@@ -1,0 +1,12 @@
+{
+  "command": "initialize",
+  "ip": "127.0.0.1",
+  "port": 50008,
+  "eye": "right",
+  "eyeSuite": "C:/XXX/eyeSuite/",
+  "gazeFeed": "C:/gazeFeed/",
+  "bigWheel": true,
+  "pres": 1,
+  "resp": 3,
+  "max10000": true
+}
