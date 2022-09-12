@@ -5,8 +5,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -14,18 +12,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.Arrays;
+
 import java.util.Enumeration;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.structures.Command;
-import org.lei.opi.core.structures.Parameters;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 /**
  *
@@ -55,7 +50,8 @@ public class OpiManager {
             while (listen) {
               if (incoming.ready()) {
                 String message = process(receive(incoming));
-                if (message.equals(Command.CLOSE.toString())) break;
+                if (message.equals(Command.CLOSE.name())) 
+                  break;
                 send(outgoing, message);
               }
             }
@@ -73,14 +69,25 @@ public class OpiManager {
 
   /** listen backlog */
   private static final int BACKLOG = 1;
-  /** Constant for exception messages: No commmand field */
-  private static final String NO_COMMAND_FIELD = "message does not contain field 'command'";
-  /** Constant for exception messages: Missing choose command */
-  private static final String NO_CHOOSE_COMMAND = "no machine selected yet. First 'command' must be 'choose'";
-  /** Constant for exception messages: No machine specified */
-  private static final String WRONG_MACHINE_NAME = "the selected machine %s in 'choose' does not exist";
-  /** Constant for exception messages: Machine initialized while trying to choose */
-  private static final String MACHINE_INITIALIZED = "Machine '%s' initialized. Cannot choose another one, you silly goose";
+  /** Constant for exception messages: {@value BAD_JSON} */
+  private static final String BAD_JSON = "String is not a valid Json object.";
+  /** Constant for exception messages: {@value NO_COMMAND_FIELD} */
+  private static final String NO_COMMAND_FIELD = "Json message does not contain field 'command'.";
+  /** Constant for exception messages: {@value BAD_COMMAND_FIELD} {@link Command} */
+  private static final String BAD_COMMAND_FIELD = "value of 'command' name in Json message is not one of Command'.";
+  /** Constant for exception messages: {@value NO_CHOOSE_COMMAND} */
+  private static final String NO_CHOOSE_COMMAND = "No machine selected yet. First 'command' must be " + Command.CHOOSE.name();
+  /** Constant for exception messages: {@value MACHINE_NEEDS_CLOSING} */
+  private static final String MACHINE_NEEDS_CLOSING = "Close the previous machine before choosing another.";
+  /** Constant for exception messages: {@value WRONG_MACHINE_NAME} */
+  private static final String WRONG_MACHINE_NAME = "Cannot create the selected machine %s in 'command:'" + Command.CHOOSE.name() + "' as it does not exist.";
+  /** Constant for exception messages: {@value WRONG_MACHINE_SUPER} */
+  private static final String WRONG_MACHINE_SUPER = "You cannot create a machine from OpiMachine. Use a subclass of OpiMachine for the choose command.";
+
+  /** name:value pair in JSON output if there is an error */
+  private static String ERROR_YES  = "\"error\" : 1";
+  /** name:value pair in JSON output if there is not an error */
+  private static String ERROR_NO   = "\"error\" : 0";
 
   /**
    *
@@ -130,21 +137,8 @@ public class OpiManager {
   protected int port;
   /** server listener */
   private Listener listener;
-  /** OPI machine to use */
+  /** OPI machine to use. */
   private OpiMachine machine;
-  /** Selected OPI machine's methods */
-  private Method[] methods;
-  /** Selected OPI machine's methods' names */
-  private String[] names;
-
-  /** Selected OPI machine's methods' parameters */
-  private Stream<Parameters> parameters;
-
-  /**
-   * Whether a connection has been stablished with machine, in which case, chooser
-   * is illegal
-   */
-  private boolean connected = true;
 
   /**
    *
@@ -155,6 +149,8 @@ public class OpiManager {
    * @since 0.0.1
    */
   public OpiManager(int port) {
+    this.machine = null;  // no opi machine chosen yet
+
     this.port = port;
     address = obtainPublicAddress();
     listener = new Listener();
@@ -196,43 +192,6 @@ public class OpiManager {
   }
 
   /**
-   * Process input JSON commands
-   *
-   * @param json JSON-structured message with at least a name "command"
-   * @return a JSON-structured message with feedback OK or ERROR + descriptive
-   *         message
-   *
-   * @since 0.0.1
-   */
-  public String process(String json) {
-    Gson gson = new Gson();
-    Map<String, String> pairs;
-    // Check that there is a command
-    pairs = gson.fromJson(json, new TypeToken<Map<String, String>>() {}.getType());
-    if (!pairs.containsKey("command"))
-      return error((new JsonSyntaxException(NO_COMMAND_FIELD).toString()));
-    if (machine == null) { // First thing to do is to choose a machine
-      return chooseMachine(pairs);
-    } else if (pairs.get("command").equals("choose")) {
-      if (!connected) return chooseMachine(pairs); // If connected, cannot choose a different machine
-      else {
-        return error(String.format(MACHINE_INITIALIZED, pairs.get("machine")));
-      }
-    }
-    // If all preliminaries are good, then find function name, ...
-    String function = pairs.get("command");
-    try {
-      // construct and validate parameters, and try and run the method with them
-      int i = Arrays.asList(names).indexOf(function);
-      String feedback = (String) methods[i].invoke(machine, arguments(function, pairs));
-      return ok(feedback);
-    } catch (ArrayIndexOutOfBoundsException | JsonParseException | IllegalAccessException |
-             InvocationTargetException e) {
-      return error(String.format("{Cannot execute method '%s' in %s.\n\"%s\"}", function, machine.getClass(), e));
-    }
-  }
-
-  /**
    *
    * Return info about OPI as a string
    *
@@ -244,81 +203,108 @@ public class OpiManager {
     return "Local socket connection at " + address.toString() + ":" + port;
   }
 
-  /**
-   * Choose machine and get its methods and parameters
-   *
-   * @param pairs instructions from JSON message
-   * 
-   * @return JSON-formatted message with feedback
-   * 
-   * @since 0.1.0
-   */
-  private String chooseMachine(Map<String, String> pairs) {
-    if (!pairs.get("command").equals("choose"))
-    return error((new JsonSyntaxException(NO_CHOOSE_COMMAND)).toString());
-    //if (!pairs.containsKey("machine"))
-    //  throw new JsonSyntaxException(NO_MACHINE_SELECTED);
-    try {
-      machine = OpiMachine.choose(pairs.get("machine"));
-      methods = machine.getClass().getMethods();
-      names = Stream.of(methods).map(Method::getName).toArray((String[]::new));
-      parameters = Stream.of(methods).map((Method m) -> m.getAnnotation(Parameters.class));
-    } catch (ClassNotFoundException e) {
-        return error((new JsonSyntaxException(String.format(WRONG_MACHINE_NAME, pairs.get("machine"))).toString()));
-    }
-    return ok();
-  }
-
-  /**
-   * Construct arguments from JSON fileand validate them. It makes sure that
-   * the the parameters received match the device-dependent OPI standard
-   *
-   * @param pairs    JSON pairs
-   * @param function function to invoke on the selected machine
-   * 
-   * @since 0.1.0
-   */
-  private Map<String, String> arguments(String function, Map<String, String> pairs) throws JsonParseException {
-    return pairs;
-  }
-
    /**
-   * Create an OK message in JSON format with attached results
-   * 
-   * @param feedback feedback from the OPI command or null
+   * Create an OK message in JSON format with nothing else
    * 
    * @return JSON-formatted ok message
    * 
    * @since 0.1.0
    */
-  private String ok() {
-    return "{\n  " + OpiMachine.OK + "\n}";
+  public static String ok() {
+    return String.format("{%s}", ERROR_NO);
   }
 
   /**
    * Create an OK message in JSON format with attached results
    * 
-   * @param feedback feedback from the OPI command or null
+   * @param feedback Json object that is feedback from the OPI command or null
    * 
    * @return JSON-formatted ok message
    * 
    * @since 0.1.0
    */
-  private String ok(String feedback) {
-    return "{\n  " + OpiMachine.OK + "\n  \"feedback\": \"" + feedback + "\"\n}";
+  public static String ok(String feedback) {
+    return String.format("{%s, \"feedback\": %s}", ERROR_NO, feedback);
   }
 
   /**
    * Create an error message in JSON format to send to R OPI
    * 
-   * @param description error description
+   * @param description String error description (no quotes)
    * 
    * @return JSON-formatted error message
    * 
    * @since 0.1.0
    */
-  private String error(String description) {
-    return "{\n" + OpiMachine.ERROR + "  \"description\": \"" + description + "\"\n}";
+  public static String error(String description) {
+    return String.format("{%s, \"description\": \"%s\"}", ERROR_YES, description);
+  }
+
+  /**
+   * Create an error message in JSON format to send to R OPI
+   * 
+   * @param description String error description (no quotes) to add to Json return name 'description'
+   * @param e An exception to print to stderr and add to Json return object name 'exception'
+   * 
+   * @return JSON-formatted error message
+   * 
+   * @since 0.1.0
+   */
+  public static String error(String description, Exception e) {
+    System.err.println(e);
+    return String.format("{%s, \"description\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, e.toString());
+  }
+
+  /**
+   * Process incoming Json commands. If it is a 'choose' command, then 
+   * set the private field machine to a new instance of that machine.
+   * If it is another command, then process it using the machine object.
+   *
+   * @param jsonStr A JSON object that at least contains the name 'command'.
+   * 
+   * @return JSON-formatted message with feedback
+   * 
+   * @since 0.1.0
+   */
+  private String process(String jsonStr) {
+    Gson gson = new Gson();
+
+    HashMap<String, String> pairs;
+    try {
+      pairs = gson.fromJson(jsonStr, HashMap.class);
+    } catch (JsonSyntaxException e) {
+      return error(BAD_JSON);
+    }
+        
+    if (!pairs.containsKey("command")) // needs a command
+      return error(NO_COMMAND_FIELD);
+
+      // check it is a valid command from Command.*
+    if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(pairs.get("command"))))
+      return error(BAD_COMMAND_FIELD);
+
+      // If it is a CHOOSE command, then let's fire up the chosen machine (unless one already open)
+    if (pairs.get("command").equalsIgnoreCase(Command.CHOOSE.name())) {
+      if (this.machine != null && machine.getIsInitialised())
+        return error(MACHINE_NEEDS_CLOSING);
+
+      String className = OpiMachine.class.getPackage().getName() + "." + pairs.get("machine");
+      try {
+        //if (pairs.get("machine") == machine.getClass().getName())  // should be called on a subclass
+        //  return error(WRONG_MACHINE_SUPER);
+        machine = (OpiMachine) Class.forName(className)
+          .getDeclaredConstructor()
+          .newInstance();
+      } catch (Exception e) {
+          return error(String.format(WRONG_MACHINE_NAME, className));
+      }
+      return ok();
+    } else { // If it is not a CHOOSE command and there is no machine open, give up else try it out
+      if (this.machine == null)
+        return error(NO_CHOOSE_COMMAND);
+
+      return this.machine.process(pairs);
+    }
   }
 
   /** get network address for public access */

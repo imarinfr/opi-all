@@ -1,7 +1,8 @@
 package org.lei.opi.core.structures;
 
 /**
- * OPI OpiMachine commands
+ * OPI OpiMachine commands that can appear as values in a JSON object's 
+ * name:value pair where name == "command".
  *
  * @since 0.0.1
  */

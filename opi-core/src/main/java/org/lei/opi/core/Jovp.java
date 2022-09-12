@@ -1,6 +1,6 @@
 package org.lei.opi.core;
 
-import java.util.Map;
+import java.util.HashMap;
 
 /**
  * JOVP client
@@ -8,37 +8,42 @@ import java.util.Map;
  * @since 0.0.1
  */
 public class Jovp extends OpiMachine {
-
-    /* (non-Javadoc)
-   * @see org.lei.opi.core.OpiMachine#query()
-   */
-  @Override
-   public String query(Map<String, Object> args) {
-    return super.query(args);
-  }
+  public Jovp() { super(); }
 
   /* (non-Javadoc)
-   * @see org.lei.opi.core.OpiMachine#init()
-   */
-  @Override
-  public String initialize(Map<String, Object> args) {
-    return super.initialize(args);
+  * @see org.lei.opi.core.OpiMachine#query()
+  */
+  public String query(HashMap<String, String> args) {
+    // any generic JOVP query stuff here
+    return "null";
+  }
+
+  public String initialize(HashMap<String, String> args) {
+    // any generic JOVP initialise stuff here
+    return "null";
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#setup()
    */
-  @Override
-  public String setup(Map<String, Object> args) {
-    return super.setup(args);
+  public String setup(HashMap<String, String> args) {
+    // any generic JOVP setup stuff here
+    return "null";
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#present()
    */
-  @Override
-  public String present(Map<String, Object> args) {
-    return super.present(args);
+  public String present(HashMap<String, String> args) {
+    // any generic JOVP present stuff here
+    return "null";
   }
 
+  /* (non-Javadoc)
+   * @see org.lei.opi.core.OpiMachine#close()
+   */
+  public String close(HashMap<String, String> args) {
+    // any generic JOVP close stuff here
+    return "null";
+  }
 }

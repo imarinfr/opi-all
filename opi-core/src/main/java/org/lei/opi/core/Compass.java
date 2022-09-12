@@ -1,6 +1,6 @@
 package org.lei.opi.core;
 
-import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Compass client
@@ -12,33 +12,36 @@ public class Compass extends OpiMachine {
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#query()
    */
-  @Override
-   public String query(Map<String, Object> args) {
-    return super.query(args);
+   public String query(HashMap<String, String> args) {
+    return "";
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#init()
    */
-  @Override
-  public String initialize(Map<String, Object> args) {
-    return super.initialize(args);
+  public String initialize(HashMap<String, String> args) {
+    return "";
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#setup()
    */
-  @Override
-  public String setup(Map<String, Object> args) {
-    return super.setup(args);
+  public String setup(HashMap<String, String> args) {
+    return "";
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#present()
    */
-  @Override
-  public String present(Map<String, Object> args) {
-    return super.present(args);
+  public String present(HashMap<String, String> args) {
+    return "";
+  }
+
+  /* (non-Javadoc)
+   * @see org.lei.opi.core.OpiMachine#close()
+   */
+  public String close(HashMap<String, String> args) {
+    return "";
   }
 
 }
