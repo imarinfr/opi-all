@@ -1,19 +1,5 @@
 package org.lei.opi.core;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
@@ -28,44 +14,7 @@ import com.google.gson.JsonSyntaxException;
  *
  * @since 0.0.1
  */
-public class OpiManager {
-
-  /** listen thread */
-  private class Listener extends Thread {
-
-    ServerSocket server;
-    boolean listen = true;
-
-    /** run listener on a different thread */
-    public void run() {
-      Socket socket;
-      try {
-        server = new ServerSocket(port, BACKLOG, address);
-        server.setSoTimeout(100);
-        while (listen) {
-          try {
-            socket = server.accept();
-            BufferedReader incoming = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            BufferedWriter outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-            while (listen) {
-              if (incoming.ready()) {
-                String message = process(receive(incoming));
-                if (message.equals(Command.CLOSE.name())) 
-                  break;
-                send(outgoing, message);
-              }
-            }
-            break;
-          } catch (SocketTimeoutException ignored) {
-          }
-        }
-        server.close();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-  }
+public class OpiManager extends MessageProcessor {
 
   /** listen backlog */
   private static final int BACKLOG = 1;
@@ -89,55 +38,6 @@ public class OpiManager {
   /** name:value pair in JSON output if there is not an error */
   private static String ERROR_NO   = "\"error\" : 0";
 
-  /**
-   *
-   * Receive message
-   *
-   * @param incoming Buffered reader for incoming messages
-   *
-   * @return Message received
-   *
-   * @since 0.0.1
-   */
-  public static String receive(BufferedReader incoming) {
-    StringBuilder message = new StringBuilder();
-    try {
-      while (incoming.ready()) {
-        String line = incoming.readLine();
-        message.append(line);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-    return message.toString();
-  }
-
-  /**
-   *
-   * Send message
-   *
-   * @param outgoing Buffered writer for outgoing messages
-   * @param message  The message to deliver
-   *
-   * @since 0.0.1
-   */
-  public static void send(BufferedWriter outgoing, String message) {
-    try {
-      outgoing.write(message);
-      outgoing.newLine();
-      outgoing.flush();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /** Connection address */
-  protected InetAddress address;
-  /** Connection port */
-  protected int port;
-  /** server listener */
-  private Listener listener;
-  /** OPI machine to use. */
   private OpiMachine machine;
 
   /**
@@ -148,59 +48,8 @@ public class OpiManager {
    *
    * @since 0.0.1
    */
-  public OpiManager(int port) {
+  public OpiManager() {
     this.machine = null;  // no opi machine chosen yet
-
-    this.port = port;
-    address = obtainPublicAddress();
-    listener = new Listener();
-    listener.start();
-    // wait for server to be ready
-    while (listener.server == null)
-      Thread.onSpinWait();
-  }
-
-  /**
-   * Signal stop listening and wait
-   *
-   * @since 0.0.1
-   */
-  public void close() {
-    listener.listen = false;
-    synchronized (listener) {
-      try {
-        listener.join();
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
-  /**
-   *
-   * Set local port. That is, close and cleanup connection,
-   * and create a new connection with a different port
-   *
-   * @param port The local port to listen to R OPI
-   *
-   * @since 0.0.1
-   */
-  public void setLocalPort(int port) {
-    close();
-    this.port = port;
-    listener = new Listener();
-  }
-
-  /**
-   *
-   * Return info about OPI as a string
-   *
-   * @return A string with address formatted as IP:port
-   *
-   * @since 0.0.1
-   */
-  public String toString() {
-    return "Local socket connection at " + address.toString() + ":" + port;
   }
 
    /**
@@ -210,8 +59,8 @@ public class OpiManager {
    * 
    * @since 0.1.0
    */
-  public static String ok() {
-    return String.format("{%s}", ERROR_NO);
+  public static MessageProcessor.Packet ok() {
+    return new MessageProcessor.Packet(String.format("{%s}", ERROR_NO));
   }
 
   /**
@@ -223,8 +72,8 @@ public class OpiManager {
    * 
    * @since 0.1.0
    */
-  public static String ok(String feedback) {
-    return String.format("{%s, \"feedback\": %s}", ERROR_NO, feedback);
+  public static MessageProcessor.Packet ok(String feedback) {
+    return new MessageProcessor.Packet(String.format("{%s, \"feedback\": %s}", ERROR_NO, feedback));
   }
 
   /**
@@ -236,8 +85,9 @@ public class OpiManager {
    * 
    * @since 0.1.0
    */
-  public static String error(String description) {
-    return String.format("{%s, \"description\": \"%s\"}", ERROR_YES, description);
+  public static MessageProcessor.Packet error(String description) {
+    return new MessageProcessor.Packet(
+      String.format("{%s, \"description\": \"%s\"}", ERROR_YES, description));
   }
 
   /**
@@ -250,9 +100,10 @@ public class OpiManager {
    * 
    * @since 0.1.0
    */
-  public static String error(String description, Exception e) {
+  public static MessageProcessor.Packet error(String description, Exception e) {
     System.err.println(e);
-    return String.format("{%s, \"description\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, e.toString());
+    return new MessageProcessor.Packet(
+      String.format("{%s, \"description\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, e.toString()));
   }
 
   /**
@@ -266,7 +117,7 @@ public class OpiManager {
    * 
    * @since 0.1.0
    */
-  private String process(String jsonStr) {
+  public MessageProcessor.Packet process(String jsonStr) {
     Gson gson = new Gson();
 
     HashMap<String, String> pairs;
@@ -307,23 +158,4 @@ public class OpiManager {
       return this.machine.process(pairs);
     }
   }
-
-  /** get network address for public access */
-  private InetAddress obtainPublicAddress() {
-    try {
-      for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-        NetworkInterface networkInterface = en.nextElement();
-        for (Enumeration<InetAddress> address = networkInterface.getInetAddresses(); address.hasMoreElements();) {
-          InetAddress inetAddress = address.nextElement();
-          if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
-            return inetAddress;
-          }
-        }
-      }
-    } catch (SocketException e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
-
 }

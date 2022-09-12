@@ -32,11 +32,11 @@ public class JsonFromClientTests {
     private static BufferedReader incoming;
     private static BufferedWriter outgoing;
 
-    private static OpiManager opi;
+    private static CSListener opi;
 
     /** init OpiManager and connect to it to server */
     Client() throws IOException {
-      opi = new OpiManager(PORT);
+      opi = new CSListener(PORT, new OpiManager());
       client = new Socket(opi.address, opi.port);
       incoming = new BufferedReader(new InputStreamReader(client.getInputStream()));
       outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
@@ -51,13 +51,13 @@ public class JsonFromClientTests {
 
     /** send JSON message to server */
     static void send(String message) {
-      OpiManager.send(outgoing, message);
+      opi.send(outgoing, message);
     }
 
     /** receive JSON message from server */
     static String receive() throws IOException {
       while (!incoming.ready()) Thread.onSpinWait();
-      return OpiManager.receive(incoming);
+      return opi.receive(incoming);
     }
 
     /** close client connection to server */

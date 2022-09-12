@@ -13,37 +13,37 @@ public class Jovp extends OpiMachine {
   /* (non-Javadoc)
   * @see org.lei.opi.core.OpiMachine#query()
   */
-  public String query(HashMap<String, String> args) {
+  public MessageProcessor.Packet query(HashMap<String, String> args) {
     // any generic JOVP query stuff here
-    return "null";
+    return new MessageProcessor.Packet("null");
   }
 
-  public String initialize(HashMap<String, String> args) {
+  public MessageProcessor.Packet initialize(HashMap<String, String> args) {
     // any generic JOVP initialise stuff here
-    return "null";
+    return new MessageProcessor.Packet("null");
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#setup()
    */
-  public String setup(HashMap<String, String> args) {
+  public MessageProcessor.Packet setup(HashMap<String, String> args) {
     // any generic JOVP setup stuff here
-    return "null";
+    return new MessageProcessor.Packet("null");
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#present()
    */
-  public String present(HashMap<String, String> args) {
+  public MessageProcessor.Packet present(HashMap<String, String> args) {
     // any generic JOVP present stuff here
-    return "null";
+    return new MessageProcessor.Packet("null");
   }
 
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#close()
    */
-  public String close(HashMap<String, String> args) {
+  public MessageProcessor.Packet close(HashMap<String, String> args) {
     // any generic JOVP close stuff here
-    return "null";
+    return new MessageProcessor.Packet("null");
   }
 }

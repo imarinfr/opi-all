@@ -20,9 +20,10 @@ public class Imo extends Jovp {
   * @param args A map of name:value pairs for Params.
   * @return A JSON object with machine specific query information
   */
-  public String query(HashMap<String, String> args) {
-    String jovp = super.query(args);
-    return String.format("{\"result\": \"Imo Queried\", \"jovp\": %s}", jovp);
+  public MessageProcessor.Packet query(HashMap<String, String> args) {
+    String jovp = super.query(args).msg;
+    return new MessageProcessor.Packet(
+      String.format("{\"result\": \"Imo Queried\", \"jovp\": %s}", jovp));
   }
 
   /** opiInitialise
@@ -31,10 +32,11 @@ public class Imo extends Jovp {
   */
   @Parameter(name = "ip", desc = "IP Address of the perimeter.")
   @Parameter(name = "port", desc = "TCP port of the perimeter.")
-  public String initialize(HashMap<String, String> args) {
-    String jovp = super.initialize(args);
+  public MessageProcessor.Packet initialize(HashMap<String, String> args) {
+    String jovp = super.initialize(args).msg;
     setIsInitialised(true);
-    return String.format("{jvop: %s}", jovp);
+    return new MessageProcessor.Packet(
+      String.format("{jvop: %s}", jovp));
   }
 
   /** opiSetBackground 
@@ -44,9 +46,10 @@ public class Imo extends Jovp {
   @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class)
   //@Param(name = "color", desc = "Background color for eye.", className = COLOR.class)
   //@Param(name = "fix", desc = "Fixation className for eye.", className = FIXATION.class)
-  public String setup(HashMap<String, String> args) {
-    String jovp = super.setup(args);
-    return String.format("{jvop: %s}", jovp);
+  public MessageProcessor.Packet setup(HashMap<String, String> args) {
+    String jovp = super.setup(args).msg;
+    return new MessageProcessor.Packet(
+      String.format("{jvop: %s}", jovp));
   }
 
   /** opiPresent 
@@ -57,19 +60,23 @@ public class Imo extends Jovp {
   @Parameter(name = "y", desc = "y co-ordinate of stimuli (can be a list).", className = Double.class, min = -80, max = 80)
   @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class)
   //@Param(name = "color", desc = "Background color for eye.<br>", className = COLOR.class)
-  public String present(HashMap<String, String> args) {
-    String jovp = super.present(args);
-    return String.format("{\"x\": %s, \"y\": %s, \"eye\": %s, \"seen\": 1, \"time\": 666, \"jovp\": %s}",
-      args.get("x"), args.get("y"), args.get("eye"), jovp);
+  public MessageProcessor.Packet present(HashMap<String, String> args) {
+    String jovp = super.present(args).msg;
+    return new MessageProcessor.Packet(
+      String.format("{\"x\": %s, \"y\": %s, \"eye\": %s, \"seen\": 1, \"time\": 666, \"jovp\": %s}",
+      args.get("x"), args.get("y"), args.get("eye"), jovp));
   }
 
   /** opiClose 
   * @param args A map of name:value pairs for Params.
   * @return A JSON object with machine specific query information
   */
-  public String close(HashMap<String, String> args) {
-    String jovp = super.close(args);
+  public MessageProcessor.Packet close(HashMap<String, String> args) {
+    String jovp = super.close(args).msg;
     setIsInitialised(false);
-    return String.format("{jvop: %s}", jovp);
+
+    return new MessageProcessor.Packet(
+      true,
+      String.format("{jvop: %s}", jovp));
   }
 }

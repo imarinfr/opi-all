@@ -63,9 +63,6 @@ abstract class OpiMachine {
       for (Class<? extends Enum> e : reflections.getSubTypesOf(Enum.class))
         enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name()).toList());
 
-//System.out.println(enums);
-//Stream.of(enums).forEach(e -> System.out.println(e.getClass().getName()));
-
         // key is method name, value is array of annotations on that method
       data.parameters = method.getAnnotation(Parameters.class);
 
@@ -79,7 +76,7 @@ abstract class OpiMachine {
     * 
     * @return Json object like OpiManger.ok() or OpiManager.error()
     */
-  public String process(HashMap<String, String> nameValuePairs) {
+  public MessageProcessor.Packet process(HashMap<String, String> nameValuePairs) {
         // (1) Find the function which is the value of the JSON name "command"
         // (2) Check that the params for the function are in the JSON (via the Params Annotation)
         // (3) Then execute the function.
@@ -133,7 +130,7 @@ abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract String query(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet query(HashMap<String, String> args);
 
   /**
    * Initialize the OPI on the corresponding machine
@@ -145,8 +142,8 @@ abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract String initialize(HashMap<String, String> args);
-  public String initialise(HashMap<String, String> args) { return this.initialize(args);}
+  public abstract MessageProcessor.Packet initialize(HashMap<String, String> args);
+  public MessageProcessor.Packet initialise(HashMap<String, String> args) { return this.initialize(args);}
 
   /**
    * Change device background and overall settings
@@ -157,7 +154,7 @@ abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract String setup(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet setup(HashMap<String, String> args);
 
   /**
    * Present OPI stimulus in perimeter
@@ -168,7 +165,7 @@ abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract String present(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet present(HashMap<String, String> args);
 
   /**
    * Close OPI connection
@@ -180,5 +177,5 @@ abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract String close(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet close(HashMap<String, String> args);
 }

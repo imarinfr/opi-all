@@ -18,7 +18,7 @@ public class ConnectionTests {
    */
   @Test
   public void getIDAndPort() {
-    OpiManager opi = new OpiManager(50001);
+    CSListener opi = new CSListener(50001, new OpiManager());
     System.out.println("[getIDAndPort] " + opi);
     opi.close();
   }
@@ -31,7 +31,7 @@ public class ConnectionTests {
    */
   @Test
   public void changeLocalPort() {
-    OpiManager opi = new OpiManager(50001);
+    CSListener opi = new CSListener(50001, new OpiManager());
     System.out.println("[changeLocalPort] Address was at " + opi);
     opi.setLocalPort(50002);
     System.out.println("[changeLocalPort] Address is at " + opi);
