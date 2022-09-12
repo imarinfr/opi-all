@@ -8,7 +8,7 @@ import java.lang.annotation.*;
 @Repeatable(Parameters.class)
 public @interface Parameter {
   String name();
-  Class<?> type() default String.class;
+  Class<?> className() default String.class;
   double min() default Double.MIN_VALUE;
   double max() default Double.MAX_VALUE;
   String desc();

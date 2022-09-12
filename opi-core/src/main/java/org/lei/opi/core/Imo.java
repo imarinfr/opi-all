@@ -41,9 +41,9 @@ public class Imo extends Jovp {
   * @param args A map of name:value pairs for Params.
   * @return A JSON object with machine specific setup information
   */
-  @Parameter(name = "eye", desc = "Eye to set.", type = Eye.class)
-  //@Param(name = "color", desc = "Background color for eye.", type = COLOR.class)
-  //@Param(name = "fix", desc = "Fixation type for eye.", type = FIXATION.class)
+  @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class)
+  //@Param(name = "color", desc = "Background color for eye.", className = COLOR.class)
+  //@Param(name = "fix", desc = "Fixation className for eye.", className = FIXATION.class)
   public String setup(HashMap<String, String> args) {
     String jovp = super.setup(args);
     return String.format("{jvop: %s}", jovp);
@@ -53,10 +53,10 @@ public class Imo extends Jovp {
   * @param args A map of name:value pairs for Params.
   * @return A JSON object with machine specific presentation information
   */
-  @Parameter(name = "x", desc = "x co-ordinate of stimuli (can be a list).", type = Double.class, min = -80, max = 80)
-  @Parameter(name = "y", desc = "y co-ordinate of stimuli (can be a list).", type = Double.class, min = -80, max = 80)
-  @Parameter(name = "eye" , desc = "Eye to test.", type = Eye.class)
-  //@Param(name = "color", desc = "Background color for eye.<br>", type = COLOR.class)
+  @Parameter(name = "x", desc = "x co-ordinate of stimuli (can be a list).", className = Double.class, min = -80, max = 80)
+  @Parameter(name = "y", desc = "y co-ordinate of stimuli (can be a list).", className = Double.class, min = -80, max = 80)
+  @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class)
+  //@Param(name = "color", desc = "Background color for eye.<br>", className = COLOR.class)
   public String present(HashMap<String, String> args) {
     String jovp = super.present(args);
     return String.format("{\"x\": %s, \"y\": %s, \"eye\": %s, \"seen\": 1, \"time\": 666, \"jovp\": %s}",

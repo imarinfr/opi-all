@@ -296,8 +296,9 @@ public class OpiManager {
           .getDeclaredConstructor()
           .newInstance();
       } catch (Exception e) {
-          return error(String.format(WRONG_MACHINE_NAME, className));
+          return error(String.format(WRONG_MACHINE_NAME, className), e);
       }
+ 
       return ok();
     } else { // If it is not a CHOOSE command and there is no machine open, give up else try it out
       if (this.machine == null)

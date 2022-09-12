@@ -7,12 +7,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
-import java.util.stream.Collectors;
 import java.lang.reflect.Method;
 
 import org.reflections.Reflections;
-import org.reflections.scanners.SubTypesScanner;
-
 
 /**
  * The OPI standard for communication with perimeters
@@ -45,10 +42,10 @@ abstract class OpiMachine {
     */
   protected class MethodData {
     protected Method method;
-    protected HashMap<String, Enum[]> enums; // Enum values defined in this object indexed by name of Enum. 
     protected Parameters parameters;   // The names expected in the JSON string that is a parameter of the 5 key OPI methods. 
   };
   protected HashMap<String, MethodData> opiMethods;
+  protected HashMap<String, List<String>> enums; // Enum class : enum values defined in the package.
 
     /** Set the information about the 5 OPI methods in opiMethods.
      * It is assumed this is called by a subclass.  
@@ -61,15 +58,13 @@ abstract class OpiMachine {
       MethodData data = new MethodData();
       data.method = method;
 
-      Reflections reflections = new Reflections(this.getClass().getPackageName(), new SubTypesScanner(false));
-      Stream<Class<?>> enums = reflections.getSubTypesOf(Object.class)
-        .stream()
-        .filter(o -> o.isEnum());
+      Reflections reflections = new Reflections(this.getClass().getPackageName());
+      enums = new HashMap<String, List<String>>();
+      for (Class<? extends Enum> e : reflections.getSubTypesOf(Enum.class))
+        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name()).toList());
 
-      data.enums = new HashMap<String, Enum[]>();
-      for (Object o : enums.toArray()) {
-        data.enums.put(o.getClass().getName(), (Enum[]) o.getClass().getEnumConstants());
-      }
+//System.out.println(enums);
+//Stream.of(enums).forEach(e -> System.out.println(e.getClass().getName()));
 
         // key is method name, value is array of annotations on that method
       data.parameters = method.getAnnotation(Parameters.class);
@@ -104,23 +99,19 @@ abstract class OpiMachine {
 
               // if it is an Enum, check the actual enum value exists in the matching enum definition
               // if it is a Double, check it is in range allowed
-          if (param.type().isEnum()) {
-  System.out.println(param.type());
-  Stream.of(methodData.enums.keySet()).forEach(System.out::println);
-
-              if (! methodData.enums.containsKey(param.type().getName()))
-                  return OpiManager.error(String.format ("strangely I cannot find enum type for parameter %s in function %s in %s.", 
-                      param.name(), funcName, this.getClass()));
-
-              Enum[] evs = methodData.enums.get(param.type().getName());
-              if (! Stream.of(evs).anyMatch((Enum e) -> e.name().equals(param.type())))
-                  return OpiManager.error(String.format ("cannot find enum type %s for parameter %s in function %s in %s.",
-                      param.type().toString(), param.name(), funcName, this.getClass()));
-          } else if (param.type().getClass().equals(Double.class)) {
+          if (enums.containsKey(param.className().getName())) {
+            String enumName = nameValuePairs.get(param.name());
+            if(!Stream.of(enums.get(param.className().getName())).anyMatch(s -> s.contains(enumName)))
+              return OpiManager.error(String.format ("I cannot find %s in enum type %s for parameter %s in function %s in %s.", 
+                      enumName, param.className(), param.name(), funcName, this.getClass()));
+          } else if (param.className().getSimpleName().equals("Double")) {
               double val = Double.parseDouble(nameValuePairs.get(param.name()));
               if (val < param.min() || val > param.max())
                   return OpiManager.error(String.format ("parameter %s in function %s in %s is out of range [%s, %s].", 
                       param.name(), funcName, this.getClass(), param.min(), param.max()));
+          } else if (! param.className().getSimpleName().equals("String")) {
+            return OpiManager.error(String.format ("type for parameter %s in function %s in %s should be an String, Enum or Double, not %s.",
+                param.name(), funcName, this.getClass(), param.className()));
           }
       }
            // (3)
