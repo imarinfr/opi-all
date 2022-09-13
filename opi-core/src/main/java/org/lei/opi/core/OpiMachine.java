@@ -109,10 +109,16 @@ abstract class OpiMachine {
             } else if (param.className().getSimpleName().equals("Double")) {
                 double val = Double.parseDouble(nameValuePairs.get(param.name()));
                 if (val < param.min() || val > param.max())
-                    return OpiManager.error(String.format ("parameter %s in function %s in %s is out of range [%s, %s].", 
-                        param.name(), funcName, this.getClass(), param.min(), param.max()));
+                    return OpiManager.error(String.format ("parameter %s in function %s in %s is %s which is out of range [%s, %s].", 
+                        param.name(), funcName, this.getClass(), val, param.min(), param.max()));
             } else if (param.className().getSimpleName().equals("List")) {
                 List<Double> lst = gson.fromJson(nameValuePairs.get(param.name()), new TypeToken<List<Double>>() {}.getType());
+                for (Double d : lst) {
+                    double val = (double)d;
+                    if (val < param.min() || val > param.max())
+                    return OpiManager.error(String.format ("parameter %s in function %s in %s is %s which is out of range [%s, %s].", 
+                        param.name(), funcName, this.getClass(), val, param.min(), param.max()));
+                }
             } else if (! param.className().getSimpleName().equals("String")) {
                 return OpiManager.error(String.format ("type for parameter %s in function %s in %s should be an String, Enum or Double, not %s.",
                   param.name(), funcName, this.getClass(), param.className()));

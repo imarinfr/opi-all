@@ -127,10 +127,17 @@ public class JsonFromClientTests {
    */
   @Test
   public void imo() {
+    String[] ps = {
+        "jsons/Imo/opiPresent.json",
+        "jsons/Imo/opiPresent2.json"
+    };
+    String[] ss = {
+        "jsons/Imo/opiSetup.json"
+    };
     serverDriver("jsons/Imo/opiChoose.json",
         "jsons/Imo/opiInit.json",
-        "jsons/Imo/opiSetup.json",
-        "jsons/Imo/opiPresent.json");
+        ss, 
+        ps);
   }
 
   /**
@@ -168,6 +175,24 @@ public class JsonFromClientTests {
       sendAndReceive(client.loadMessage(initJson)); // Initialize OPI
       sendAndReceive(client.loadMessage(setupJson)); // Setup OPI
       sendAndReceive(client.loadMessage(presentJson)); // Present OPI
+      sendAndReceive(client.loadMessage("jsons/opiClose.json")); // Close OPI
+      client.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /** server driver with lists of present/query etc*/
+  private void serverDriver(String chooseJson, String initJson, String[] setupJson, String[] presentJson) {
+    try {
+      Client client = new Client();
+      sendAndReceive(client.loadMessage(chooseJson)); // Choose OPI
+      sendAndReceive(client.loadMessage("jsons/opiQuery.json")); // Query OPI
+      sendAndReceive(client.loadMessage(initJson)); // Initialize OPI
+      for (String s : setupJson) 
+        sendAndReceive(client.loadMessage(s)); // Setup OPI
+      for (String s : presentJson) 
+        sendAndReceive(client.loadMessage(s)); // Present OPI
       sendAndReceive(client.loadMessage("jsons/opiClose.json")); // Close OPI
       client.close();
     } catch (IOException e) {
