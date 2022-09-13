@@ -39,7 +39,7 @@
     <module>opi-core</module>
     <module>opi-rgen</module>
     <module>opi-monitor</module>
-    <module>opi-imo</module>
+    <module>opi-jovp</module>
   </modules>
   
   <build>
