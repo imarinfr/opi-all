@@ -10,8 +10,8 @@
     <version>${opi.version}</version>
   </parent>
 
-  <artifactId>opi-frontend</artifactId>
-  <name>OPI frontend</name>
+  <artifactId>opi-monitor</artifactId>
+  <name>OPI monitor</name>
   <packaging>jar</packaging>
 
   <dependencies>
