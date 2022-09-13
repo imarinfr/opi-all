@@ -55,13 +55,14 @@ public class Imo extends Jovp {
 
   /** opiPresent 
   * @param args A map of name:value pairs for Params.
- *  @ParamTag (name = "eye" , desc = "Eye to test.", className = Eye.class)
- *  @ParamTag (name = "eye" , desc = "Eye to test.", className = Eye.class)
   * @return A JSON object with machine specific presentation information
   */
-  @Parameter(name = "x", desc = "x co-ordinate of stimuli (can be a list).", className = List.class, min = -80, max = 80)
-  @Parameter(name = "y", desc = "y co-ordinate of stimuli (can be a list).", className = List.class, min = -80, max = 80)
   @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class)
+  @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80)
+  @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80)
+  @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, max = Double.MAX_VALUE)
+  @Parameter(name = "w", desc = "List of stimuli response windows (ms).", className = Double.class, min = 0, max = Double.MAX_VALUE)
+  @Parameter(name = "color", desc = "List of stimuli colors.", className = Jovp.Color.class)
   //@Param(name = "color", desc = "Background color for eye.<br>", className = COLOR.class)
   public MessageProcessor.Packet present(HashMap<String, String> args) {
     String jovp = super.present(args).msg;

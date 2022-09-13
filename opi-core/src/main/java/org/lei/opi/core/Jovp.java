@@ -8,6 +8,8 @@ import java.util.HashMap;
  * @since 0.0.1
  */
 public class Jovp extends OpiMachine {
+  public enum Color { WHITE, RED, GREEN, BLUE };
+
   public Jovp() { super(); }
 
   /* (non-Javadoc)

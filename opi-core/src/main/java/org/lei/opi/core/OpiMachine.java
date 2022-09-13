@@ -6,12 +6,16 @@ import org.lei.opi.core.structures.Parameter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Stream;
+import java.util.Optional;
+
 import java.lang.reflect.Method;
 
 import org.reflections.Reflections;
 
 import com.google.gson.reflect.TypeToken;
+
 import com.google.gson.Gson;
 
 /**
@@ -20,7 +24,6 @@ import com.google.gson.Gson;
  * @since 0.0.1
  */
 abstract class OpiMachine {
-
   /** {@value BAD_CHOOSE} */
   static final String BAD_CHOOSE = "JSON object does not contain 'command:choose'.";
   /** {@value BAD_MACHINE} */
@@ -64,7 +67,7 @@ abstract class OpiMachine {
       Reflections reflections = new Reflections(this.getClass().getPackageName());
       enums = new HashMap<String, List<String>>();
       for (Class<? extends Enum> e : reflections.getSubTypesOf(Enum.class))
-        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name()).toList());
+        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());
 
         // key is method name, value is array of annotations on that method
       data.parameters = method.getAnnotation(Parameters.class);
@@ -85,7 +88,6 @@ abstract class OpiMachine {
         // (3) Then execute the function.
     String funcName = (String)nameValuePairs.get("command");
     MethodData methodData = opiMethods.get(funcName);
-    Gson gson = new Gson();
 
     if (methodData == null)
         return OpiManager.error(String.format("cannot find function %s in %s.", 
@@ -94,34 +96,40 @@ abstract class OpiMachine {
         // (2) 
     if (methodData.parameters != null)
         for (Parameter param : methodData.parameters.value()) {
-            if (!nameValuePairs.containsKey(param.name())) 
-                return OpiManager.error(String.format ("parameter %s is missing for function %s in %s.", 
-                  param.name(), funcName, this.getClass()));
+            if (!nameValuePairs.containsKey(param.name()))
+                return OpiManager.error(String.format ("parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
        
-                // if it is an Enum, check the actual enum value exists in the matching enum definition
-                // if it is a Double, check it is in range allowed
-                // if it is a List<Double>, check each element is in range allowed
+            Object valueObj = nameValuePairs.get(param.name());
+
+            if (valueObj instanceof ArrayList<?> && ((ArrayList<?>)valueObj).size() == 0)
+                return OpiManager.error(String.format ("Parameter %s is a list of length 0 in function %s in %s.", param.name(), funcName, this.getClass()));
+     
+            //Predicate<Object> pDouble = v -> v.doubleValue() >= param.min() && v.doubleValue() <= param.max();
+            //Predicate<Object> pString = v -> v instanceof String;
+
             if (enums.containsKey(param.className().getName())) {
-                String enumName = nameValuePairs.get(param.name());
-                if(!Stream.of(enums.get(param.className().getName())).anyMatch(s -> s.contains(enumName)))
-                  return OpiManager.error(String.format ("I cannot find %s in enum type %s for parameter %s in function %s in %s.", 
-                          enumName, param.className(), param.name(), funcName, this.getClass()));
+                Stream<String> enumVals = enums.get(param.className().getName()).stream();
+
+                Optional<Object> result = Stream.of(valueObj)
+                    .filter(v -> !(v instanceof String) || !  enumVals.anyMatch(s -> s.contains(((String)v).toLowerCase())))
+                    .findAny();
+                if (result.isPresent())
+                    return OpiManager.error(String.format ("I cannot find %s in enum type %s for parameter %s in function %s in %s.", 
+                          result.get(), param.className(), param.name(), funcName, this.getClass()));
             } else if (param.className().getSimpleName().equals("Double")) {
-                double val = Double.parseDouble(nameValuePairs.get(param.name()));
-                if (val < param.min() || val > param.max())
-                    return OpiManager.error(String.format ("parameter %s in function %s in %s is %s which is out of range [%s, %s].", 
-                        param.name(), funcName, this.getClass(), val, param.min(), param.max()));
-            } else if (param.className().getSimpleName().equals("List")) {
-                List<Double> lst = gson.fromJson(nameValuePairs.get(param.name()), new TypeToken<List<Double>>() {}.getType());
-                for (Double d : lst) {
-                    double val = (double)d;
-                    if (val < param.min() || val > param.max())
-                    return OpiManager.error(String.format ("parameter %s in function %s in %s is %s which is out of range [%s, %s].", 
-                        param.name(), funcName, this.getClass(), val, param.min(), param.max()));
-                }
-            } else if (! param.className().getSimpleName().equals("String")) {
-                return OpiManager.error(String.format ("type for parameter %s in function %s in %s should be an String, Enum or Double, not %s.",
-                  param.name(), funcName, this.getClass(), param.className()));
+                Optional<Object> result = Stream.of(valueObj)
+                    .filter(v -> !(v instanceof Double) || ((Double)v).doubleValue() < param.min() || ((Double)v).doubleValue() > param.max())
+                    .findAny();
+                if (result.isPresent())
+                    return OpiManager.error(String.format ("Parameter %s in funciton %s of %s is either not a double or not in range [%s,%s].", 
+                        param.name(), funcName, this.getClass(), param.min(), param.max()));
+            } else { // assuming param is a String
+                Optional<Object> result = Stream.of(valueObj)
+                    .filter(v -> !(v instanceof String))
+                    .findAny();
+                if (result.isPresent())
+                    return OpiManager.error(String.format ("Parameter %s in funciton %s of %s should be a String.", 
+                        param.name(), funcName, this.getClass()));
             }
         }
            // (3)

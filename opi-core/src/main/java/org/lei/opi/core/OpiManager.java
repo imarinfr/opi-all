@@ -134,7 +134,7 @@ public class OpiManager extends MessageProcessor {
     public MessageProcessor.Packet process(String jsonStr) {
         HashMap<String, String> pairs;
         try {
-            pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, String>>() {}.getType());
+            pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (JsonSyntaxException e) {
             return error(BAD_JSON);
         }
