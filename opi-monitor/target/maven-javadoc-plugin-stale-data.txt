@@ -1,0 +1,54 @@
+@options
+@packages
+-classpath
+'/Users/aturpin/.m2/repository/org/openjfx/javafx-controls/18.0.2/javafx-controls-18.0.2.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-controls/18.0.2/javafx-controls-18.0.2-mac.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-graphics/18.0.2/javafx-graphics-18.0.2.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-graphics/18.0.2/javafx-graphics-18.0.2-mac.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-base/18.0.2/javafx-base-18.0.2.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-base/18.0.2/javafx-base-18.0.2-mac.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-fxml/18.0.2/javafx-fxml-18.0.2.jar:/Users/aturpin/.m2/repository/org/openjfx/javafx-fxml/18.0.2/javafx-fxml-18.0.2-mac.jar'
+-encoding
+'UTF-8'
+-protected
+-source
+'17'
+-sourcepath
+'/Users/aturpin/src/opi-all/opi-monitor/src/main/java'
+-author
+-bottom
+'Copyright &#169; 2022. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'OPI frontend 0.1.0-SNAPSHOT API'
+-use
+-version
+-windowtitle
+'OPI frontend 0.1.0-SNAPSHOT API'
+org.lei.opi.frontend
+/Users/aturpin/.m2/repository/org/openjfx/javafx-controls/18.0.2/javafx-controls-18.0.2.jar = 1662936290280
+/Users/aturpin/.m2/repository/org/openjfx/javafx-controls/18.0.2/javafx-controls-18.0.2-mac.jar = 1662936293305
+/Users/aturpin/.m2/repository/org/openjfx/javafx-graphics/18.0.2/javafx-graphics-18.0.2.jar = 1662936290453
+/Users/aturpin/.m2/repository/org/openjfx/javafx-graphics/18.0.2/javafx-graphics-18.0.2-mac.jar = 1662936294816
+/Users/aturpin/.m2/repository/org/openjfx/javafx-base/18.0.2/javafx-base-18.0.2.jar = 1662936290463
+/Users/aturpin/.m2/repository/org/openjfx/javafx-base/18.0.2/javafx-base-18.0.2-mac.jar = 1662936292290
+/Users/aturpin/.m2/repository/org/openjfx/javafx-fxml/18.0.2/javafx-fxml-18.0.2.jar = 1662936291137
+/Users/aturpin/.m2/repository/org/openjfx/javafx-fxml/18.0.2/javafx-fxml-18.0.2-mac.jar = 1662936291385
+/Users/aturpin/src/opi-all/opi-monitor/src/main/java/.DS_Store = 1662936224110
+/Users/aturpin/src/opi-all/opi-monitor/src/main/java = 1662936224110
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/tag-search-index.js = 1663039472132
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/overview-tree.html = 1663039472119
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/module-search-index.js = 1663039472130
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/index.html = 1663039472143
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/package-search-index.js = 1663039472131
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/jquery-ui.overrides.css = 1663039472161
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/index-all.html = 1663039472142
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/allpackages-index.html = 1663039472130
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/member-search-index.js = 1663039472132
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/copy.svg = 1663039472151
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/script.js = 1663039472149
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/stylesheet.css = 1663039472149
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/help-doc.html = 1663039472147
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/element-list = 1663039472095
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/allclasses-index.html = 1663039472128
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/type-search-index.js = 1663039472131
+/Users/aturpin/src/opi-all/opi-monitor/target/site/apidocs/search.js = 1663039472153
