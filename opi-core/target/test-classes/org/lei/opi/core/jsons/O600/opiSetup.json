@@ -3,6 +3,6 @@
   "bgLum": "bg_10",
 	"bgCol": "ww",
   "fixType": "center",
-	"fixLum": 20,
-  "tracking": true
+	"fixLum": "20",
+  "tracking": "true"
 }

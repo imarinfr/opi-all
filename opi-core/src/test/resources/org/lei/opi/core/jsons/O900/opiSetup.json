@@ -3,7 +3,7 @@
   "bgLum": "bg_10",
 	"bgCol": "ww",
   "fixType": "center",
-	"fixLum": 20,
+	"fixLum": "20",
   "color": "white",
-  "f310": false
+  "f310": "false"
 }

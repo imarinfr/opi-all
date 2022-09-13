@@ -19,5 +19,7 @@ public enum Implementation {
   /** PicoVR as perimeter through the jovp */
   PICOVR,
   /** Android phone as perimeter through the jovp */
-  PHONEHMD
+  PHONEHMD,
+  /** PC Display as perimeter through the jovp */
+  PC
 }

@@ -1,7 +1,7 @@
 {
   "command": "setup",
-  "bgLum": 10,
+  "bgLum": "10",
 	"bgCol": "white",
-  "fixType": 0,
-	"fixLum": 20
+  "fixType": "0",
+	"fixLum": "20"
 }

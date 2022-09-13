@@ -1,6 +1,6 @@
 {
   "command": "setup",
-  "fixType": 0,
-  "fixCx": 0,
-  "tracking": true
+  "fixType": "0",
+  "fixCx": "0",
+  "tracking": "1"
 }
