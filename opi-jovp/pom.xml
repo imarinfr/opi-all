@@ -10,8 +10,8 @@
     <version>${opi.version}</version>
   </parent>
 
-  <artifactId>opi-imo</artifactId>
-  <name>OPI IMO driver</name>
+  <artifactId>opi-jovp</artifactId>
+  <name>OPI JOVP driver</name>
   <packaging>jar</packaging>
 
 </project>
