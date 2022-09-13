@@ -112,13 +112,13 @@ abstract class OpiMachine {
           }
       }
            // (3)
-    String result;
+    MessageProcessor.Packet result;
     try {
-      result = (String)methodData.method.invoke(this, nameValuePairs);
+      result = (MessageProcessor.Packet)methodData.method.invoke(this, nameValuePairs);
     } catch(IllegalAccessException | InvocationTargetException e) {
       return OpiManager.error(String.format("cannot execute %s in %s.", funcName, this.getClass()), e);
     }
-    return OpiManager.ok(result);
+    return result;
   };
 
   /**

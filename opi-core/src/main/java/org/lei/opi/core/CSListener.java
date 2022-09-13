@@ -136,24 +136,6 @@ public class CSListener extends Thread {
 
   /**
    *
-   * Set local port. That is, close and cleanup connection,
-   * and create a new connection with a different port
-   *
-   * @param port The local port to listen to R OPI
-   *
-   * @since 0.0.1
-   */
-  public void setLocalPort(int port) {
-    close();
-    this.port = port;
-    this.start();
-    // wait for server to be ready
-    while (this.server == null)
-      Thread.onSpinWait();
-  }
-
-  /**
-   *
    * Return info about OPI as a string
    *
    * @return A string with address formatted as IP:port
