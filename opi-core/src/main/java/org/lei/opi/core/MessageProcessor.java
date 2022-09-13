@@ -5,8 +5,8 @@ public abstract class MessageProcessor {
     public static class Packet {
         public boolean close;
         public String msg;
-        Packet(boolean close, String msg) { this.close = close ; this.msg = msg; }
-        Packet(String msg) { this.close = false ; this.msg = msg; }
+        public Packet(boolean close, String msg) { this.close = close ; this.msg = msg; }
+        public Packet(String msg) { this.close = false ; this.msg = msg; }
     }
 
     /** 
