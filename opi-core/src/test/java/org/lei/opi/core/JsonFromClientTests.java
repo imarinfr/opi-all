@@ -129,7 +129,10 @@ public class JsonFromClientTests {
   public void imo() {
     String[] ps = {
         "jsons/Imo/opiPresent.json",
-        "jsons/Imo/opiPresent2.json"
+        "jsons/Imo/opiPresent2.json",
+        "jsons/Imo/opiPresent3.json",
+        "jsons/Imo/opiPresent4.json",
+        "jsons/Imo/opiPresent5.json"
     };
     String[] ss = {
         "jsons/Imo/opiSetup.json"

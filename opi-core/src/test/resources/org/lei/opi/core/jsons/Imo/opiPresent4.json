@@ -1,0 +1,11 @@
+{
+    "command": "present",
+    "eye": "BOTH",
+    "x": [10],
+    "y": [-5],
+    "t": [200],
+    "w": [],
+    "level": [0],
+    "size": [1.72],
+    "color": ["pink"]
+  }

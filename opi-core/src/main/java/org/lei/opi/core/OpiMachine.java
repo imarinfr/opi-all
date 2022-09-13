@@ -7,16 +7,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.stream.Stream;
 import java.util.Optional;
 
 import java.lang.reflect.Method;
 
 import org.reflections.Reflections;
-
-import com.google.gson.reflect.TypeToken;
-
-import com.google.gson.Gson;
 
 /**
  * The OPI standard for communication with perimeters
@@ -104,25 +101,41 @@ abstract class OpiMachine {
             if (valueObj instanceof ArrayList<?> && ((ArrayList<?>)valueObj).size() == 0)
                 return OpiManager.error(String.format ("Parameter %s is a list of length 0 in function %s in %s.", param.name(), funcName, this.getClass()));
      
-            //Predicate<Object> pDouble = v -> v.doubleValue() >= param.min() && v.doubleValue() <= param.max();
-            //Predicate<Object> pString = v -> v instanceof String;
-
             if (enums.containsKey(param.className().getName())) {
                 Stream<String> enumVals = enums.get(param.className().getName()).stream();
 
-                Optional<Object> result = Stream.of(valueObj)
-                    .filter(v -> !(v instanceof String) || !  enumVals.anyMatch(s -> s.contains(((String)v).toLowerCase())))
+                Stream<Object> s;
+                if (valueObj instanceof ArrayList)
+                    s = ((ArrayList)valueObj).stream();
+                else 
+                    s = Arrays.asList(valueObj).stream();
+
+                Optional<Object> result = s
+                    .filter(v -> !(v instanceof String) || ! enumVals.anyMatch(ss -> ss.contains(((String)v).toLowerCase())))
                     .findAny();
+
                 if (result.isPresent())
                     return OpiManager.error(String.format ("I cannot find %s in enum type %s for parameter %s in function %s in %s.", 
                           result.get(), param.className(), param.name(), funcName, this.getClass()));
             } else if (param.className().getSimpleName().equals("Double")) {
-                Optional<Object> result = Stream.of(valueObj)
-                    .filter(v -> !(v instanceof Double) || ((Double)v).doubleValue() < param.min() || ((Double)v).doubleValue() > param.max())
-                    .findAny();
-                if (result.isPresent())
-                    return OpiManager.error(String.format ("Parameter %s in funciton %s of %s is either not a double or not in range [%s,%s].", 
-                        param.name(), funcName, this.getClass(), param.min(), param.max()));
+                Stream<Double> s;
+                try {
+                    if (valueObj instanceof ArrayList)
+                        s = ((ArrayList<Double>)valueObj).stream();
+                    else 
+                        s = Arrays.asList(((Double)valueObj).doubleValue()).stream();
+
+                    Optional<Double> result = s
+                        .filter(v -> ((Double)v).doubleValue() < param.min() || ((Double)v).doubleValue() > param.max())
+                        .findAny();
+
+                    if (result.isPresent())
+                        return OpiManager.error(String.format ("Parameter %s in funciton %s of %s is either not a double or not in range [%s,%s]. It is %s.",
+                            param.name(), funcName, this.getClass(), param.min(), param.max(), result.get()));
+                } catch (ClassCastException e) {
+                    return OpiManager.error(String.format ("A parameter in %s in funciton %s of %s is not a double.",
+                        param.name(), funcName, this.getClass()));
+                }
             } else { // assuming param is a String
                 Optional<Object> result = Stream.of(valueObj)
                     .filter(v -> !(v instanceof String))
