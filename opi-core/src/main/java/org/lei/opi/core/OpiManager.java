@@ -7,6 +7,7 @@ import org.lei.opi.core.structures.Command;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 
 /**
  *
@@ -16,8 +17,6 @@ import com.google.gson.JsonSyntaxException;
  */
 public class OpiManager extends MessageProcessor {
 
-  /** listen backlog */
-  private static final int BACKLOG = 1;
   /** Constant for exception messages: {@value BAD_JSON} */
   private static final String BAD_JSON = "String is not a valid Json object.";
   /** Constant for exception messages: {@value NO_COMMAND_FIELD} */
@@ -30,8 +29,6 @@ public class OpiManager extends MessageProcessor {
   private static final String MACHINE_NEEDS_CLOSING = "Close the previous machine before choosing another.";
   /** Constant for exception messages: {@value WRONG_MACHINE_NAME} */
   private static final String WRONG_MACHINE_NAME = "Cannot create the selected machine %s in 'command:'" + Command.CHOOSE.name() + "' as it does not exist.";
-  /** Constant for exception messages: {@value WRONG_MACHINE_SUPER} */
-  private static final String WRONG_MACHINE_SUPER = "You cannot create a machine from OpiMachine. Use a subclass of OpiMachine for the choose command.";
 
   /** name:value pair in JSON output if there is an error */
   private static String ERROR_YES  = "\"error\" : 1";
@@ -122,7 +119,8 @@ public class OpiManager extends MessageProcessor {
 
     HashMap<String, String> pairs;
     try {
-      pairs = gson.fromJson(jsonStr, HashMap.class);
+      pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, String>>() {}.getType());
+
     } catch (JsonSyntaxException e) {
       return error(BAD_JSON);
     }
