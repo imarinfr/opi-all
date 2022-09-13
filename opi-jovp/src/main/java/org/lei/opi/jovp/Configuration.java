@@ -3,6 +3,7 @@ package org.lei.opi.jovp;
 import java.io.InputStream;
 import java.util.HashMap;
 
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.structures.Input;
@@ -80,7 +81,7 @@ public class Configuration {
     HashMap<String, String> pairs;
     try {
       InputStream inputStream = Configuration.class.getResourceAsStream(file);
-      pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, String>>() {}.getType());
+      //pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, String>>() {}.getType());
     } catch (Exception e) {
 
     }

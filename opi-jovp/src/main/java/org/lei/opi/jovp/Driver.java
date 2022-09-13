@@ -28,7 +28,7 @@ public class Driver {
    * @since 0.0.1
    */
   public void ready(Configuration.Impl impl) {
-    Configuration config = new Configuration();
+    Configuration config = new Configuration(impl);
     psychoEngine = new PsychoEngine(new Logic(), config.distance, config.viewMode, config.input,
                                     PARADIGM, VALIDATION_LAYERS, API_DUMP);
     psychoEngine.setWindowMonitor(config.screen);
