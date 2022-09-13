@@ -1,0 +1,8 @@
+{
+  "screen": 1,
+  "fullScreen": true,
+  "distance": 50,
+  "viewMode": "mono",
+  "input": "clicker",
+  "distorsion": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+}

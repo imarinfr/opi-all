@@ -14,4 +14,17 @@
   <name>OPI JOVP driver</name>
   <packaging>jar</packaging>
 
+  <dependencies>
+    <dependency>
+      <groupId>es.optocom.jovp</groupId>
+      <artifactId>jovp</artifactId>
+      <version>${jovp.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.lei.opi</groupId>
+      <artifactId>opi-core</artifactId>
+      <version>${opi.version}</version>
+    </dependency>
+  </dependencies>
+
 </project>

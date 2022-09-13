@@ -1,0 +1,8 @@
+{
+  "screen": 0,
+  "fullScreen": true,
+  "distance": 90,
+  "viewMode": "mono",
+  "input": "joystick",
+  "distorsion": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+}
