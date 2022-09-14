@@ -35,11 +35,11 @@ public class OpiManager extends MessageProcessor {
     }
 
     /** Constant for exception messages: {@value BAD_JSON} */
-    private static final String BAD_JSON = "String is not a valid Json object.";
+    public static final String BAD_JSON = "String is not a valid Json object.";
     /** Constant for exception messages: {@value NO_COMMAND_FIELD} */
-    private static final String NO_COMMAND_FIELD = "Json message does not contain field 'command'.";
+    public static final String NO_COMMAND_FIELD = "Json message does not contain field 'command'.";
     /** Constant for exception messages: {@value BAD_COMMAND_FIELD} {@link Command} */
-    private static final String BAD_COMMAND_FIELD = "value of 'command' name in Json message is not one of Command'.";
+    public static final String BAD_COMMAND_FIELD = "value of 'command' name in Json message is not one of Command'.";
     /** Constant for exception messages: {@value NO_CHOOSE_COMMAND} */
     private static final String NO_CHOOSE_COMMAND = "No machine selected yet. First 'command' must be " + Command.CHOOSE.name();
     /** Constant for exception messages: {@value MACHINE_NEEDS_CLOSING} */
@@ -48,7 +48,7 @@ public class OpiManager extends MessageProcessor {
     private static final String WRONG_MACHINE_NAME = "Cannot create the selected machine %s in 'command:'" + Command.CHOOSE.name() + "' as it does not exist.";
    
     /** name:value pair in JSON output if there is an error */
-    private static String ERROR_YES  = "\"error\" : 1";
+    public static String ERROR_YES  = "\"error\" : 1";
     /** name:value pair in JSON output if there is not an error */
     private static String ERROR_NO   = "\"error\" : 0";
    
