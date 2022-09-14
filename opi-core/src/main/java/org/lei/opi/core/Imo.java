@@ -39,10 +39,14 @@ public class Imo extends Jovp {
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "jovp", desc = "Any messages that the JOVP sent back.")
     public MessageProcessor.Packet initialize(HashMap<String, String> args) {
-        String jovp = super.initialize(args).msg;
-
-        setIsInitialised(true);
-        return OpiManager.ok(String.format("{jvop: %s}", jovp), false);
+        MessageProcessor.Packet jovp = super.initialize(args);
+        if (jovp.error) {
+            setIsInitialised(false);
+            return OpiManager.error(String.format("{jvop: %s}", jovp.msg));
+        } else {
+            setIsInitialised(true);
+            return OpiManager.ok(String.format("{jvop: %s}", jovp.msg), false);
+        }
     }
 
     /** opiSetBackground 
@@ -71,6 +75,9 @@ public class Imo extends Jovp {
     @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, isList = true)
     @Parameter(name = "w", desc = "List of stimuli response windows (ms).", className = Double.class, min = 0, isList = true)
     @Parameter(name = "color", desc = "List of stimuli colors.", className = Jovp.Color.class, isList = true)
+    @Parameter(name = "sx", desc = "List of diameters along major axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, optional = true)
+    @Parameter(name = "sy", desc = "List of diameters along minor axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, optional = true)
+    @Parameter(name = "rotation", desc = "List of angles of rotaion of stimuli (degrees). Only useful if sx != sy specified.", className = Double.class, min = -360, max = 360, isList = true, optional = true)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "seen", desc = "true if seen, false if not.", className = Boolean.class)
@@ -79,7 +86,7 @@ public class Imo extends Jovp {
     @ReturnMsg(name = "eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
     @ReturnMsg(name = "eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
     @ReturnMsg(name = "eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
-    @ReturnMsg(name = "jovp", desc = "Any messages that the JOVP sent back.")
+    @ReturnMsg(name = "jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
     public MessageProcessor.Packet present(HashMap<String, String> args) {
         String jovp = super.present(args).msg;
 

@@ -20,7 +20,7 @@ import org.reflections.Reflections;
  *
  * @since 0.0.1
  */
-abstract class OpiMachine {
+public abstract class OpiMachine {
     /** {@value BAD_CHOOSE} */
     static final String BAD_CHOOSE = "JSON object does not contain 'command:choose'.";
     /** {@value BAD_MACHINE} */
@@ -88,7 +88,7 @@ abstract class OpiMachine {
         // (2) 
     if (methodData.parameters != null)
         for (Parameter param : methodData.parameters.value()) {
-            if (!nameValuePairs.containsKey(param.name()))
+            if (!nameValuePairs.containsKey(param.name()) && !param.optional())
                 return OpiManager.error(String.format ("Parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
        
             Object valueObj = nameValuePairs.get(param.name());
