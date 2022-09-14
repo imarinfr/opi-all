@@ -21,57 +21,52 @@ import org.reflections.Reflections;
  * @since 0.0.1
  */
 abstract class OpiMachine {
-  /** {@value BAD_CHOOSE} */
-  static final String BAD_CHOOSE = "JSON object does not contain 'command:choose'.";
-  /** {@value BAD_MACHINE} */
-  static final String BAD_MACHINE = "JSON choos object does not contain the name 'machine'";
-  /** {@value UNKNOWN_MACHINE} */
-  static final String UNKNOWN_MACHINE = "machine:%s in JSON choose object is unknown.";
-  /** {@value BAD_MACHINE_CONSTRUCT} */
-  static final String BAD_MACHINE_CONSTRUCT = "Cannot construct machine %s in JSON choose object.\n";
+    /** {@value BAD_CHOOSE} */
+    static final String BAD_CHOOSE = "JSON object does not contain 'command:choose'.";
+    /** {@value BAD_MACHINE} */
+    static final String BAD_MACHINE = "JSON choos object does not contain the name 'machine'";
+    /** {@value UNKNOWN_MACHINE} */
+    static final String UNKNOWN_MACHINE = "machine:%s in JSON choose object is unknown.";
+    /** {@value BAD_MACHINE_CONSTRUCT} */
+    static final String BAD_MACHINE_CONSTRUCT = "Cannot construct machine %s in JSON choose object.\n";
 
-  private boolean isInitialised; 
-  public void setIsInitialised(boolean value) { this.isInitialised = value; }
-  public boolean getIsInitialised() { return this.isInitialised; }
-
-  /** IP Address of perimeter {@value IP} */
-  public static final String IP = "{type: String, default = localhost}";
-  /** TCP Port of perimeter {@value PORT} */
-  public static final String PORT = "{type: Integer, min: 1, max: Inf}";
-
+    private boolean isInitialised; 
+    public void setIsInitialised(boolean value) { this.isInitialised = value; }
+    public boolean getIsInitialised() { return this.isInitialised; }
 
     /** Class to hold information of the 5 key OPI methods ready for use. 
     * Should be set in the constructor. 
     */
-  protected class MethodData {
-    protected Method method;
-    protected Parameters parameters;   // The names expected in the JSON string that is a parameter of the 5 key OPI methods. 
-  };
-  protected HashMap<String, MethodData> opiMethods;
-  protected HashMap<String, List<String>> enums; // Enum class : enum values defined in the package.
+    protected class MethodData {
+        protected Method method;
+        protected Parameters parameters;   // The names expected in the JSON string that is a parameter of the 5 key OPI methods. 
+    };
+    protected HashMap<String, MethodData> opiMethods;
+    protected HashMap<String, List<String>> enums; // Enum class : enum values defined in the package.
 
     /** Set the information about the 5 OPI methods in opiMethods.
      * It is assumed this is called by a subclass.  
      */
-  public OpiMachine() {
-    this.isInitialised = false;
+    public OpiMachine() {
+        this.isInitialised = false;
 
-    opiMethods = new HashMap<String, MethodData>();
-    for (Method method : this.getClass().getMethods()) {
-      MethodData data = new MethodData();
-      data.method = method;
+        opiMethods = new HashMap<String, MethodData>();
+        for (Method method : this.getClass().getMethods()) {
+        MethodData data = new MethodData();
+        data.method = method;
 
-      Reflections reflections = new Reflections(this.getClass().getPackageName());
-      enums = new HashMap<String, List<String>>();
-      for (Class<? extends Enum> e : reflections.getSubTypesOf(Enum.class))
-        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());
+        //Reflections reflections = new Reflections(this.getClass().getPackageName() + ".opi-core");
+        Reflections reflections = new Reflections(this.getClass().getPackageName());
+        enums = new HashMap<String, List<String>>();
+        for (Class<? extends Enum> e : reflections.getSubTypesOf(Enum.class))
+            enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());
 
-        // key is method name, value is array of annotations on that method
-      data.parameters = method.getAnnotation(Parameters.class);
+            // key is method name, value is array of annotations on that method
+        data.parameters = method.getAnnotation(Parameters.class);
 
-      opiMethods.put(method.getName(), data);
+        opiMethods.put(method.getName(), data);
+        }
     }
-  }
 
    /** Map the 'command' to a function, check it has the right parameters, and then call it.
     *
@@ -94,23 +89,23 @@ abstract class OpiMachine {
     if (methodData.parameters != null)
         for (Parameter param : methodData.parameters.value()) {
             if (!nameValuePairs.containsKey(param.name()))
-                return OpiManager.error(String.format ("parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
+                return OpiManager.error(String.format ("Parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
        
             Object valueObj = nameValuePairs.get(param.name());
 
-            if (valueObj instanceof ArrayList<?> && ((ArrayList<?>)valueObj).size() == 0)
-                return OpiManager.error(String.format ("Parameter %s is a list of length 0 in function %s in %s.", param.name(), funcName, this.getClass()));
-     
+            if (param.isList() && (!(valueObj instanceof ArrayList) || ((ArrayList<?>)valueObj).size() == 0))
+                return OpiManager.error(String.format ("Parameter %s should be a non-empty list but is not for function %s in %s.", param.name(), funcName, this.getClass()));
+            if (!param.isList() && (valueObj instanceof ArrayList))
+                return OpiManager.error(String.format ("Parameter %s should not be a list but is not for function %s in %s.", param.name(), funcName, this.getClass()));
+
+            List<Object> pList = !param.isList() ?
+                Arrays.asList(valueObj) :
+                (List)valueObj;
+
             if (enums.containsKey(param.className().getName())) {
                 Stream<String> enumVals = enums.get(param.className().getName()).stream();
 
-                Stream<Object> s;
-                if (valueObj instanceof ArrayList)
-                    s = ((ArrayList)valueObj).stream();
-                else 
-                    s = Arrays.asList(valueObj).stream();
-
-                Optional<Object> result = s
+                Optional<Object> result = pList.stream()
                     .filter(v -> !(v instanceof String) || ! enumVals.anyMatch(ss -> ss.contains(((String)v).toLowerCase())))
                     .findAny();
 
@@ -118,15 +113,10 @@ abstract class OpiMachine {
                     return OpiManager.error(String.format ("I cannot find %s in enum type %s for parameter %s in function %s in %s.", 
                           result.get(), param.className(), param.name(), funcName, this.getClass()));
             } else if (param.className().getSimpleName().equals("Double")) {
-                Stream<Double> s;
                 try {
-                    if (valueObj instanceof ArrayList)
-                        s = ((ArrayList<Double>)valueObj).stream();
-                    else 
-                        s = Arrays.asList(((Double)valueObj).doubleValue()).stream();
-
-                    Optional<Double> result = s
-                        .filter(v -> ((Double)v).doubleValue() < param.min() || ((Double)v).doubleValue() > param.max())
+                    Optional<Double> result = pList.stream()
+                        .map((Object o) -> (Double)o)
+                        .filter((Object v) -> ((Double)v).doubleValue() < param.min() || ((Double)v).doubleValue() > param.max())
                         .findAny();
 
                     if (result.isPresent())
@@ -137,7 +127,7 @@ abstract class OpiMachine {
                         param.name(), funcName, this.getClass()));
                 }
             } else { // assuming param is a String
-                Optional<Object> result = Stream.of(valueObj)
+                Optional<Object> result = pList.stream()
                     .filter(v -> !(v instanceof String))
                     .findAny();
                 if (result.isPresent())
@@ -150,7 +140,8 @@ abstract class OpiMachine {
     try {
       result = (MessageProcessor.Packet)methodData.method.invoke(this, nameValuePairs);
     } catch(IllegalAccessException | InvocationTargetException e) {
-      return OpiManager.error(String.format("cannot execute %s in %s.", funcName, this.getClass()), e);
+      return new MessageProcessor.Packet(true, false, 
+        String.format("cannot execute %s in %s. %s", funcName, this.getClass(), e));
     }
     return result;
   };

@@ -5,8 +5,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(value = ElementType.METHOD)
 @Documented
-@Repeatable(Parameters.class)
-public @interface Parameter {
+@Repeatable(ReturnMsgs.class)
+public @interface ReturnMsg {
   String name();
   Class<?> className() default String.class;
   boolean isList() default false;

@@ -9,9 +9,9 @@ m2PATH="\
 javadoc \
     -d /Users/aturpin/src/opi-all/doc \
     --class-path $m2PATH \
-    -taglet org.lei.opi.core.ParamTaglet \
-    -tagletpath ../../../target/classes/ \
     org/lei/opi/core/*.java org/lei/opi/core/structures/*.java
+    #-taglet org.lei.opi.core.ParamTaglet \
+    #-tagletpath ../../../target/classes/ \
     #-docletpath ../../../target/classes/:$m2PATH \
     #-doclet org.lei.opi.core.DocFormatter \
 )

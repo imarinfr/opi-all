@@ -16,3 +16,4 @@ The [OPI-project] (WEBSITE) project and all its modules are COPYRIGHTED by Andre
 
 ## Future Work
 * Write a doclet to format @Parmeters Annotaion nicely.
+* Modularise OpiMachine.process() so Enum, Double and List are all handled consistently.

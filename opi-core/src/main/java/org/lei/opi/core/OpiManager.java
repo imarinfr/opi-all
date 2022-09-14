@@ -52,9 +52,10 @@ public class OpiManager extends MessageProcessor {
     /** name:value pair in JSON output if there is not an error */
     private static String ERROR_NO   = "\"error\" : 0";
    
+    /** The OpiMachine object that is instantiated when a Command.CHOOSE is recevied. */
     private OpiMachine machine;
    
-    public static Gson gson = new Gson();  // for fromJson method
+    private static Gson gson = new Gson();  // for fromJson method
 
   /**
    *
@@ -65,18 +66,7 @@ public class OpiManager extends MessageProcessor {
   public OpiManager() {
     this.machine = null;  // no opi machine chosen yet
   }
-
-   /**
-   * Create an OK message in JSON format with nothing else
-   * 
-   * @return JSON-formatted ok message
-   * 
-   * @since 0.1.0
-   */
-  public static MessageProcessor.Packet ok() {
-    return new MessageProcessor.Packet(String.format("{%s}", ERROR_NO));
-  }
-
+ 
   /**
    * Create an OK message in JSON format with attached results
    * 
@@ -86,8 +76,8 @@ public class OpiManager extends MessageProcessor {
    * 
    * @since 0.1.0
    */
-  public static MessageProcessor.Packet ok(String feedback) {
-    return new MessageProcessor.Packet(String.format("{%s, \"feedback\": %s}", ERROR_NO, feedback));
+  public static MessageProcessor.Packet ok(String feedback, boolean close) {
+    return new MessageProcessor.Packet(false, close, String.format("{%s, \"msg\": %s}", ERROR_NO, feedback));
   }
 
   /**
@@ -101,7 +91,7 @@ public class OpiManager extends MessageProcessor {
    */
   public static MessageProcessor.Packet error(String description) {
     return new MessageProcessor.Packet(
-      String.format("{%s, \"description\": \"%s\"}", ERROR_YES, description));
+      String.format("{%s, \"msg\": \"%s\"}", ERROR_YES, description));
   }
 
   /**
@@ -117,7 +107,7 @@ public class OpiManager extends MessageProcessor {
   public static MessageProcessor.Packet error(String description, Exception e) {
     System.err.println(e);
     return new MessageProcessor.Packet(
-      String.format("{%s, \"description\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, e.toString()));
+      String.format("{%s, \"msg\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, e.toString()));
   }
 
    /**
@@ -162,7 +152,7 @@ public class OpiManager extends MessageProcessor {
                 return error(String.format(WRONG_MACHINE_NAME, className), e);
             }
         
-            return ok();
+            return ok("", false);
        } else { // If it is not a CHOOSE command and there is no machine open, give up else try it out
             if (this.machine == null)
                 return error(NO_CHOOSE_COMMAND);
