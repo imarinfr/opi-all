@@ -3,7 +3,6 @@ package org.lei.opi.jovp;
 import java.util.HashMap;
 
 import org.lei.opi.core.MessageProcessor;
-import org.lei.opi.core.MessageProcessor.Packet;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;

@@ -3,6 +3,5 @@
   "fullScreen": false,
   "distance": 60,
   "viewMode": "mono",
-  "input": "keypad",
-  "distorsion": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+  "input": "keypad"
 }

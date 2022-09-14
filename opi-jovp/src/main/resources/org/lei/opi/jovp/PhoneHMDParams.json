@@ -3,6 +3,5 @@
   "fullScreen": true,
   "distance": 80,
   "viewMode": "mono",
-  "input": "clicker",
-  "distorsion": [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+  "input": "clicker"
 }
