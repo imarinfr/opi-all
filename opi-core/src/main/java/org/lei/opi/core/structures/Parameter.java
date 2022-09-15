@@ -14,4 +14,5 @@ public @interface Parameter {
   double min() default Double.MIN_VALUE;
   double max() default Double.MAX_VALUE;
   String desc();
+  String defaultvalue() default "null";   // maybe only used for generating R code?
 }

@@ -122,7 +122,7 @@ public class OpiManager extends MessageProcessor {
     * @since 0.1.0
     */
     public MessageProcessor.Packet process(String jsonStr) {
-        HashMap<String, String> pairs;
+        HashMap<String, Object> pairs;
         try {
             pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (JsonSyntaxException e) {
@@ -132,12 +132,18 @@ public class OpiManager extends MessageProcessor {
         if (!pairs.containsKey("command")) // needs a command
             return error(NO_COMMAND_FIELD);
        
+        String cmd;
+        try {
+            cmd = (String)pairs.get("command");
+        } catch (ClassCastException e) {
+            return error(BAD_COMMAND_FIELD);
+        }
           // check it is a valid command from Command.*
-        if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(pairs.get("command"))))
+        if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
             return error(BAD_COMMAND_FIELD);
        
           // If it is a CHOOSE command, then let's fire up the chosen machine (unless one already open)
-        if (pairs.get("command").equalsIgnoreCase(Command.CHOOSE.name())) {
+        if (cmd.equalsIgnoreCase(Command.CHOOSE.name())) {
             if (this.machine != null && machine.getIsInitialised())
                 return error(MACHINE_NEEDS_CLOSING);
        

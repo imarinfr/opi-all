@@ -37,6 +37,8 @@ public class ImoVifa extends Jovp {
     */
     @Parameter(name = "ip", desc = "IP Address of the perimeter.")
     @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535)
+    @Parameter(name = "ip_OPI_JOVP", desc = "IP Address of the OPI JOVP server.", defaultvalue = "localhost")
+    @Parameter(name = "port_OPI_JOVP", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
@@ -56,7 +58,7 @@ public class ImoVifa extends Jovp {
     * @return A JSON object with machine specific setup information
     */
     @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class)
-    //@Param(name = "color", desc = "Background color for eye.", className = COLOR.class)
+    @Parameter(name = "color", desc = "Background color for eye.")
     //@Param(name = "fix", desc = "Fixation className for eye.", className = FIXATION.class)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")

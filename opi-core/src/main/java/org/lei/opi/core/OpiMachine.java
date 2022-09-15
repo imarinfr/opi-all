@@ -74,7 +74,7 @@ public abstract class OpiMachine {
     * 
     * @return Json object like OpiManger.ok() or OpiManager.error()
     */
-  public MessageProcessor.Packet process(HashMap<String, String> nameValuePairs) {
+  public MessageProcessor.Packet process(HashMap<String, Object> nameValuePairs) {
         // (1) Find the function which is the value of the JSON name "command"
         // (2) Check that the params for the function are in the JSON (via the Params Annotation)
         // (3) Then execute the function.
