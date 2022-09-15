@@ -38,8 +38,8 @@ public abstract class OpiMachine {
     * Should be set in the constructor. 
     */
     protected class MethodData {
-        protected Method method;
-        protected Parameters parameters;   // The names expected in the JSON string that is a parameter of the 5 key OPI methods. 
+        Method method;
+        Parameters parameters;   // The names expected in the JSON string that is a parameter of the 5 key OPI methods. 
     };
     protected HashMap<String, MethodData> opiMethods;
     protected HashMap<String, List<String>> enums; // Enum class : enum values defined in the package.
@@ -54,6 +54,7 @@ public abstract class OpiMachine {
         for (Method method : this.getClass().getMethods()) {
         MethodData data = new MethodData();
         data.method = method;
+        data.parameters = method.getAnnotation(Parameters.class);
 
         //Reflections reflections = new Reflections(this.getClass().getPackageName() + ".opi-core");
         Reflections reflections = new Reflections(this.getClass().getPackageName());
@@ -62,7 +63,6 @@ public abstract class OpiMachine {
             enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());
 
             // key is method name, value is array of annotations on that method
-        data.parameters = method.getAnnotation(Parameters.class);
 
         opiMethods.put(method.getName(), data);
         }

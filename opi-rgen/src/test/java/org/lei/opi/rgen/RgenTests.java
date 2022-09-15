@@ -1,7 +1,7 @@
 package org.lei.opi.rgen;
 
 import org.junit.jupiter.api.Test;
-import org.lei.opi.core.Imo;
+import org.lei.opi.core.ImoVifa;
 
 /**
  *
@@ -19,7 +19,7 @@ public class RgenTests {
    */
   @Test
   public void mainTest() {
-    Main.makeR(new Imo(), System.out);
+    Main.makeR(new ImoVifa(), System.out);
   }
 
 }

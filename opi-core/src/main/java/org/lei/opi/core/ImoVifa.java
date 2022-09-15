@@ -11,8 +11,8 @@ import java.util.HashMap;
  *
  * @since 0.0.1
  */
-public class Imo extends Jovp {
-    public Imo() { 
+public class ImoVifa extends Jovp {
+    public ImoVifa() { 
         super(); 
     }
 
@@ -22,7 +22,9 @@ public class Imo extends Jovp {
     */
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "jovp", desc = "Any messages that the JOVP sent back.")
+    @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+    @ReturnMsg(name = "msg.isTracking", desc = "0 eye tracking is off, any other value it is on.", className = Double.class, min = 0)
+    @ReturnMsg(name = "msg.isCalibrated", desc = "0 eye tracking has not been calibrated, any other value it has.", className = Double.class, min = 0)
     public MessageProcessor.Packet query(HashMap<String, String> args) {
         String jovp = super.query(args).msg;
 
@@ -37,7 +39,7 @@ public class Imo extends Jovp {
     @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "jovp", desc = "Any messages that the JOVP sent back.")
+    @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
     public MessageProcessor.Packet initialize(HashMap<String, String> args) {
         MessageProcessor.Packet jovp = super.initialize(args);
         if (jovp.error) {
@@ -58,7 +60,7 @@ public class Imo extends Jovp {
     //@Param(name = "fix", desc = "Fixation className for eye.", className = FIXATION.class)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "jovp", desc = "Any messages that the JOVP sent back.")
+    @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
     public MessageProcessor.Packet setup(HashMap<String, String> args) {
         String jovp = super.setup(args).msg;
 
@@ -80,13 +82,13 @@ public class Imo extends Jovp {
     @Parameter(name = "rotation", desc = "List of angles of rotaion of stimuli (degrees). Only useful if sx != sy specified.", className = Double.class, min = -360, max = 360, isList = true, optional = true)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "seen", desc = "true if seen, false if not.", className = Boolean.class)
-    @ReturnMsg(name = "time", desc = "Response time from stimulus onset if button pressed, -1 otherwise (ms).", className = Double.class, min = -1)
-    @ReturnMsg(name = "eyex", desc = "x co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
-    @ReturnMsg(name = "eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
-    @ReturnMsg(name = "eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
-    @ReturnMsg(name = "eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
-    @ReturnMsg(name = "jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
+    @ReturnMsg(name = "msg.seen", desc = "true if seen, false if not.", className = Boolean.class)
+    @ReturnMsg(name = "msg.time", desc = "Response time from stimulus onset if button pressed, -1 otherwise (ms).", className = Double.class, min = -1)
+    @ReturnMsg(name = "msg.eyex", desc = "x co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
+    @ReturnMsg(name = "msg.eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
+    @ReturnMsg(name = "msg.eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
+    @ReturnMsg(name = "msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
+    @ReturnMsg(name = "msg.jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
     public MessageProcessor.Packet present(HashMap<String, String> args) {
         String jovp = super.present(args).msg;
 
@@ -101,7 +103,7 @@ public class Imo extends Jovp {
     */
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "jovp", desc = "Any messages that the JOVP sent back.")
+    @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
     public MessageProcessor.Packet close(HashMap<String, String> args) {
         String jovp = super.close(args).msg;
 

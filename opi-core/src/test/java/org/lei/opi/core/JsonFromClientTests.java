@@ -126,19 +126,19 @@ public class JsonFromClientTests {
    * @since 0.0.1
    */
   @Test
-  public void imo() {
-    String[] ps = {
-        "jsons/Imo/opiPresent.json",
-        "jsons/Imo/opiPresent2.json",
-        "jsons/Imo/opiPresent3.json",
-        "jsons/Imo/opiPresent4.json",
-        "jsons/Imo/opiPresent5.json"
-    };
+  public void driveImoVifa() {
     String[] ss = {
-        "jsons/Imo/opiSetup.json"
+        "jsons/ImoVifa/opiSetup.json"
     };
-    serverDriver("jsons/Imo/opiChoose.json",
-        "jsons/Imo/opiInit.json",
+    String[] ps = {
+        "jsons/ImoVifa/opiPresent.json",
+        "jsons/ImoVifa/opiPresent2.json",
+        "jsons/ImoVifa/opiPresent3.json",
+        "jsons/ImoVifa/opiPresent4.json",
+        "jsons/ImoVifa/opiPresent5.json"
+    };
+    serverDriver("jsons/ImoVifa/opiChoose.json",
+        "jsons/ImoVifa/opiInit.json",
         ss, 
         ps);
   }

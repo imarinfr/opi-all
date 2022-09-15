@@ -2,13 +2,13 @@ package org.lei.opi.rgen;
 
 import java.io.PrintStream;
 
-import org.lei.opi.core.Imo;
+import org.lei.opi.core.ImoVifa;
 import org.lei.opi.core.OpiMachine;
 
 public class Main {
 
-    static final String header = """
-#' Open Perimetry Interface implementation for imoVifa
+    static final String makeHeader(String machineName) { return String.format("""
+#' Open Perimetry Interface implementation for %s
 #' 
 #' Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
 #' 
@@ -23,16 +23,15 @@ public class Main {
 #' WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #' See the License for the specific language governing permissions and
 #' limitations under the License.
-""";
+""", machineName);
+    }
 
     static final OpiFunction[] functions = { 
-        new OpiFunction("imo.opiInitialise", "initialize", new String[] {}, "list(err = %s)"),
-        new OpiFunction("imo.opiPresent.opiStaticStimulus",   "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s"),
-        new OpiFunction("imo.opiPresent.opiKineticStimulus",  "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s"),
-        new OpiFunction("imo.opiPresent.opiTemporalStimulus", "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s"),
-        new OpiFunction("imo.opiSetBackground", "setup", new String[] {"lum", "color"}, "%s"),
-        new OpiFunction("imo.opiClose", "close", new String[] {}, "%s"),
-        new OpiFunction("imo.opiQueryDevice", "query", new String[] {}, "list(%s)")
+        new OpiFunction("opiInitialise_for_ImoVifa", "initialize", new String[] {}, "list(err = %s)"),
+        new OpiFunction("opiPresent_for_ImoVifa",   "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s"),
+        new OpiFunction("opiSetup_for_ImoVifa", "setup", new String[] {}, "%s"),
+        new OpiFunction("opiClose_for_ImoVifa", "close", new String[] {}, "%s"),
+        new OpiFunction("opiQueryDevice_for_ImoVifa", "query", new String[] {}, "list(%s)")
     };
 
     /**
@@ -42,18 +41,23 @@ public class Main {
      * @param machine An {@link OpiMachine} object that will be the basis for the R code.
      */
     static void makeR(OpiMachine machine, PrintStream writer) {
-        writer.println(Main.header);
+        writer.println(Main.makeHeader(machine.getClass().getSimpleName()));
+
+        for (OpiFunction f : Main.functions) 
+            f.generateR(machine, writer);
 
         writer.println("""
-            imo.opiPresent <- function(stim, nextStim=NULL) { UseMethod("imo.opiPresent") }
-            setGeneric("imo.opiPresent")
-            """);
 
-        //for (OpiFunction f : Main.functions) 
-            //f.generateR(writer);
+#' Set background color and luminance in both eyes. 
+#' Deprecated for ImoVifa and replaced with [opiSetup()].
+#' @usage NULL
+#' @seealso [opiSetup()]
+opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
+
+        """);
     } 
   
     public static void main(String args[]) {
-        makeR(new Imo(), System.out);
+        makeR(new ImoVifa(), System.out);
     }
 }
