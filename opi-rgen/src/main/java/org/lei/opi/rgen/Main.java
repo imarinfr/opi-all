@@ -71,11 +71,11 @@ env.%s <- vector("list")    # environment for this machine in R
 
 
     static final OpiFunction[] functions = { 
-        new OpiFunction("opiInitialise_for_ImoVifa", "initialize", new String[] {}, "list(err = %s)", true),
-        new OpiFunction("opiPresent_for_ImoVifa",   "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s", false),
-        new OpiFunction("opiSetup_for_ImoVifa", "setup", new String[] {}, "%s", false),
-        new OpiFunction("opiClose_for_ImoVifa", "close", new String[] {}, "%s", false),
-        new OpiFunction("opiQueryDevice_for_ImoVifa", "query", new String[] {}, "list(%s)", false)
+        new OpiFunction("opiInitialise", "initialize", new String[] {}, "list(err = %s)", true),
+        new OpiFunction("opiPresent",   "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s", false),
+        new OpiFunction("opiSetup", "setup", new String[] {"settings"}, "%s", false),
+        new OpiFunction("opiClose", "close", new String[] {}, "%s", false),
+        new OpiFunction("opiQueryDevice", "query", new String[] {}, "list(%s)", false)
     };
 
     /**

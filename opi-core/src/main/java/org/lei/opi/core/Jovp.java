@@ -15,12 +15,12 @@ public class Jovp extends OpiMachine {
   /* (non-Javadoc)
   * @see org.lei.opi.core.OpiMachine#query()
   */
-  public MessageProcessor.Packet query(HashMap<String, String> args) {
+  public MessageProcessor.Packet query() {
     // any generic JOVP query stuff here
     return new MessageProcessor.Packet("null");
   }
 
-  public MessageProcessor.Packet initialize(HashMap<String, String> args) {
+  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     // any generic JOVP initialise stuff here
     return new MessageProcessor.Packet("null");
   }
@@ -28,7 +28,7 @@ public class Jovp extends OpiMachine {
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#setup()
    */
-  public MessageProcessor.Packet setup(HashMap<String, String> args) {
+  public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     // any generic JOVP setup stuff here
     return new MessageProcessor.Packet("null");
   }
@@ -36,7 +36,7 @@ public class Jovp extends OpiMachine {
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#present()
    */
-  public MessageProcessor.Packet present(HashMap<String, String> args) {
+  public MessageProcessor.Packet present(HashMap<String, Object> args) {
     // any generic JOVP present stuff here
     return new MessageProcessor.Packet("null");
   }
@@ -44,7 +44,7 @@ public class Jovp extends OpiMachine {
   /* (non-Javadoc)
    * @see org.lei.opi.core.OpiMachine#close()
    */
-  public MessageProcessor.Packet close(HashMap<String, String> args) {
+  public MessageProcessor.Packet close() {
     // any generic JOVP close stuff here
     return new MessageProcessor.Packet("null");
   }

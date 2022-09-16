@@ -4,7 +4,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import java.lang.reflect.Method;
-import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
@@ -32,6 +31,51 @@ public record OpiFunction(
     static final String parameterForIp = "ip_OPI_JOVP";
         /** This is the parameter name for the port on which OPI R should create socket */
     static final String parameterForPort = "port_OPI_JOVP";
+
+    /**
+     * Roxygen2 comments at the header of the function.
+     */
+    String makeDoc(String machineName, MethodData mData) {
+        String params = Stream.of(mData.parameters)
+            .map((Parameter p) -> String.format("#' @param %s %s\n",p.name(), p.desc()))
+            .collect(Collectors.joining(""));
+
+        String callingExample = Stream.of(mData.parameters)
+            .filter((Parameter p) -> !p.optional())
+            .map((Parameter p) -> p.className().getSimpleName().equals("Double") || p.isList() ? 
+                String.format("%s = %s", p.name(), p.defaultValue()) :
+                String.format("%s = \"%s\"", p.name(), p.defaultValue()))
+            .collect(Collectors.joining(", "));
+
+        String rets = "#' @return a list contianing:\n" + 
+            Stream.of(mData.returnMsgs)
+            .map((ReturnMsg r) -> String.format("#'  * %s %s\n",r.name().replaceAll("\\.", "\\$"), r.desc()))
+            .collect(Collectors.joining(""));
+
+        return String.format("""
+#' Implementation of %s for the %s machine.
+#'
+#' This is for internal use only. Use [%s()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+%s%s#'
+#' @examples
+#' chooseOpi("%s")
+#' result <- %s(%s)
+#'
+#' @seealso [%s()]
+    """,
+    this.opiName, machineName, // title
+    this.opiName,
+    params, rets,
+    machineName,    // chooseOpi
+    this.opiName, 
+    this.opiInputFields.length == 1 ? String.format("%s = list(%s)", this.opiInputFields[0], callingExample) : callingExample,
+    this.opiName   // seealso
+        );
+    }
 
     /**
      * R code to generate a JSON msg of list of params and values
@@ -68,8 +112,6 @@ public record OpiFunction(
     *
     * @param machine {@link OpiMachine} for which to gerneate R code.
     * @param writer {@link PrintWriter} to which to write output.
-    *
-    * @throws NoSuchElementException If this.opiCoreName is not found as a method in machine
     */
     public void generateR(OpiMachine machine, PrintStream writer) {
             // 1 Get Parameter and ResultMsg annotations for Method this.opiCoreName in machine
@@ -94,7 +136,7 @@ public record OpiFunction(
             return;
         }
 
-        //Stream.of(mData.parameters).map((Parameter p) -> p.name()).forEach(System.out::println);
+        //Stream.of(mData.parameters).map((Parameter p) -> p.className().getSimpleName()).forEach(System.out::println);
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 
             // (2) make the function header
@@ -108,10 +150,7 @@ public record OpiFunction(
         } else
             System.err.println("PANIC: I don't know what to do with more than one opiInputFields.");
 
-        String funcSignature = String.format("%s <- function(%s)", this.opiName, params);
-        String paramDocumentation = Stream.of(mData.parameters)
-            .map((Parameter p) -> String.format("\n#' @param %s %s",p.name(), p.desc()))
-            .collect(Collectors.joining(""));
+        String funcSignature = String.format("%s_for_%s <- function(%s)", this.opiName, machineName, params);
 
             // (2) Make the first part of function body which 
             //     - either opens socket or uses existing socket
@@ -121,22 +160,17 @@ public record OpiFunction(
         if (createSocket) {
             socketCode = String.format("    %s$socket <<- open_socket(%s, %s)", envName, parameterForIp, parameterForPort);
             if (!Stream.of(mData.parameters).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
-                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter ip.", this.opiName));
+                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
             if (!Stream.of(mData.parameters).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
-                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter port.", this.opiName));
+                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
         }
 
             // (3) make the second part of function body which 
             //    - gets back JSON msg from socket
             //    - returns it as returnMsg format
         // something here about returnmsg???
-        String retDocumentation = "\n#' @return a list contianing:" + 
-            Stream.of(mData.returnMsgs)
-            .map((ReturnMsg r) -> String.format("\n#' * %s %s",r.name(), r.desc()))
-            .collect(Collectors.joining(""));
 
-        writer.print(paramDocumentation);
-        writer.println(retDocumentation);
+        writer.print(makeDoc(machineName, mData));
         writer.println(funcSignature);
         writer.print("{");
         writer.println(socketCode);

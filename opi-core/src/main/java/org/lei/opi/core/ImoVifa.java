@@ -25,8 +25,8 @@ public class ImoVifa extends Jovp {
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
     @ReturnMsg(name = "msg.isTracking", desc = "0 eye tracking is off, any other value it is on.", className = Double.class, min = 0)
     @ReturnMsg(name = "msg.isCalibrated", desc = "0 eye tracking has not been calibrated, any other value it has.", className = Double.class, min = 0)
-    public MessageProcessor.Packet query(HashMap<String, String> args) {
-        String jovp = super.query(args).msg;
+    public MessageProcessor.Packet query() {
+        String jovp = super.query().msg;
 
         return OpiManager.ok(String.format("{\"result\": \"Imo Queried\", \"jovp\": %s}", jovp), false);
     }
@@ -35,14 +35,14 @@ public class ImoVifa extends Jovp {
      * @param args A map of name:value pairs for Params.
     * @return A JSON object with machine specific initialise information
     */
-    @Parameter(name = "ip", desc = "IP Address of the perimeter.")
-    @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535)
-    @Parameter(name = "ip_OPI_JOVP", desc = "IP Address of the OPI JOVP server.", defaultvalue = "localhost")
-    @Parameter(name = "port_OPI_JOVP", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535)
+    @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
+    @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
+    @Parameter(name = "ip_OPI_JOVP", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
+    @Parameter(name = "port_OPI_JOVP", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-    public MessageProcessor.Packet initialize(HashMap<String, String> args) {
+    public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
         MessageProcessor.Packet jovp = super.initialize(args);
         if (jovp.error) {
             setIsInitialised(false);
@@ -57,13 +57,13 @@ public class ImoVifa extends Jovp {
      * @param args A map of name:value pairs for Params.
     * @return A JSON object with machine specific setup information
     */
-    @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class)
-    @Parameter(name = "color", desc = "Background color for eye.")
+    @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
+    @Parameter(name = "color", desc = "Background color for eye.", defaultValue = "white")
     //@Param(name = "fix", desc = "Fixation className for eye.", className = FIXATION.class)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-    public MessageProcessor.Packet setup(HashMap<String, String> args) {
+    public MessageProcessor.Packet setup(HashMap<String, Object> args) {
         String jovp = super.setup(args).msg;
 
         return OpiManager.ok(String.format("{jvop: %s}", jovp), false);
@@ -73,14 +73,15 @@ public class ImoVifa extends Jovp {
      * @param args A map of name:value pairs for Params.
     * @return A JSON object with machine specific presentation information
     */
-    @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class)
-    @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80, isList = true)
-    @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80, isList = true)
-    @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, isList = true)
-    @Parameter(name = "w", desc = "List of stimuli response windows (ms).", className = Double.class, min = 0, isList = true)
-    @Parameter(name = "color", desc = "List of stimuli colors.", className = Jovp.Color.class, isList = true)
-    @Parameter(name = "sx", desc = "List of diameters along major axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, optional = true)
-    @Parameter(name = "sy", desc = "List of diameters along minor axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, optional = true)
+    @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class, defaultValue = "left")
+    @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80, isList = true, defaultValue = "list(0)")
+    @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80, isList = true, defaultValue = "list(0)")
+    @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, isList = true, defaultValue = "list(200)")
+    @Parameter(name = "w", desc = "List of stimuli response windows (ms).", className = Double.class, min = 0, isList = true, defaultValue = "list(1500)")
+    @Parameter(name = "lum", desc = "List of stimuli luminances (cd/m^2).", className = Double.class, isList = true, min = 0, max = 3183.099, defaultValue = "list(20)")
+    @Parameter(name = "color", desc = "List of stimuli colors.", className = Jovp.Color.class, isList = true, defaultValue = "list('white')")
+    @Parameter(name = "sx", desc = "List of diameters along major axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, defaultValue = "list(1.72)")
+    @Parameter(name = "sy", desc = "List of diameters along minor axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, defaultValue = "list(1.72)")
     @Parameter(name = "rotation", desc = "List of angles of rotaion of stimuli (degrees). Only useful if sx != sy specified.", className = Double.class, min = -360, max = 360, isList = true, optional = true)
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
@@ -91,7 +92,7 @@ public class ImoVifa extends Jovp {
     @ReturnMsg(name = "msg.eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
     @ReturnMsg(name = "msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
     @ReturnMsg(name = "msg.jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
-    public MessageProcessor.Packet present(HashMap<String, String> args) {
+    public MessageProcessor.Packet present(HashMap<String, Object> args) {
         String jovp = super.present(args).msg;
 
         return OpiManager.ok(
@@ -106,8 +107,8 @@ public class ImoVifa extends Jovp {
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-    public MessageProcessor.Packet close(HashMap<String, String> args) {
-        String jovp = super.close(args).msg;
+    public MessageProcessor.Packet close(HashMap<String, Object> args) {
+        String jovp = super.close().msg;
 
         setIsInitialised(false);
 

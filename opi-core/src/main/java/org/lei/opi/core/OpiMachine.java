@@ -90,6 +90,9 @@ public abstract class OpiMachine {
         for (Parameter param : methodData.parameters.value()) {
             if (!nameValuePairs.containsKey(param.name()) && !param.optional())
                 return OpiManager.error(String.format ("Parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
+
+            if (!nameValuePairs.containsKey(param.name()) && param.optional())
+                continue;
        
             Object valueObj = nameValuePairs.get(param.name());
 
@@ -98,9 +101,7 @@ public abstract class OpiMachine {
             if (!param.isList() && (valueObj instanceof ArrayList))
                 return OpiManager.error(String.format ("Parameter %s should not be a list but is not for function %s in %s.", param.name(), funcName, this.getClass()));
 
-            List<Object> pList = !param.isList() ?
-                Arrays.asList(valueObj) :
-                (List)valueObj;
+            List<Object> pList = !param.isList() ?  Arrays.asList(valueObj) : (List)valueObj;
 
             if (enums.containsKey(param.className().getName())) {
                 Stream<String> enumVals = enums.get(param.className().getName()).stream();
@@ -120,10 +121,10 @@ public abstract class OpiMachine {
                         .findAny();
 
                     if (result.isPresent())
-                        return OpiManager.error(String.format ("Parameter %s in funciton %s of %s is either not a double or not in range [%s,%s]. It is %s.",
+                        return OpiManager.error(String.format ("Parameter %s in function %s of %s is either not a double or not in range [%s,%s]. It is %s.",
                             param.name(), funcName, this.getClass(), param.min(), param.max(), result.get()));
                 } catch (ClassCastException e) {
-                    return OpiManager.error(String.format ("A parameter in %s in funciton %s of %s is not a double.",
+                    return OpiManager.error(String.format ("A parameter in %s in function %s of %s is not a double.",
                         param.name(), funcName, this.getClass()));
                 }
             } else { // assuming param is a String
@@ -131,14 +132,16 @@ public abstract class OpiMachine {
                     .filter(v -> !(v instanceof String))
                     .findAny();
                 if (result.isPresent())
-                    return OpiManager.error(String.format ("Parameter %s in funciton %s of %s should be a String.", 
+                    return OpiManager.error(String.format ("Parameter %s in function %s of %s should be a String.", 
                         param.name(), funcName, this.getClass()));
             }
         }
            // (3)
     MessageProcessor.Packet result;
     try {
-      result = (MessageProcessor.Packet)methodData.method.invoke(this, nameValuePairs);
+      result = methodData.parameters == null ? 
+        (MessageProcessor.Packet)methodData.method.invoke(this) :
+        (MessageProcessor.Packet)methodData.method.invoke(this, nameValuePairs);
     } catch(IllegalAccessException | InvocationTargetException e) {
       return new MessageProcessor.Packet(true, false, 
         String.format("cannot execute %s in %s. %s", funcName, this.getClass(), e));
@@ -155,7 +158,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet query(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet query();
 
   /**
    * Initialize the OPI on the corresponding machine
@@ -167,8 +170,8 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet initialize(HashMap<String, String> args);
-  public MessageProcessor.Packet initialise(HashMap<String, String> args) { return this.initialize(args);}
+  public abstract MessageProcessor.Packet initialize(HashMap<String, Object> args);
+  public MessageProcessor.Packet initialise(HashMap<String, Object> args) { return this.initialize(args);}
 
   /**
    * Change device background and overall settings
@@ -179,7 +182,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet setup(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet setup(HashMap<String, Object> args);
 
   /**
    * Present OPI stimulus in perimeter
@@ -190,7 +193,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet present(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet present(HashMap<String, Object> args);
 
   /**
    * Close OPI connection
@@ -202,5 +205,5 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet close(HashMap<String, String> args);
+  public abstract MessageProcessor.Packet close();
 }
