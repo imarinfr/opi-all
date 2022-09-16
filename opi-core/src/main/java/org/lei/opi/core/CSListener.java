@@ -27,11 +27,12 @@ public class CSListener extends Thread {
   private static final int BACKLOG = 1;
 
   /** Connection address */
-  protected InetAddress address;
+  private InetAddress address;
   /** Connection port */
-  protected int port;
-
+  private int port;
+  /** Socket server */
   private ServerSocket server;
+  /** Whether it is listening or not */
   private boolean listen = true;
 
   private MessageProcessor msgProcessor;
@@ -134,8 +135,7 @@ public class CSListener extends Thread {
   }
 
   /**
-   *
-   * Return info about OPI as a string
+   * Info about OPI as a string
    *
    * @return A string with address formatted as IP:port
    *
@@ -143,6 +143,28 @@ public class CSListener extends Thread {
    */
   public String toString() {
     return "Local socket connection at " + address.toString() + ":" + port;
+  }
+
+  /**
+   * Get local address
+   *
+   * @return the local address
+   *
+   * @since 0.0.1
+   */
+  public InetAddress getAddress() {
+    return address;
+  }
+
+  /**
+   * Get local address
+   *
+   * @return the listener port
+   *
+   * @since 0.0.1
+   */
+  public int getPort() {
+    return port;
   }
 
   /** get network address for public access */

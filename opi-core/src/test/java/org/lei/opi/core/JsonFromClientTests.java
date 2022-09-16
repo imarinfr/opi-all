@@ -37,7 +37,7 @@ public class JsonFromClientTests {
     /** init OpiManager and connect to it to server */
     Client() throws IOException {
       opi = new CSListener(PORT, new OpiManager());
-      client = new Socket(opi.address, opi.port);
+      client = new Socket(opi.getAddress(), opi.getPort());
       incoming = new BufferedReader(new InputStreamReader(client.getInputStream()));
       outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
     }
