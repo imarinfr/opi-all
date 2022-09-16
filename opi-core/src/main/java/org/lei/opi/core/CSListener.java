@@ -62,8 +62,7 @@ public class CSListener extends Thread {
             if (incoming.ready()) {
               MessageProcessor.Packet pack = msgProcessor.process(receive(incoming));
               send(outgoing, pack.msg);
-              if (pack.close) 
-                break;
+              if (pack.close) break; // if close requested, break loop
             }
           }
           break;

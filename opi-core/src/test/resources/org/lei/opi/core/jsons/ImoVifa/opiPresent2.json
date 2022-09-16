@@ -1,6 +1,7 @@
 {
   "command": "present",
-  "eye": "BOTH",
+  "eye": ["both"],
+  "type": ["circle"],
   "x": ["1000000"],
   "y": ["-5"],
   "t": ["200"],

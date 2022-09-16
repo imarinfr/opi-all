@@ -10,6 +10,6 @@
   "fixCy": 0,
   "fixSx": 1,
   "fixSy": 1,
-  "fixTheta": 45,
+  "fixRotation": 45,
   "tracking": 1
 }

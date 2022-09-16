@@ -1,9 +1,8 @@
 {
   "command": "setup",
   "bgLum": "bg_10",
-	"bgCol": "ww",
+	"bgCol": "yellow",
   "fixType": "center",
 	"fixLum": "20",
-  "color": "white",
   "f310": "false"
 }

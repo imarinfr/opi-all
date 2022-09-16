@@ -101,13 +101,14 @@ public abstract class OpiMachine {
             if (!param.isList() && (valueObj instanceof ArrayList))
                 return OpiManager.error(String.format ("Parameter %s should not be a list but is not for function %s in %s.", param.name(), funcName, this.getClass()));
 
-            List<Object> pList = !param.isList() ?  Arrays.asList(valueObj) : (List)valueObj;
+            List<Object> pList = !param.isList() ?  Arrays.asList(valueObj) : (List) valueObj;
 
             if (enums.containsKey(param.className().getName())) {
-                Stream<String> enumVals = enums.get(param.className().getName()).stream();
+                List<String> enumVals = enums.get(param.className().getName());
+                System.out.println(param.name());
 
                 Optional<Object> result = pList.stream()
-                    .filter(v -> !(v instanceof String) || ! enumVals.anyMatch(ss -> ss.contains(((String)v).toLowerCase())))
+                    .filter(p -> !(p instanceof String) || ! enumVals.stream().anyMatch(ss -> ss.contains(((String)p).toLowerCase())))
                     .findAny();
 
                 if (result.isPresent())
@@ -150,58 +151,64 @@ public abstract class OpiMachine {
   };
 
   /**
-   * Query the settings and capabilities of the perimetry device
+   * opiQuery: Query device
    * 
-   * @param args pairs of argument name and value
-   *
-   * @return A JSON-structured string with machine specific query information
+   * @return settings and state machine state
    *
    * @since 0.0.1
    */
   public abstract MessageProcessor.Packet query();
 
   /**
-   * Initialize the OPI on the corresponding machine
+   * opiInitialise: initialize OPI
    * 
-   * @param args pairs of argument name and value
-   *
-   * @return A JSON-structured string with machine specific initialization feedback. 
-   *         If successful should set isInitialised to true
-   *
+   * @param args A map of name:value pairs for Params
+   * 
+   * @return A JSON object with machine specific initialise information
+   * 
    * @since 0.0.1
    */
   public abstract MessageProcessor.Packet initialize(HashMap<String, Object> args);
+
+  /**
+   * opiInitialise: initialize OPI
+   * 
+   * @param args A map of name:value pairs for Params
+   * 
+   * @return A JSON object with return messages
+   * 
+   * @since 0.0.1
+   */
   public MessageProcessor.Packet initialise(HashMap<String, Object> args) { return this.initialize(args);}
 
   /**
-   * Change device background and overall settings
+   * opiSetup: Change device background and overall settings
    * 
    * @param args pairs of argument name and value
    * 
-   * @return A JSON-structured string with machine specific setup feedback
+   * @return A JSON object with return messages
    *
    * @since 0.0.1
    */
   public abstract MessageProcessor.Packet setup(HashMap<String, Object> args);
 
   /**
-   * Present OPI stimulus in perimeter
+   * opiPresent: Present OPI stimulus in perimeter
    * 
    * @param args pairs of argument name and value
    * 
-   * @return A JSON-structured string with machine specific presentation feedback
+   * @return A JSON object with return messages
    *
    * @since 0.0.1
    */
   public abstract MessageProcessor.Packet present(HashMap<String, Object> args);
 
   /**
-   * Close OPI connection
+   * opiClose: Close OPI connection
    * 
    * @param args pairs of argument name and value
    *
-   * @return A JSON-structured string with machine specific closing feedback
-   *         If successful should set isInitialised to false.
+   * @return A JSON object with return messages
    *
    * @since 0.0.1
    */

@@ -1,8 +1,8 @@
 {
   "command": "setup",
-  "bgLum": "bg_10",
-	"bgCol": "ww",
+  "bgLum": 10,
   "fixType": "center",
-	"fixLum": "20",
+	"fixLum": 20,
+  "fixCol": "white",
   "tracking": "true"
 }

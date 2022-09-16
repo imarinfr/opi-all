@@ -1,6 +1,7 @@
 {
     "command": "present",
-    "eye": "BOTH",
+    "eye": ["right"],
+    "type": ["circle"],
     "x": [10],
     "y": [-5],
     "t": [200],

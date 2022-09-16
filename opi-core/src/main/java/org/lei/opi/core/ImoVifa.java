@@ -2,7 +2,6 @@ package org.lei.opi.core;
 
 import org.lei.opi.core.structures.Parameter;
 import org.lei.opi.core.structures.ReturnMsg;
-import org.lei.opi.core.structures.Eye;
 
 import java.util.HashMap;
 
@@ -12,14 +11,23 @@ import java.util.HashMap;
  * @since 0.0.1
  */
 public class ImoVifa extends Jovp {
+
+    /**
+     * ImoVifa constructor
+     *
+     * @since 0.0.1
+     */
     public ImoVifa() { 
         super(); 
     }
 
-    /** opiQuery
-     * @param args A map of name:value pairs for Params.
-    * @return A JSON object with machine specific query information
-    */
+  /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
@@ -31,10 +39,15 @@ public class ImoVifa extends Jovp {
         return OpiManager.ok(String.format("{\"result\": \"Imo Queried\", \"jovp\": %s}", jovp), false);
     }
 
-    /** opiInitialise
-     * @param args A map of name:value pairs for Params.
-    * @return A JSON object with machine specific initialise information
-    */
+  /**
+   * opiInitialise: initialize OPI
+   * 
+   * @param args A map of name:value pairs for Params
+   * 
+   * @return A JSON object with return messages
+   * 
+   * @since 0.0.1
+   */
     @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
     @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
     @Parameter(name = "ip_OPI_JOVP", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
@@ -53,14 +66,28 @@ public class ImoVifa extends Jovp {
         }
     }
 
-    /** opiSetBackground 
-     * @param args A map of name:value pairs for Params.
-    * @return A JSON object with machine specific setup information
-    */
-    @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
-    @Parameter(name = "color", desc = "Background color for eye.", defaultValue = "white")
-    //@Param(name = "fix", desc = "Fixation className for eye.", className = FIXATION.class)
-    @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
+  /**
+   * opiSetup: Change device background and overall settings
+   * 
+   * @param args pairs of argument name and value
+   * 
+   * @return A JSON object with return messages
+   *
+   * @since 0.0.1
+   */
+    @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "both")
+    @Parameter(name = "bgLum", desc = "Background luminance for eye.", className = Double.class, defaultValue = "10", min = 0, max = 3183.099)
+    @Parameter(name = "bgCol", desc = "Background color for eye.", className = Color.class, defaultValue = "white")
+    @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = ShapeType.class, defaultValue = "maltese")
+    @Parameter(name = "fixLum", desc = "Fixation target luminance for eye.", className = Double.class, defaultValue = "20", min = 0, max = 3183.099)
+    @Parameter(name = "fixCol", desc = "Fixation target color for eye.", className = Color.class, defaultValue = "green")
+    @Parameter(name = "fixCx", desc = "x-coordinate of fixation target (degrees).", className = Double.class, min = -90, max = 90, defaultValue = "0")
+    @Parameter(name = "fixCy", desc = "y-coordinate of fixation target (degrees).", className = Double.class, min = -90, max = 90, defaultValue = "0")
+    @Parameter(name = "fixSx", desc = "diameter along major axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, defaultValue = "1")
+    @Parameter(name = "fixSy", desc = "diameter along minor axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, defaultValue = "1")
+    @Parameter(name = "fixRotation", desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", className = Double.class, min = 0, max = 360, defaultValue = "0")
+    @Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
+    @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from ImoVifa.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
     public MessageProcessor.Packet setup(HashMap<String, Object> args) {
@@ -69,21 +96,27 @@ public class ImoVifa extends Jovp {
         return OpiManager.ok(String.format("{jvop: %s}", jovp), false);
     }
 
-    /** opiPresent 
-     * @param args A map of name:value pairs for Params.
-    * @return A JSON object with machine specific presentation information
-    */
-    @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class, defaultValue = "left")
-    @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80, isList = true, defaultValue = "list(0)")
-    @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -80, max = 80, isList = true, defaultValue = "list(0)")
+  /**
+   * opiPresent: Present OPI stimulus in perimeter
+   * 
+   * @param args pairs of argument name and value
+   * 
+   * @return A JSON object with return messages
+   *
+   * @since 0.0.1
+   */
+    @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class, isList = true, defaultValue = "list('left')")
+    @Parameter(name = "type" , desc = "Stimulus type.", className = ShapeType.class, isList = true, defaultValue = "list('circle')")
+    @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -90, max = 90, isList = true, defaultValue = "list(0)")
+    @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -90, max = 90, isList = true, defaultValue = "list(0)")
     @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, isList = true, defaultValue = "list(200)")
     @Parameter(name = "w", desc = "List of stimuli response windows (ms).", className = Double.class, min = 0, isList = true, defaultValue = "list(1500)")
     @Parameter(name = "lum", desc = "List of stimuli luminances (cd/m^2).", className = Double.class, isList = true, min = 0, max = 3183.099, defaultValue = "list(20)")
-    @Parameter(name = "color", desc = "List of stimuli colors.", className = Jovp.Color.class, isList = true, defaultValue = "list('white')")
+    @Parameter(name = "color", desc = "List of stimuli colors.", className = Color.class, isList = true, defaultValue = "list('white')")
     @Parameter(name = "sx", desc = "List of diameters along major axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, defaultValue = "list(1.72)")
     @Parameter(name = "sy", desc = "List of diameters along minor axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, defaultValue = "list(1.72)")
     @Parameter(name = "rotation", desc = "List of angles of rotaion of stimuli (degrees). Only useful if sx != sy specified.", className = Double.class, min = -360, max = 360, isList = true, optional = true)
-    @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
+    @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from ImoVifa.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.seen", desc = "true if seen, false if not.", className = Boolean.class)
     @ReturnMsg(name = "msg.time", desc = "Response time from stimulus onset if button pressed, -1 otherwise (ms).", className = Double.class, min = -1)
@@ -100,10 +133,15 @@ public class ImoVifa extends Jovp {
                 args.get("x"), args.get("y"), args.get("eye"), jovp), false);
     }
 
-    /** opiClose 
-     * @param args A map of name:value pairs for Params.
-    * @return A JSON object with machine specific query information
-    */
+  /**
+   * opiClose: Close OPI connection
+   * 
+   * @param args pairs of argument name and value
+   *
+   * @return A JSON object with return messages
+   *
+   * @since 0.0.1
+   */
     @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
     @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
@@ -114,4 +152,5 @@ public class ImoVifa extends Jovp {
 
         return OpiManager.ok(String.format("{jvop: %s}", jovp), true);
     }
+
 }
