@@ -2,6 +2,6 @@
   "command": "initialize",
   "ip": "127.0.0.1",
   "port": "50008",
-  "ip_OPI_JOVP": "127.0.0.1",
-  "port_OPI_JOVP": 50001
+  "ip_Monitor": "127.0.0.1",
+  "port_Monitor": 50001
 }

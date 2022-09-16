@@ -46,8 +46,8 @@ public class Compass extends OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
   @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
-  @Parameter(name = "ip_OPI_JOVP", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
-  @Parameter(name = "port_OPI_JOVP", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
+  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
+  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")

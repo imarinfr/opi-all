@@ -51,8 +51,8 @@ public class O900 extends OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
   @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
-  @Parameter(name = "ip_OPI_JOVP", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
-  @Parameter(name = "port_OPI_JOVP", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
+  @Parameter(name = "ip_Monitor", desc = "IP Address of the O900 server.", defaultValue = "localhost")
+  @Parameter(name = "port_Monitor", desc = "TCP port of the O900 server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
   @Parameter(name = "eyeSuite", desc = "Path to EyeSuite.", className = String.class, defaultValue = "C:/XXX/eyeSuite/")
   @Parameter(name = "gazeFeed", desc = "Path where to save gaze feed. Directory must exists", className = String.class, defaultValue = "C:/XXX/gazeFeed/")

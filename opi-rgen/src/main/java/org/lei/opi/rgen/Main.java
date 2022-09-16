@@ -1,8 +1,13 @@
 package org.lei.opi.rgen;
 
+import java.io.File;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Constructor;
 
 import org.lei.opi.core.ImoVifa;
+import org.lei.opi.core.O900;
+import org.lei.opi.core.Compass;
 import org.lei.opi.core.OpiMachine;
 
 /**
@@ -34,36 +39,7 @@ public class Main {
 #' limitations under the License.
 
 require(rjson)
-
-#'
-#' Open a socket on ip and port. Will `stop()` on error.
-#'
-#' @param ip IP address of socket
-#' @param port TCP port of socket
-#' @param machineName Machine name for error message
-#'
-#' @return Socket
-#'
-open_socket <- function(ip, port, machineName) {
-    cat("Looking for server... ")
-    suppressWarnings(tryCatch(    
-        v <- socketConnection(host = ip, port,
-                    blocking = TRUE, open = "w+b",
-                    timeout = 10)
-        , error=function(e) { 
-            stop(paste("Cannot find a server at", ip, "on port",port))
-        }
-    ))
-    close(v)
-
-    cat("Found server at",ip,port,"\\n")
-
-    socket <- tryCatch(
-        socketConnection(host=ip, port, open = "w+b", blocking = TRUE, timeout = 1000), 
-        error=function(e) stop(paste("Cannot connect to", machineName, "at",ip,"on port", port))
-    )
-    return(socket)
-}
+source("opi.r")
 
 env.%s <- vector("list")    # environment for this machine in R
         """, machineName, machineName);
@@ -102,6 +78,23 @@ opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
     } 
   
     public static void main(String args[]) {
-        makeR(new ImoVifa(), System.out);
+        //String path = "/Users/aturpin/temp/TOPI/R/";
+        String path = "opi-rgen/src/main/OPI/R/";
+        for (String m : new String[] {"ImoVifa", "Compass", "O900"}) {
+            PrintStream printStream = null;
+            OpiMachine machine = null;
+            try {
+                File file = new File(String.format("%s%s.R", path, m));
+                printStream = new PrintStream(file);
+
+                Class<?> c = Class.forName("org.lei.opi.core." + m);
+                Constructor<?> ctor = c.getConstructor();
+                machine = (OpiMachine)ctor.newInstance();
+            } catch (Exception e) {
+                System.err.println(e);
+                System.exit(-1);
+            }
+            makeR(machine, printStream);
+        }
     }
 }

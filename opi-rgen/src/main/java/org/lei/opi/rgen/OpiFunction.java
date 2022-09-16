@@ -28,9 +28,9 @@ public record OpiFunction(
     boolean createSocket) {
 
         /** This is the parameter name for the ip on which OPI R should create socket */
-    static final String parameterForIp = "ip_OPI_JOVP";
+    static final String parameterForIp = "ip_Monitor";
         /** This is the parameter name for the port on which OPI R should create socket */
-    static final String parameterForPort = "port_OPI_JOVP";
+    static final String parameterForPort = "port_Monitor";
 
     /**
      * Roxygen2 comments at the header of the function.
@@ -163,6 +163,11 @@ public record OpiFunction(
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
             if (!Stream.of(mData.parameters).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
+        } else {
+            socketCode = String.format("""
+                if(!exists(%s$socket) || is.null(%s$socket))
+                    stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
+                """, envName, envName, this.opiName);
         }
 
             // (3) make the second part of function body which 
@@ -171,12 +176,11 @@ public record OpiFunction(
         // something here about returnmsg???
 
         writer.print(makeDoc(machineName, mData));
-        writer.println(funcSignature);
-        writer.print("{");
+        writer.print(funcSignature);
+        writer.println(" {");
         writer.println(socketCode);
         writer.println(sendMessage(mData.parameters, envName));
         writer.print(makeReturnCode(mData.returnMsgs, envName));
         writer.println("}\n");
-
     }
 };
