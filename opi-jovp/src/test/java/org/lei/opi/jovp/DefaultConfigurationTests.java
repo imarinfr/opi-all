@@ -1,6 +1,8 @@
 package org.lei.opi.jovp;
+
+import java.io.IOException;
+
 import org.junit.jupiter.api.Test;
-import org.lei.opi.jovp.Configuration.Impl;
 
 /**
  *
@@ -18,21 +20,19 @@ public class DefaultConfigurationTests {
    */
   @Test
   public void defaultJsonConfs() {
-    Configuration conf = new Configuration(Impl.IMO);
-    conf = new Configuration(Impl.PC);
-    conf = new Configuration(Impl.PHONEHMD);
-    conf = new Configuration(Impl.PICOVR);
-  }
-
-  /**
-   *
-   * Load incorrect configuration files
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void wrongJsonConf() {
-
+    Settings settings;
+    try {
+      settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
+      System.out.println(settings.toString());
+      settings = Settings.defaultSettings(Settings.Machine.PICOVR);
+      System.out.println(settings.toString());
+      settings = Settings.defaultSettings(Settings.Machine.PHONEHMD);
+      System.out.println(settings.toString());
+      settings = Settings.defaultSettings(Settings.Machine.DISPLAY);
+      System.out.println(settings.toString());
+    } catch (IllegalArgumentException | IOException e) {
+      e.printStackTrace();
+    }
   }
 
 }

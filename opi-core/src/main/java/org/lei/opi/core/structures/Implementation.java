@@ -21,5 +21,5 @@ public enum Implementation {
   /** Android phone as perimeter through the jovp */
   PHONEHMD,
   /** PC Display as perimeter through the jovp */
-  PC
+  DISPLAY
 }
