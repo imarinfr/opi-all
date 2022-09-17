@@ -16,16 +16,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>${gson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>${commons.version}</version>
-    </dependency>
-    <dependency>
     <groupId>org.reflections</groupId>
     <artifactId>reflections</artifactId> 
     <version>${reflections.version}</version>
