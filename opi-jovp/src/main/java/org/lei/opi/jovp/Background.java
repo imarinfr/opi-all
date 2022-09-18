@@ -38,7 +38,7 @@ public record Background(double bgLum, double[] bgCol, ModelType fixShape, doubl
    */
   static Background set(HashMap<String, Object> args) throws ClassCastException {
     return new Background((double) args.get("bgLum"),
-                          color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
+                          color2rgba(Color.valueOf(((String) args.get("bgCol")).toUpperCase())),
                           ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
                           (double) args.get("fixLum"),
                           color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
