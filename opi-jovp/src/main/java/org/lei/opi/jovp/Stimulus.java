@@ -14,7 +14,7 @@ import es.optocom.jovp.structures.TextureType;
  * @param type stimulus type
  * @param x x center of the stimulus in degrees of visual angle
  * @param y y center of the stimulus in degrees of visual angle
- * @param sx mayor axis size of the stimulus in degrees of visual angle
+ * @param sx major axis size of the stimulus in degrees of visual angle
  * @param sy minor axis size of the stimulus in degrees of visual angle
  * @param rotation  rotation of the stimulus in degrees
  * @param lum stimulus luminance
@@ -39,26 +39,12 @@ public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
    * 
    * @return a stimulus record
    * 
+   * @throws ClassCastException Cast exception
+   * 
    * @since 0.0.1
    */
   static Stimulus set(HashMap<String, Object> args) throws ClassCastException {
     try {
-/**
-        (Eye[]) args.get("eye");
-        (ModelType[]) args.get("shape"),
-        (TextureType[]) args.get("type"),
-        (double[]) args.get("x"),
-        (double[]) args.get("y"),
-        (double[]) args.get("sx"),
-        (double[]) args.get("sy"),
-        (double[]) args.get("rotation"),
-        (double[]) args.get("t"),
-        (double[]) args.get("lum"),
-        (double[][]) args.get("col"),
-        (double[]) args.get("contrast"),
-        (double[]) args.get("frequency"),
-        (double) args.get("w")
-*/
       Eye[] eye = new Eye[] {Eye.LEFT, Eye.RIGHT};
       ModelType[] shape = new ModelType[] {ModelType.CIRCLE, ModelType.SQUARE};
       TextureType[] type = new TextureType[] {TextureType.FLAT, TextureType.SINE};

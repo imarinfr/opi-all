@@ -36,4 +36,5 @@ public abstract class MessageProcessor {
     * @return String reply to send back on socket, or null to close socket.
     */
     public abstract Packet process(String incomingString);
+    
 }

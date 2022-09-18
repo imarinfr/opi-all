@@ -1,10 +1,6 @@
 package org.lei.opi.jovp;
 
-import java.io.IOException;
-
 import org.junit.jupiter.api.Test;
-
-import org.lei.opi.core.*;;
 
 /**
  *
@@ -22,15 +18,10 @@ public class ConnectionTests {
    */
   @Test
   public void getIDAndPort() {
-    Settings settings;
-    try {
-      settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
-      CSListener driver = new CSListener(50001, new OpiJovp(settings));
-      System.out.println("[getIDAndPort] " + driver);
-      driver.close();
-    } catch (IllegalArgumentException | IOException e) {
-      e.printStackTrace();
-    }
+    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY);
+    opiJovp.open(50001);
+    System.out.println("[getIDAndPort] " + opiJovp.listener);
+    opiJovp.close();
   }
 
   /**
@@ -41,18 +32,13 @@ public class ConnectionTests {
    */
   @Test
   public void changeLocalPort() {
-    Settings settings;
-    try {
-      settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
-      CSListener driver = new CSListener(50001, new OpiJovp(settings));
-      System.out.println("[changeLocalPort] Address was at " + driver);
-      driver.close();
-      driver = new CSListener(50009, new OpiJovp(settings));
-      System.out.println("[changeLocalPort] Address is at " + driver);
-      driver.close();
-    } catch (IllegalArgumentException | IOException e) {
-      e.printStackTrace();
-    }
+    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY);
+    opiJovp.open(50001);
+    System.out.println("[changeLocalPort] Address was at " + opiJovp.listener);
+    opiJovp.close();
+    opiJovp.open(50001);
+    System.out.println("[changeLocalPort] Address is at " + opiJovp.listener);
+    opiJovp.close();
   }
 
 }

@@ -23,15 +23,15 @@ public class DefaultConfigurationTests {
     Settings settings;
     try {
       settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
-      System.out.println(settings.toString());
+      System.out.println(settings);
       settings = Settings.defaultSettings(Settings.Machine.PICOVR);
-      System.out.println(settings.toString());
+      System.out.println(settings);
       settings = Settings.defaultSettings(Settings.Machine.PHONEHMD);
-      System.out.println(settings.toString());
+      System.out.println(settings);
       settings = Settings.defaultSettings(Settings.Machine.DISPLAY);
-      System.out.println(settings.toString());
+      System.out.println(settings);
     } catch (IllegalArgumentException | IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
   }
 

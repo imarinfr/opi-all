@@ -1,0 +1,17 @@
+{
+  "command": "present",
+  "eye": ["right", "both", "left"],
+  "shape": ["circle", "square", "triangle"],
+  "type": ["flat", "sine", "G1"],
+  "x": [10, 11, 12],
+  "y": [-5, 5, 25],
+  "sx": [1.72],
+  "sy": [1.72],
+  "rotation": [15],
+  "lum": [20],
+  "color": ["white"],
+  "contrast": [1],
+  "frequency": [2],
+  "t": [200],
+  "w": [1500]
+}

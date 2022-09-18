@@ -1,7 +1,6 @@
 package org.lei.opi.jovp;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -27,12 +26,13 @@ import es.optocom.jovp.structures.ViewMode;
  * @param viewMode viewing mode: MONO or STEREO
  * @param input input device for responses
  * @param depth depth for each color channel
+ * @param tracking whether device allows eye tracking
  * @param gamma display-specific gamma function
  *
  * @since 0.0.1
  */
 public record Settings(Machine machine, int screen, boolean fullScreen, int distance,
-                       ViewMode viewMode, Input input, int depth, int[] gamma) {
+                       ViewMode viewMode, Input input, boolean tracking, int depth, int[] gamma) {
 
   /** Implemented display-based machines */
   enum Machine {
@@ -69,7 +69,7 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
    * 
    * @return a record with the OPI JOVP machine settings
    *
-   * @throws IOException
+   * @throws IOException IO exception
    *
    * @since 0.0.1
    */
@@ -91,13 +91,12 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
    * 
    * @return a record with the OPI JOVP machine settings
    * 
-   * @throws IOException
-   * @throws FileNotFoundException
-   * @throws IllegalArgumentException
+   * @throws IOException IO exception
+   * @throws IllegalArgumentException Illegal argument
    *
    * @since 0.0.1
    */
-  public static Settings load(Machine machine, String file) throws IllegalArgumentException, FileNotFoundException, IOException {
+  public static Settings load(Machine machine, String file) throws IOException, IllegalArgumentException {
     return jsonToSettings(machine, IOUtils.toString(new FileInputStream(file), String.valueOf(StandardCharsets.UTF_8)));
   }
 
@@ -107,6 +106,8 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
    * @param file string with JSON file name
    * 
    * @return a settings record
+   * 
+   * @throws IOException IO exception
    *
    * @since 0.0.1
    */
@@ -121,27 +122,30 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
    * @param jsonStr A JSON file with the OPI JOVP machine settings
    * 
    * @return a settings record
+   * 
+   * @throws IllegalArgumentException Illegal argument
+   * @throws ClassCastException Cast exception
    *
    * @since 0.0.1
    */
-  private static Settings jsonToSettings(Machine machine, String jsonStr) throws IllegalArgumentException {
+  private static Settings jsonToSettings(Machine machine, String jsonStr) throws IllegalArgumentException, ClassCastException {
     Gson gson = new Gson();
     HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
     int screen = ((Double) pairs.get("screen")).intValue();
     if(screen < 0)
       throw new IllegalArgumentException(String.format("'screen' value has to be 0 (default screen or positive). It is %s", screen));
-    boolean fullScreen = (boolean) pairs.get("fullScreen");
     int distance = ((Double) pairs.get("distance")).intValue();
     if(distance < 0)
       throw new IllegalArgumentException(String.format("'distance' cannot be negative, you silly goose. It is %s", distance));
-    ViewMode viewMode = ViewMode.valueOf(((String) pairs.get("viewMode")).toUpperCase());
-    Input input = Input.valueOf(((String) pairs.get("input")).toUpperCase());
     int depth = ((Double) pairs.get("depth")).intValue();
     if(depth < 8)
       throw new IllegalArgumentException(String.format("Cannot run on a display with a color 'depth' lower than 8 bits. It is %s", depth));
     int[] gamma = (((ArrayList<?>) (pairs.get("gamma"))).stream().map(Double.class::cast)
                     .collect(Collectors.toCollection(ArrayList::new))).stream().mapToInt(Double::intValue).toArray();
-    return new Settings(machine, screen, fullScreen, distance, viewMode, input, depth, gamma);
+    return new Settings(machine, screen, (boolean) pairs.get("fullScreen"), distance,
+                        ViewMode.valueOf(((String) pairs.get("viewMode")).toUpperCase()),
+                        Input.valueOf(((String) pairs.get("input")).toUpperCase()),
+                        (boolean) pairs.get("tracking"), depth, gamma);
   }
 
 }

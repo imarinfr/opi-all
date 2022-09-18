@@ -32,17 +32,37 @@ public record Background(double bgLum, double[] bgCol, ModelType fixShape, doubl
    * 
    * @return a background record
    * 
+   * @throws ClassCastException Cast exception
+   * 
    * @since 0.0.1
    */
   static Background set(HashMap<String, Object> args) throws ClassCastException {
     return new Background((double) args.get("bgLum"),
-                          OpiJovp.color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
+                          color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
                           ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
                           (double) args.get("fixLum"),
-                          OpiJovp.color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
+                          color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
                           (double) args.get("fixCx"), (double) args.get("fixCy"),
                           (double) args.get("fixSx"), (double) args.get("fixSy"),
                           (double) args.get("fixRotation"));
+  }
+
+  /**
+   * Obtain RGBA values from color label
+   *
+   * @param color an Enum with a color label 
+   * 
+   * @return the rgba values for that color
+   * 
+   * @since 0.0.1
+   */
+  static double[] color2rgba(Color color) {
+    return switch(color) {
+      case WHITE -> new double[] {1, 1, 1, 1};
+      case RED -> new double[] {1, 0, 0, 1};
+      case GREEN -> new double[] {0, 1, 0, 1};
+      case BLUE -> new double[] {0, 0, 1, 1};
+    };
   }
 
 }

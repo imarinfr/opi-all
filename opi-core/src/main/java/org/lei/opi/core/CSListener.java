@@ -180,7 +180,7 @@ public class CSListener extends Thread {
         }
       }
     } catch (SocketException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
     return null;
   }

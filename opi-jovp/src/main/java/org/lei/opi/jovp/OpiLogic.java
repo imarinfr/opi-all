@@ -2,132 +2,153 @@ package org.lei.opi.jovp;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
-import es.optocom.jovp.Timer;
 import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Texture;
 import es.optocom.jovp.structures.Command;
-import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ModelType;
-
-/**
- * The OPI JOVP logic
- *
- * @since 0.0.1
- */
-public class OpiLogic implements PsychoLogic {
-
-  /** Minimum time from stimulus onset */
-  private static final double[] BLACK = new double [] {0, 0, 0, 0};
-  private static final int MINIMUM_TIME_FROM_ONSET = 50;
-
-  /** A background record to communicate with JOVP */
-  private Background bgRecord;
-  /** A stimulus record to communicate with JOVP */
-  private Stimulus stRecord;
-  /** A timer to control, well, you know, er, time? */
-  private Timer timer;
-
-  private final Item background;
-  private final Item fixation;
-  private final Item stimulus;
-
-  /** A timer to control, well, you know, er, time? */
-  int ellapseTime = 0;
-  /** Whether stimulus is displaying */
-  boolean onset = false;
-  /** Whether observer responded to stimulus */
-  boolean gotAnswer = false;
-
   /**
-   * Instantiate OpiLogic with a background, stimulus, and timer objects
+   * Logic for the PsychoEngine
    *
    * @since 0.0.1
    */
-  OpiLogic(Background bgRecord, Stimulus stRecord, Timer timer) {
-    this.bgRecord = bgRecord;
-    this.stRecord = stRecord;
-    this.timer = timer;
-    // start background and fixation with defaults
-    background = new Item(new Model(ModelType.SQUARE), new Texture(BLACK));
-    background.size(180); // Background to cover the whole field of view
-    fixation = new Item(new Model(ModelType.MALTESE), new Texture(BLACK));
-    stimulus = new Item(new Model(ModelType.CIRCLE), new Texture(BLACK));
-  }
+  public class OpiLogic implements PsychoLogic{
 
-  /* (non-Javadoc)
-   * @see es.optocom.jovp.engine.PsychoLogic#init(es.optocom.jovp.engine.PsychoEngine)
-   */
-  @Override
-  public void init(PsychoEngine psychoEngine) {
-    // add perimetry items, background, fixation, stimulus
-    items.add(background);
-    items.add(fixation);
-    stimulus.eye(Eye.NONE); // do not show until ready
-    items.add(stimulus);
-  }
+    /** Default background shape */
+    private static final ModelType DEFAULT_BACKGROUND_SHAPE = ModelType.CIRCLE;
+    /** Default background shape */
+    private static final ModelType DEFAULT_FIXATION_SHAPE = ModelType.MALTESE;
+    /** Default stimulus shape */
+    private static final ModelType DEFAULT_STIMULUS_SHAPE = ModelType.CIRCLE;
+    /** Default fixation color */
+    private static final double[] DEFAULT_FIXATION_COLOR = new double[] {0, 0.25, 0, 1};
+    /** Default fixation size */
+    private static final int DEFAULT_FIXATION_SIZE = 1;
+    /** Minimum time from stimulus onset */
+    private static final int MINIMUM_TIME_FROM_ONSET = 50;
 
-  /* (non-Javadoc)
-   * @see es.optocom.jovp.engine.PsychoLogic#input(es.optocom.jovp.engine.structures.Command, double)
-   */
-  @Override
-  public void input(Command command) {
-    // if no response or response is too early, do nothing
-    if(command != Command.YES || ellapseTime < MINIMUM_TIME_FROM_ONSET) return;
-    gotAnswer = true;
-  }
+    /** The OPI driver */
+    private final OpiDriver driver;
 
-  /* (non-Javadoc)
-   * @see es.optocom.jovp.engine.PsychoLogic#update(es.optocom.jovp.engine.PsychoEngine)
-   */
-  @Override
-  public void update(PsychoEngine psychoEngine) {
-    // check if background and fixation settings have changed
-    if(bgRecord != null) {
-      setBackground();
-      bgRecord = null; // set background record to null when done with it
-      return;
+    /** Background PsychoEngine item */
+    private Item[] backgrounds;
+    /** Background PsychoEngine fixation target */
+    private Item[] fixations;
+    /** Background PsychoEngine stimulus */
+    private Item stimulus;
+  
+    /** A timer to control, well, you know, er, time? */
+    int ellapseTime = 0;
+    /** Whether stimulus is displaying */
+    boolean onset = false;
+    /** Whether observer responded to stimulus */
+    boolean gotAnswer = false;
+
+    OpiLogic(OpiDriver driver) {
+      this.driver = driver;
+      // Init background, fixation depending on whether viewMode is MONO or STEREO
+      switch(driver.settings.viewMode()) {
+        case MONO -> {
+          backgrounds = new Item[] {
+            new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture())
+          };
+          fixations = new Item[] {
+            new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture(DEFAULT_FIXATION_COLOR))
+          };
+        }
+        case STEREO -> {
+          backgrounds = new Item[] {
+            new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture()),
+            new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture())
+          };
+          fixations = new Item[] {
+            new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture(DEFAULT_FIXATION_COLOR)),
+            new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture(DEFAULT_FIXATION_COLOR))
+          };
+        }
+      }
+      // set size of the backgroud to be the field of view
+      for (int i = 0; i < fixations.length; i++) fixations[i].size(DEFAULT_FIXATION_SIZE);
+      stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
+      stimulus.hide();
     }
-/**
-    // if a stimulus not shown then return
-    if(!onset) return; // TODO: bad management. Need to check if stimulus.eye == Eye.NONE
-    // if a stimulus not shown then return: could be that presentation window
-    // has expired or observer responded to it
-    if(stSettings == null) return;
-    
-    { // if observer answered, then sit idly for a new stimulus
-      stSettings = null; // set stimulus record to null when done with it`
-      gotAnswer = false;
-      return;
+
+    /**
+     * Initialize PsychoEngine
+     *
+     * @param psychoEngine the psychoEngine
+     * 
+     * @since 0.0.1
+     */
+    @Override
+    public void init(PsychoEngine psychoEngine) {
+      // set size of the backgroud to be the field of view
+      double[] fov = psychoEngine.getFieldOfView();
+      for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0], fov[1]);
+      // add perimetry items, background, fixation, stimulus
+      items.add(backgrounds[0]);
+      items.add(fixations[0]);
+      items.add(stimulus);
     }
-*/
-  }
+
+    /**
+     * Process input
+     *
+     * @param command the command received
+     * 
+     * @since 0.0.1
+     */
+    @Override
+    public void input(Command command) {
+      if (command == Command.NONE) return;
+      System.out.println(command);
+      // if no response or response is too early, do nothing
+      if(command != Command.YES || ellapseTime < MINIMUM_TIME_FROM_ONSET) return;
+      gotAnswer = true;
+    }
+
+    /**
+     * Update the psychoEngine input
+     *
+     * @param psychoEngine the psychoEngine
+     * 
+     * @since 0.0.1
+     */
+    @Override
+    public void update(PsychoEngine psychoEngine) {
+      if (driver.initialized) {
+        psychoEngine.show();
+      } else psychoEngine.hide();
+      for (int i = 0; i < backgrounds.length; i++) {
+        // check if background and fixation settings have changed
+        if(driver.backgrounds[i] != null) {
+          setBackground();
+          driver.backgrounds[i] = null; // set background record to null when done with it
+        }
+      }
+    }
  
-  /**
-   * Change background
-   */
-  private void setBackground() {
-    // set new luminance and color in background
-    bgRecord.bgLum();
-    bgRecord.bgCol();
-    background.setColor(bgRecord.bgCol());
-    // TODO: fixation setType
-    // set new position, size and rotation in fixation target
-    fixation.position(bgRecord.fixCx(), bgRecord.fixCy());
-    fixation.size(bgRecord.fixSx(), bgRecord.fixSy());
-    fixation.rotation(bgRecord.fixRotation());
-    // set new luminance and color in fixation target
-    bgRecord.fixLum();
-    bgRecord.fixCol();
-    fixation.setColor(bgRecord.fixCol());
-  }
+    /** Change background */
+    private void setBackground() {
+      // set new luminance and color in background
+      driver.backgrounds[0].bgLum();
+      driver.backgrounds[0].bgCol();
+      backgrounds[0].setColor(driver.backgrounds[0].bgCol());
+      // TODO: fixation setType
+      // set new position, size and rotation in fixation target
+      fixations[0].position(driver.backgrounds[0].fixCx(), driver.backgrounds[0].fixCy());
+      fixations[0].size(driver.backgrounds[0].fixSx(), driver.backgrounds[0].fixSy());
+      fixations[0].rotation(driver.backgrounds[0].fixRotation());
+      // set new luminance and color in fixation target
+      driver.backgrounds[0].fixLum();
+      driver.backgrounds[0].fixCol();
+      fixations[0].setColor(driver.backgrounds[0].fixCol());
+    }
 
-  /**
-   * Synchronized stimulus presentation
-   */
-  private void present() {
-    // once done, set stimulus record to null
-    stRecord = null;
-  }
+    /** Present stimulus */
+    private void present() {
+      // once done, set stimulus record to null
+      driver.stimulus = null;
+    }
 
-}
+  }
