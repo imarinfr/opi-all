@@ -1,4 +1,4 @@
-# Open Perimetry Interface implementation for ImoVifa
+# Open Perimetry Interface implementation for O600
 #
 # Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
 #
@@ -16,9 +16,9 @@
 
 require(rjson)
 
-env.ImoVifa <- vector("list")    # environment for this machine in R
+env.O600 <- vector("list")    # environment for this machine in R
 
-#' Implementation of opiInitialise for the ImoVifa machine.
+#' Implementation of opiInitialise for the O600 machine.
 #'
 #' This is for internal use only. Use [opiInitialise()] with
 #' these Arguments and you will get the Value back.
@@ -29,6 +29,7 @@ env.ImoVifa <- vector("list")    # environment for this machine in R
 #' @param port TCP port of the perimeter.
 #' @param ip_Monitor IP Address of the OPI JOVP server.
 #' @param port_Monitor TCP port of the OPI JOVP server.
+#' @param eye Eye to set.
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
@@ -37,44 +38,41 @@ env.ImoVifa <- vector("list")    # environment for this machine in R
 #'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
-#' chooseOpi("ImoVifa")
+#' chooseOpi("O600")
 #' result <- opiInitialise(ip = "192.126.0.1", port = 50000,
-#'                         ip_Monitor = "localhost", port_Monitor = 50001)
+#'                         ip_Monitor = "localhost", port_Monitor = 50001,
+#'                         eye = "left")
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_ImoVifa <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL) {
-    env.ImoVifa$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor);
+opiInitialise_for_O600 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL, eye = NULL) {
+    env.O600$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor,eye = eye);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, env.O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
     return(res)
 }
 
-#' Implementation of opiPresent for the ImoVifa machine.
+#' Implementation of opiPresent for the O600 machine.
 #'
 #' This is for internal use only. Use [opiPresent()] with
 #' these Arguments and you will get the Value back.
 #'
 #' @usage NULL
 #'
-#' @param eye Eye to test.
-#' @param type Stimulus type.
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
 #' @param t List of stimuli presentation times (ms).
 #' @param w List of stimuli response windows (ms).
 #' @param lum List of stimuli luminances (cd/m^2).
+#' @param size Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
+#'                device has a big wheel)
 #' @param color List of stimuli colors.
-#' @param sx List of diameters along major axis of ellipse (degrees).
-#' @param sy List of diameters along minor axis of ellipse (degrees).
-#' @param rotation List of angles of rotaion of stimuli (degrees). Only useful
-#'                    if sx != sy specified.
 #'
 #' @return a list contianing:
-#'  * error Empty string for all good, else error messages from ImoVifa.
+#'  * error Empty string for all good, else error messages from O600.
 #'  * msg JSON Object with all of the other fields described in @ReturnMsg
 #'           except 'error'.
 #'    - msg$seen true if seen, false if not.
@@ -87,44 +85,35 @@ opiInitialise_for_ImoVifa <- function(ip = NULL, port = NULL, ip_Monitor = NULL,
 #'    - msg$jovp Any JOVP-specific messages that the JOVP sent back.
 #'
 #' @examples
-#' chooseOpi("ImoVifa")
-#' result <- opiPresent(stim = list(eye = list('left'), type = list('circle'), x = list(0),
-#'                      y = list(0), t = list(200), w = list(1500), lum = list(20),
-#'                      color = list('white'), sx = list(1.72), sy = list(1.72)))
+#' chooseOpi("O600")
+#' result <- opiPresent(stim = list(x = list(0), y = list(0), t = list(200), w = 1500, lum = 20,
+#'                      size = "GV", color = "white"))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_ImoVifa <- function(stim = list(eye = NULL, type = NULL, x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, color = NULL, sx = NULL, sy = NULL, rotation = NULL)) {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+opiPresent_for_O600 <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
+if(!exists(env.O600$socket) || is.null(env.O600$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(eye = stim$eye,type = stim$type,x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,color = stim$color,sx = stim$sx,sy = stim$sy,rotation = stim$rotation);
+    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,size = stim$size,color = stim$color);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, env.O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
     return(res)
 }
 
-#' Implementation of opiSetup for the ImoVifa machine.
+#' Implementation of opiSetup for the O600 machine.
 #'
 #' This is for internal use only. Use [opiSetup()] with
 #' these Arguments and you will get the Value back.
 #'
 #' @usage NULL
 #'
-#' @param eye Eye to set.
 #' @param bgLum Background luminance for eye.
-#' @param bgCol Background color for eye.
 #' @param fixType Fixation target type for eye.
 #' @param fixLum Fixation target luminance for eye.
 #' @param fixCol Fixation target color for eye.
-#' @param fixCx x-coordinate of fixation target (degrees).
-#' @param fixCy y-coordinate of fixation target (degrees).
-#' @param fixSx diameter along major axis of ellipse (degrees).
-#' @param fixSy diameter along minor axis of ellipse (degrees).
-#' @param fixRotation Angles of rotation of fixation target (degrees). Only
-#'                       useful if sx != sy specified.
 #' @param tracking Whether to correct stimulus location based on eye position.
 #'
 #' @return a list contianing:
@@ -134,26 +123,25 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
-#' chooseOpi("ImoVifa")
-#' result <- opiSetup(settings = list(eye = "both", bgLum = 10, bgCol = "white", fixType = "maltese",
-#'                    fixLum = 20, fixCol = "green", fixCx = 0, fixCy = 0,
-#'                    fixSx = 1, fixSy = 1, fixRotation = 0, tracking = 0))
+#' chooseOpi("O600")
+#' result <- opiSetup(settings = list(bgLum = 10, fixType = "maltese", fixLum = 20, fixCol = "green",
+#'                    tracking = 0))
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_ImoVifa <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixType = NULL, fixLum = NULL, fixCol = NULL, fixCx = NULL, fixCy = NULL, fixSx = NULL, fixSy = NULL, fixRotation = NULL, tracking = NULL)) {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+opiSetup_for_O600 <- function(settings = list(bgLum = NULL, fixType = NULL, fixLum = NULL, fixCol = NULL, tracking = NULL)) {
+if(!exists(env.O600$socket) || is.null(env.O600$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(eye = settings$eye,bgLum = settings$bgLum,bgCol = settings$bgCol,fixType = settings$fixType,fixLum = settings$fixLum,fixCol = settings$fixCol,fixCx = settings$fixCx,fixCy = settings$fixCy,fixSx = settings$fixSx,fixSy = settings$fixSy,fixRotation = settings$fixRotation,tracking = settings$tracking);
+    msg <- list(bgLum = settings$bgLum,fixType = settings$fixType,fixLum = settings$fixLum,fixCol = settings$fixCol,tracking = settings$tracking);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, env.O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
     return(res)
 }
 
-#' Implementation of opiClose for the ImoVifa machine.
+#' Implementation of opiClose for the O600 machine.
 #'
 #' This is for internal use only. Use [opiClose()] with
 #' these Arguments and you will get the Value back.
@@ -169,24 +157,24 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
-#' chooseOpi("ImoVifa")
+#' chooseOpi("O600")
 #' result <- opiClose()
 #'
 #' @seealso [opiClose()]
 #'
-opiClose_for_ImoVifa <- function() {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+opiClose_for_O600 <- function() {
+if(!exists(env.O600$socket) || is.null(env.O600$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, env.O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
     return(res)
 }
 
-#' Implementation of opiQueryDevice for the ImoVifa machine.
+#' Implementation of opiQueryDevice for the O600 machine.
 #'
 #' This is for internal use only. Use [opiQueryDevice()] with
 #' these Arguments and you will get the Value back.
@@ -200,25 +188,22 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #'  * msg JSON Object with all of the other fields described in @ReturnMsg
 #'           except 'error'.
 #'    - msg$jovp Any messages that the JOVP sent back.
-#'    - msg$isTracking 0 eye tracking is off, any other value it is on.
-#'    - msg$isCalibrated 0 eye tracking has not been calibrated, any other value
-#'                          it has.
 #'
 #' @examples
-#' chooseOpi("ImoVifa")
+#' chooseOpi("O600")
 #' result <- opiQueryDevice()
 #'
 #' @seealso [opiQueryDevice()]
 #'
-opiQueryDevice_for_ImoVifa <- function() {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+opiQueryDevice_for_O600 <- function() {
+if(!exists(env.O600$socket) || is.null(env.O600$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, env.O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
     return(res)
 }
 

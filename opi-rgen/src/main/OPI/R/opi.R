@@ -1,28 +1,31 @@
-#' Open Perimetry Interface implementation for %s
-#'
-#' Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
-#'
-#' Licensed under the Apache License, Version 2.0 (the "License");
-#' you may not use this file except in compliance with the License.
-#' You may obtain a copy of the License at
-#'
-#'   http://www.apache.org/licenses/LICENSE-2.0
-#'
-#' Unless required by applicable law or agreed to in writing, software
-#' distributed under the License is distributed on an "AS IS" BASIS,
-#' WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#' See the License for the specific language governing permissions and
-#' limitations under the License.
-#'
+# Open Perimetry Interface implementation for %s
+#
+# Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 packageStartupMessage("OPI version", utils::packageVersion("OPI"))
 
-#' Used for holding state of the OPI
-env.OPI <- vector("list")
-env.OPI$machine_list <- list(
+# Used for holding state of the OPI
+
+#' @export
+.opi_env <- new.env(size = 20)
+
+assign("machine_list", list(
     "Compass",
     "ImoVifa",
-    "KowaAP7000",
+    "Kowa",
     "O900",
     "O600",
     "SimNo",
@@ -30,10 +33,12 @@ env.OPI$machine_list <- list(
     "SimHenson",
     "SimGaussian",
     "SimHensonRT",
-    "PhoneVR",
-    "Display"
-)
-env.OPI$machine <- NULL # Chosen machine from env.OPI$machine_list by chooseOPI()
+    "PhoneHMD",
+    "Display",
+    "PicoVR"
+), envir = .opi_env)
+
+assign("chosen_machine", NULL, .opi_env) # Chosen machine from machine_list by chooseOPI()
 
 #' chooseOPI selects an OPI machine to use.
 #'
@@ -41,19 +46,22 @@ env.OPI$machine <- NULL # Chosen machine from env.OPI$machine_list by chooseOPI(
 #'
 #' @param machine Machine name to use. Set to NULL to get a list.
 #' @returns NULL
-#'
-chooseOPI() <- function(machine) {
-    if (is.null(machine) {
+#' @export
+chooseOPI <- function(machine = NULL) {
+    if (is.null(machine)) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
-        print(enc.OPI$machine_list)
-    } else if (! machine %in% machine_list) {
+        print(unlist(.opi_env$machine_list))
+    } else if (! machine %in% .opi_env$machine_list) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
-        print(enc.OPI$machine_list)
+        print(unlist(.opi_env$machine_list))
     } else {
-        env.OPI$machine_list <<- machine
+        assign("chosen_machine", machine, .opi_env)
     }
     return(NULL)
 }
+#' @rdname chooseOPI
+#' @export
+chooseOpi <- chooseOPI
 
 #' opiInitialise that calls opiInitialise_for_MACHINE as appropriate.
 #'
@@ -62,16 +70,104 @@ chooseOPI() <- function(machine) {
 #' Specific paramters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
+#' @param ... Parameters specific to each machine as described in the 'See Also' functions.
+#'
 #' @seealso [opiInitialise_for_Compass()], [opiInitialise_for_ImoVifa()],
-#' [opiInitialise_for_KowaAP7000()], [opiInitialise_for_O900()], [opiInitialise_for_O600()],
+#' [opiInitialise_for_Kowa()], [opiInitialise_for_O900()], [opiInitialise_for_O600()],
+#' [opiInitialise_for_PhoneHMD()], [opiInitialise_for_Display()], [opiInitialise_for_PicoVR()],
 #' [opiInitialise_for_SimNo()], [opiInitialise_for_SimYes()], [opiInitialise_for_SimHenson()],
-#' [opiInitialise_for_SimGaussian()], [opiInitialise_for_SimHensonRT()],
-#' [opiInitialise_for_PhoneVR()], [opiInitialise_for_Display()],
+#' [opiInitialise_for_SimGaussian()], [opiInitialise_for_SimHensonRT()]
+#' @export
 opiInitialise <- function(...) {
-    if (is.null(env.OPI$machine))
+    if (is.null(.opi_env$chosen_machine))
         stop("you should use chooseOPI() before calling opiInitiaise.")
 
-    return(do.call(paste0("opiInitialise_for_", env.OPI$chosen_machine), ...))
+    return(do.call(paste0("opiInitialise_for_", .opi_env$chosen_machine), args = list(...)))
+}
+
+#' @rdname opiInitialise
+#' @export
+opiInitialize <- opiInitialise
+
+#' opiQueryDevice that calls opiQueryDevice_for_MACHINE as appropriate.
+#'
+#' Returns a list that describes the current state of the machine.
+#' Specific paramters and return values can be seen in the machine specific versions
+#' listed below in the ’See Also’.
+#'
+#' @seealso [opiQueryDevice_for_Compass()], [opiQueryDevice_for_ImoVifa()],
+#' [opiQueryDevice_for_Kowa()], [opiQueryDevice_for_O900()], [opiQueryDevice_for_O600()],
+#' [opiQueryDevice_for_PhoneHMD()], [opiQueryDevice_for_Display()], [opiQueryDevice_for_PicoVR()],
+#' [opiQueryDevice_for_SimNo()], [opiQueryDevice_for_SimYes()], [opiQueryDevice_for_SimHenson()],
+#' [opiQueryDevice_for_SimGaussian()], [opiQueryDevice_for_SimHensonRT()]
+#' @export
+opiQueryDevice <- function() {
+    if (is.null(.opi_env$chosen_machine))
+        stop("you should use chooseOPI() before calling opiQueryDevice.")
+
+    return(do.call(paste0("opiQueryDevice_for_", .opi_env$chosen_machine)))
+}
+
+#' opiSetup that calls opiSetup_for_MACHINE as appropriate.
+#'
+#' Returns a JSON object that describes the current state of the machine.
+#' Specific paramters and return values can be seen in the machine specific versions
+#' listed below in the ’See Also’.
+#'
+#' @param state A list containing the same names as that returned by {@link opi_queryDevice}.
+#'
+#' @seealso [opiSetup_for_Compass()], [opiSetup_for_ImoVifa()],
+#' [opiSetup_for_Kowa()], [opiSetup_for_O900()], [opiSetup_for_O600()],
+#' [opiSetup_for_PhoneHMD()], [opiSetup_for_Display()], [opiSetup_for_PicoVR()],
+#' [opiSetup_for_SimNo()], [opiSetup_for_SimYes()], [opiSetup_for_SimHenson()],
+#' [opiSetup_for_SimGaussian()], [opiSetup_for_SimHensonRT()]
+#' @export
+opiSetup <- function(state) {
+    if (is.null(.opi_env$chosen_machine))
+        stop("you should use chooseOPI() before calling opiSetup.")
+
+    return(do.call(paste0("opiSetup_for_", .opi_env$chosen_machine), list(state = state)))
+}
+
+#' opiClose that calls opiSetup_for_MACHINE as appropriate.
+#'
+#' Returns a JSON object that describes the current state of the machine.
+#' Specific paramters and return values can be seen in the machine specific versions
+#' listed below in the ’See Also’.
+#'
+#' @seealso [opiClose_for_Compass()], [opiClose_for_ImoVifa()],
+#' [opiClose_for_Kowa()], [opiClose_for_O900()], [opiClose_for_O600()],
+#' [opiClose_for_PhoneHMD()], [opiClose_for_Display()], [opiClose_for_PicoVR()],
+#' [opiClose_for_SimNo()], [opiClose_for_SimYes()], [opiClose_for_SimHenson()],
+#' [opiClose_for_SimGaussian()], [opiClose_for_SimHensonRT()]
+#' @export
+opiClose <- function() {
+    if (is.null(.opi_env$chosen_machine))
+        stop("you should use chooseOPI() before calling opiClose.")
+
+    return(do.call(paste0("opiClose_for_", env.OPI$chosen_machine)))
+}
+
+#' opiPresent that calls opiPresent_for_MACHINE as appropriate.
+#'
+#' Returns a JSON object that describes the current state of the machine.
+#' Specific paramters and return values can be seen in the machine specific versions
+#' listed below in the ’See Also’.
+#'
+#' @param stim A stimulus object or list as described for each machine in the 'See Also' methods.
+#' @param ...  Other arguments that might be needed by each machine in the 'See Also' methods.
+#'
+#' @seealso [opiPresent_for_Compass()], [opiPresent_for_ImoVifa()],
+#' [opiPresent_for_Kowa()], [opiPresent_for_O900()], [opiPresent_for_O600()],
+#' [opiPresent_for_PhoneHMD()], [opiPresent_for_Display()], [opiPresent_for_PicoVR()],
+#' [opiPresent_for_SimNo()], [opiPresent_for_SimYes()], [opiPresent_for_SimHenson()],
+#' [opiPresent_for_SimGaussian()], [opiPresent_for_SimHensonRT()]
+#' @export
+opiPresent <- function(stim, ...) {
+    if (is.null(.opi_env$chosen_machine))
+        stop("you should use chooseOPI() before calling opiPresent.")
+
+    return(do.call(paste0("opiPresent_for_", .opi_env$chosen_machine), list(stim = stim, ...)))
 }
 
 #'

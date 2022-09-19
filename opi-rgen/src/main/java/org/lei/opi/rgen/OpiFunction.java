@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 import java.util.stream.Stream;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.structures.Parameter;
@@ -16,14 +17,14 @@ import org.lei.opi.core.structures.ReturnMsg;
  * to funcitons in Imo.java and also to generate the R code.
  * @param opiName Name used in OPI standard and R code 
  * @param opiCoreName Name used in this java pacakge (opi-core) 
- * @param opiInputFields Essential input field names in OPI Standard. These will be paramters in the R function. 
+ * @param opiInputFieldName Essential input field name in OPI Standard. Can be empty for no param in the OPI standard.
  * @param opiReturnTemplate A format string that is valid R with %s for places where return values should be plugged in. eg "list(err=%s")" 
  * @param createSocket If true, look for Paramters ipOPI... and portOPI and create a socket for other functions to use.
 */
 public record OpiFunction(
     String   opiName,
     String   opiCoreName,
-    String[] opiInputFields,
+    String   opiInputFieldName,
     String   opiReturnTemplate,
     boolean createSocket) {
 
@@ -33,24 +34,71 @@ public record OpiFunction(
     static final String parameterForPort = "port_Monitor";
 
     /**
+     * Break a string into lines using \n#' on spaces if isCode is false else on commas
+     * so that no line is longer than 80 chars. Uses simple greedy algorithm.
+     * 
+     * @param s  String to wrap
+     * @param leadingSpaces  Number of leading spaces to allow for on first line, and to 
+     *                       add to each line after the first.
+     *                       This does not include the 3 chars for "#' ".
+     * @param isCode true if an R command (break on commas, not spaces)
+     * @return
+     */
+    private static String wrapR(String s, int leadingSpaces, boolean isCode) {
+        String result = "";
+        while (s.length() > 80 - leadingSpaces) {
+            int i = s.lastIndexOf(isCode ? "," : " ", 80 - leadingSpaces);
+            if (i > -1) {
+                result += s.substring(0, i);
+                if (isCode) 
+                    result += ",";
+                
+                result += "\n#' ";
+                result += " ".repeat(leadingSpaces);
+                s = s.substring(i + 1);
+            } else {
+                break;  // could not find the break char, so give up
+            }
+        } 
+        result += s;
+
+        return result;
+    }
+
+    private static Function<Parameter, String> prettyParam = (Parameter p) -> {
+        String prefix =  String.format("#' @param %s ",p.name());
+        return prefix + wrapR(p.desc(), prefix.length(), false);
+    };
+
+    private static Function<ReturnMsg, String> prettyReturn = (ReturnMsg r) -> {
+        String prefix = r.name().contains(".") ?
+            String.format("#'    - %s ",r.name().replaceAll("\\.", "\\$")) :
+            String.format("#'  * %s ",r.name());
+        return prefix + wrapR(r.desc(), prefix.length(), false);
+    };
+
+    /**
      * Roxygen2 comments at the header of the function.
      */
-    String makeDoc(String machineName, MethodData mData) {
+    String makeDocumentation(String machineName, MethodData mData) {
         String params = Stream.of(mData.parameters)
-            .map((Parameter p) -> String.format("#' @param %s %s\n",p.name(), p.desc()))
-            .collect(Collectors.joining(""));
+            .map(prettyParam)
+            .collect(Collectors.joining("\n"));
 
-        String callingExample = Stream.of(mData.parameters)
-            .filter((Parameter p) -> !p.optional())
-            .map((Parameter p) -> p.className().getSimpleName().equals("Double") || p.isList() ? 
-                String.format("%s = %s", p.name(), p.defaultValue()) :
-                String.format("%s = \"%s\"", p.name(), p.defaultValue()))
-            .collect(Collectors.joining(", "));
+        String callingExample = wrapR(
+                Stream.of(mData.parameters)
+                .filter((Parameter p) -> !p.optional())
+                .map((Parameter p) -> 
+                    p.className().getSimpleName().equals("Double") || p.isList() ?
+                        String.format("%s = %s", p.name(), p.defaultValue()) :
+                        String.format("%s = \"%s\"", p.name(), p.defaultValue()))
+                .collect(Collectors.joining(", "))
+            , 10 + this.opiName.length(), true);
 
         String rets = "#' @return a list contianing:\n" + 
             Stream.of(mData.returnMsgs)
-            .map((ReturnMsg r) -> String.format("#'  * %s %s\n",r.name().replaceAll("\\.", "\\$"), r.desc()))
-            .collect(Collectors.joining(""));
+            .map(prettyReturn)
+            .collect(Collectors.joining("\n"));
 
         return String.format("""
 #' Implementation of %s for the %s machine.
@@ -60,34 +108,43 @@ public record OpiFunction(
 #'
 #' @usage NULL
 #'
-%s%s#'
+%s
+#'
+%s
+#'
 #' @examples
 #' chooseOpi("%s")
 #' result <- %s(%s)
 #'
 #' @seealso [%s()]
+#'
     """,
     this.opiName, machineName, // title
     this.opiName,
     params, rets,
     machineName,    // chooseOpi
     this.opiName, 
-    this.opiInputFields.length == 1 ? String.format("%s = list(%s)", this.opiInputFields[0], callingExample) : callingExample,
+    this.opiInputFieldName.length() > 0 ? String.format("%s = list(%s)", this.opiInputFieldName, callingExample) : callingExample,
     this.opiName   // seealso
         );
     }
 
     /**
      * R code to generate a JSON msg of list of params and values
+     * @param params List of params to send to machine
+     * @param envName List variable (environment) where $socket lives
      */
-    static final String sendMessage(Parameter[] params, String envName) {
+    final String sendMessage(Parameter[] params, String envName) {
         return String.format("""
         msg <- list(%s); 
-        msg <- toJSON(msg)
+        msg <- rjson::toJSON(msg)
         writeLines(msg, %s$socket)
     """, 
         Stream.of(params)
-            .map((Parameter p) -> String.format("%s = %s", p.name(), p.name()))
+            .map((Parameter p) -> String.format("%s = %s%s", 
+                p.name(), 
+                this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "",
+                p.name()))
             .collect(Collectors.joining(","))
         ,
         envName, envName);
@@ -98,7 +155,7 @@ public record OpiFunction(
      */
     static final String makeReturnCode(ReturnMsg[] retMsgs, String envName) {
         return String.format("""
-        res <- fromJSON(readLines(%s$socket, n=1))
+        res <- rjson::fromJSON(readLines(%s$socket, n=1))
         return(res)
     """, 
         envName);
@@ -140,15 +197,14 @@ public record OpiFunction(
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 
             // (2) make the function header
-        String params = Stream.of(mData.parameters).map((Parameter p) -> String.format("%s=NULL",p.name())).collect(Collectors.joining(", "));
+        String params = Stream.of(mData.parameters).map((Parameter p) -> String.format("%s = NULL",p.name())).collect(Collectors.joining(", "));
 
-        if (opiInputFields.length == 0) {
+        if (opiInputFieldName.length() == 0) {
             if (Stream.of(mData.parameters).filter((Parameter p) -> p.name().contains(".")).findAny().isPresent())
                 System.err.println("PANIC: I don't know what to do with a Paramter.name() with a '.' in it.");
-        } else if (opiInputFields.length == 1) {
-            params = String.format("%s = list(%s)", opiInputFields[0], params);
-        } else
-            System.err.println("PANIC: I don't know what to do with more than one opiInputFields.");
+        } else {
+            params = String.format("%s = list(%s)", opiInputFieldName, params);
+        } 
 
         String funcSignature = String.format("%s_for_%s <- function(%s)", this.opiName, machineName, params);
 
@@ -175,7 +231,7 @@ public record OpiFunction(
             //    - returns it as returnMsg format
         // something here about returnmsg???
 
-        writer.print(makeDoc(machineName, mData));
+        writer.print(makeDocumentation(machineName, mData));
         writer.print(funcSignature);
         writer.println(" {");
         writer.println(socketCode);

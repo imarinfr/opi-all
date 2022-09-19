@@ -1,21 +1,20 @@
-#' Open Perimetry Interface implementation for O900
-#'
-#' Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
-#'
-#' Licensed under the Apache License, Version 2.0 (the "License");
-#' you may not use this file except in compliance with the License.
-#' You may obtain a copy of the License at
-#'
-#'   http://www.apache.org/licenses/LICENSE-2.0
-#'
-#' Unless required by applicable law or agreed to in writing, software
-#' distributed under the License is distributed on an "AS IS" BASIS,
-#' WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#' See the License for the specific language governing permissions and
-#' limitations under the License.
+# Open Perimetry Interface implementation for O900
+#
+# Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require(rjson)
-source("opi.r")
 
 env.O900 <- vector("list")    # environment for this machine in R
 
@@ -33,27 +32,38 @@ env.O900 <- vector("list")    # environment for this machine in R
 #' @param eye Eye to set.
 #' @param eyeSuite Path to EyeSuite.
 #' @param gazeFeed Path where to save gaze feed. Directory must exists
-#' @param bigWheel Whether O900 has a big wheel for displaying Goldmann Size VI stimuli.
-#' @param pres Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.
-#' @param resp Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.
-#' @param max10000 Whether O900 can handle a maximum luminance of 10000 apostilbs instead of 4000. Check the settings in EyeSuite
+#' @param bigWheel Whether O900 has a big wheel for displaying Goldmann Size VI
+#'                    stimuli.
+#' @param pres Volume for auditory feedback when a stimulus is presented: 0
+#'                means no buzzer.
+#' @param resp Volume for auditory feedback when observer presses the clicker: 0
+#'                means no buzzer.
+#' @param max10000 Whether O900 can handle a maximum luminance of 10000
+#'                    apostilbs instead of 4000. Check the settings in EyeSuite
+#'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'  * msg$jovp Any messages that the JOVP sent back.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiInitialise(ip = "192.126.0.1", port = 50000, ip_Monitor = "localhost", port_Monitor = 50001, eye = "left", eyeSuite = "C:/XXX/eyeSuite/", gazeFeed = "C:/XXX/gazeFeed/", bigWheel = 0, pres = 0, resp = 0, max10000 = 0)
+#' result <- opiInitialise(ip = "192.126.0.1", port = 50000,
+#'                         ip_Monitor = "localhost", port_Monitor = 50001,
+#'                         eye = "left", eyeSuite = "C:/XXX/eyeSuite/",
+#'                         gazeFeed = "C:/XXX/gazeFeed/", bigWheel = 0, pres = 0,
+#'                         resp = 0, max10000 = 0)
 #'
 #' @seealso [opiInitialise()]
-opiInitialise_for_O900 <- function(ip=NULL, port=NULL, ip_Monitor=NULL, port_Monitor=NULL, eye=NULL, eyeSuite=NULL, gazeFeed=NULL, bigWheel=NULL, pres=NULL, resp=NULL, max10000=NULL) {
+#'
+opiInitialise_for_O900 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL, eye = NULL, eyeSuite = NULL, gazeFeed = NULL, bigWheel = NULL, pres = NULL, resp = NULL, max10000 = NULL) {
     env.O900$socket <<- open_socket(ip_Monitor, port_Monitor)
     msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor,eye = eye,eyeSuite = eyeSuite,gazeFeed = gazeFeed,bigWheel = bigWheel,pres = pres,resp = resp,max10000 = max10000);
-    msg <- toJSON(msg)
+    msg <- rjson::toJSON(msg)
     writeLines(msg, env.O900$socket)
 
-    res <- fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
     return(res)
 }
 
@@ -69,33 +79,39 @@ opiInitialise_for_O900 <- function(ip=NULL, port=NULL, ip_Monitor=NULL, port_Mon
 #' @param t List of stimuli presentation times (ms).
 #' @param w List of stimuli response windows (ms).
 #' @param lum List of stimuli luminances (cd/m^2).
-#' @param size Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)
+#' @param size Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
+#'                device has a big wheel)
 #' @param color List of stimuli colors.
+#'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from ImoVifa.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'  * msg$seen true if seen, false if not.
-#'  * msg$time Response time from stimulus onset if button pressed, -1 otherwise (ms).
-#'  * msg$eyex x co-ordinates of pupil at times eyet (degrees).
-#'  * msg$eyey y co-ordinates of pupil at times eyet (degrees).
-#'  * msg$eyed Diameter of pupil at times eyet (degrees).
-#'  * msg$eyet Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).
-#'  * msg$jovp Any JOVP-specific messages that the JOVP sent back.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$seen true if seen, false if not.
+#'    - msg$time Response time from stimulus onset if button pressed, -1
+#'                  otherwise (ms).
+#'    - msg$eyex x co-ordinates of pupil at times eyet (degrees).
+#'    - msg$eyey y co-ordinates of pupil at times eyet (degrees).
+#'    - msg$eyed Diameter of pupil at times eyet (degrees).
+#'    - msg$eyet Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).
+#'    - msg$jovp Any JOVP-specific messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiPresent(stim = list(x = list(0), y = list(0), t = list(200), w = 1500, lum = 20, size = "GV", color = "white"))
+#' result <- opiPresent(stim = list(x = list(0), y = list(0), t = list(200), w = 1500, lum = 20,
+#'                      size = "GV", color = "white"))
 #'
 #' @seealso [opiPresent()]
-opiPresent_for_O900 <- function(stim = list(x=NULL, y=NULL, t=NULL, w=NULL, lum=NULL, size=NULL, color=NULL)) {
+#'
+opiPresent_for_O900 <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
 if(!exists(env.O900$socket) || is.null(env.O900$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = x,y = y,t = t,w = w,lum = lum,size = size,color = color);
-    msg <- toJSON(msg)
+    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,size = stim$size,color = stim$color);
+    msg <- rjson::toJSON(msg)
     writeLines(msg, env.O900$socket)
 
-    res <- fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
     return(res)
 }
 
@@ -111,25 +127,29 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #' @param fixType Fixation target type for eye.
 #' @param fixLum Fixation luminance color for eye (from 0% to 100%).
 #' @param f310 Whether to use Logitech's F310 controlles
+#'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from ImoVifa.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'  * msg$jovp Any messages that the JOVP sent back.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiSetup(settings = list(bgLum = "white", bgCol = "white", fixType = "center", fixLum = 50, f310 = 0))
+#' result <- opiSetup(settings = list(bgLum = "white", bgCol = "white", fixType = "center",
+#'                    fixLum = 50, f310 = 0))
 #'
 #' @seealso [opiSetup()]
-opiSetup_for_O900 <- function(settings = list(bgLum=NULL, bgCol=NULL, fixType=NULL, fixLum=NULL, f310=NULL)) {
+#'
+opiSetup_for_O900 <- function(settings = list(bgLum = NULL, bgCol = NULL, fixType = NULL, fixLum = NULL, f310 = NULL)) {
 if(!exists(env.O900$socket) || is.null(env.O900$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(bgLum = bgLum,bgCol = bgCol,fixType = fixType,fixLum = fixLum,f310 = f310);
-    msg <- toJSON(msg)
+    msg <- list(bgLum = settings$bgLum,bgCol = settings$bgCol,fixType = settings$fixType,fixLum = settings$fixLum,f310 = settings$f310);
+    msg <- rjson::toJSON(msg)
     writeLines(msg, env.O900$socket)
 
-    res <- fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
     return(res)
 }
 
@@ -140,25 +160,29 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #'
 #' @usage NULL
 #'
+
+#'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'  * msg$jovp Any messages that the JOVP sent back.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("O900")
 #' result <- opiClose()
 #'
 #' @seealso [opiClose()]
+#'
 opiClose_for_O900 <- function() {
 if(!exists(env.O900$socket) || is.null(env.O900$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
-    msg <- toJSON(msg)
+    msg <- rjson::toJSON(msg)
     writeLines(msg, env.O900$socket)
 
-    res <- fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
     return(res)
 }
 
@@ -169,25 +193,29 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #'
 #' @usage NULL
 #'
+
+#'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'  * msg$jovp Any messages that the JOVP sent back.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("O900")
 #' result <- opiQueryDevice()
 #'
 #' @seealso [opiQueryDevice()]
+#'
 opiQueryDevice_for_O900 <- function() {
 if(!exists(env.O900$socket) || is.null(env.O900$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
-    msg <- toJSON(msg)
+    msg <- rjson::toJSON(msg)
     writeLines(msg, env.O900$socket)
 
-    res <- fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
     return(res)
 }
 

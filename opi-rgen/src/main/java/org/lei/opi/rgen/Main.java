@@ -5,9 +5,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 
-import org.lei.opi.core.ImoVifa;
-import org.lei.opi.core.O900;
-import org.lei.opi.core.Compass;
 import org.lei.opi.core.OpiMachine;
 
 /**
@@ -22,24 +19,23 @@ public class Main {
      * @return Header string
      */
     static final String makeHeader(String machineName) { return String.format("""
-#' Open Perimetry Interface implementation for %s
-#' 
-#' Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
-#' 
-#' Licensed under the Apache License, Version 2.0 (the "License");
-#' you may not use this file except in compliance with the License.
-#' You may obtain a copy of the License at
-#' 
-#'   http://www.apache.org/licenses/LICENSE-2.0
-#' 
-#' Unless required by applicable law or agreed to in writing, software
-#' distributed under the License is distributed on an "AS IS" BASIS,
-#' WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#' See the License for the specific language governing permissions and
-#' limitations under the License.
+# Open Perimetry Interface implementation for %s
+# 
+# Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#   http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 require(rjson)
-source("opi.r")
 
 env.%s <- vector("list")    # environment for this machine in R
         """, machineName, machineName);
@@ -47,11 +43,11 @@ env.%s <- vector("list")    # environment for this machine in R
 
 
     static final OpiFunction[] functions = { 
-        new OpiFunction("opiInitialise", "initialize", new String[] {}, "list(err = %s)", true),
-        new OpiFunction("opiPresent",   "present", new String[] {"stim"}, "list(err=%s, seen=%s, time=%s", false),
-        new OpiFunction("opiSetup", "setup", new String[] {"settings"}, "%s", false),
-        new OpiFunction("opiClose", "close", new String[] {}, "%s", false),
-        new OpiFunction("opiQueryDevice", "query", new String[] {}, "list(%s)", false)
+        new OpiFunction("opiInitialise", "initialize", "", "list(err = %s)", true),
+        new OpiFunction("opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false),
+        new OpiFunction("opiSetup", "setup", "settings", "%s", false),
+        new OpiFunction("opiClose", "close", "", "%s", false),
+        new OpiFunction("opiQueryDevice", "query", "", "list(%s)", false)
     };
 
     /**
@@ -80,11 +76,11 @@ opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
     public static void main(String args[]) {
         //String path = "/Users/aturpin/temp/TOPI/R/";
         String path = "opi-rgen/src/main/OPI/R/";
-        for (String m : new String[] {"ImoVifa", "Compass", "O900"}) {
+        for (String m : new String[] {"ImoVifa", "Compass", "O900", "PicoVR", "O600", "PhoneHMD", "Kowa", "Display"}) {
             PrintStream printStream = null;
             OpiMachine machine = null;
             try {
-                File file = new File(String.format("%s%s.R", path, m));
+                File file = new File(String.format("%s%s.r", path, m));
                 printStream = new PrintStream(file);
 
                 Class<?> c = Class.forName("org.lei.opi.core." + m);
