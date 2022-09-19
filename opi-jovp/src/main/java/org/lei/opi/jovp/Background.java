@@ -1,19 +1,19 @@
 package org.lei.opi.jovp;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
-
-import org.lei.opi.core.Jovp.Color;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import es.optocom.jovp.structures.ModelType;
 
 /**
  * Background and fixation target settings
  * 
- * @param bgLum background luminance from 0 to 1
- * @param bgCol background color
+ * @param bgCol background RGBA color where each channel range is from 0 to max luminance
  * @param fixShape fixation type
- * @param fixLum fixation luminance from 0 to 1
- * @param fixCol fixation color
+ * @param fixCol fixation RGBA color where each channel range is from 0 to max luminance
  * @param fixCx x center of the fixation target in degrees of visual angle
  * @param fixCy y center of the fixation target in degrees of visual angle
  * @param fixSx mayor axis size of the fixation target in degrees of visual angle
@@ -22,9 +22,11 @@ import es.optocom.jovp.structures.ModelType;
  *
  * @since 0.0.1
  */
-public record Background(double bgLum, double[] bgCol, ModelType fixShape, double fixLum, double[] fixCol,
-                         double fixCx, double fixCy, double fixSx, double fixSy, double fixRotation) {
+public record Background(double[] bgCol, ModelType fixShape, double[] fixCol,
+                         double fixCx, double fixCy, double fixSx, double fixSy,
+                         double fixRotation) {
 
+  private static final String LUMINANCE_TOO_HIGH = "Requested luminance %s cd/m2 is too high. Maximum luminance is %s";
   /**
    * Set background record 
    * 
@@ -33,36 +35,43 @@ public record Background(double bgLum, double[] bgCol, ModelType fixShape, doubl
    * @return a background record
    * 
    * @throws ClassCastException Cast exception
+   * @throws IllegalArgumentException If any value is bad
    * 
    * @since 0.0.1
    */
-  static Background set(HashMap<String, Object> args) throws ClassCastException {
-    return new Background((double) args.get("bgLum"),
-                          color2rgba(Color.valueOf(((String) args.get("bgCol")).toUpperCase())),
+  static Background set(HashMap<String, Object> args, Calibration[] calibration) throws ClassCastException, IllegalArgumentException {
+    double bgLum = (double) args.get("bgLum");
+    double fixLum = (double) args.get("fixLum");
+    double[] bgCol = (double[]) args.get("bgCol");
+    double[] fixCol = (double[]) args.get("fixCol");
+    return new Background(getRGBA(bgLum, bgCol, calibration),
                           ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
-                          (double) args.get("fixLum"),
-                          color2rgba(Color.valueOf(((String) args.get("fixCol")).toUpperCase())),
+                          getRGBA(fixLum, fixCol, calibration),
                           (double) args.get("fixCx"), (double) args.get("fixCy"),
                           (double) args.get("fixSx"), (double) args.get("fixSy"),
                           (double) args.get("fixRotation"));
   }
 
   /**
-   * Obtain RGBA values from color label
+   * Obtain pixel level from luminance in cd/m2 from gamma function
    *
-   * @param color an Enum with a color label 
+   * @param lum the luminance in cd/m2
+   * @param gamma the gamma function
    * 
-   * @return the rgba values for that color
+   * @return the device-dependent pixel level between 0 and 1
+   * 
+   * @throws IllegalArgumentException If any value is bad
    * 
    * @since 0.0.1
    */
-  static double[] color2rgba(Color color) {
-    return switch(color) {
-      case WHITE -> new double[] {1, 1, 1, 1};
-      case RED -> new double[] {1, 0, 0, 1};
-      case GREEN -> new double[] {0, 1, 0, 1};
-      case BLUE -> new double[] {0, 0, 1, 1};
-    };
+  private static double[] getRGBA(double lum, double[] color, Calibration[] calibration) throws IllegalArgumentException {
+    // TODO: make proper use of max luminance
+    if (lum > calibration[0].maxLum())
+      throw new IllegalArgumentException(String.format(LUMINANCE_TOO_HIGH, lum, calibration[0].maxLum()));
+    //List<Double> list = Arrays.stream(gamma).mapToDouble(pixVal -> Math.abs(pixVal - lum))
+    //                                        .boxed().collect(Collectors.toList());
+    //(double) (list.indexOf(Collections.min(list)) / (double) depth)
+    return new double[] {0.1, 0.4, 0.8, 1};
   }
 
 }

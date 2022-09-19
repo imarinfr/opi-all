@@ -10,7 +10,8 @@ import java.util.HashMap;
 public class Jovp extends OpiMachine {
 
   public enum Eye {LEFT, RIGHT, BOTH};
-  public enum ShapeType {CIRCLE, SQUARE, TRIANGLE, ANNULUS, CROSS, MALTESE}; // for stimulus presentation and fixation target
+  public enum Shape {CIRCLE, SQUARE, TRIANGLE, ANNULUS, CROSS, MALTESE};
+  public enum Type {FLAT, SINE, SQUARESINE, CHECKERBOARD, G1, G2, G3};
 
   /**
    * JOVP constructor

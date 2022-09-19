@@ -1,9 +1,9 @@
 {
   "screen": 0,
-  "fullScreen": true,
-  "distance": 80,
+  "fullScreen": false,
+  "distance": 100,
   "viewMode": "stereo",
-  "input": "clicker",
+  "input": "mouse",
   "tracking": false,
   "depth": 8,
   "gamma": "gamma8bit.json"

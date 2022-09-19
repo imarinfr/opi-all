@@ -47,7 +47,6 @@ public class ProtocolTests {
     /** load JSON message */
     static String loadMessage(String file) throws IOException {
       InputStream inputStream = ProtocolTests.class.getResourceAsStream(file);
-      assert inputStream != null;
       return IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8));
     }
 
@@ -70,29 +69,48 @@ public class ProtocolTests {
   }
 
   /**
-   * Monitor IMO perimeter
+   * Monitor controlling Display on monoscopic view
    *
    * @since 0.0.1
    */
   @Test
-  public void monitorDisplay() {
-    opiJovp = new OpiJovp(Machine.DISPLAY);
+  public void monitorDisplayMono() {
+    opiJovp = new OpiJovp(Machine.DISPLAY_MONO);
     opiJovp.open(PORT);
+    runMonitor(opiJovp);
+    opiJovp.start(); // start the psychoEngine
+    opiJovp.close(); // close the psychoEngine
+  }
+
+  /**
+   * Monitor controlling Display on stereoscopic view
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void monitorDisplayStereo() {
+    opiJovp = new OpiJovp(Machine.DISPLAY_STEREO);
+    opiJovp.open(PORT);
+    runMonitor(opiJovp);
+    opiJovp.start(); // start the psychoEngine
+    opiJovp.close(); // close the psychoEngine
+  }
+
+  /** start psychoEngine */
+  private void runMonitor(OpiJovp opiJovp) {
     new Thread() {
       public void run() {
         try {
           Thread.sleep(200);
           monitorDriver();
           Thread.sleep(200);
-          //signal finish all
+          // signal finish to psychoEngine
           opiJovp.psychoEngine.finish();
         } catch (InterruptedException e) {
           throw new RuntimeException(e);
         }
       }
     }.start();
-    opiJovp.start(); // start the psychoEngine
-    opiJovp.close(); // start the psychoEngine
   }
 
   /** server driver with lists of present/query etc*/
@@ -110,11 +128,11 @@ public class ProtocolTests {
   private void monitorDriver(String initJson, String[] setupJson, String[] presentJson) throws InterruptedException {
     try {
       new Monitor(opiJovp.listener);
-      sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(Monitor.loadMessage(initJson)); // Initialize OPI
+      sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       Thread.sleep(1000);
       for (String s : setupJson) sendAndReceive(Monitor.loadMessage(s)); // Setup OPI
-      Thread.sleep(1000);
+      Thread.sleep(5000);
       for (String s : presentJson) sendAndReceive(Monitor.loadMessage(s)); // Present OPI
       sendAndReceive(Monitor.loadMessage("jsons/opiClose.json")); // Close OPI
       Monitor.close();

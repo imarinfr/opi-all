@@ -114,7 +114,7 @@ public class OpiDriver extends MessageProcessor {
    */
   private MessageProcessor.Packet setup(HashMap<String, Object> args) {
     try {
-      backgrounds[0] = Background.set(args);
+      backgrounds[0] = Background.set(args, settings.calibration());
       return OpiManager.ok("OPI JOVP " + settings.machine() + ": background and fixation target set", false);
     } catch (ClassCastException e) {
       return OpiManager.error("OPI JOVP " + settings.machine() + ": problem while setting background and fixation target.", e);

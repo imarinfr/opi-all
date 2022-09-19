@@ -1,0 +1,10 @@
+{
+  "screen": 0,
+  "fullScreen": false,
+  "distance": 100,
+  "viewMode": "mono",
+  "input": "mouse",
+  "tracking": false,
+  "depth": 8,
+  "gamma": "gamma8bit.json"
+}

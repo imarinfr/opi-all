@@ -18,7 +18,7 @@ public class ConnectionTests {
    */
   @Test
   public void getIDAndPort() {
-    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY);
+    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY_MONO);
     opiJovp.open(50001);
     System.out.println("[getIDAndPort] " + opiJovp.listener);
     opiJovp.close();
@@ -32,7 +32,7 @@ public class ConnectionTests {
    */
   @Test
   public void changeLocalPort() {
-    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY);
+    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY_MONO);
     opiJovp.open(50001);
     System.out.println("[changeLocalPort] Address was at " + opiJovp.listener);
     opiJovp.close();
