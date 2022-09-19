@@ -10,6 +10,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+import es.optocom.jovp.Monitor;
+import es.optocom.jovp.PsychoEngine;
+import es.optocom.jovp.structures.ViewMode;
+
 /**
  * The OPI JOVP driver
  *
@@ -18,16 +22,19 @@ import com.google.gson.reflect.TypeToken;
 public class OpiDriver extends MessageProcessor {
 
   /** A background record to communicate with OpiLogic */
-  final Settings settings;
+  protected final Settings settings;
+  /** Message prefix */
+  private final String prefix;
+  /** The psychoEngine */
+  private PsychoEngine psychoEngine = null;
   /** A background record to communicate with OpiLogic */
-  Background[] backgrounds;
+  protected Background[] backgrounds;
   /** A stimulus record to communicate with OpiLogic */
-  Stimulus stimulus;
+  protected Stimulus stimulus;
   /** A record to record the results after a stimulus prsentation */
-  Response response;
-
-  /** Whether driver has been initialized */
-  boolean initialized = false;
+  protected Response response;
+  /** Whether opiInitialized has been invoked and not closed later on by opiClose */
+  protected boolean initialized = false;
 
   /**
    * The OpiDriver
@@ -40,10 +47,22 @@ public class OpiDriver extends MessageProcessor {
    */
   OpiDriver(Settings settings) {
     this.settings = settings;
+    this.prefix = "OPI JOVP " + settings.machine() + ": ";
     switch (settings.viewMode()) {
       case MONO -> backgrounds = new Background[] {null};
       case STEREO -> backgrounds = new Background[] {null, null};
     }
+  }
+
+  /**
+   * Initialize the driver with a psychoEngine
+   *
+   * @param psychoEngine The psychoEngine
+   * 
+   * @since 0.1.0
+   */
+  void init(PsychoEngine psychoEngine) {
+    this.psychoEngine = psychoEngine;
   }
 
   /**
@@ -88,10 +107,17 @@ public class OpiDriver extends MessageProcessor {
    */
   private MessageProcessor.Packet query() {
     try {
-      Query queryRecord = new Query(settings.distance(), settings.viewMode(), settings.input(), settings.depth(), new double[] {1, 2}, null);
-      return OpiManager.ok("OPI JOVP " + settings.machine() + " settings: " + queryRecord, false);
+      double[] fov = new double[] {-1, -1};
+      Monitor monitor = null;
+      if (psychoEngine != null) {
+        fov = psychoEngine.getFieldOfView();
+        if (settings.viewMode() == ViewMode.STEREO) fov[0] /= 2;
+        monitor = psychoEngine.getWindow().getMonitor();
+      }
+      Query query = new Query(settings.distance(), settings.viewMode(), settings.input(), settings.depth(), fov, monitor);
+      return OpiManager.ok(prefix + "opiQuery successful: " + query, false); 
     } catch (Exception e) {
-      return OpiManager.error("OPI JOVP " + settings.machine() + ": problem while querying.", e);
+      return OpiManager.error(prefix + "problem with opiQuery", e);
     }
   }
 
@@ -101,8 +127,12 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet initialize() {
-    initialized = true;
-    return OpiManager.ok("OPI JOVP " + settings.machine() + ": initialized", false);
+    try{
+      initialized = true;
+      return OpiManager.ok(prefix + "opiInitialize successful", false);
+    } catch (Exception e) {
+      return OpiManager.error(prefix + "problem with opiInitialize", e);
+    }
   }
 
   /**
@@ -115,9 +145,9 @@ public class OpiDriver extends MessageProcessor {
   private MessageProcessor.Packet setup(HashMap<String, Object> args) {
     try {
       backgrounds[0] = Background.set(args, settings.calibration());
-      return OpiManager.ok("OPI JOVP " + settings.machine() + ": background and fixation target set", false);
+      return OpiManager.ok(prefix + "opiSetup successful", false);
     } catch (ClassCastException e) {
-      return OpiManager.error("OPI JOVP " + settings.machine() + ": problem while setting background and fixation target.", e);
+      return OpiManager.error(prefix + "problem with opiSetup", e);
     }
   }
 
@@ -132,9 +162,9 @@ public class OpiDriver extends MessageProcessor {
     try {
       stimulus = Stimulus.set(args);
       response = new Response(true, 537, 0.3, 0.8, 6.2, 258);
-      return OpiManager.ok("OPI JOVP " + settings.machine() + " present: " + response, false);
+      return OpiManager.ok(prefix + "opiPresent successful: " + response, false);
     } catch (Exception e) {
-      return OpiManager.error("OPI JOVP " + settings.machine() + ": problem while presenting.", e);
+      return OpiManager.error(prefix + "problem with opiPresent", e);
     }
   }
 
@@ -144,8 +174,12 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet close() {
-    initialized = false;
-    return OpiManager.ok("OPI JOVP " + settings.machine() + ": closed", true);
+    try{
+      initialized = false;
+      return OpiManager.ok(prefix + "opiClose successful", true);
+    } catch (Exception e) {
+      return OpiManager.error(prefix + "problem with opiClose", e);
+    }
   }
 
 }

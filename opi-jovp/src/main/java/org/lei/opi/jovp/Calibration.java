@@ -39,10 +39,11 @@ public record Calibration(double maxLum, int depth, double[] gamma) {
     //if ()
     if (IntStream.range(1, gamma.length).anyMatch(i -> gamma[i - 1] > gamma[i]))
     throw new IllegalArgumentException(UNSORTED_GAMMA_FUNCTION);
-    if (gamma[0] < 0 || gamma[gamma.length] > 1)
+    if (gamma[0] < 0 || gamma[gamma.length - 1] > 1)
       throw new IllegalArgumentException(WRONG_GAMMA_VALUE);
     this.maxLum = maxLum;
     this.depth = depth;
     this.gamma = gamma;
   }
+
 }

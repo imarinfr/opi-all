@@ -128,7 +128,11 @@ public class ProtocolTests {
   private void monitorDriver(String initJson, String[] setupJson, String[] presentJson) throws InterruptedException {
     try {
       new Monitor(opiJovp.listener);
+      System.out.println("QUERY before initialized");
+      sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(Monitor.loadMessage(initJson)); // Initialize OPI
+      Thread.sleep(1000);
+      System.out.println("QUERY after initialized");
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       Thread.sleep(1000);
       for (String s : setupJson) sendAndReceive(Monitor.loadMessage(s)); // Setup OPI

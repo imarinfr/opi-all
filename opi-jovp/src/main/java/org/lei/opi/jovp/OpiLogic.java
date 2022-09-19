@@ -12,7 +12,7 @@ import es.optocom.jovp.structures.ModelType;
    *
    * @since 0.0.1
    */
-  public class OpiLogic implements PsychoLogic{
+  public class OpiLogic implements PsychoLogic {
 
     /** Default background shape */
     private static final ModelType DEFAULT_BACKGROUND_SHAPE = ModelType.CIRCLE;
@@ -82,7 +82,7 @@ import es.optocom.jovp.structures.ModelType;
     public void init(PsychoEngine psychoEngine) {
       // set size of the backgroud to be the field of view
       double[] fov = psychoEngine.getFieldOfView();
-      for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0] / backgrounds.length, fov[1]);
+      for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0] / 2, fov[1]);
       // add perimetry items, background, fixation, stimulus
       items.add(backgrounds[0]);
       items.add(fixations[0]);
@@ -121,7 +121,7 @@ import es.optocom.jovp.structures.ModelType;
       // present stimulus
       presentStimulus();
     }
- 
+
     /** Change background */
     private void setBackgroundAndFixation() {
       for (int i = 0; i < backgrounds.length; i++) {

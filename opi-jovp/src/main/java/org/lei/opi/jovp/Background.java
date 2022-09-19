@@ -1,10 +1,7 @@
 package org.lei.opi.jovp;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import es.optocom.jovp.structures.ModelType;
 
@@ -42,8 +39,8 @@ public record Background(double[] bgCol, ModelType fixShape, double[] fixCol,
   static Background set(HashMap<String, Object> args, Calibration[] calibration) throws ClassCastException, IllegalArgumentException {
     double bgLum = (double) args.get("bgLum");
     double fixLum = (double) args.get("fixLum");
-    double[] bgCol = (double[]) args.get("bgCol");
-    double[] fixCol = (double[]) args.get("fixCol");
+    double[] bgCol = ((ArrayList<?>) (args.get("bgCol"))).stream().mapToDouble(Double.class::cast).toArray();
+    double[] fixCol = ((ArrayList<?>) (args.get("fixCol"))).stream().mapToDouble(Double.class::cast).toArray();
     return new Background(getRGBA(bgLum, bgCol, calibration),
                           ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
                           getRGBA(fixLum, fixCol, calibration),

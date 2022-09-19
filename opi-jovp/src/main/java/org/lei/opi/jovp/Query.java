@@ -23,7 +23,7 @@ public record Query(int distance, ViewMode viewMode, Input input, int setupDepth
    * @since 0.0.1
    */
   public String toString() {
-    StringBuilder str = new StringBuilder("[{\n");
+    StringBuilder str = new StringBuilder("{\n");
     str.append("\"distance\": " + distance + ",\n")
        .append("\"viewMode\": " + viewMode + ",\n")
        .append("\"input\": " + input);
@@ -31,8 +31,8 @@ public record Query(int distance, ViewMode viewMode, Input input, int setupDepth
       int[] colorDepth = monitor.getColorDepth();
       double[] dpi = monitor.getDpi();  
       str.append(",\n")
-         .append("\"xfov\": " + fov[0] + ",\n")
-         .append("\"yfov\": " + fov[1] + ",\n")
+         .append("\"xFov\": " + fov[0] + ",\n")
+         .append("\"yFov\": " + fov[1] + ",\n")
          .append("\"monitorName\": " + monitor.getName() + ",\n")
          .append("\"width\": " + monitor.getWidth() + ",\n")
          .append("\"height\": " + monitor.getHeight() + ",\n")
@@ -40,15 +40,15 @@ public record Query(int distance, ViewMode viewMode, Input input, int setupDepth
          .append("\"heightMM\": " + monitor.getHeightMM() + ",\n")
          .append("\"pixelWidth\": " + 1000 * monitor.getPixelWidth() + ",\n")
          .append("\"pixelHeight\": " + 1000 * monitor.getPixelHeight() + ",\n")
-         .append("\"pixelHeight\": " + monitor.getPixelAspect() + ",\n")
-         .append("\"xdpi\": " + dpi[0] + ",\n")
-         .append("\"ydpi\": " + dpi[1] + ",\n")
+         .append("\"aspectRatio\": " + monitor.getPixelAspect() + ",\n")
+         .append("\"xDpi\": " + dpi[0] + ",\n")
+         .append("\"yDpi\": " + dpi[1] + ",\n")
          .append("\"refreshRate\": " + monitor.getRefreshRate() + ",\n")
-         .append("\"rdepth\": " + colorDepth[0] + ",\n")
-         .append("\"gdepth\": " + colorDepth[1] + ",\n")
-         .append("\"bdepth\": " + colorDepth[2]);
+         .append("\"Rbits\": " + colorDepth[0] + ",\n")
+         .append("\"Gbits\": " + colorDepth[1] + ",\n")
+         .append("\"Bbits\": " + colorDepth[2]);
     }
-    str.append("\n}]");
+    str.append("\n}");
     return str.toString();
   }
 

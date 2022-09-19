@@ -20,10 +20,10 @@ public record Response(boolean seen, int time, double eyex, double eyey, double 
    * @since 0.0.1
    */
   public String toString() {
-    StringBuilder str = new StringBuilder("[{\n");
+    StringBuilder str = new StringBuilder("{\n");
     str.append("\"seen\": " + seen + ",\n").append("\"time\": " + time + ",\n")
        .append("\"eyex\": " + eyex + ",\n").append("\"eyey\": " + eyey + ",\n")
-       .append("\"eyed\": " + eyed + ",\n").append("\"eyet\": " + eyet + "\n}]");
+       .append("\"eyed\": " + eyed + ",\n").append("\"eyet\": " + eyet + "\n}");
     return str.toString();
   }
 

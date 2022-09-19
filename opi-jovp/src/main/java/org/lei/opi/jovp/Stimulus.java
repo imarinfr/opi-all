@@ -16,21 +16,23 @@ import es.optocom.jovp.structures.TextureType;
  * @param y y center of the stimulus in degrees of visual angle
  * @param sx major axis size of the stimulus in degrees of visual angle
  * @param sy minor axis size of the stimulus in degrees of visual angle
- * @param rotation  rotation of the stimulus in degrees
  * @param lum stimulus luminance
  * @param color stimulus color
+ * @param rotation rotation of the stimulus in degrees
  * @param contrast stimulus contrast
+ * @param defocus stimulus defocus in Diopters for stimulus such as "Gaussian blob", Gabors, etc
  * @param frequency stimulus spatial frequency
- * @param defocus stimulus defocus in Diopters
+ * @param patRotation stimulus pattern rotation in degrees
  * @param t presentation time in ms
  * @param w response window in ms
  *
  * @since 0.0.1
  */
 public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
-                       double[] x, double[] y, double[] sx, double[] sy, double[] rotation,
-                       double[] lum, double[][] color, double[] contrast, double[] frequency,
-                       double[] defocus, int[] t, int w) {
+                       double[] x, double[] y, double[] sx, double[] sy,
+                       double[] lum, double[][] color, double[] rotation,
+                       double[] contrast, double[] defocus, double[] frequency,
+                       double[] patRotation, int[] t, int w) {
 
   /**
    * Set stimulus record
@@ -58,8 +60,10 @@ public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
       double[] contrast = new double[] {1, 0.5};
       double[] frequency = new double[] {4, 2};
       double[] defocus = new double[] {0, 1};
+      double[] patRotation = new double[] {30, 60};
       int[] t = new int[] {200, 500};
-      return new Stimulus(eye, shape, type, x, y, sx, sy, rotation, lum, color, contrast, frequency, defocus, t, 1500);
+      return new Stimulus(eye, shape, type, x, y, sx, sy, lum, color, rotation,
+                          contrast, defocus, frequency, patRotation, t, 1500);
     } catch(ClassCastException e) {
       String errorMessage = "Problem setting stimulus. Pairs of values were: " + args;
       System.err.println(errorMessage);

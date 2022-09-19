@@ -87,9 +87,10 @@ public class OpiJovp {
   public void start() {
     psychoEngine = new PsychoEngine(new OpiLogic(driver), settings.distance(), settings.viewMode(), settings.input(),
                                     Settings.PARADIGM, Settings.VALIDATION_LAYERS, Settings.API_DUMP);
-    psychoEngine.setWindowMonitor(settings.screen());
-    if (settings.fullScreen()) psychoEngine.setFullScreen();
     psychoEngine.hide();
+    psychoEngine.setWindowMonitor(settings.screen());
+    driver.init(psychoEngine);
+    if (settings.fullScreen()) psychoEngine.setFullScreen();
     psychoEngine.start();
     psychoEngine.cleanup();
     psychoEngine = null;

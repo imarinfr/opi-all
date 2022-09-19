@@ -4,10 +4,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -184,27 +185,14 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
       // if gamma not path and not a resource file, then throw IOException
     }
     HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
-    double[] gammaRed = toDoubleArray((String) pairs.get("gammaRed"));
-    double[] gammaGreen = toDoubleArray((String) pairs.get("gammaRed"));
-    double[] gammaBlue = toDoubleArray((String) pairs.get("gammaRed"));
+    double[] gammaRed = ((ArrayList<?>) (pairs.get("gammaRed"))).stream().mapToDouble(Double.class::cast).toArray();
+    double[] gammaGreen = ((ArrayList<?>) (pairs.get("gammaGreen"))).stream().mapToDouble(Double.class::cast).toArray();
+    double[] gammaBlue = ((ArrayList<?>) (pairs.get("gammaBlue"))).stream().mapToDouble(Double.class::cast).toArray();
     return new Calibration[] {
       new Calibration((double) pairs.get("maxRed"), depth, gammaRed),
       new Calibration((double) pairs.get("maxGreen"), depth, gammaGreen),
       new Calibration((double) pairs.get("maxBlue"), depth, gammaBlue)
     };
-  }
-
-  /**
-   * Get calibration from a path
-   * 
-   * @param gammaStr String of gamma values separated by spaces
-   *
-   * @throws IOException
-   *
-   * @since 0.0.1
-   */
-  private static double[] toDoubleArray(String gammaStr) {
-    return Arrays.stream(gammaStr.split(" ")).mapToDouble(Double::valueOf).toArray();
   }
 
   /**
