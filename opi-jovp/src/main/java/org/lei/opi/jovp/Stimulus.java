@@ -1,6 +1,10 @@
 package org.lei.opi.jovp;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import org.lei.opi.core.Jovp.Shape;
+import org.lei.opi.core.Jovp.Type;
 
 import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ModelType;
@@ -19,9 +23,9 @@ import es.optocom.jovp.structures.TextureType;
  * @param color stimulus color
  * @param rotation rotation of the stimulus in degrees
  * @param contrast stimulus contrast
- * @param defocus stimulus defocus in Diopters for stimulus such as "Gaussian blob", Gabors, etc
  * @param phase stimulus spatial phase
  * @param frequency stimulus spatial frequency
+ * @param defocus stimulus defocus in Diopters for stimulus such as "Gaussian blob", Gabors, etc
  * @param texRotation stimulus pattern rotation in degrees
  * @param t presentation time in ms
  * @param w response window in ms
@@ -31,7 +35,7 @@ import es.optocom.jovp.structures.TextureType;
 public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
                        double[] x, double[] y, double[] sx, double[] sy,
                        double[][] color, double[] rotation, double[] contrast,
-                       double[] defocus, double[] phase, double[] frequency,
+                       double[] phase, double[] frequency, double[] defocus,
                        double[] texRotation, int[] t, int w) {
 
   /**
@@ -45,30 +49,24 @@ public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
    * 
    * @since 0.0.1
    */
-  static Stimulus set(HashMap<String, Object> args) throws ClassCastException {
-    try {
-      Eye[] eye = new Eye[] {Eye.RIGHT};
-      ModelType[] shape = new ModelType[] {ModelType.CIRCLE};
-      TextureType[] type = new TextureType[] {TextureType.FLAT};
-      double[] x = new double[] {5};
-      double[] y = new double[] {8};
-      double[] sx = new double[] {3};
-      double[] sy = new double[] {5};
-      double[] rotation = new double[] {45};
-      double[][] color = new double[][] {{1, 1, 1, 1}};
-      double[] contrast = new double[] {1};
-      double[] phase = new double[] {0};
-      double[] frequency = new double[] {4};
-      double[] defocus = new double[] {0};
-      double[] texRotation = new double[] {0};
-      int[] t = new int[] {500};
-      return new Stimulus(eye, shape, type, x, y, sx, sy, color, rotation,
-                          contrast, defocus, phase, frequency, texRotation, t, 1500);
-    } catch(ClassCastException e) {
-      String errorMessage = "Problem setting stimulus. Pairs of values were: " + args;
-      System.err.println(errorMessage);
-      throw new ClassCastException(errorMessage);
-    }
+  static Stimulus set(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException {
+
+    double[] x = ((ArrayList<?>) (args.get("x"))).stream().mapToDouble(Double.class::cast).toArray();
+    double[] y = ((ArrayList<?>) (args.get("y"))).stream().mapToDouble(Double.class::cast).toArray();
+    return new Stimulus(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
+                        Shape.valueOf(((String) args.get("shape")).toUpperCase()),
+                        Type.valueOf(((String) args.get("type")).toUpperCase()),
+                        parToDouble(args.get("x")), parToDouble(args.get("y")),
+                        parToDouble(args.get("sx")), parToDouble(args.get("sy")),
+                        color,
+                        parToDouble(args.get("rotation")), parToDouble(args.get("contrast")),
+                        parToDouble(args.get("phase")), parToDouble(args.get("frequency")),
+                        parToDouble(args.get("defocus")), parToDouble(args.get("texRotation")),
+                        parToDouble(args.get("t")), (double) args.get("t"));
+
   }
 
+  private static double[] parToDouble(Object param) {
+    return ((ArrayList<?>) param).stream().mapToDouble(Double.class::cast).toArray();
+  }
 }
