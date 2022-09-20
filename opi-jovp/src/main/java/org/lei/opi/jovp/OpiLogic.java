@@ -2,6 +2,7 @@ package org.lei.opi.jovp;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
+import es.optocom.jovp.Timer;
 import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Texture;
@@ -36,7 +37,9 @@ import es.optocom.jovp.structures.ModelType;
     private Item stimulus;
   
     /** A timer to control, well, you know, er, time? */
-    int ellapseTime = 0;
+    Timer timer = new Timer();
+    /** time from onset to keep track of the presentation */
+    long ellapseTime = -1;
     /** Whether stimulus is displaying */
     boolean onset = false;
     /** Whether observer responded to stimulus */
@@ -82,11 +85,16 @@ import es.optocom.jovp.structures.ModelType;
     public void init(PsychoEngine psychoEngine) {
       // set size of the backgroud to be the field of view
       double[] fov = psychoEngine.getFieldOfView();
-      for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0] / 2, fov[1]);
-      // add perimetry items, background, fixation, stimulus
-      items.add(backgrounds[0]);
-      items.add(fixations[0]);
+      // add perimetry items, stimulus, fixation, background. Order matters
+      for (int i = 0; i < backgrounds.length; i++) {
+        items.add(fixations[i]);
+      }
       items.add(stimulus);
+      for (int i = 0; i < backgrounds.length; i++) {
+        backgrounds[i].size(fov[0] / backgrounds.length, fov[1]);
+        items.add(fixations[i]);
+        items.add(backgrounds[i]);
+      }
     }
 
     /**
@@ -127,24 +135,36 @@ import es.optocom.jovp.structures.ModelType;
       for (int i = 0; i < backgrounds.length; i++) {
         // check if background and fixation settings have changed
         if(driver.backgrounds[i] != null) {
-          backgrounds[0].setColor(driver.backgrounds[0].bgCol());
-          // TODO: fixation setType
+          backgrounds[i].setColor(driver.backgrounds[i].bgCol());
+          // TODO: allow to change fixation shape
           // set new position, size and rotation in fixation target
-          fixations[0].position(driver.backgrounds[0].fixCx(), driver.backgrounds[0].fixCy());
-          fixations[0].size(driver.backgrounds[0].fixSx(), driver.backgrounds[0].fixSy());
-          fixations[0].rotation(driver.backgrounds[0].fixRotation());
+          fixations[i].position(driver.backgrounds[i].fixCx(), driver.backgrounds[i].fixCy());
+          fixations[i].size(driver.backgrounds[i].fixSx(), driver.backgrounds[i].fixSy());
+          fixations[i].rotation(driver.backgrounds[i].fixRotation());
           // set new luminance and color in fixation target
-          fixations[0].setColor(driver.backgrounds[0].fixCol());
+          fixations[i].setColor(driver.backgrounds[i].fixCol());
           driver.backgrounds[i] = null; // set background record to null when done with it
         }
       }
     }
 
-    /** Present stimulus */
+    /** Present stimulus upon request*/
     private void presentStimulus() {
-      if (driver.stimulus == null) return;
-      // once done, set stimulus record to null
-      driver.stimulus = null;
+      // onset: show stimulus and start timer
+      if (!onset && driver.stimulus != null) {
+        stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
+        stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
+        stimulus.rotation(driver.stimulus.rotation()[0]);
+        stimulus.setColor(driver.stimulus.color()[0]);
+        stimulus.contrast(driver.stimulus.contrast()[0]);
+        stimulus.frequency(driver.stimulus.phase()[0], driver.stimulus.frequency()[0]);
+        stimulus.defocus(driver.stimulus.defocus()[0]);
+        stimulus.texRotation(driver.stimulus.texRotation()[0]);
+        stimulus.show();
+        timer.start();
+        onset = true;
+      }
+      if(!onset) return;
     }
 
   }

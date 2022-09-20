@@ -1,7 +1,9 @@
 package org.lei.opi.jovp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.DoubleStream;
 
 import es.optocom.jovp.structures.ModelType;
 
@@ -24,6 +26,7 @@ public record Background(double[] bgCol, ModelType fixShape, double[] fixCol,
                          double fixRotation) {
 
   private static final String LUMINANCE_TOO_HIGH = "Requested luminance %s cd/m2 is too high. Maximum luminance is %s";
+  private static final String COLOR_OUTSIDE_RANGE = "Color values outside range [0, 1]. Color was %s";
   /**
    * Set background record 
    * 
@@ -62,13 +65,31 @@ public record Background(double[] bgCol, ModelType fixShape, double[] fixCol,
    * @since 0.0.1
    */
   private static double[] getRGBA(double lum, double[] color, Calibration[] calibration) throws IllegalArgumentException {
-    // TODO: make proper use of max luminance
     if (lum > calibration[0].maxLum())
       throw new IllegalArgumentException(String.format(LUMINANCE_TOO_HIGH, lum, calibration[0].maxLum()));
-    //List<Double> list = Arrays.stream(gamma).mapToDouble(pixVal -> Math.abs(pixVal - lum))
-    //                                        .boxed().collect(Collectors.toList());
-    //(double) (list.indexOf(Collections.min(list)) / (double) depth)
-    return new double[] {0.1, 0.4, 0.8, 1};
+    if (DoubleStream.of(color).anyMatch(val -> val < 0 || val > 1))
+      throw new IllegalArgumentException(String.format(COLOR_OUTSIDE_RANGE, Arrays.toString(color)));
+    // TODO: make proper use of max luminance and gamma function: stuff below is incorrect.
+    return new double[] {
+      getRelativeColorValue(lum * color[0], calibration[0].maxLum(), calibration[0].gamma()),
+      getRelativeColorValue(lum * color[1], calibration[1].maxLum(), calibration[1].gamma()),
+      getRelativeColorValue(lum * color[2], calibration[2].maxLum(), calibration[2].gamma()),
+      1}; // alpha channel
+  }
+
+  /**
+   * Computes the relative color value for a channel 
+   *
+   * @param lum the luminance for the channel in cd/m2
+   * @param maxLum the maximum luminance for the channel in cd/m2
+   * @param gamma the gamma function for that channel
+   * 
+   * @return the relative channel value
+   * 
+   * @since 0.0.1
+   */
+  private static double getRelativeColorValue(double lum, double maxLum, double[] gamma) {
+    return lum / maxLum;
   }
 
 }

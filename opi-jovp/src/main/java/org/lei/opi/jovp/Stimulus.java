@@ -16,13 +16,13 @@ import es.optocom.jovp.structures.TextureType;
  * @param y y center of the stimulus in degrees of visual angle
  * @param sx major axis size of the stimulus in degrees of visual angle
  * @param sy minor axis size of the stimulus in degrees of visual angle
- * @param lum stimulus luminance
  * @param color stimulus color
  * @param rotation rotation of the stimulus in degrees
  * @param contrast stimulus contrast
  * @param defocus stimulus defocus in Diopters for stimulus such as "Gaussian blob", Gabors, etc
+ * @param phase stimulus spatial phase
  * @param frequency stimulus spatial frequency
- * @param patRotation stimulus pattern rotation in degrees
+ * @param texRotation stimulus pattern rotation in degrees
  * @param t presentation time in ms
  * @param w response window in ms
  *
@@ -30,9 +30,9 @@ import es.optocom.jovp.structures.TextureType;
  */
 public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
                        double[] x, double[] y, double[] sx, double[] sy,
-                       double[] lum, double[][] color, double[] rotation,
-                       double[] contrast, double[] defocus, double[] frequency,
-                       double[] patRotation, int[] t, int w) {
+                       double[][] color, double[] rotation, double[] contrast,
+                       double[] defocus, double[] phase, double[] frequency,
+                       double[] texRotation, int[] t, int w) {
 
   /**
    * Set stimulus record
@@ -47,23 +47,23 @@ public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
    */
   static Stimulus set(HashMap<String, Object> args) throws ClassCastException {
     try {
-      Eye[] eye = new Eye[] {Eye.LEFT, Eye.RIGHT};
-      ModelType[] shape = new ModelType[] {ModelType.CIRCLE, ModelType.SQUARE};
-      TextureType[] type = new TextureType[] {TextureType.FLAT, TextureType.SINE};
-      double[] x = new double[] {1, 2};
-      double[] y = new double[] {3, 4};
-      double[] sx = new double[] {3, 5};
-      double[] sy = new double[] {5, 2};
-      double[] rotation = new double[] {0, 45};
-      double[] lum = new double[] {30, 20};
-      double[][] color = new double[][] {{1, 1, 1, 1}, {1, 0, 1, 1}};
-      double[] contrast = new double[] {1, 0.5};
-      double[] frequency = new double[] {4, 2};
-      double[] defocus = new double[] {0, 1};
-      double[] patRotation = new double[] {30, 60};
-      int[] t = new int[] {200, 500};
-      return new Stimulus(eye, shape, type, x, y, sx, sy, lum, color, rotation,
-                          contrast, defocus, frequency, patRotation, t, 1500);
+      Eye[] eye = new Eye[] {Eye.RIGHT};
+      ModelType[] shape = new ModelType[] {ModelType.CIRCLE};
+      TextureType[] type = new TextureType[] {TextureType.FLAT};
+      double[] x = new double[] {5};
+      double[] y = new double[] {8};
+      double[] sx = new double[] {3};
+      double[] sy = new double[] {5};
+      double[] rotation = new double[] {45};
+      double[][] color = new double[][] {{1, 1, 1, 1}};
+      double[] contrast = new double[] {1};
+      double[] phase = new double[] {0};
+      double[] frequency = new double[] {4};
+      double[] defocus = new double[] {0};
+      double[] texRotation = new double[] {0};
+      int[] t = new int[] {500};
+      return new Stimulus(eye, shape, type, x, y, sx, sy, color, rotation,
+                          contrast, defocus, phase, frequency, texRotation, t, 1500);
     } catch(ClassCastException e) {
       String errorMessage = "Problem setting stimulus. Pairs of values were: " + args;
       System.err.println(errorMessage);

@@ -119,7 +119,8 @@ public class ProtocolTests {
       "jsons/Display/opiSetup.json"
     };
     String[] ps = {
-        "jsons/Display/opiPresent.json"
+        "jsons/Display/opiPresentStatic.json",
+        "jsons/Display/opiPresentDynamic.json"
     };
     monitorDriver("jsons/Display/opiInit.json", ss, ps);
   }
@@ -131,13 +132,13 @@ public class ProtocolTests {
       System.out.println("QUERY before initialized");
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(Monitor.loadMessage(initJson)); // Initialize OPI
-      Thread.sleep(1000);
+      Thread.sleep(100);
       System.out.println("QUERY after initialized");
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       Thread.sleep(1000);
       for (String s : setupJson) sendAndReceive(Monitor.loadMessage(s)); // Setup OPI
-      Thread.sleep(5000);
       for (String s : presentJson) sendAndReceive(Monitor.loadMessage(s)); // Present OPI
+      Thread.sleep(5000);
       sendAndReceive(Monitor.loadMessage("jsons/opiClose.json")); // Close OPI
       Monitor.close();
     } catch (IOException e) {
