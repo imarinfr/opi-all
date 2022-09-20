@@ -34,7 +34,7 @@ import es.optocom.jovp.structures.ViewMode;
  */
 public record Settings(Machine machine, int screen, boolean fullScreen, int distance,
                        ViewMode viewMode, Input input, boolean tracking, int depth,
-                       String gamma, Calibration[] calibration) {
+                       String gamma, Calibration calibration) {
 
   /** Implemented display-based machines */
   enum Machine {
@@ -174,7 +174,7 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
    *
    * @since 0.0.1
    */
-  private static Calibration[] loadCalibration(int depth, String gamma) throws IllegalArgumentException, ClassCastException, IOException {
+  private static Calibration loadCalibration(int depth, String gamma) throws IllegalArgumentException, ClassCastException, IOException {
     Gson gson = new Gson();
     String jsonStr;
     // Get calibration from a path or from resources
@@ -188,11 +188,9 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
     double[] gammaRed = ((ArrayList<?>) (pairs.get("gammaRed"))).stream().mapToDouble(Double.class::cast).toArray();
     double[] gammaGreen = ((ArrayList<?>) (pairs.get("gammaGreen"))).stream().mapToDouble(Double.class::cast).toArray();
     double[] gammaBlue = ((ArrayList<?>) (pairs.get("gammaBlue"))).stream().mapToDouble(Double.class::cast).toArray();
-    return new Calibration[] {
-      new Calibration((double) pairs.get("maxRed"), depth, gammaRed),
-      new Calibration((double) pairs.get("maxGreen"), depth, gammaGreen),
-      new Calibration((double) pairs.get("maxBlue"), depth, gammaBlue)
-    };
+    return Calibration.set((double) pairs.get("maxRed"), depth, gammaRed,
+                           (double) pairs.get("maxGreen"), depth, gammaGreen,
+                           (double) pairs.get("maxBlue"), depth, gammaBlue);
   }
 
   /**
