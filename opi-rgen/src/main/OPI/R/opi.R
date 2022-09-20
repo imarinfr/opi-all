@@ -105,7 +105,7 @@ opiQueryDevice <- function() {
     if (is.null(.opi_env$chosen_machine))
         stop("you should use chooseOPI() before calling opiQueryDevice.")
 
-    return(do.call(paste0("opiQueryDevice_for_", .opi_env$chosen_machine)))
+    return(do.call(paste0("opiQueryDevice_for_", .opi_env$chosen_machine), args = list()))
 }
 
 #' opiSetup that calls opiSetup_for_MACHINE as appropriate.
@@ -145,7 +145,7 @@ opiClose <- function() {
     if (is.null(.opi_env$chosen_machine))
         stop("you should use chooseOPI() before calling opiClose.")
 
-    return(do.call(paste0("opiClose_for_", env.OPI$chosen_machine)))
+    return(do.call(paste0("opiClose_for_", .opi_env$chosen_machine), args = list()))
 }
 
 #' opiPresent that calls opiPresent_for_MACHINE as appropriate.

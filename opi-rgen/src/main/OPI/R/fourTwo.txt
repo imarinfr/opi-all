@@ -28,6 +28,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+require(utils)
 
 #' @rdname fourTwo
 #' @title 4-2 Staircase
@@ -128,13 +129,13 @@
 #'   r <- fourTwo.step(states[[i]])               # step it
 #'   states[[i]] <- r$state                  # update the states
 #' }
-#' 
+#'
 #' finals <- lapply(states, fourTwo.final)    # get final estimates of threshold
 #' for(i in 1:length(locations)) {
 #'   cat(sprintf("Location (%+2d,%+2d) ",locations[[i]][1], locations[[i]][2]))
 #'       cat(sprintf("has threshold %4.2f\n", finals[[i]]))
 #' }
-#' 
+#'
 #' if (!is.null(opiClose()))
 #'   warning("opiClose() failed")
 #' @export
@@ -211,7 +212,7 @@ fourTwo.step <- function(state, nextStim=NULL) {
         # check if staircase is finished.
     if (state$numberOfReversals >= 2) {
         state$finished <- "Rev"
-        state$stairResult <- mean(tail(state$stimuli, 2)) # mean of last two
+        state$stairResult <- mean(utils::tail(state$stimuli, 2)) # mean of last two
     } else if (state$currNotSeenLimit >= 2) {
         state$finished <- "Min"
         state$stairResult <- state$minStimulus

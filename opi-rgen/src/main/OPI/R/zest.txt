@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+require(stats)
+require(utils)
 
 ##########################
 # little helper functions
@@ -248,11 +250,11 @@ ZEST.entropy <- function(state) {
 #'   warning("opiClose() failed")
 #' @export
 ZEST <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
-                 likelihood=sapply(domain, function(tt) 0.03 + (1-0.03-0.03)*(1-pnorm(domain, tt, 1))),
+                 likelihood=sapply(domain, function(tt) 0.03 + (1-0.03-0.03)*(1-stats::pnorm(domain, tt, 1))),
                  stopType="S",
                  stopValue=1.5,
-                 minStimulus=head(domain,1),
-                 maxStimulus=tail(domain,1),
+                 minStimulus=utils::head(domain, 1),
+                 maxStimulus=utils::tail(domain, 1),
                  maxSeenLimit=2,
                  minNotSeenLimit=2,
                  maxPresentations=100,
@@ -272,19 +274,19 @@ ZEST <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
         state <- r$state
         if (verbose == 2) {
             cat(sprintf("Presentation %2d: ", state$numPresentations))
-            cat(sprintf("stim= %5s repsonse=%s ", tail(state$stimuli,1), tail(state$responses,1)))
-            cat(sprintf("fixation= %1.0g ", tail(state$fixated,1)))
+            cat(sprintf("stim= %5s repsonse=%s ", utils::tail(state$stimuli,1), utils::tail(state$responses,1)))
+            cat(sprintf("fixation= %1.0g ", utils::tail(state$fixated,1)))
             cat(sprintf("stdev= %8.4g H= %8.4g\n", ZEST.stdev(state), ZEST.entropy(state)))
         }
         if (verbose > 0)
             pdfs <- c(pdfs, list(state$pdf))
         
         if (!is.na(minInterStimInterval) && !is.na(maxInterStimInterval))
-            Sys.sleep(runif(1, min=minInterStimInterval, max=maxInterStimInterval)/1000)
+            Sys.sleep(stats::runif(1, min=minInterStimInterval, max=maxInterStimInterval)/1000)
     }
     
     return(list(
-        npres=tail(state$numPresentations,1),        # number of presentations
+        npres=utils::tail(state$numPresentations,1),        # number of presentations
         respSeq=mapply(c, state$stimuli, state$responses, state$fixated), # reposnse sequence (list of triples)
         pdfs=pdfs,                                   # list of pdfs used (if verbose > 0)
         final=ZEST.final(state),                     # final threshold estimate
@@ -295,11 +297,11 @@ ZEST <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
 #' @rdname ZEST
 #' @export
 ZEST.start <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
-            likelihood=sapply(domain, function(tt) 0.03 + (1-0.03-0.03)*(1-pnorm(domain, tt, 1))),
+            likelihood=sapply(domain, function(tt) 0.03 + (1-0.03-0.03)*(1-stats::pnorm(domain, tt, 1))),
             stopType="S",
             stopValue=1.5,
-            minStimulus=head(domain, 1),
-            maxStimulus=tail(domain, 1),
+            minStimulus=utils::head(domain, 1),
+            maxStimulus=utils::tail(domain, 1),
             maxSeenLimit=2,
             minNotSeenLimit=2,
             maxPresentations=100,

@@ -19,25 +19,23 @@
 
 #' Does nothing.
 #'
-#' @param state Any object you like.
-#'
 #' @return NULL
 #'
-opiClose_for_SimNo         <- function() NULL
+opiClose_for_SimNo <- function() NULL
 
 #' Returns a simple list.
 #'
 #' @return A list with one element `machine` that is `"SimNo"`.
 #'
-opiQueryDevice_for_SimNo   <- function() list(machine = "SimNo")
+opiQueryDevice_for_SimNo <- function() list(machine = "SimNo")
 
 #' Does nothing.
 #'
-#' @param state Any object you like.
+#' @param ... Any object you like, it is ignored.
 #'
 #' @return NULL
 #'
-opiInitialise_for_SimNo <- function() NULL
+opiInitialise_for_SimNo <- function(...) NULL
 
 #' Does nothing.
 #'
@@ -50,11 +48,12 @@ opiSetup_for_SimNo <- function(state) NULL
 #' Always respond 'yes' immediately to any parameter.
 #' No checking is done on the validity of `stim`.
 #'
-#' @param stim Any stimulus object or list. 
+#' @param stim Any stimulus object or list.
+#' @param ... Any other paramters you like, they are ignored.
 #'
 #' @return A list contianing:
 #'   * err, and error code that is always NULL
 #'   * seen, which is always FALSE
 #'   * time, which is always 0
 #'
-opiPresent_for_SimNo <- function(stim) list(err = NULL, seen = FALSE, time = 0)
+opiPresent_for_SimNo <- function(stim, ...) list(err = NULL, seen = FALSE, time = 0)

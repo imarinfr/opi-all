@@ -16,7 +16,9 @@
 
 require(rjson)
 
-env.ImoVifa <- vector("list")    # environment for this machine in R
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("ImoVifa", where = .opi_env))
+    assign("ImoVifa", new.env(), envir = .opi_env)
 
 #' Implementation of opiInitialise for the ImoVifa machine.
 #'
@@ -44,12 +46,12 @@ env.ImoVifa <- vector("list")    # environment for this machine in R
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_ImoVifa <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL) {
-    env.ImoVifa$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor);
+    .opi_env$ImoVifa$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, .opi_env$ImoVifa$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$ImoVifa$socket, n=1))
     return(res)
 }
 
@@ -61,17 +63,27 @@ opiInitialise_for_ImoVifa <- function(ip = NULL, port = NULL, ip_Monitor = NULL,
 #' @usage NULL
 #'
 #' @param eye Eye to test.
+#' @param shape Stimulus shape.
 #' @param type Stimulus type.
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
-#' @param t List of stimuli presentation times (ms).
-#' @param w List of stimuli response windows (ms).
-#' @param lum List of stimuli luminances (cd/m^2).
-#' @param color List of stimuli colors.
 #' @param sx List of diameters along major axis of ellipse (degrees).
 #' @param sy List of diameters along minor axis of ellipse (degrees).
-#' @param rotation List of angles of rotaion of stimuli (degrees). Only useful
+#' @param lum List of stimuli luminances (cd/m^2).
+#' @param color List of stimuli colors.
+#' @param rotation List of angles of rotation of stimuli (degrees). Only useful
 #'                    if sx != sy specified.
+#' @param contrast List of stimulus contrasts (from 0 to 1).
+#' @param defocus List of defocus values in Diopters for stimulus
+#'                   post-processing.
+#' @param phase List of phases (in degrees) for generation of spatial patterns.
+#'                 Only useful if type != FLAT
+#' @param frequency List of frequencies (in cycles per degrees) for generation
+#'                     of spatial patterns. Only useful if type != FLAT
+#' @param textRotation List of angles of rotation of stimuli (degrees). Only
+#'                        useful if type != FLAT
+#' @param t List of stimuli presentation times (ms).
+#' @param w List of stimuli response windows (ms).
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from ImoVifa.
@@ -88,21 +100,21 @@ opiInitialise_for_ImoVifa <- function(ip = NULL, port = NULL, ip_Monitor = NULL,
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
-#' result <- opiPresent(stim = list(eye = list('left'), type = list('circle'), x = list(0),
-#'                      y = list(0), t = list(200), w = list(1500), lum = list(20),
-#'                      color = list('white'), sx = list(1.72), sy = list(1.72)))
+#' result <- opiPresent(stim = list(eye = list('left'), x = list(0), y = list(0),
+#'                      sx = list(1.72), sy = list(1.72), lum = list(20),
+#'                      color = list(list(1, 1, 1)), t = list(200), w = list(1500)))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_ImoVifa <- function(stim = list(eye = NULL, type = NULL, x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, color = NULL, sx = NULL, sy = NULL, rotation = NULL)) {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+opiPresent_for_ImoVifa <- function(stim = list(eye = NULL, shape = NULL, type = NULL, x = NULL, y = NULL, sx = NULL, sy = NULL, lum = NULL, color = NULL, rotation = NULL, contrast = NULL, defocus = NULL, phase = NULL, frequency = NULL, textRotation = NULL, t = NULL, w = NULL)) {
+if(!exists(".opi_env$ImoVifa$socket") || is.null(.opi_env$ImoVifa$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(eye = stim$eye,type = stim$type,x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,color = stim$color,sx = stim$sx,sy = stim$sy,rotation = stim$rotation);
+    msg <- list(eye = stim$eye, shape = stim$shape, type = stim$type, x = stim$x, y = stim$y, sx = stim$sx, sy = stim$sy, lum = stim$lum, color = stim$color, rotation = stim$rotation, contrast = stim$contrast, defocus = stim$defocus, phase = stim$phase, frequency = stim$frequency, textRotation = stim$textRotation, t = stim$t, w = stim$w);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, .opi_env$ImoVifa$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$ImoVifa$socket, n=1))
     return(res)
 }
 
@@ -135,21 +147,22 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
-#' result <- opiSetup(settings = list(eye = "both", bgLum = 10, bgCol = "white", fixType = "maltese",
-#'                    fixLum = 20, fixCol = "green", fixCx = 0, fixCy = 0,
-#'                    fixSx = 1, fixSy = 1, fixRotation = 0, tracking = 0))
+#' result <- opiSetup(settings = list(eye = "both", bgLum = 10, bgCol = list(1, 1, 1),
+#'                    fixType = "maltese", fixLum = 20, fixCol = list(0, 1, 0),
+#'                    fixCx = 0, fixCy = 0, fixSx = 1, fixSy = 1, fixRotation = 0,
+#'                    tracking = 0))
 #'
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_ImoVifa <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixType = NULL, fixLum = NULL, fixCol = NULL, fixCx = NULL, fixCy = NULL, fixSx = NULL, fixSy = NULL, fixRotation = NULL, tracking = NULL)) {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+if(!exists(".opi_env$ImoVifa$socket") || is.null(.opi_env$ImoVifa$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(eye = settings$eye,bgLum = settings$bgLum,bgCol = settings$bgCol,fixType = settings$fixType,fixLum = settings$fixLum,fixCol = settings$fixCol,fixCx = settings$fixCx,fixCy = settings$fixCy,fixSx = settings$fixSx,fixSy = settings$fixSy,fixRotation = settings$fixRotation,tracking = settings$tracking);
+    msg <- list(eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixType = settings$fixType, fixLum = settings$fixLum, fixCol = settings$fixCol, fixCx = settings$fixCx, fixCy = settings$fixCy, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, tracking = settings$tracking);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, .opi_env$ImoVifa$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$ImoVifa$socket, n=1))
     return(res)
 }
 
@@ -160,7 +173,7 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
@@ -175,14 +188,14 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_ImoVifa <- function() {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+if(!exists(".opi_env$ImoVifa$socket") || is.null(.opi_env$ImoVifa$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, .opi_env$ImoVifa$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$ImoVifa$socket, n=1))
     return(res)
 }
 
@@ -193,7 +206,7 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
@@ -211,14 +224,14 @@ if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_ImoVifa <- function() {
-if(!exists(env.ImoVifa$socket) || is.null(env.ImoVifa$socket))
+if(!exists(".opi_env$ImoVifa$socket") || is.null(.opi_env$ImoVifa$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.ImoVifa$socket)
+    writeLines(msg, .opi_env$ImoVifa$socket)
 
-    res <- rjson::fromJSON(readLines(env.ImoVifa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$ImoVifa$socket, n=1))
     return(res)
 }
 

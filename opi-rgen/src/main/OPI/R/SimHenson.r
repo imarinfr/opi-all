@@ -19,9 +19,9 @@
 # limitations under the License.
 #
 
+require(stats)
+
 #' Does nothing.
-#'
-#' @param state Any object you like.
 #'
 #' @return NULL
 #'
@@ -49,6 +49,7 @@ opiQueryDevice_for_SimHenson <- function() list(machine = "SimHenson")
 #' @param B Addend of `t` in the formula (ignored if `type != 'X'`).
 #' @param cap Maximum dB value for the stdev of the FoS curve.
 #' @param maxStim The maximum stimuls value (0 dB) in cd/\eqn{\mbox{m}^2}{m^2}.
+#' @param ... Any other parameters you like, they are ignored.
 #'
 #' @return NULL on success or a string message otherwise
 #' @examples
@@ -57,7 +58,7 @@ opiQueryDevice_for_SimHenson <- function() list(machine = "SimHenson")
 #' if (!is.null(opiInitialize(type = "C", cap = 6)))
 #'   stop("opiInitialize failed")
 #'
-opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 6, maxStim = 10000 / pi) {
+opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 6, maxStim = 10000 / pi, ...) {
     if (!is.element(type, c("N", "G", "C", "X"))) {
         msg <- paste("Bad 'type' specified for SimHenson in opiInitialize():", type)
         warning(msg)
@@ -114,9 +115,12 @@ simH.opiSetup_for_SimHenson <- function(state)  NULL
 #' \code{opiInitialize}, and \code{A} and \code{B} are from Table 1 in Henson
 #' et al (2000), also set in the call to `opiInitiaise` using the \code{type} parameter.
 #'
+#' @param stim A list that contains at least:
+#'   * `lum` which is the stim value in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param fpr false positive rate for the FoS curve (range 0..1).
 #' @param fnr false negative rate for the FoS curve (range 0..1).
-#' @param tt  mean of the assumed FoS curve (db >= 0).
+#' @param tt  mean of the assumed FoS curve (cd/\eqn{\mbox{m}^2}{m^2}).
+#' @param ...  Any other parameters you like, they are ignored.
 #'
 #' @return A list contianing:
 #'   * err, an error msg or NULL if no error.
@@ -129,7 +133,7 @@ simH.opiSetup_for_SimHenson <- function(state)  NULL
 #' if (!is.null(opiInitialize(type = "C", cap = 6)))
 #'   stop("opiInitialize failed")
 #'
-#' result <- opiPresent(stim = list(level = 20), tt = 30, fpr = 0.15, fnr = 0.01)
+#' result <- opiPresent(stim = list(lum = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01)
 #'
 #' if (!is.null(opiClose()))
 #'   warning("opiClose() failed")
@@ -139,16 +143,16 @@ opiPresent_for_SimHenson <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...)
     if (!exists(".opi_env") || !exists("sim_henson", where = .opi_env))
         return(list(err = "You have not called opiInitialise.", seen = NA, time = NA))
 
-    if (is.null(stim) || ! any(is(stim) == "list") || ! "level" %in% names(stim))
-        return(list(err = "'stim' should be a list with a name 'level'. stim$level is the dB to present.", seen = NA, time = NA))
+    if (is.null(stim) || ! "lum" %in% names(stim))
+        return(list(err = "'stim' should be a list with a name 'lum'. stim$lum is the cd/m^2 to present.", seen = NA, time = NA))
 
     px_var <- min(.opi_env$sim_henson$cap, exp(.opi_env$sim_henson$A*tt + .opi_env$sim_henson$B)) # variability of patient, henson formula 
 
-    pr_seeing <- fpr + (1 - fpr - fnr) * (1 - pnorm(stim$level, mean = tt, sd = px_var))
+    pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(stim$lum, mean = tt, sd = px_var))
 
     return(list(
         err = NULL,
-        seen = runif(1) < pr_seeing,
+        seen = stats::runif(1) < pr_seeing,
         time = 0
     ))
 }

@@ -5,7 +5,11 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
 
+import java.util.stream.Stream;
+import java.util.stream.Collectors;
+
 import org.lei.opi.core.OpiMachine;
+import org.lei.opi.core.structures.Parameter;
 
 /**
  * Generate R code for machines defined in org.lei.opi.core.*.
@@ -37,18 +41,13 @@ public class Main {
 
 require(rjson)
 
-env.%s <- vector("list")    # environment for this machine in R
-        """, machineName, machineName);
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("%s", where = .opi_env))
+    assign("%s", new.env(), envir = .opi_env)
+        """, 
+machineName,  // header title
+machineName, machineName);  // environment name
 }
-
-
-    static final OpiFunction[] functions = { 
-        new OpiFunction("opiInitialise", "initialize", "", "list(err = %s)", true),
-        new OpiFunction("opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false),
-        new OpiFunction("opiSetup", "setup", "settings", "%s", false),
-        new OpiFunction("opiClose", "close", "", "%s", false),
-        new OpiFunction("opiQueryDevice", "query", "", "list(%s)", false)
-    };
 
     /**
      * Produce the R methods for a single machine and output it on writer.
@@ -57,24 +56,46 @@ env.%s <- vector("list")    # environment for this machine in R
      * @param machine An {@link OpiMachine} object that will be the basis for the R code.
      */
     static void makeR(OpiMachine machine, PrintStream writer) {
+        String machineName = machine.getClass().getSimpleName();
+
+        OpiFunction[] functions = { 
+            new OpiFunction(machine, "opiInitialise", "initialize", "", "list(err = %s)", true),
+            new OpiFunction(machine, "opiQueryDevice", "query", "", "list(%s)", false),
+            new OpiFunction(machine, "opiSetup", "setup", "settings", "%s", false),
+            new OpiFunction(machine, "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false),
+            new OpiFunction(machine, "opiClose", "close", "", "%s", false)
+        };
+
+        String callingExample = Stream.of(functions)
+            .map((OpiFunction f) -> {
+                String s = Stream.of(f.methodData.parameters())
+                   .filter((Parameter p) -> !p.optional())
+                   .map((Parameter p) -> 
+                       p.className().getSimpleName().equals("Double") || p.isList() ?
+                           String.format("%s = %s", p.name(), p.defaultValue()) :
+                           String.format("%s = \"%s\"", p.name(), p.defaultValue()))
+                   .collect(Collectors.joining(", "));
+                return OpiFunction.wrapR(s, 10 + f.opiName.length(), true);
+            })
+            .collect(Collectors.joining("\n"));
+
         writer.println(Main.makeHeader(machine.getClass().getSimpleName()));
 
-        for (OpiFunction f : Main.functions) 
-            f.generateR(machine, writer);
+        for (OpiFunction f : functions) 
+            f.generateR(callingExample, writer);
 
-        writer.println("""
+        writer.println(String.format("""
 
 #' Set background color and luminance in both eyes. 
-#' Deprecated for ImoVifa and replaced with [opiSetup()].
+#' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
 #' @usage NULL
 #' @seealso [opiSetup()]
-opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
+opiSetBackground_for_%s <- function(lum, color, ...) {return("Deprecated")}
 
-        """);
+        """, machineName));
     } 
   
     public static void main(String args[]) {
-        //String path = "/Users/aturpin/temp/TOPI/R/";
         String path = "opi-rgen/src/main/OPI/R/";
         for (String m : new String[] {"ImoVifa", "Compass", "O900", "PicoVR", "O600", "PhoneHMD", "Kowa", "Display"}) {
             PrintStream printStream = null;

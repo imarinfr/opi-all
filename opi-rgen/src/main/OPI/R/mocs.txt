@@ -21,6 +21,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+require(stats)
+require(utils)
+
 ################################################################################
 # Perform a MOCS, possibly with alternate-forced-choice stimuli.
 # The number of AFC are given by the number of columns in params.
@@ -294,7 +297,7 @@ MOCS <- function(params=NA,
             reps <- params[i,4]
             mocs <- rbind(mocs, matrix(params[i,], ncol=ncol(params), nrow=reps, byrow=T))
         }
-        mocs <- mocs[order(runif(nrow(mocs))), ]
+        mocs <- mocs[order(stats::runif(nrow(mocs))), ]
     } else if (order == "fixed") {
         mocs <- params
     } else {
@@ -371,7 +374,7 @@ MOCS <- function(params=NA,
                 beep_function('incorrect')
         
             if (ret$seen && responseWindowMeth == "speed") 
-                respTimeHistory <- c(tail(respTimeHistory, -1), ret$time)
+                respTimeHistory <- c(utils::tail(respTimeHistory, -1), ret$time)
         } else {
             warning("Opi Present return error in MOCS")
             error_count <- error_count + 1 
@@ -379,7 +382,7 @@ MOCS <- function(params=NA,
 
         cat(sprintf(',%g,%g\n',ret$seen,  ret$time))
         
-        Sys.sleep(runif(1, min=interStimMin, max=interStimMax)/1000)
+        Sys.sleep(stats::runif(1, min=interStimMin, max=interStimMax)/1000)
 
         results <- rbind(results, c(mocs[i,1:5], all_fixations_good, mocs[i,6:ncol(mocs)], ret))
     }

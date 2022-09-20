@@ -16,7 +16,9 @@
 
 require(rjson)
 
-env.O600 <- vector("list")    # environment for this machine in R
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("O600", where = .opi_env))
+    assign("O600", new.env(), envir = .opi_env)
 
 #' Implementation of opiInitialise for the O600 machine.
 #'
@@ -46,12 +48,12 @@ env.O600 <- vector("list")    # environment for this machine in R
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_O600 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL, eye = NULL) {
-    env.O600$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor,eye = eye);
+    .opi_env$O600$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor, eye = eye);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O600$socket)
+    writeLines(msg, .opi_env$O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
     return(res)
 }
 
@@ -92,14 +94,14 @@ opiInitialise_for_O600 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, po
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_O600 <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
-if(!exists(env.O600$socket) || is.null(env.O600$socket))
+if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,size = stim$size,color = stim$color);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O600$socket)
+    writeLines(msg, .opi_env$O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
     return(res)
 }
 
@@ -130,14 +132,14 @@ if(!exists(env.O600$socket) || is.null(env.O600$socket))
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_O600 <- function(settings = list(bgLum = NULL, fixType = NULL, fixLum = NULL, fixCol = NULL, tracking = NULL)) {
-if(!exists(env.O600$socket) || is.null(env.O600$socket))
+if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(bgLum = settings$bgLum,fixType = settings$fixType,fixLum = settings$fixLum,fixCol = settings$fixCol,tracking = settings$tracking);
+    msg <- list(bgLum = settings$bgLum, fixType = settings$fixType, fixLum = settings$fixLum, fixCol = settings$fixCol, tracking = settings$tracking);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O600$socket)
+    writeLines(msg, .opi_env$O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
     return(res)
 }
 
@@ -148,7 +150,7 @@ if(!exists(env.O600$socket) || is.null(env.O600$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
@@ -163,14 +165,14 @@ if(!exists(env.O600$socket) || is.null(env.O600$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_O600 <- function() {
-if(!exists(env.O600$socket) || is.null(env.O600$socket))
+if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O600$socket)
+    writeLines(msg, .opi_env$O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
     return(res)
 }
 
@@ -181,7 +183,7 @@ if(!exists(env.O600$socket) || is.null(env.O600$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
@@ -196,14 +198,14 @@ if(!exists(env.O600$socket) || is.null(env.O600$socket))
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_O600 <- function() {
-if(!exists(env.O600$socket) || is.null(env.O600$socket))
+if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O600$socket)
+    writeLines(msg, .opi_env$O600$socket)
 
-    res <- rjson::fromJSON(readLines(env.O600$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
     return(res)
 }
 

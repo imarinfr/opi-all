@@ -16,7 +16,9 @@
 
 require(rjson)
 
-env.Compass <- vector("list")    # environment for this machine in R
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("Compass", where = .opi_env))
+    assign("Compass", new.env(), envir = .opi_env)
 
 #' Implementation of opiInitialise for the Compass machine.
 #'
@@ -46,12 +48,12 @@ env.Compass <- vector("list")    # environment for this machine in R
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_Compass <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL, eye = NULL) {
-    env.Compass$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor,eye = eye);
+    .opi_env$Compass$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor, eye = eye);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Compass$socket)
+    writeLines(msg, .opi_env$Compass$socket)
 
-    res <- rjson::fromJSON(readLines(env.Compass$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Compass$socket, n=1))
     return(res)
 }
 
@@ -89,14 +91,14 @@ opiInitialise_for_Compass <- function(ip = NULL, port = NULL, ip_Monitor = NULL,
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Compass <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL)) {
-if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
+if(!exists(".opi_env$Compass$socket") || is.null(.opi_env$Compass$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Compass$socket)
+    writeLines(msg, .opi_env$Compass$socket)
 
-    res <- rjson::fromJSON(readLines(env.Compass$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Compass$socket, n=1))
     return(res)
 }
 
@@ -124,14 +126,14 @@ if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_Compass <- function(settings = list(fixType = NULL, fixCx = NULL, tracking = NULL)) {
-if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
+if(!exists(".opi_env$Compass$socket") || is.null(.opi_env$Compass$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(fixType = settings$fixType,fixCx = settings$fixCx,tracking = settings$tracking);
+    msg <- list(fixType = settings$fixType, fixCx = settings$fixCx, tracking = settings$tracking);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Compass$socket)
+    writeLines(msg, .opi_env$Compass$socket)
 
-    res <- rjson::fromJSON(readLines(env.Compass$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Compass$socket, n=1))
     return(res)
 }
 
@@ -142,7 +144,7 @@ if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
@@ -157,14 +159,14 @@ if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_Compass <- function() {
-if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
+if(!exists(".opi_env$Compass$socket") || is.null(.opi_env$Compass$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Compass$socket)
+    writeLines(msg, .opi_env$Compass$socket)
 
-    res <- rjson::fromJSON(readLines(env.Compass$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Compass$socket, n=1))
     return(res)
 }
 
@@ -175,7 +177,7 @@ if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
@@ -190,14 +192,14 @@ if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Compass <- function() {
-if(!exists(env.Compass$socket) || is.null(env.Compass$socket))
+if(!exists(".opi_env$Compass$socket") || is.null(.opi_env$Compass$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Compass$socket)
+    writeLines(msg, .opi_env$Compass$socket)
 
-    res <- rjson::fromJSON(readLines(env.Compass$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Compass$socket, n=1))
     return(res)
 }
 

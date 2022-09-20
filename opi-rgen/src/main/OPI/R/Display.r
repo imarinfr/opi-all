@@ -16,7 +16,9 @@
 
 require(rjson)
 
-env.Display <- vector("list")    # environment for this machine in R
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("Display", where = .opi_env))
+    assign("Display", new.env(), envir = .opi_env)
 
 #' Implementation of opiInitialise for the Display machine.
 #'
@@ -40,12 +42,12 @@ env.Display <- vector("list")    # environment for this machine in R
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_Display <- function(ip_Monitor = NULL, port_Monitor = NULL) {
-    env.Display$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip_Monitor = ip_Monitor,port_Monitor = port_Monitor);
+    .opi_env$Display$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip_Monitor = ip_Monitor, port_Monitor = port_Monitor);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Display$socket)
+    writeLines(msg, .opi_env$Display$socket)
 
-    res <- rjson::fromJSON(readLines(env.Display$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
     return(res)
 }
 
@@ -83,14 +85,14 @@ opiInitialise_for_Display <- function(ip_Monitor = NULL, port_Monitor = NULL) {
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Display <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, size = NULL, colorRed = NULL, colorGreen = NULL, colorBlue = NULL, lum = NULL)) {
-if(!exists(env.Display$socket) || is.null(env.Display$socket))
+if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,size = stim$size,colorRed = stim$colorRed,colorGreen = stim$colorGreen,colorBlue = stim$colorBlue,lum = stim$lum);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, size = stim$size, colorRed = stim$colorRed, colorGreen = stim$colorGreen, colorBlue = stim$colorBlue, lum = stim$lum);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Display$socket)
+    writeLines(msg, .opi_env$Display$socket)
 
-    res <- rjson::fromJSON(readLines(env.Display$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
     return(res)
 }
 
@@ -117,14 +119,14 @@ if(!exists(env.Display$socket) || is.null(env.Display$socket))
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_Display <- function(settings = list(bgRed = NULL, bgGreen = NULL, bgBlue = NULL)) {
-if(!exists(env.Display$socket) || is.null(env.Display$socket))
+if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(bgRed = settings$bgRed,bgGreen = settings$bgGreen,bgBlue = settings$bgBlue);
+    msg <- list(bgRed = settings$bgRed, bgGreen = settings$bgGreen, bgBlue = settings$bgBlue);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Display$socket)
+    writeLines(msg, .opi_env$Display$socket)
 
-    res <- rjson::fromJSON(readLines(env.Display$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
     return(res)
 }
 
@@ -135,7 +137,7 @@ if(!exists(env.Display$socket) || is.null(env.Display$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Display.
@@ -149,14 +151,14 @@ if(!exists(env.Display$socket) || is.null(env.Display$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_Display <- function() {
-if(!exists(env.Display$socket) || is.null(env.Display$socket))
+if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Display$socket)
+    writeLines(msg, .opi_env$Display$socket)
 
-    res <- rjson::fromJSON(readLines(env.Display$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
     return(res)
 }
 
@@ -167,7 +169,7 @@ if(!exists(env.Display$socket) || is.null(env.Display$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
@@ -181,14 +183,14 @@ if(!exists(env.Display$socket) || is.null(env.Display$socket))
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Display <- function() {
-if(!exists(env.Display$socket) || is.null(env.Display$socket))
+if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Display$socket)
+    writeLines(msg, .opi_env$Display$socket)
 
-    res <- rjson::fromJSON(readLines(env.Display$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
     return(res)
 }
 

@@ -1,6 +1,6 @@
-#' @rdname pixTodeg
-#' @title Convert pixels to degrees for machine 'machine'
-#' @description Convert pixels to degrees for machine 'machine'
+#'
+#' Convert pixels to degrees for machine 'machine'
+#'
 #' @param xy a 2 element vector c(x,y) where x and y are in pixels
 #' @param machine "compass" or ...?
 #'
@@ -17,7 +17,8 @@ pixTodeg <- function(xy, machine="compass") {
     return(NA)
 }
 
-#' @rdname pixTodeg
+#' Convert degrees to pixelsfor machine 'machine'
+#'
 #' @return xy converted to pixels (top-left is (0,0)) for the machine or
 #' \code{NA} if machine is unknown
 #'

@@ -16,7 +16,9 @@
 
 require(rjson)
 
-env.Kowa <- vector("list")    # environment for this machine in R
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("Kowa", where = .opi_env))
+    assign("Kowa", new.env(), envir = .opi_env)
 
 #' Implementation of opiInitialise for the Kowa machine.
 #'
@@ -44,12 +46,12 @@ env.Kowa <- vector("list")    # environment for this machine in R
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_Kowa <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL) {
-    env.Kowa$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor);
+    .opi_env$Kowa$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Kowa$socket)
+    writeLines(msg, .opi_env$Kowa$socket)
 
-    res <- rjson::fromJSON(readLines(env.Kowa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
     return(res)
 }
 
@@ -89,14 +91,14 @@ opiInitialise_for_Kowa <- function(ip = NULL, port = NULL, ip_Monitor = NULL, po
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Kowa <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
-if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
+if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,size = stim$size,color = stim$color);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Kowa$socket)
+    writeLines(msg, .opi_env$Kowa$socket)
 
-    res <- rjson::fromJSON(readLines(env.Kowa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
     return(res)
 }
 
@@ -124,14 +126,14 @@ if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_Kowa <- function(settings = list(bgLum = NULL, bgCol = NULL, fixType = NULL)) {
-if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
+if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(bgLum = settings$bgLum,bgCol = settings$bgCol,fixType = settings$fixType);
+    msg <- list(bgLum = settings$bgLum, bgCol = settings$bgCol, fixType = settings$fixType);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Kowa$socket)
+    writeLines(msg, .opi_env$Kowa$socket)
 
-    res <- rjson::fromJSON(readLines(env.Kowa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
     return(res)
 }
 
@@ -142,7 +144,7 @@ if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
@@ -157,14 +159,14 @@ if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_Kowa <- function() {
-if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
+if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Kowa$socket)
+    writeLines(msg, .opi_env$Kowa$socket)
 
-    res <- rjson::fromJSON(readLines(env.Kowa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
     return(res)
 }
 
@@ -175,7 +177,7 @@ if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
@@ -190,14 +192,14 @@ if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Kowa <- function() {
-if(!exists(env.Kowa$socket) || is.null(env.Kowa$socket))
+if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.Kowa$socket)
+    writeLines(msg, .opi_env$Kowa$socket)
 
-    res <- rjson::fromJSON(readLines(env.Kowa$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
     return(res)
 }
 

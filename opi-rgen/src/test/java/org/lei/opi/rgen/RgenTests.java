@@ -24,14 +24,14 @@ public class RgenTests {
 
   @Test
   public void opiFunctionTest1() {
-    OpiFunction f = new OpiFunction("opiInitialise_for_ImoVifa", "initialize", "", "list(err = %s)", false);
-    f.generateR(new org.lei.opi.core.ImoVifa(), System.out);
+    OpiFunction f = new OpiFunction(new ImoVifa(), "opiInitialise", "initialize", "", "list(err = %s)", true);
+    f.generateR("#' @example\nres <- opiInitialise()", System.out);
   }
 
   @Test
   public void opiFunctionTest2() {
-    OpiFunction f = new OpiFunction("opiInitialise_for_ImoVifa", "initializzzzze", "", "list(err = %s)", false);
-    f.generateR(new org.lei.opi.core.ImoVifa(), System.out);
+    OpiFunction f = new OpiFunction(new ImoVifa(), "opiInitializzze", "initialize", "", "list(err = %s)", true);
+    f.generateR("#' @example\nres <- opiInitialise()", System.out);
   }
 
 }

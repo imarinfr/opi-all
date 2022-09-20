@@ -16,7 +16,9 @@
 
 require(rjson)
 
-env.O900 <- vector("list")    # environment for this machine in R
+    # environment for this machine in R
+if (exists(".opi_env") && !exists("O900", where = .opi_env))
+    assign("O900", new.env(), envir = .opi_env)
 
 #' Implementation of opiInitialise for the O900 machine.
 #'
@@ -58,12 +60,12 @@ env.O900 <- vector("list")    # environment for this machine in R
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_O900 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL, eye = NULL, eyeSuite = NULL, gazeFeed = NULL, bigWheel = NULL, pres = NULL, resp = NULL, max10000 = NULL) {
-    env.O900$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip,port = port,ip_Monitor = ip_Monitor,port_Monitor = port_Monitor,eye = eye,eyeSuite = eyeSuite,gazeFeed = gazeFeed,bigWheel = bigWheel,pres = pres,resp = resp,max10000 = max10000);
+    .opi_env$O900$socket <<- open_socket(ip_Monitor, port_Monitor)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor, eye = eye, eyeSuite = eyeSuite, gazeFeed = gazeFeed, bigWheel = bigWheel, pres = pres, resp = resp, max10000 = max10000);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O900$socket)
+    writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n=1))
     return(res)
 }
 
@@ -104,14 +106,14 @@ opiInitialise_for_O900 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, po
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_O900 <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
-if(!exists(env.O900$socket) || is.null(env.O900$socket))
+if(!exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x,y = stim$y,t = stim$t,w = stim$w,lum = stim$lum,size = stim$size,color = stim$color);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O900$socket)
+    writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n=1))
     return(res)
 }
 
@@ -142,14 +144,14 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_O900 <- function(settings = list(bgLum = NULL, bgCol = NULL, fixType = NULL, fixLum = NULL, f310 = NULL)) {
-if(!exists(env.O900$socket) || is.null(env.O900$socket))
+if(!exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(bgLum = settings$bgLum,bgCol = settings$bgCol,fixType = settings$fixType,fixLum = settings$fixLum,f310 = settings$f310);
+    msg <- list(bgLum = settings$bgLum, bgCol = settings$bgCol, fixType = settings$fixType, fixLum = settings$fixLum, f310 = settings$f310);
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O900$socket)
+    writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n=1))
     return(res)
 }
 
@@ -160,7 +162,7 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Imo.
@@ -175,14 +177,14 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_O900 <- function() {
-if(!exists(env.O900$socket) || is.null(env.O900$socket))
+if(!exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O900$socket)
+    writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n=1))
     return(res)
 }
 
@@ -193,7 +195,7 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #'
 #' @usage NULL
 #'
-
+#'
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error message.
@@ -208,14 +210,14 @@ if(!exists(env.O900$socket) || is.null(env.O900$socket))
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_O900 <- function() {
-if(!exists(env.O900$socket) || is.null(env.O900$socket))
+if(!exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list();
     msg <- rjson::toJSON(msg)
-    writeLines(msg, env.O900$socket)
+    writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(env.O900$socket, n=1))
+    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n=1))
     return(res)
 }
 
