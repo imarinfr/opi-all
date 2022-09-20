@@ -96,4 +96,17 @@ public class OpiJovp {
     psychoEngine = null;
   }
 
+  /**
+   * Main function to test outside connections
+   *
+   * @since 0.1.0
+   */
+  public static void main(String[] args) {
+    OpiJovp opiJovp = new OpiJovp(Settings.Machine.DISPLAY_MONO);
+    opiJovp.open(51234);
+    System.out.println("ADDRESS: " + opiJovp.listener);
+    opiJovp.start();
+    opiJovp.close();
+  }
+
 }

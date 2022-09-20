@@ -120,7 +120,7 @@ public class ProtocolTests {
     };
     String[] ps = {
         "jsons/Display/opiPresentStatic.json",
-        "jsons/Display/opiPresentDynamic.json"
+        //"jsons/Display/opiPresentDynamic.json"
     };
     monitorDriver("jsons/Display/opiInit.json", ss, ps);
   }

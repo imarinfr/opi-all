@@ -92,7 +92,6 @@ import es.optocom.jovp.structures.ModelType;
       items.add(stimulus);
       for (int i = 0; i < backgrounds.length; i++) {
         backgrounds[i].size(fov[0] / backgrounds.length, fov[1]);
-        items.add(fixations[i]);
         items.add(backgrounds[i]);
       }
     }
@@ -136,7 +135,7 @@ import es.optocom.jovp.structures.ModelType;
         // check if background and fixation settings have changed
         if(driver.backgrounds[i] != null) {
           backgrounds[i].setColor(driver.backgrounds[i].bgCol());
-          // TODO: allow to change fixation shape
+          // TODO: allow to change shape of fixation target
           // set new position, size and rotation in fixation target
           fixations[i].position(driver.backgrounds[i].fixCx(), driver.backgrounds[i].fixCy());
           fixations[i].size(driver.backgrounds[i].fixSx(), driver.backgrounds[i].fixSy());

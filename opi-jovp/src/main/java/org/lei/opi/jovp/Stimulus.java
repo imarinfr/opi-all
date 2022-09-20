@@ -1,10 +1,8 @@
 package org.lei.opi.jovp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-
-import org.lei.opi.core.Jovp.Shape;
-import org.lei.opi.core.Jovp.Type;
 
 import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ModelType;
@@ -50,23 +48,79 @@ public record Stimulus(Eye[] eye, ModelType[] shape, TextureType[] type,
    * @since 0.0.1
    */
   static Stimulus set(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException {
-
-    double[] x = ((ArrayList<?>) (args.get("x"))).stream().mapToDouble(Double.class::cast).toArray();
-    double[] y = ((ArrayList<?>) (args.get("y"))).stream().mapToDouble(Double.class::cast).toArray();
-    return new Stimulus(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
-                        Shape.valueOf(((String) args.get("shape")).toUpperCase()),
-                        Type.valueOf(((String) args.get("type")).toUpperCase()),
-                        parToDouble(args.get("x")), parToDouble(args.get("y")),
-                        parToDouble(args.get("sx")), parToDouble(args.get("sy")),
-                        color,
-                        parToDouble(args.get("rotation")), parToDouble(args.get("contrast")),
-                        parToDouble(args.get("phase")), parToDouble(args.get("frequency")),
-                        parToDouble(args.get("defocus")), parToDouble(args.get("texRotation")),
-                        parToDouble(args.get("t")), (double) args.get("t"));
-
+    Eye[] eye = Arrays.stream(listToStringArray(args.get("eye"))).map(Eye::valueOf).toArray(Eye[]::new);
+    ModelType[] shape = Arrays.stream(listToStringArray(args.get("shape"))).map(ModelType::valueOf).toArray(ModelType[]::new);
+    TextureType[] type = Arrays.stream(listToStringArray(args.get("type"))).map(TextureType::valueOf).toArray(TextureType[]::new);
+    return new Stimulus(eye, shape, type,
+                        listToDoubleArray(args.get("x")), listToDoubleArray(args.get("y")),
+                        listToDoubleArray(args.get("sx")), listToDoubleArray(args.get("sy")),
+                        listOfColorsToArray(args.get("color")),
+                        listToDoubleArray(args.get("rotation")), listToDoubleArray(args.get("contrast")),
+                        listToDoubleArray(args.get("phase")), listToDoubleArray(args.get("frequency")),
+                        listToDoubleArray(args.get("defocus")), listToDoubleArray(args.get("texRotation")),
+                        listToIntArray(args.get("t")), listToIntArray(args.get("w"))[0]);
   }
 
-  private static double[] parToDouble(Object param) {
-    return ((ArrayList<?>) param).stream().mapToDouble(Double.class::cast).toArray();
+  /**
+   * Get an array of String values from a JSON list
+   * 
+   * @param list list of Strings from JSON
+   * 
+   * @return an array of Strings
+   * 
+   * @throws ClassCastException Cast exception
+   * 
+   * @since 0.0.1
+   */
+  private static String[] listToStringArray(Object list) throws ClassCastException {
+    return ((ArrayList<?>) list).stream().map(String.class::cast).map(String::toUpperCase).toArray(String[]::new);
   }
+
+  /**
+   * Get an array of double values from a JSON list
+   * 
+   * @param list list of doubles from JSON
+   * 
+   * @return an array of doubles
+   * 
+   * @throws ClassCastException Cast exception
+   * 
+   * @since 0.0.1
+   */
+  private static double[] listToDoubleArray(Object list) throws ClassCastException {
+    return ((ArrayList<?>) list).stream().mapToDouble(Double.class::cast).toArray();
+  }
+
+  /**
+   * Get an array of integer values from a JSON list
+   * 
+   * @param list list of integers from JSON
+   * 
+   * @return an array of integers
+   * 
+   * @throws ClassCastException Cast exception
+   * 
+   * @since 0.0.1
+   */
+  private static int[] listToIntArray(Object list) throws ClassCastException {
+    return ((ArrayList<?>) list).stream().mapToDouble(Double.class::cast).mapToInt(d -> (int) d).toArray();  
+  }
+
+  /**
+   * Get an array of 4D-array RGBA colors from a JSON list of lists
+   * 
+   * @param list list of list of colors from JSON
+   * 
+   * @return an array or array of RGBA colors
+   * 
+   * @throws ClassCastException Cast exception
+   * 
+   * @since 0.0.1
+   */
+  private static double[][] listOfColorsToArray(Object list) throws ClassCastException {
+    return ((ArrayList<?>) list).stream().map(l -> listToDoubleArray(l))
+                                         .map(l -> (new double[] {l[0], l[1], l[2], 1}))
+                                         .toArray(double[][]::new);
+  }
+
 }
