@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.lei.opi</groupId>
+    <artifactId>opi</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>monitor</artifactId>
+  <name>OPI monitor</name>
+  <packaging>jar</packaging>
+
+  
+<build>
+<pluginManagement>
+<plugins>
+    <plugin>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-maven-plugin</artifactId>
+        <version>0.0.8</version>
+        <configuration>
+            <mainClass>org.lei.opi.monitor.OpiMonitor</mainClass>
+        </configuration>
+    </plugin>
+</plugins>
+</pluginManagement>
+</build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${openjfx.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-fxml</artifactId>
+      <version>${openjfx.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.anaptecs.jeaf.owalibs</groupId>
+        <artifactId>org.apache.commons.cli</artifactId>
+        <version>4.3.1</version>
+    </dependency>
+     <dependency>
+      <groupId>org.lei.opi</groupId>
+      <artifactId>core</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
+</project>
