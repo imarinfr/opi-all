@@ -15,7 +15,7 @@ import java.io.IOException;
  *
  * @since 0.0.1
  */
-public class OpiApp extends Application {
+public class OpiMonitor extends Application {
 
 	private double width;
 	private double height;
@@ -44,7 +44,7 @@ public class OpiApp extends Application {
 	@Override
 	public void start(Stage stage) throws IOException {
 		showSplash();
-		FXMLLoader fxmlLoader = new FXMLLoader(OpiApp.class.getResource("main.fxml"));
+		FXMLLoader fxmlLoader = new FXMLLoader(OpiMonitor.class.getResource("main.fxml"));
 		Scene scene = new Scene(fxmlLoader.load(), width / 2, height / 2);
 		stage.setTitle("Hello!");
 		stage.setScene(scene);

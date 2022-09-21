@@ -21,6 +21,8 @@ public class OpiFunction {
     static final String parameterForIp = "ip_Monitor";
         /** This is the parameter name for the port on which OPI R should create socket */
     static final String parameterForPort = "port_Monitor";
+        /** This is the name of the OPI environemnt for storing variables, settings, etc */
+    static final String opiEnvName = ".opi_env";
 
     public record MethodData(Parameter[] parameters, ReturnMsg[] returnMsgs) {};
     
@@ -31,7 +33,6 @@ public class OpiFunction {
     boolean createSocket;
     MethodData methodData;
     String machineName;
-    String envName;
     String callingExample; // String that is a roxygen2 @example that should at least include this function.
 
     /**
@@ -50,7 +51,6 @@ public class OpiFunction {
         this.opiReturnTemplate = opiReturnTemplate;
         this.createSocket = createSocket;
         this.machineName = machine.getClass().getSimpleName();
-        this.envName = String.format(".opi_env$%s", this.machineName);
 
         this.methodData = Stream.of(machine.getClass().getMethods())
                 .filter((Method m) -> m.getName() == this.opiCoreName)
@@ -156,13 +156,12 @@ public class OpiFunction {
     /**
      * R code to generate a JSON msg of list of params and values
      * @param params List of params to send to machine
-     * @param envName List variable (environment) where $socket lives
      */
     private final String sendMessage() {
         return String.format("""
-        msg <- list(%s); 
+        msg <- list(%s)
         msg <- rjson::toJSON(msg)
-        writeLines(msg, %s$socket)
+        writeLines(msg, %s$%s$socket)
     """, 
         Stream.of(methodData.parameters())
             .map((Parameter p) -> String.format("%s = %s%s", 
@@ -171,7 +170,7 @@ public class OpiFunction {
                 p.name()))
             .collect(Collectors.joining(", "))
         ,
-        envName, envName);
+        opiEnvName, this.machineName);
     }
 
     /**
@@ -179,10 +178,10 @@ public class OpiFunction {
      */
     private String makeReturnCode() {
         return String.format("""
-        res <- rjson::fromJSON(readLines(%s$socket, n=1))
+        res <- rjson::fromJSON(readLines(%s$%s$socket, n = 1))
         return(res)
     """, 
-        this.envName);
+        opiEnvName, this.machineName);
     }
 
     /**
@@ -221,16 +220,20 @@ public class OpiFunction {
             //     - sends the json on the socket
         String socketCode = "";
         if (createSocket) {
-            socketCode = String.format("    %s$socket <<- open_socket(%s, %s)", envName, parameterForIp, parameterForPort);
+            socketCode = String.format("    assign(\"socket\", open_socket(%s, %s), %s$%s)", parameterForIp, parameterForPort, opiEnvName, this.machineName);
             if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
             if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
         } else {
             socketCode = String.format("""
-                if(!exists("%s$socket") || is.null(%s$socket))
+                if(!exists("%s$%s") || !exists("%s$%s$socket") || is.null(%s$%s$socket))
                     stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
-                """, envName, envName, this.opiName);
+                """, opiEnvName, machineName,
+                opiEnvName, machineName, 
+                opiEnvName, machineName,
+                this.opiName
+                );
         }
 
             // (3) make the second part of function body which 

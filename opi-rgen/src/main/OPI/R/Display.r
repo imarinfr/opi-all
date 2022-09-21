@@ -32,18 +32,84 @@ if (exists(".opi_env") && !exists("Display", where = .opi_env))
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Display.
-#'  * msg JSON Object with all of the other fields.
+#'  * msg Object with all of the other fields.
 #'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("Display")
-#' result <- opiInitialise(ip_Monitor = "localhost", port_Monitor = 50001)
+#' result <- opiInitialise(null)
 #'
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_Display <- function(ip_Monitor = NULL, port_Monitor = NULL) {
-    .opi_env$Display$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip_Monitor = ip_Monitor, port_Monitor = port_Monitor);
+    assign("socket", open_socket(ip_Monitor, port_Monitor), .opi_env$Display)
+    msg <- list(ip_Monitor = ip_Monitor, port_Monitor = port_Monitor)
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$Display$socket)
+
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
+    return(res)
+}
+
+#' Implementation of opiQueryDevice for the Display machine.
+#'
+#' This is for internal use only. Use [opiQueryDevice()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#'
+#'
+#' @return a list contianing:
+#'  * error Empty string for all good, else error message.
+#'  * msg Object with all of the other fields.
+#'    - msg$jovp Any messages that the JOVP sent back.
+#'
+#' @examples
+#' chooseOpi("Display")
+#' result <- opiQueryDevice(null)
+#'
+#' @seealso [opiQueryDevice()]
+#'
+opiQueryDevice_for_Display <- function() {
+if(!exists(".opi_env$Display") || !exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
+    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    msg <- list()
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$Display$socket)
+
+    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
+    return(res)
+}
+
+#' Implementation of opiSetup for the Display machine.
+#'
+#' This is for internal use only. Use [opiSetup()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#' @param bgRed Background color for the screen: red channel. (0..255)
+#' @param bgGreen Background color for the screen: green channel (0..255).
+#' @param bgBlue Background color for the screen: blue channel (0..255).
+#'
+#' @return a list contianing:
+#'  * error Empty string for all good, else error messages from Display.
+#'  * msg Object with all of the other fields.
+#'    - msg$jovp Any messages that the JOVP sent back.
+#'
+#' @examples
+#' chooseOpi("Display")
+#' result <- opiSetup(settings = list(null))
+#'
+#' @seealso [opiSetup()]
+#'
+opiSetup_for_Display <- function(settings = list(bgRed = NULL, bgGreen = NULL, bgBlue = NULL)) {
+if(!exists(".opi_env$Display") || !exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
+    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    msg <- list(bgRed = settings$bgRed, bgGreen = settings$bgGreen, bgBlue = settings$bgBlue)
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Display$socket)
 
@@ -70,7 +136,7 @@ opiInitialise_for_Display <- function(ip_Monitor = NULL, port_Monitor = NULL) {
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Display.
-#'  * msg JSON Object with all of the other fields.
+#'  * msg Object with all of the other fields.
 #'    - msg$seen true if seen, false if not.
 #'    - msg$time Response time from stimulus onset if button pressed, -1
 #'                  otherwise (ms).
@@ -78,51 +144,15 @@ opiInitialise_for_Display <- function(ip_Monitor = NULL, port_Monitor = NULL) {
 #'
 #' @examples
 #' chooseOpi("Display")
-#' result <- opiPresent(stim = list(x = list(0), y = list(0), t = list(200), w = 1500,
-#'                      size = 1.72, colorRed = list(0), colorGreen = list(0),
-#'                      colorBlue = list(0), lum = 31.4))
+#' result <- opiPresent(stim = list(null))
 #'
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Display <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, size = NULL, colorRed = NULL, colorGreen = NULL, colorBlue = NULL, lum = NULL)) {
-if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
+if(!exists(".opi_env$Display") || !exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, size = stim$size, colorRed = stim$colorRed, colorGreen = stim$colorGreen, colorBlue = stim$colorBlue, lum = stim$lum);
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$Display$socket)
-
-    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
-    return(res)
-}
-
-#' Implementation of opiSetup for the Display machine.
-#'
-#' This is for internal use only. Use [opiSetup()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#' @param bgRed Background color for the screen: red channel. (0..255)
-#' @param bgGreen Background color for the screen: green channel (0..255).
-#' @param bgBlue Background color for the screen: blue channel (0..255).
-#'
-#' @return a list contianing:
-#'  * error Empty string for all good, else error messages from Display.
-#'  * msg JSON Object with all of the other fields.
-#'    - msg$jovp Any messages that the JOVP sent back.
-#'
-#' @examples
-#' chooseOpi("Display")
-#' result <- opiSetup(settings = list(bgRed = 0, bgGreen = 0, bgBlue = 0))
-#'
-#' @seealso [opiSetup()]
-#'
-opiSetup_for_Display <- function(settings = list(bgRed = NULL, bgGreen = NULL, bgBlue = NULL)) {
-if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
-
-    msg <- list(bgRed = settings$bgRed, bgGreen = settings$bgGreen, bgBlue = settings$bgBlue);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, size = stim$size, colorRed = stim$colorRed, colorGreen = stim$colorGreen, colorBlue = stim$colorBlue, lum = stim$lum)
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Display$socket)
 
@@ -141,52 +171,20 @@ if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
 #'
 #' @return a list contianing:
 #'  * error Empty string for all good, else error messages from Display.
-#'  * msg JSON Object with all other fields.
+#'  * msg Object with all other fields.
 #'    - msg$jovp Any messages that the JOVP sent back.
 #'
 #' @examples
 #' chooseOpi("Display")
-#' result <- opiClose()
+#' result <- opiClose(null)
 #'
 #' @seealso [opiClose()]
 #'
 opiClose_for_Display <- function() {
-if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
+if(!exists(".opi_env$Display") || !exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list();
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$Display$socket)
-
-    res <- rjson::fromJSON(readLines(.opi_env$Display$socket, n=1))
-    return(res)
-}
-
-#' Implementation of opiQueryDevice for the Display machine.
-#'
-#' This is for internal use only. Use [opiQueryDevice()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#'
-#'
-#' @return a list contianing:
-#'  * error Empty string for all good, else error message.
-#'  * msg JSON Object with all of the other fields.
-#'    - msg$jovp Any messages that the JOVP sent back.
-#'
-#' @examples
-#' chooseOpi("Display")
-#' result <- opiQueryDevice()
-#'
-#' @seealso [opiQueryDevice()]
-#'
-opiQueryDevice_for_Display <- function() {
-if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
-
-    msg <- list();
+    msg <- list()
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Display$socket)
 
@@ -196,9 +194,9 @@ if(!exists(".opi_env$Display$socket") || is.null(.opi_env$Display$socket))
 
 
 #' Set background color and luminance in both eyes.
-#' Deprecated for ImoVifa and replaced with [opiSetup()].
+#' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
 #' @usage NULL
 #' @seealso [opiSetup()]
-opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
+opiSetBackground_for_Display <- function(lum, color, ...) {return("Deprecated")}
 
 

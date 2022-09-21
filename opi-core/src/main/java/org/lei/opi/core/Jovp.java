@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import org.lei.opi.core.structures.Parameter;
 import java.util.HashMap;
 
 /**
@@ -41,8 +42,11 @@ public class Jovp extends OpiMachine {
    * 
    * @since 0.0.1
    */
+  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
+  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     // any generic JOVP initialise stuff here
+    // open socket to JOVP...
     return new MessageProcessor.Packet("null");
   }
 

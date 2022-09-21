@@ -41,15 +41,83 @@ if (exists(".opi_env") && !exists("O600", where = .opi_env))
 #'
 #' @examples
 #' chooseOpi("O600")
-#' result <- opiInitialise(ip = "192.126.0.1", port = 50000,
-#'                         ip_Monitor = "localhost", port_Monitor = 50001,
-#'                         eye = "left")
+#' result <- opiInitialise(null)
 #'
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_O600 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL, eye = NULL) {
-    .opi_env$O600$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor, eye = eye);
+    assign("socket", open_socket(ip_Monitor, port_Monitor), .opi_env$O600)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor, eye = eye)
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$O600$socket)
+
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
+    return(res)
+}
+
+#' Implementation of opiQueryDevice for the O600 machine.
+#'
+#' This is for internal use only. Use [opiQueryDevice()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#'
+#'
+#' @return a list contianing:
+#'  * error Empty string for all good, else error message.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
+#'
+#' @examples
+#' chooseOpi("O600")
+#' result <- opiQueryDevice(null)
+#'
+#' @seealso [opiQueryDevice()]
+#'
+opiQueryDevice_for_O600 <- function() {
+if(!exists(".opi_env$O600") || !exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
+    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    msg <- list()
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$O600$socket)
+
+    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
+    return(res)
+}
+
+#' Implementation of opiSetup for the O600 machine.
+#'
+#' This is for internal use only. Use [opiSetup()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#' @param bgLum Background luminance for eye.
+#' @param fixType Fixation target type for eye.
+#' @param fixLum Fixation target luminance for eye.
+#' @param fixCol Fixation target color for eye.
+#' @param tracking Whether to correct stimulus location based on eye position.
+#'
+#' @return a list contianing:
+#'  * error Empty string for all good, else error messages from ImoVifa.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
+#'
+#' @examples
+#' chooseOpi("O600")
+#' result <- opiSetup(settings = list(null))
+#'
+#' @seealso [opiSetup()]
+#'
+opiSetup_for_O600 <- function(settings = list(bgLum = NULL, fixType = NULL, fixLum = NULL, fixCol = NULL, tracking = NULL)) {
+if(!exists(".opi_env$O600") || !exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
+    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    msg <- list(bgLum = settings$bgLum, fixType = settings$fixType, fixLum = settings$fixLum, fixCol = settings$fixCol, tracking = settings$tracking)
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O600$socket)
 
@@ -88,54 +156,15 @@ opiInitialise_for_O600 <- function(ip = NULL, port = NULL, ip_Monitor = NULL, po
 #'
 #' @examples
 #' chooseOpi("O600")
-#' result <- opiPresent(stim = list(x = list(0), y = list(0), t = list(200), w = 1500, lum = 20,
-#'                      size = "GV", color = "white"))
+#' result <- opiPresent(stim = list(null))
 #'
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_O600 <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
-if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
+if(!exists(".opi_env$O600") || !exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color);
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$O600$socket)
-
-    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
-    return(res)
-}
-
-#' Implementation of opiSetup for the O600 machine.
-#'
-#' This is for internal use only. Use [opiSetup()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#' @param bgLum Background luminance for eye.
-#' @param fixType Fixation target type for eye.
-#' @param fixLum Fixation target luminance for eye.
-#' @param fixCol Fixation target color for eye.
-#' @param tracking Whether to correct stimulus location based on eye position.
-#'
-#' @return a list contianing:
-#'  * error Empty string for all good, else error messages from ImoVifa.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - msg$jovp Any messages that the JOVP sent back.
-#'
-#' @examples
-#' chooseOpi("O600")
-#' result <- opiSetup(settings = list(bgLum = 10, fixType = "maltese", fixLum = 20, fixCol = "green",
-#'                    tracking = 0))
-#'
-#' @seealso [opiSetup()]
-#'
-opiSetup_for_O600 <- function(settings = list(bgLum = NULL, fixType = NULL, fixLum = NULL, fixCol = NULL, tracking = NULL)) {
-if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
-
-    msg <- list(bgLum = settings$bgLum, fixType = settings$fixType, fixLum = settings$fixLum, fixCol = settings$fixCol, tracking = settings$tracking);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color)
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O600$socket)
 
@@ -160,48 +189,15 @@ if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
 #'
 #' @examples
 #' chooseOpi("O600")
-#' result <- opiClose()
+#' result <- opiClose(null)
 #'
 #' @seealso [opiClose()]
 #'
 opiClose_for_O600 <- function() {
-if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
+if(!exists(".opi_env$O600") || !exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list();
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$O600$socket)
-
-    res <- rjson::fromJSON(readLines(.opi_env$O600$socket, n=1))
-    return(res)
-}
-
-#' Implementation of opiQueryDevice for the O600 machine.
-#'
-#' This is for internal use only. Use [opiQueryDevice()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#'
-#'
-#' @return a list contianing:
-#'  * error Empty string for all good, else error message.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - msg$jovp Any messages that the JOVP sent back.
-#'
-#' @examples
-#' chooseOpi("O600")
-#' result <- opiQueryDevice()
-#'
-#' @seealso [opiQueryDevice()]
-#'
-opiQueryDevice_for_O600 <- function() {
-if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
-
-    msg <- list();
+    msg <- list()
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O600$socket)
 
@@ -211,9 +207,9 @@ if(!exists(".opi_env$O600$socket") || is.null(.opi_env$O600$socket))
 
 
 #' Set background color and luminance in both eyes.
-#' Deprecated for ImoVifa and replaced with [opiSetup()].
+#' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
 #' @usage NULL
 #' @seealso [opiSetup()]
-opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
+opiSetBackground_for_O600 <- function(lum, color, ...) {return("Deprecated")}
 
 

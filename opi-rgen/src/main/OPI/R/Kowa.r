@@ -40,14 +40,81 @@ if (exists(".opi_env") && !exists("Kowa", where = .opi_env))
 #'
 #' @examples
 #' chooseOpi("Kowa")
-#' result <- opiInitialise(ip = "192.126.0.1", port = 50000,
-#'                         ip_Monitor = "localhost", port_Monitor = 50001)
+#' result <- opiInitialise(null)
 #'
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_Kowa <- function(ip = NULL, port = NULL, ip_Monitor = NULL, port_Monitor = NULL) {
-    .opi_env$Kowa$socket <<- open_socket(ip_Monitor, port_Monitor)
-    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor);
+    assign("socket", open_socket(ip_Monitor, port_Monitor), .opi_env$Kowa)
+    msg <- list(ip = ip, port = port, ip_Monitor = ip_Monitor, port_Monitor = port_Monitor)
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$Kowa$socket)
+
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
+    return(res)
+}
+
+#' Implementation of opiQueryDevice for the Kowa machine.
+#'
+#' This is for internal use only. Use [opiQueryDevice()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#'
+#'
+#' @return a list contianing:
+#'  * error Empty string for all good, else error message.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
+#'
+#' @examples
+#' chooseOpi("Kowa")
+#' result <- opiQueryDevice(null)
+#'
+#' @seealso [opiQueryDevice()]
+#'
+opiQueryDevice_for_Kowa <- function() {
+if(!exists(".opi_env$Kowa") || !exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
+    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    msg <- list()
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$Kowa$socket)
+
+    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
+    return(res)
+}
+
+#' Implementation of opiSetup for the Kowa machine.
+#'
+#' This is for internal use only. Use [opiSetup()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#' @param bgLum Background luminance for eye.
+#' @param bgCol Background color for eye.
+#' @param fixType Fixation target type for eye.
+#'
+#' @return a list contianing:
+#'  * error Empty string for all good, else error messages from ImoVifa.
+#'  * msg JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - msg$jovp Any messages that the JOVP sent back.
+#'
+#' @examples
+#' chooseOpi("Kowa")
+#' result <- opiSetup(settings = list(null))
+#'
+#' @seealso [opiSetup()]
+#'
+opiSetup_for_Kowa <- function(settings = list(bgLum = NULL, bgCol = NULL, fixType = NULL)) {
+if(!exists(".opi_env$Kowa") || !exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
+    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    msg <- list(bgLum = settings$bgLum, bgCol = settings$bgCol, fixType = settings$fixType)
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Kowa$socket)
 
@@ -85,51 +152,15 @@ opiInitialise_for_Kowa <- function(ip = NULL, port = NULL, ip_Monitor = NULL, po
 #'
 #' @examples
 #' chooseOpi("Kowa")
-#' result <- opiPresent(stim = list(x = list(0), y = list(0), t = list(200), w = 1500, lum = 20,
-#'                      size = 1.72, color = "white"))
+#' result <- opiPresent(stim = list(null))
 #'
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Kowa <- function(stim = list(x = NULL, y = NULL, t = NULL, w = NULL, lum = NULL, size = NULL, color = NULL)) {
-if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
+if(!exists(".opi_env$Kowa") || !exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color);
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$Kowa$socket)
-
-    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
-    return(res)
-}
-
-#' Implementation of opiSetup for the Kowa machine.
-#'
-#' This is for internal use only. Use [opiSetup()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#' @param bgLum Background luminance for eye.
-#' @param bgCol Background color for eye.
-#' @param fixType Fixation target type for eye.
-#'
-#' @return a list contianing:
-#'  * error Empty string for all good, else error messages from ImoVifa.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - msg$jovp Any messages that the JOVP sent back.
-#'
-#' @examples
-#' chooseOpi("Kowa")
-#' result <- opiSetup(settings = list(bgLum = "white", bgCol = "white", fixType = "center"))
-#'
-#' @seealso [opiSetup()]
-#'
-opiSetup_for_Kowa <- function(settings = list(bgLum = NULL, bgCol = NULL, fixType = NULL)) {
-if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
-
-    msg <- list(bgLum = settings$bgLum, bgCol = settings$bgCol, fixType = settings$fixType);
+    msg <- list(x = stim$x, y = stim$y, t = stim$t, w = stim$w, lum = stim$lum, size = stim$size, color = stim$color)
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Kowa$socket)
 
@@ -154,48 +185,15 @@ if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
 #'
 #' @examples
 #' chooseOpi("Kowa")
-#' result <- opiClose()
+#' result <- opiClose(null)
 #'
 #' @seealso [opiClose()]
 #'
 opiClose_for_Kowa <- function() {
-if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
+if(!exists(".opi_env$Kowa") || !exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list();
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$Kowa$socket)
-
-    res <- rjson::fromJSON(readLines(.opi_env$Kowa$socket, n=1))
-    return(res)
-}
-
-#' Implementation of opiQueryDevice for the Kowa machine.
-#'
-#' This is for internal use only. Use [opiQueryDevice()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#'
-#'
-#' @return a list contianing:
-#'  * error Empty string for all good, else error message.
-#'  * msg JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - msg$jovp Any messages that the JOVP sent back.
-#'
-#' @examples
-#' chooseOpi("Kowa")
-#' result <- opiQueryDevice()
-#'
-#' @seealso [opiQueryDevice()]
-#'
-opiQueryDevice_for_Kowa <- function() {
-if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
-
-    msg <- list();
+    msg <- list()
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Kowa$socket)
 
@@ -205,9 +203,9 @@ if(!exists(".opi_env$Kowa$socket") || is.null(.opi_env$Kowa$socket))
 
 
 #' Set background color and luminance in both eyes.
-#' Deprecated for ImoVifa and replaced with [opiSetup()].
+#' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
 #' @usage NULL
 #' @seealso [opiSetup()]
-opiSetBackground_for_ImoVifa <- function(lum, color, ...) {return("Deprecated")}
+opiSetBackground_for_Kowa <- function(lum, color, ...) {return("Deprecated")}
 
 
