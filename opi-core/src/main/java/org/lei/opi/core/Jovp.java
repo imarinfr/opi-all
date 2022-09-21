@@ -1,27 +1,29 @@
 package org.lei.opi.core;
 
+import java.util.HashMap;
+
 import org.lei.opi.core.structures.Parameter;
 import org.lei.opi.core.structures.ReturnMsg;
 
-import java.util.HashMap;
+import es.optocom.jovp.structures.Eye;
+import es.optocom.jovp.structures.ModelType;
+import es.optocom.jovp.structures.TextureType;
 
 /**
  * JOVP client
  *
  * @since 0.0.1
  */
-public class Jovp extends OpiMachine {
-
-  public enum Eye {LEFT, RIGHT, BOTH};
-  public enum Shape {CIRCLE, SQUARE, TRIANGLE, ANNULUS, CROSS, MALTESE};
-  public enum Type {FLAT, SINE, SQUARESINE, CHECKERBOARD, G1, G2, G3};
+public class Jovp extends OpiMachine {  
 
   /**
    * JOVP constructor
    *
    * @since 0.0.1
    */
-  public Jovp() { super(); }
+  public Jovp() {
+    super();
+  }
 
   /**
    * opiInitialise: initialize OPI
@@ -38,15 +40,12 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    boolean error = false;
-    String msg = "ERROR MESSAGE";
-    // DO SOMETHING!
-    if (error) {
-      setIsInitialised(false);
-      return OpiManager.error(String.format("{jvop: %s}", msg));
-    } else {
-      setIsInitialised(true);
-      return OpiManager.ok(String.format("{jvop: %s}", msg), false);
+    // TODO CONSTRUCT INIT COMMAND
+    String jsonStr = "";
+    try {
+      return sendInitCommand((String) args.get("ip"), (int) ((double) args.get("port")), jsonStr);
+    } catch (ClassCastException e) {
+      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
     }
   }
 
@@ -63,8 +62,14 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "msg.isTracking", desc = "0 eye tracking is off, any other value it is on.", className = Double.class, min = 0)
   @ReturnMsg(name = "msg.isCalibrated", desc = "0 eye tracking has not been calibrated, any other value it has.", className = Double.class, min = 0)
   public MessageProcessor.Packet query() {
-    String msg = "QUERY MESSAGE";
-    return OpiManager.ok(String.format("{\"result\": \"Imo Queried\", \"jovp\": %s}", msg), false);
+    if (!getInitialised()) return OpiManager.error(NOT_INITIALIZED);
+    try {
+      String msg = "QUERY MESSAGE";
+      // TODO SEND QUERY COMMAND
+      return OpiManager.ok(msg, false);
+    } catch (Exception e) { // TODO Check what exceptions need to be added
+      return OpiManager.error(COULD_NOT_QUERY);
+    }
   }
 
   /**
@@ -79,7 +84,7 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "both")
   @Parameter(name = "bgLum", desc = "Background luminance for eye.", className = Double.class, defaultValue = "10", min = 0, max = 3183.099)
   @Parameter(name = "bgCol", desc = "Background color for eye.", className = Double[].class, isList = true, defaultValue = "list(1, 1, 1)")
-  @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = Type.class, defaultValue = "maltese")
+  @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = ModelType.class, defaultValue = "maltese")
   @Parameter(name = "fixLum", desc = "Fixation target luminance for eye.", className = Double.class, defaultValue = "20", min = 0, max = 3183.099)
   @Parameter(name = "fixCol", desc = "Fixation target color for eye.", className = Double[].class, isList = true, defaultValue = "list(0, 1, 0)")
   @Parameter(name = "fixCx", desc = "x-coordinate of fixation target (degrees).", className = Double.class, min = -90, max = 90, defaultValue = "0")
@@ -92,8 +97,14 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
-    // any generic JOVP setup stuff here
-    return new MessageProcessor.Packet("null");
+    if (!getInitialised()) return OpiManager.error(NOT_INITIALIZED);
+    try {
+      String msg = "SETUP MESSAGE";
+      // TODO SEND SETUP MESSAGE
+      return OpiManager.ok(msg, false);
+    } catch (Exception e) { // TODO Check what exceptions need to be added
+      return OpiManager.error(COULD_NOT_SETUP);
+    }
   }
 
   /**
@@ -105,9 +116,9 @@ public class Jovp extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye" , desc = "Eye to test.", className = Eye.class, isList = true, defaultValue = "list('left')")
-  @Parameter(name = "shape" , desc = "Stimulus shape.", className = Shape.class, isList = true, defaultValue = "list('circle')", optional = true)
-  @Parameter(name = "type" , desc = "Stimulus type.", className = Type.class, isList = true, defaultValue = "list('flat')", optional = true)
+  @Parameter(name = "eye", desc = "Eye to test.", className = Eye.class, isList = true, defaultValue = "list('left')")
+  @Parameter(name = "shape", desc = "Stimulus shape.", className = ModelType.class, isList = true, defaultValue = "list('circle')", optional = true)
+  @Parameter(name = "type", desc = "Stimulus type.", className = TextureType.class, isList = true, defaultValue = "list('flat')", optional = true)
   @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -90, max = 90, isList = true, defaultValue = "list(0)")
   @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -90, max = 90, isList = true, defaultValue = "list(0)")
   @Parameter(name = "sx", desc = "List of diameters along major axis of ellipse (degrees).", className = Double.class, min = 0, max = 180, isList = true, defaultValue = "list(1.72)")
@@ -132,8 +143,14 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
-    // any generic JOVP present stuff here
-    return new MessageProcessor.Packet("null");
+    if (!getInitialised()) return OpiManager.error(NOT_INITIALIZED);
+    try {
+      String msg = "PRESENT MESSAGE";
+      // TODO SEND PRESENT MESSAGE
+      return OpiManager.ok(msg, false);
+    } catch (Exception e) { // TODO Check what exceptions need to be added
+      return OpiManager.error(COULD_NOT_PRESENT);
+    }
   }
 
   /**
@@ -149,9 +166,9 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
   public MessageProcessor.Packet close() {
-    setIsInitialised(false);
-    // any generic JOVP close stuff here
-    return new MessageProcessor.Packet("null");
+    // TODO CONSTRUCT CLOSE COMMAND
+    String jsonStr = "CLOSE COMMAND";
+    return sendCloseCommand(jsonStr);
   }
 
 }

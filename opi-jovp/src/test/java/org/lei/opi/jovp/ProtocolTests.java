@@ -130,16 +130,19 @@ public class ProtocolTests {
     try {
       new Monitor(opiJovp.listener);
       System.out.println("QUERY before initialized");
+      Thread.sleep(1000);
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(Monitor.loadMessage(initJson)); // Initialize OPI
       Thread.sleep(100);
       System.out.println("QUERY after initialized");
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
-      Thread.sleep(1000);
+      Thread.sleep(100);
       for (String s : setupJson) sendAndReceive(Monitor.loadMessage(s)); // Setup OPI
+      Thread.sleep(1000);
       for (String s : presentJson) sendAndReceive(Monitor.loadMessage(s)); // Present OPI
-      Thread.sleep(5000);
+      Thread.sleep(2000);
       sendAndReceive(Monitor.loadMessage("jsons/opiClose.json")); // Close OPI
+      Thread.sleep(200);
       Monitor.close();
     } catch (IOException e) {
       throw new RuntimeException(e);

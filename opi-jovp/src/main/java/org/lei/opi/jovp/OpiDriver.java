@@ -12,6 +12,7 @@ import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.Monitor;
 import es.optocom.jovp.PsychoEngine;
+import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ViewMode;
 
 /**
@@ -20,6 +21,9 @@ import es.optocom.jovp.structures.ViewMode;
  * @since 0.0.1
  */
 public class OpiDriver extends MessageProcessor {
+
+  /** Machine state */
+  protected enum State {IDLE, INIT, SETUP, PRESENT, WAIT, RESPONDED, CLOSE};
 
   /** A background record to communicate with OpiLogic */
   protected final Settings settings;
@@ -34,7 +38,7 @@ public class OpiDriver extends MessageProcessor {
   /** A record to record the results after a stimulus prsentation */
   protected Response response;
   /** Whether opiInitialized has been invoked and not closed later on by opiClose */
-  protected boolean initialized = false;
+  protected State state;
 
   /**
    * The OpiDriver
@@ -77,6 +81,7 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   public MessageProcessor.Packet process(String jsonStr) {
+    System.out.println(jsonStr);
     Gson gson = new Gson();
     HashMap<String, Object> pairs;
     try {
@@ -127,12 +132,9 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet initialize() {
-    try{
-      initialized = true;
-      return OpiManager.ok(prefix + "opiInitialize successful", false);
-    } catch (Exception e) {
-      return OpiManager.error(prefix + "problem with opiInitialize", e);
-    }
+    state = State.INIT;
+    while (state != State.IDLE) Thread.onSpinWait();
+    return OpiManager.ok(prefix + "opiInitialize successful", false);
   }
 
   /**
@@ -144,7 +146,13 @@ public class OpiDriver extends MessageProcessor {
    */
   private MessageProcessor.Packet setup(HashMap<String, Object> args) {
     try {
-      backgrounds[0] = Background.set(args, settings.calibration());
+      // Get eye for the instruction
+      Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());
+      if(settings.viewMode() == ViewMode.MONO || eye == Eye.BOTH || eye == Eye.LEFT)
+        backgrounds[0] = Background.set(args, settings.calibration());
+      if(settings.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
+        backgrounds[1] = Background.set(args, settings.calibration());
+      state = State.SETUP;
       return OpiManager.ok(prefix + "opiSetup successful", false);
     } catch (ClassCastException e) {
       return OpiManager.error(prefix + "problem with opiSetup", e);
@@ -161,7 +169,8 @@ public class OpiDriver extends MessageProcessor {
   private MessageProcessor.Packet present(HashMap<String, Object> args) {
     try {
       stimulus = Stimulus.set(args);
-      response = new Response(true, 537, 0.3, 0.8, 6.2, 258);
+      state = State.PRESENT;
+      while (state != State.RESPONDED) Thread.onSpinWait(); // wait for response
       return OpiManager.ok(prefix + "opiPresent successful: " + response, false);
     } catch (Exception e) {
       return OpiManager.error(prefix + "problem with opiPresent", e);
@@ -174,12 +183,8 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet close() {
-    try{
-      initialized = false;
-      return OpiManager.ok(prefix + "opiClose successful", true);
-    } catch (Exception e) {
-      return OpiManager.error(prefix + "problem with opiClose", e);
-    }
+    state = State.CLOSE;
+    return OpiManager.ok(prefix + "opiClose successful", true);
   }
 
 }

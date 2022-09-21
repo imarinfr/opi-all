@@ -144,7 +144,7 @@ public class OpiManager extends MessageProcessor {
        
           // If it is a CHOOSE command, then let's fire up the chosen machine (unless one already open)
         if (cmd.equalsIgnoreCase(Command.CHOOSE.name())) {
-            if (this.machine != null && machine.getIsInitialised())
+            if (this.machine != null && machine.getInitialised())
                 return error(MACHINE_NEEDS_CLOSING);
        
             String className = OpiMachine.class.getPackage().getName() + "." + pairs.get("machine");

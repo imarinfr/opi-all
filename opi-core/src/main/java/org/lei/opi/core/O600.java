@@ -43,8 +43,13 @@ public class O600 extends OpiMachine {
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
    public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    setIsInitialised(true);
-    return new MessageProcessor.Packet("");
+    // TODO CONSTRUCT INIT COMMAND
+    String jsonStr = "";
+    try {
+      return sendInitCommand((String) args.get("ip"), (int) ((double) args.get("port")), jsonStr);
+    } catch (ClassCastException e) {
+      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
+    }
   }
 
   /**
@@ -124,8 +129,9 @@ public class O600 extends OpiMachine {
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
   public MessageProcessor.Packet close() {
-    setIsInitialised(false);
-    return new MessageProcessor.Packet("");
+    // TODO CONSTRUCT CLOSE COMMAND
+    String jsonStr = "CLOSE COMMAND";
+    return sendCloseCommand(jsonStr);
   }
 
 }
