@@ -26,20 +26,6 @@ public class O600 extends OpiMachine {
   public O600() { super(); }
 
   /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
-  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-   public MessageProcessor.Packet query() {
-    return new MessageProcessor.Packet("");
-  }
-
-  /**
    * opiInitialise: initialize OPI
    * 
    * @param args A map of name:value pairs for Params
@@ -62,6 +48,20 @@ public class O600 extends OpiMachine {
   }
 
   /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
+  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
+  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+   public MessageProcessor.Packet query() {
+    return new MessageProcessor.Packet("");
+  }
+
+  /**
    * opiSetup: Change device background and overall settings
    * 
    * @param args pairs of argument name and value
@@ -74,7 +74,7 @@ public class O600 extends OpiMachine {
   @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = FixType.class, defaultValue = "maltese")
   @Parameter(name = "fixLum", desc = "Fixation target luminance for eye.", className = Double.class, defaultValue = "20", min = 0, max = 3183.099)
   @Parameter(name = "fixCol", desc = "Fixation target color for eye.", className = FixCol.class, defaultValue = "green")
-@Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
+  @Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from ImoVifa.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")

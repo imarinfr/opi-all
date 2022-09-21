@@ -22,22 +22,6 @@ public class PhoneHMD extends Jovp {
   }
 
   /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
-  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-  @ReturnMsg(name = "msg.isTracking", desc = "0 eye tracking is off, any other value it is on.", className = Double.class, min = 0)
-  @ReturnMsg(name = "msg.isCalibrated", desc = "0 eye tracking has not been calibrated, any other value it has.", className = Double.class, min = 0)
-  public MessageProcessor.Packet query() {
-    return new MessageProcessor.Packet("");
-  }
-
-  /**
    * opiInitialise: initialize OPI
    * 
    * @param args A map of name:value pairs for Params
@@ -55,6 +39,22 @@ public class PhoneHMD extends Jovp {
   @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     setIsInitialised(true);
+    return new MessageProcessor.Packet("");
+  }
+
+  /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
+  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
+  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.isTracking", desc = "0 eye tracking is off, any other value it is on.", className = Double.class, min = 0)
+  @ReturnMsg(name = "msg.isCalibrated", desc = "0 eye tracking has not been calibrated, any other value it has.", className = Double.class, min = 0)
+  public MessageProcessor.Packet query() {
     return new MessageProcessor.Packet("");
   }
 

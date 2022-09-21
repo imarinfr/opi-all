@@ -20,20 +20,6 @@ public class Display extends Jovp {
   public Display() { super(); }
 
   /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
-  @ReturnMsg(name = "msg", desc = "Object with all of the other fields.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-   public MessageProcessor.Packet query() {
-    return new MessageProcessor.Packet("");
-  }
-
-  /**
    * opiInitialise: initialize OPI
    * 
    * @param args A map of name:value pairs for Params
@@ -50,6 +36,20 @@ public class Display extends Jovp {
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     setIsInitialised(true);
     super.initialize(args);
+    return new MessageProcessor.Packet("");
+  }
+
+  /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
+  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
+  @ReturnMsg(name = "msg", desc = "Object with all of the other fields.")
+  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+   public MessageProcessor.Packet query() {
     return new MessageProcessor.Packet("");
   }
 

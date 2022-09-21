@@ -151,15 +151,6 @@ public abstract class OpiMachine {
   };
 
   /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  public abstract MessageProcessor.Packet query();
-
-  /**
    * opiInitialise: initialize OPI
    * 
    * @param args A map of name:value pairs for Params
@@ -180,6 +171,15 @@ public abstract class OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialise(HashMap<String, Object> args) { return this.initialize(args);}
+
+  /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
+  public abstract MessageProcessor.Packet query();
 
   /**
    * opiSetup: Change device background and overall settings

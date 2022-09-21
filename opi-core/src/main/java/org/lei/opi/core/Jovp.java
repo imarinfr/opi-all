@@ -22,18 +22,6 @@ public class Jovp extends OpiMachine {
   public Jovp() { super(); }
 
   /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  public MessageProcessor.Packet query() {
-    // any generic JOVP query stuff here
-    return new MessageProcessor.Packet("null");
-  }
-
-  /**
    * opiInitialise: initialize OPI
    * 
    * @param args A map of name:value pairs for Params
@@ -46,7 +34,19 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "port_Monitor", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     // any generic JOVP initialise stuff here
-    // open socket to JOVP...
+    // open socket to JOVP machine
+    return new MessageProcessor.Packet("null");
+  }
+
+  /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
+  public MessageProcessor.Packet query() {
+    // any generic JOVP query stuff here
     return new MessageProcessor.Packet("null");
   }
 
