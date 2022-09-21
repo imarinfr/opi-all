@@ -10,7 +10,7 @@ import org.lei.opi.core.structures.ReturnMsg;
  *
  * @since 0.0.1
  */
-public class Display extends OpiMachine {
+public class Display extends Jovp {
 
   /**
    * Display constructor
