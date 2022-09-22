@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -35,9 +36,14 @@ public class CSListener extends Thread {
   /** Whether it is listening or not */
   private boolean listen = true;
 
+  /** If this is not null, add the messages processed by {@link send} to {@link sendWriter} */
+  Writer sendWriter;
+  /** If true, add the messages procesed by {@link receive} to {@link receiveBuffer} */
+  Writer receiveWriter;
+
   private MessageProcessor msgProcessor;
 
-  public CSListener(int port, MessageProcessor processObject) {
+  private void setup(int port, MessageProcessor processObject) {
     this.msgProcessor = processObject;
     this.port = port;
     address = obtainPublicAddress();
@@ -47,6 +53,31 @@ public class CSListener extends Thread {
     while (this.server == null)
       Thread.onSpinWait();
   }
+
+   /**
+   * 
+   * @param port
+   * @param processObject Pro
+   */
+  public CSListener(int port, MessageProcessor processObject) {
+        setup(port, processObject);
+        this.receiveWriter = null;
+        this.sendWriter = null;
+  }
+
+  /**
+   * 
+   * @param port
+   * @param processObject Pro
+   * @param receiveWriter If this is not null, messages via {@link receive} will be println to this.
+   * @param sendWriter If this is not null, messages via {@link send} will be println to this.
+   */
+  public CSListener(int port, MessageProcessor processObject, Writer receiveWriter, Writer sendWriter) {
+        setup(port, processObject);
+        this.receiveWriter = receiveWriter;
+        this.sendWriter = sendWriter;
+  }
+
 
   /** run listener on a different thread */
   public void run() throws RuntimeException {
@@ -96,6 +127,12 @@ public class CSListener extends Thread {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+    if (receiveWriter != null)
+        try {
+            receiveWriter.write(message.toString());
+        } catch (IOException e) {
+            System.err.println("Cannot write recieve() message to receiveWriter in CSListener.");
+        }
     return message.toString();
   }
 
@@ -113,6 +150,12 @@ public class CSListener extends Thread {
       outgoing.write(message);
       outgoing.newLine();
       outgoing.flush();
+      if (sendWriter != null)
+        try {
+            sendWriter.write(message);
+        } catch (IOException e) {
+            System.err.println("Cannot write send() message to sendWriter in CSListener.");
+        }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

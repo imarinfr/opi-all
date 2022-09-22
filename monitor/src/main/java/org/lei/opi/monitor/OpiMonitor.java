@@ -8,16 +8,16 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.layout.HBox;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
 import javafx.geometry.Pos;
-import javafx.geometry.Insets;
 import javafx.stage.Stage;
 
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.Writer;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.CommandLine;
@@ -163,6 +163,9 @@ public class OpiMonitor extends Application {
 
         updateVFImage(leftField);
         updateVFImage(rghtField);
+
+        MessageWriter mw = new MessageWriter(messages);
+        Server s = new Server(51434, mw);
     }
 
     public static void main(String[] args) {
@@ -184,7 +187,7 @@ public class OpiMonitor extends Application {
         }
         else {
             System.out.println("Starting server");
-            Server s = new Server(51434);
+            Server s = new Server(51434, new PrintWriter(System.out));
             System.exit(0);
         }
     }
