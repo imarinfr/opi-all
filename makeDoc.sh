@@ -9,7 +9,7 @@ javadoc \
     -d /Users/aturpin/src/opi-all/doc \
     --class-path $m2PATH \
     opi-core/src/main/java/org/lei/opi/core/*.java \
-    opi-core/src/main/java/org/lei/opi/core/structures/*.java \
+    opi-core/src/main/java/org/lei/opi/core/definitions/*.java \
     opi-rgen/src/main/java/org/lei/opi/rgen/*.java
     #-taglet org.lei.opi.core.ParamTaglet \
     #-tagletpath ../../../target/classes/ \
