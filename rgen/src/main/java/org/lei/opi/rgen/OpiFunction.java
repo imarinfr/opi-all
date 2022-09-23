@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 import java.util.function.Function;
 
 import org.lei.opi.core.OpiMachine;
-import org.lei.opi.core.structures.Parameter;
-import org.lei.opi.core.structures.ReturnMsg;
+import org.lei.opi.core.definitions.Parameter;
+import org.lei.opi.core.definitions.ReturnMsg;
 
 /**
  * Class to hold information about the mapping from opi functions 

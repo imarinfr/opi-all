@@ -1,4 +1,4 @@
-package org.lei.opi.core.structures;
+package org.lei.opi.core.definitions;
 
 import java.lang.annotation.*;
 
@@ -6,6 +6,6 @@ import java.lang.annotation.*;
 @Target(value = ElementType.METHOD)
 @Documented
 @Inherited
-public @interface ReturnMsgs {
-  ReturnMsg[] value();
+public @interface Parameters {
+  Parameter[] value();
 }

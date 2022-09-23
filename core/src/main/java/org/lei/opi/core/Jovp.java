@@ -2,8 +2,8 @@ package org.lei.opi.core;
 
 import java.util.HashMap;
 
-import org.lei.opi.core.structures.Parameter;
-import org.lei.opi.core.structures.ReturnMsg;
+import org.lei.opi.core.definitions.Parameter;
+import org.lei.opi.core.definitions.ReturnMsg;
 
 import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ModelType;
@@ -36,6 +36,8 @@ public class Jovp extends OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the JOVP perimeter.", defaultValue = "192.126.0.1")
   @Parameter(name = "port", desc = "TCP port of the JOVP perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "51234")
+  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI Kowa server.", defaultValue = "localhost")
+  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI Kowa server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.jovp", desc = "JOVP-specific messages.")

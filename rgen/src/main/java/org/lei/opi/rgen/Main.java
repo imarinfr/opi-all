@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import java.util.stream.Collectors;
 
 import org.lei.opi.core.OpiMachine;
-import org.lei.opi.core.structures.Parameter;
+import org.lei.opi.core.definitions.Parameter;
 
 /**
  * Generate R code for machines defined in org.lei.opi.core.*.

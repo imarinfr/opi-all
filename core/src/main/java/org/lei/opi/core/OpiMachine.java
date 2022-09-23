@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.lei.opi.core.structures.Parameter;
-import org.lei.opi.core.structures.Parameters;
+import org.lei.opi.core.definitions.Parameter;
+import org.lei.opi.core.definitions.Parameters;
 import org.reflections.Reflections;
 
 /**

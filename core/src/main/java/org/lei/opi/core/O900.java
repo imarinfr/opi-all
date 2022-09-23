@@ -2,8 +2,8 @@ package org.lei.opi.core;
 
 import java.util.HashMap;
 
-import org.lei.opi.core.structures.Parameter;
-import org.lei.opi.core.structures.ReturnMsg;
+import org.lei.opi.core.definitions.Parameter;
+import org.lei.opi.core.definitions.ReturnMsg;
 
 /**
  * Octopus O900 client

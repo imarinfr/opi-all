@@ -1,4 +1,4 @@
-package org.lei.opi.core.structures;
+package org.lei.opi.core.definitions;
 
 import java.lang.annotation.*;
 
