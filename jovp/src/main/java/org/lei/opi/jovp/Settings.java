@@ -185,9 +185,9 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
       // if gamma not path and not a resource file, then throw IOException
     }
     HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
-    double[] gammaRed = ((ArrayList<?>) (pairs.get("gammaRed"))).stream().mapToDouble(Double.class::cast).toArray();
-    double[] gammaGreen = ((ArrayList<?>) (pairs.get("gammaGreen"))).stream().mapToDouble(Double.class::cast).toArray();
-    double[] gammaBlue = ((ArrayList<?>) (pairs.get("gammaBlue"))).stream().mapToDouble(Double.class::cast).toArray();
+    double[] gammaRed = ((ArrayList<?>) pairs.get("gammaRed")).stream().mapToDouble(Double.class::cast).toArray();
+    double[] gammaGreen = ((ArrayList<?>) pairs.get("gammaGreen")).stream().mapToDouble(Double.class::cast).toArray();
+    double[] gammaBlue = ((ArrayList<?>) pairs.get("gammaBlue")).stream().mapToDouble(Double.class::cast).toArray();
     return Calibration.set((double) pairs.get("maxRed"), depth, gammaRed,
                            (double) pairs.get("maxGreen"), depth, gammaGreen,
                            (double) pairs.get("maxBlue"), depth, gammaBlue);

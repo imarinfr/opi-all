@@ -38,8 +38,8 @@ public record Background(double[] bgCol, ModelType fixShape, double[] fixCol,
   static Background set(HashMap<String, Object> args, Calibration calibration) throws ClassCastException, IllegalArgumentException {
     double bgLum = (double) args.get("bgLum");
     double fixLum = (double) args.get("fixLum");
-    double[] bgCol = ((ArrayList<?>) (args.get("bgCol"))).stream().mapToDouble(Double.class::cast).toArray();
-    double[] fixCol = ((ArrayList<?>) (args.get("fixCol"))).stream().mapToDouble(Double.class::cast).toArray();
+    double[] bgCol = ((ArrayList<?>) args.get("bgCol")).stream().mapToDouble(Double.class::cast).toArray();
+    double[] fixCol = ((ArrayList<?>) args.get("fixCol")).stream().mapToDouble(Double.class::cast).toArray();
     return new Background(calibration.colorValues(bgLum, bgCol),
                           ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
                           calibration.colorValues(fixLum, fixCol),
