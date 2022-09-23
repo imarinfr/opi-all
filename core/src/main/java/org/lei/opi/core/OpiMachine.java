@@ -83,8 +83,9 @@ public abstract class OpiMachine {
       // ".opi-core");
       Reflections reflections = new Reflections(this.getClass().getPackageName());
       enums = new HashMap<String, List<String>>();
-      for (Class<? extends Enum> e : reflections.getSubTypesOf(Enum.class))
-        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());
+      for (Class<?> e : reflections.getSubTypesOf(Enum.class))
+        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast).map(c -> c.name().toLowerCase()).toList());
+        //enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());//
 
       // key is method name, value is array of annotations on that method
 
@@ -133,7 +134,7 @@ public abstract class OpiMachine {
           return OpiManager.error(String.format("Parameter %s should not be a list but is not for function %s in %s.",
               param.name(), funcName, this.getClass()));
 
-        List<Object> pList = !param.isList() ? Arrays.asList(valueObj) : (List) valueObj;
+        List<Object> pList = !param.isList() ? Arrays.asList(valueObj) : ((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList();
 
         if (enums.containsKey(param.className().getName())) {
           List<String> enumVals = enums.get(param.className().getName());
