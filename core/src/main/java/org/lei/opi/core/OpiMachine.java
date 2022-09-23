@@ -79,16 +79,11 @@ public abstract class OpiMachine {
       data.method = method;
       data.parameters = method.getAnnotation(Parameters.class);
 
-      // Reflections reflections = new Reflections(this.getClass().getPackageName() +
-      // ".opi-core");
+      // key is method name, value is array of annotations on that method
       Reflections reflections = new Reflections(this.getClass().getPackageName());
       enums = new HashMap<String, List<String>>();
       for (Class<?> e : reflections.getSubTypesOf(Enum.class))
         enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast).map(c -> c.name().toLowerCase()).toList());
-        //enums.put(e.getName(), Stream.of(e.getEnumConstants()).map((Enum c) -> c.name().toLowerCase()).toList());//
-
-      // key is method name, value is array of annotations on that method
-
       opiMethods.put(method.getName(), data);
     }
   }
