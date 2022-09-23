@@ -17,7 +17,6 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.Writer;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.CommandLine;
