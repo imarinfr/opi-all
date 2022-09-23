@@ -23,19 +23,6 @@ public class Compass extends OpiMachine {
   public Compass() { super(); }
 
   /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
-  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-   public MessageProcessor.Packet query() {
-    return new MessageProcessor.Packet("");
-  }
-  /**
    * opiInitialise: initialize OPI
    * 
    * @param args A map of name:value pairs for Params
@@ -46,12 +33,12 @@ public class Compass extends OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
   @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
-  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
-  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
+  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI Compass server.", defaultValue = "localhost")
+  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI Compass server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.compass", desc = "Compass-specific messages.")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     // TODO CONSTRUCT INIT COMMAND
     String jsonStr = "";
@@ -63,6 +50,20 @@ public class Compass extends OpiMachine {
   }
 
   /**
+   * opiQuery: Query device
+   * 
+   * @return settings and state machine state
+   *
+   * @since 0.0.1
+   */
+  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
+  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "msg.compass", desc = "Compass-specific messages.")
+   public MessageProcessor.Packet query() {
+    return new MessageProcessor.Packet("");
+  }
+
+  /**
    * opiSetup: Change device background and overall settings
    * 
    * @param args pairs of argument name and value
@@ -71,12 +72,12 @@ public class Compass extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = ShapeType.class, defaultValue = "maltese")
+  @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = ShapeType.class, defaultValue = "spot")
   @Parameter(name = "fixCx", desc = "x-coordinate of fixation target (degrees).", className = Double.class, min = -90, max = 90, defaultValue = "0")
   @Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from ImoVifa.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.compass", desc = "Compass-specific messages.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     return new MessageProcessor.Packet("");
   }
@@ -103,7 +104,7 @@ public class Compass extends OpiMachine {
   @ReturnMsg(name = "msg.eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
-  @ReturnMsg(name = "msg.jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.compass", desc = "Compass-specific messages.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     return new MessageProcessor.Packet("");
   }
@@ -119,7 +120,7 @@ public class Compass extends OpiMachine {
    */
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.compass", desc = "Compass-specific messages.")
   public MessageProcessor.Packet close() {
     // TODO CONSTRUCT CLOSE COMMAND
     String jsonStr = "CLOSE COMMAND";

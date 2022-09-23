@@ -15,8 +15,8 @@ public class O600 extends OpiMachine {
   private enum Eye {LEFT, RIGHT};
   private enum FixType {FIX1, FIX2, FIX3, FIX4};
   private enum FixCol {COL1, COL2, COL3, COL4};
-  private enum StCol {WHITE, RED, BLUE};
-  private enum StSize {GI, GII, GIII, GIV, GV};
+  private enum Size {GI, GII, GIII, GIV, GV};
+  private enum Color {WHITE, RED, BLUE};
 
   /**
    * Octopus O600 constructor
@@ -36,12 +36,12 @@ public class O600 extends OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
   @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
-  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI JOVP server.", defaultValue = "localhost")
-  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI JOVP server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
+  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI O600 server.", defaultValue = "localhost")
+  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI O600 server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
   @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.O600", desc = "O600-specific messages.")
    public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     // TODO CONSTRUCT INIT COMMAND
     String jsonStr = "";
@@ -61,7 +61,7 @@ public class O600 extends OpiMachine {
    */
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.O600", desc = "O600-specific messages.")
    public MessageProcessor.Packet query() {
     return new MessageProcessor.Packet("");
   }
@@ -82,7 +82,7 @@ public class O600 extends OpiMachine {
   @Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from ImoVifa.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.O600", desc = "O600-specific messages.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     return new MessageProcessor.Packet("");
   }
@@ -101,8 +101,8 @@ public class O600 extends OpiMachine {
   @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, isList = true, defaultValue = "list(200)")
   @Parameter(name = "w", desc = "List of stimuli response windows (ms).", className = Double.class, min = 0, defaultValue = "1500")
   @Parameter(name = "lum", desc = "List of stimuli luminances (cd/m^2).", className = Double.class, min = 0, max = 3183.099, defaultValue = "20")
-  @Parameter(name = "size", desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", className = StSize.class, defaultValue = "GV")
-  @Parameter(name = "color", desc = "List of stimuli colors.", className = StCol.class, defaultValue = "white")
+  @Parameter(name = "size", desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", className = Size.class, defaultValue = "GV")
+  @Parameter(name = "color", desc = "List of stimuli colors.", className = Color.class, defaultValue = "white")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from O600.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "msg.seen", desc = "true if seen, false if not.", className = Boolean.class)
@@ -111,7 +111,7 @@ public class O600 extends OpiMachine {
   @ReturnMsg(name = "msg.eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
-  @ReturnMsg(name = "msg.jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.O600", desc = "O600-specific messages.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     return new MessageProcessor.Packet("");
   }
@@ -127,7 +127,7 @@ public class O600 extends OpiMachine {
    */
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.O600", desc = "O600-specific messages.")
   public MessageProcessor.Packet close() {
     // TODO CONSTRUCT CLOSE COMMAND
     String jsonStr = "CLOSE COMMAND";

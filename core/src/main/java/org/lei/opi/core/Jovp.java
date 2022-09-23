@@ -38,7 +38,7 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "port", desc = "TCP port of the JOVP perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "51234")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.jovp", desc = "JOVP-specific messages.")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     // TODO CONSTRUCT INIT COMMAND
     String jsonStr = "";
@@ -58,9 +58,7 @@ public class Jovp extends OpiMachine {
    */
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
-  @ReturnMsg(name = "msg.isTracking", desc = "0 eye tracking is off, any other value it is on.", className = Double.class, min = 0)
-  @ReturnMsg(name = "msg.isCalibrated", desc = "0 eye tracking has not been calibrated, any other value it has.", className = Double.class, min = 0)
+  @ReturnMsg(name = "msg.jovp", desc = "JOVP-specific messages.")
   public MessageProcessor.Packet query() {
     if (!getInitialised()) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -95,7 +93,7 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from ImoVifa.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.jovp", desc = "JOVP-specific messages.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (!getInitialised()) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -141,7 +139,7 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "msg.eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
   @ReturnMsg(name = "msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
-  @ReturnMsg(name = "msg.jovp", desc = "Any JOVP-specific messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.jovp", desc = "JOVP-specific messages.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     if (!getInitialised()) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -164,7 +162,7 @@ public class Jovp extends OpiMachine {
    */
   @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
   @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.jovp", desc = "Any messages that the JOVP sent back.")
+  @ReturnMsg(name = "msg.jovp", desc = "JOVP-specific messages.")
   public MessageProcessor.Packet close() {
     // TODO CONSTRUCT CLOSE COMMAND
     String jsonStr = "CLOSE COMMAND";
