@@ -19,53 +19,6 @@ public class Kowa extends OpiMachine {
   private enum Color {WHITE, RED, GREEN, BLUE};
 
   /**
-   * Kowa AP7000 constructor
-   *
-   * @since 0.0.1
-   */
-  public Kowa() { super(); }
-
-  /**
-   * opiInitialise: initialize OPI
-   * 
-   * @param args A map of name:value pairs for Params
-   * 
-   * @return A JSON object with return messages
-   * 
-   * @since 0.0.1
-   */
-  @Parameter(name = "ip", desc = "IP Address of the perimeter.", defaultValue = "192.126.0.1")
-  @Parameter(name = "port", desc = "TCP port of the perimeter.", className = Double.class, min = 0, max = 65535, defaultValue = "50000")
-  @Parameter(name = "ip_Monitor", desc = "IP Address of the OPI Kowa server.", defaultValue = "localhost")
-  @Parameter(name = "port_Monitor", desc = "TCP port of the OPI Kowa server.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
-  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.kowa", desc = "Kowa-specific messages.")
-  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    // TODO CONSTRUCT INIT COMMAND
-    String jsonStr = "";
-    try {
-      return sendInitCommand((String) args.get("ip"), (int) ((double) args.get("port")), jsonStr);
-    } catch (ClassCastException e) {
-      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
-    }
-  }
-
-  /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error message.")
-  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.kowa", desc = "Kowa-specific messages.")
-   public MessageProcessor.Packet query() {
-    return new MessageProcessor.Packet("");
-  }
-
-  /**
    * opiSetup: Change device background and overall settings
    * 
    * @param args pairs of argument name and value
@@ -111,24 +64,6 @@ public class Kowa extends OpiMachine {
   @ReturnMsg(name = "msg.kowa", desc = "Kowa-specific messages.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     return new MessageProcessor.Packet("");
-  }
-
-  /**
-   * opiClose: Close OPI connection
-   * 
-   * @param args pairs of argument name and value
-   *
-   * @return A JSON object with return messages
-   *
-   * @since 0.0.1
-   */
-  @ReturnMsg(name = "error", desc = "Empty string for all good, else error messages from Imo.")
-  @ReturnMsg(name = "msg", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "msg.kowa", desc = "Kowa-specific messages.")
-  public MessageProcessor.Packet close() {
-    // TODO CONSTRUCT CLOSE COMMAND
-    String jsonStr = "CLOSE COMMAND";
-    return sendCloseCommand(jsonStr);
   }
 
 }
