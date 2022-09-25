@@ -1,7 +1,6 @@
 package org.lei.opi.jovp;
 
 import java.util.Arrays;
-import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 /**
@@ -15,17 +14,15 @@ import java.util.stream.IntStream;
  */
 public record Calibration(double[] maxLum, int[] depth, double[][] gamma) {
 
-  /** Error message: wrong maximum luminance */
+  /** {@value WRONG_MAX_LUMINANCE} */
   private static final String WRONG_MAX_LUMINANCE = "Maximum luminance for the gamma functions cannot be negative";
-  /** Error message: wrong gamma size */
+  /** {@value WRONG_GAMMA_SIZE} */
   private static final String WRONG_GAMMA_SIZE = "Wrong length for a gamma function. Lengths for R, G, and B where %s, %s, and %s, respectively";
-  /** Error message: unsorted gamma function */
+  /** {@value UNSORTED_GAMMA_FUNCTION} */
   private static final String UNSORTED_GAMMA_FUNCTION = "The gamma function needs to be sorted";
-  /** Error message: wrong gamma value */
+  /** {@value WRONG_GAMMA_VALUE} */
   private static final String WRONG_GAMMA_VALUE = "Invalid gamma function. Some values our outside the range [0, 1]";
-  /** Error message: color outside range */
-  private static final String COLOR_OUTSIDE_RANGE = "Color values outside range [0, 1]. Color was %s";
-  /** Error message: color luminance too high */
+  /** {@value LUMINANCES_OUTSIDE_RANGE} */
   private static final String LUMINANCES_OUTSIDE_RANGE = "Requested RGB luminances %s cd/m^2 are too high. Maximum luminances are %s cd/m^2";
 
   /**
@@ -59,7 +56,6 @@ public record Calibration(double[] maxLum, int[] depth, double[][] gamma) {
                            new double[][] {Rgamma, Ggamma, Bgamma});
   }
 
-  
   /**
    * Obtain pixel level from luminance in cd/m2 from gamma function
    *
@@ -73,11 +69,6 @@ public record Calibration(double[] maxLum, int[] depth, double[][] gamma) {
    * @since 0.0.1
    */
   public double[] colorValues(double lum, double[] color) throws IllegalArgumentException {
-    if (DoubleStream.of(color).anyMatch(val -> val < 0 || val > 1))
-      throw new IllegalArgumentException(String.format(COLOR_OUTSIDE_RANGE, Arrays.toString(color)));
-    color[0] = lum * color[0];
-    color[1] = lum * color[1];
-    color[2] = lum * color[2];
     if (color[0] > maxLum[0] || color[1] > maxLum[1] || color[2] > maxLum[2])
       throw new IllegalArgumentException(String.format(LUMINANCES_OUTSIDE_RANGE, Arrays.toString(color), Arrays.toString(maxLum)));
     // TODO: make proper use of max luminance and gamma function: stuff below is incorrect.

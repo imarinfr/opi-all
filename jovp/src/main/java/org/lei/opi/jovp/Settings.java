@@ -50,29 +50,29 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
     DISPLAY_STEREO
   }
 
-  /** Default configuration file for IMO */
+  /** {@value IMO_PARAMS} */
   public static final String IMO_PARAMS = "IMOParams.json";
-  /** Default configuration file for Display monoscopic view */
+  /** {@value DISPLAY_MONO_PARAMS} */
   public static final String DISPLAY_MONO_PARAMS = "DisplayMonoParams.json";
-  /** Default configuration file for Display monoscopic view */
+  /** {@value DISPLAY_STEREO_PARAMS} */
   public static final String DISPLAY_STEREO_PARAMS = "DisplayStereoParams.json";
-  /** Default configuration file for PhoneHMD */
+  /** {@value PHONEHMD_PARAMS} */
   public static final String PHONEHMD_PARAMS = "PhoneHMDParams.json";
-  /** Default configuration file for PicoVR */
+  /** {@value PICOVR_PARAMS} */
   public static final String PICOVR_PARAMS = "PicoVRParams.json";
 
-  /** Paradigm is a click response for seen or not seen */
+  /** {@value PARADIGM} */
   static final Paradigm PARADIGM = Paradigm.CLICKER;
-  /** Debugging parameter: whether to enable Vulkan validation layers */
+  /** {@value VALIDATION_LAYERS} */
   static final boolean VALIDATION_LAYERS = PsychoEngine.VALIDATION_LAYERS;
-  /** Debugging parameter: whether to dump Vulkan API feedback */
+  /** {@value API_DUMP} */
   static final boolean API_DUMP = false;
 
-  /** Error message: wrong screen */
+  /** {@value WRONG_SCREEN} */
   private static final String WRONG_SCREEN = "'screen' value has to be 0 (default screen or positive). It is %s";
-  /** Error message: wrong distance */
+  /** {@value WRONG_DISTANCE} */
   private static final String WRONG_DISTANCE = "'distance' cannot be negative, you silly goose. It is %s";
-  /** Error message: wrong depth */
+  /** {@value WRONG_DEPTH} */
   private static final String WRONG_DEPTH = "Cannot run on a display with a color 'depth' lower than 8 bits. It is %s";
 
   /**

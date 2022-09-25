@@ -1,4 +1,4 @@
-package org.lei.opi.core;
+package org.lei.opi.core.definitions;
 
 /**
  * A class for managers/drivers to extend so that they have a process() method that will 

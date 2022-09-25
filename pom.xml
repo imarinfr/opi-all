@@ -22,7 +22,7 @@
     <reflections.version>0.9.12</reflections.version>
     <!-- monitor -->
     <openjfx.version>18.0.2</openjfx.version>
-    <!-- imo -->
+    <!-- jovp -->
     <jovp.version>0.1.0-SNAPSHOT</jovp.version>
   </properties>
 

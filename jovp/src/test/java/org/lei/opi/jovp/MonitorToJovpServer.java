@@ -1,11 +1,7 @@
 package org.lei.opi.jovp;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
@@ -20,7 +16,7 @@ import org.lei.opi.jovp.Settings.Machine;
  *
  * @since 0.0.1
  */
-public class ProtocolTests {
+public class MonitorToJovpServer {
 
   /** driver port */
   private static final int PORT = 50008;
@@ -34,31 +30,27 @@ public class ProtocolTests {
   class Monitor {
 
     private static Socket monitor;
-    private static BufferedReader incoming;
-    private static BufferedWriter outgoing;
 
     /** init OpiManager and connect to it to server */
     Monitor(CSListener driver) throws IOException {
       monitor = new Socket(driver.getAddress(), driver.getPort());
-      incoming = new BufferedReader(new InputStreamReader(monitor.getInputStream()));
-      outgoing = new BufferedWriter(new OutputStreamWriter(monitor.getOutputStream()));
     }
 
     /** load JSON message */
     static String loadMessage(String file) throws IOException {
-      InputStream inputStream = ProtocolTests.class.getResourceAsStream(file);
+      InputStream inputStream = MonitorToJovpServer.class.getResourceAsStream(file);
       return IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8));
     }
 
     /** send JSON message to server */
     static void send(CSListener driver, String message) {
-      driver.send(outgoing, message);
+      driver.send(message);
     }
 
     /** receive JSON message from server */
     static String receive(CSListener driver) throws IOException {
-      while (!incoming.ready()) Thread.onSpinWait();
-      return driver.receive(incoming);
+      while (driver.empty()) Thread.onSpinWait();
+      return driver.receive();
     }
 
     /** close client connection to server */

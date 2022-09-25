@@ -1,11 +1,7 @@
 package org.lei.opi.core;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
@@ -17,7 +13,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 0.0.1
  */
-public class JsonFromClientTests {
+public class ClientToMonitor {
 
   /**
    * Utilities and helpers for client in JSON unitary tests
@@ -29,17 +25,12 @@ public class JsonFromClientTests {
     private static final int PORT = 50008;
 
     private static Socket client;
-    private static BufferedReader incoming;
-    private static BufferedWriter outgoing;
-
     private static CSListener opi;
 
     /** init OpiManager and connect to it to server */
     Client() throws IOException {
       opi = new CSListener(PORT, new OpiManager());
       client = new Socket(opi.getAddress(), opi.getPort());
-      incoming = new BufferedReader(new InputStreamReader(client.getInputStream()));
-      outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
     }
 
     /** load JSON message */
@@ -51,13 +42,13 @@ public class JsonFromClientTests {
 
     /** send JSON message to server */
     static void send(String message) {
-      opi.send(outgoing, message);
+      opi.send(message);
     }
 
     /** receive JSON message from server */
     static String receive() throws IOException {
-      while (!incoming.ready()) Thread.onSpinWait();
-      return opi.receive(incoming);
+      while (opi.empty()) Thread.onSpinWait();
+      return opi.receive();
     }
 
     /** close client connection to server */
@@ -69,55 +60,23 @@ public class JsonFromClientTests {
   }
 
   /**
-   * Drive O600 perimeter
+   * Drive Display perimeter
    *
    * @since 0.0.1
    */
   @Test
-  public void driveO600() {
-    serverDriver("jsons/O600/opiChoose.json",
-        "jsons/O600/opiInit.json",
-        "jsons/O600/opiSetup.json",
-        "jsons/O600/opiPresent.json");
-  }
-
-  /**
-   * Drive O900 perimeter
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void driveO900() {
-    serverDriver("jsons/O900/opiChoose.json",
-        "jsons/O900/opiInit.json",
-        "jsons/O900/opiSetup.json",
-        "jsons/O900/opiPresent.json");
-  }
-
-  /**
-   * Drive Kowa perimeter
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void driveKowa() {
-    serverDriver("jsons/Kowa/opiChoose.json",
-        "jsons/Kowa/opiInit.json",
-        "jsons/Kowa/opiSetup.json",
-        "jsons/Kowa/opiPresent.json");
-  }
-
-  /**
-   * Drive Compass perimeter
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void driveCompass() {
-    serverDriver("jsons/Compass/opiChoose.json",
-        "jsons/Compass/opiInit.json",
-        "jsons/Compass/opiSetup.json",
-        "jsons/Compass/opiPresent.json");
+  public void driveDisplay() {
+    String[] ss = {
+        "jsons/Display/opiSetup.json"
+    };
+    String[] ps = {
+        "jsons/Display/opiPresentStatic.json",
+        "jsons/ImoVifa/opiPresentDynamic.json"
+    };
+    serverDriver("jsons/Display/opiChoose.json",
+        "jsons/Display/opiInit.json",
+        ss, 
+        ps);
   }
 
   /**
@@ -169,13 +128,39 @@ public class JsonFromClientTests {
         "jsons/PicoVR/opiPresent.json");
   }
 
+  /**
+   * Drive O900 perimeter
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void driveO900() {
+    serverDriver("jsons/O900/opiChoose.json",
+        "jsons/O900/opiInit.json",
+        "jsons/O900/opiSetup.json",
+        "jsons/O900/opiPresent.json");
+  }
+
+  /**
+   * Drive Compass perimeter
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void driveCompass() {
+    serverDriver("jsons/Compass/opiChoose.json",
+        "jsons/Compass/opiInit.json",
+        "jsons/Compass/opiSetup.json",
+        "jsons/Compass/opiPresent.json");
+  }
+
   /** server driver */
   private void serverDriver(String chooseJson, String initJson, String setupJson, String presentJson) {
     try {
       Client client = new Client();
       sendAndReceive(client.loadMessage(chooseJson)); // Choose OPI
-      sendAndReceive(client.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(client.loadMessage(initJson)); // Initialize OPI
+      sendAndReceive(client.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(client.loadMessage(setupJson)); // Setup OPI
       sendAndReceive(client.loadMessage(presentJson)); // Present OPI
       sendAndReceive(client.loadMessage("jsons/opiClose.json")); // Close OPI

@@ -14,7 +14,7 @@
   <name>OPI R code generator</name>
   <packaging>jar</packaging>
 
-<dependencies>
+  <dependencies>
     <dependency>
       <groupId>org.lei.opi</groupId>
       <artifactId>core</artifactId>

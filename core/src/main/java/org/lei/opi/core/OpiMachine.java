@@ -1,13 +1,8 @@
 package org.lei.opi.core;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,12 +10,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.lei.opi.core.definitions.MessageProcessor;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.Parameters;
+import org.lei.opi.core.definitions.ReturnMsg;
 import org.reflections.Reflections;
 
 /**
- * The OPI standard for communication with perimeters
+ * The OPI machine standard for communication with perimeters
  *
  * @since 0.0.1
  */
@@ -34,41 +31,59 @@ public abstract class OpiMachine {
   static final String UNKNOWN_MACHINE = "machine:%s in JSON choose object is unknown.";
   /** {@value BAD_MACHINE_CONSTRUCT} */
   static final String BAD_MACHINE_CONSTRUCT = "Cannot construct machine %s in JSON choose object.\n";
-
+  /** {@value INCORRECT_FORMAT_IP_PORT} */
   static final String INCORRECT_FORMAT_IP_PORT = "IP and port have the wrong format";
-  static final String COULD_NOT_CONNECT = "Could not connect to JOVP machine at ";
-  static final String NOT_INITIALIZED = "JOVP machine has not yet been initialized";
-  static final String COULD_NOT_QUERY = "Could not query the JOVP machine";
-  static final String COULD_NOT_SETUP = "Could not setup the background and fixation target on the JOVP machine";
-  static final String COULD_NOT_PRESENT = "Could not present on the JOVP machine";
-  static final String COULD_NOT_DISCONNECT = "Could not disconnect from JOVP machine";
-
+  /** {@value UNKNOWN_HOST} */
+  static final String SERVER_NOT_READY = "Server at %s is unknown or does not exist";
+  /** {@value CONNECTED_TO_HOST} */
+  static final String CONNECTED_TO_HOST = "Connected to host at ";
+  /** {@value NOT_INITIALIZED} */
+  static final String NOT_INITIALIZED = "OPI machine has not yet been initialized";
+  /** {@value COULD_NOT_QUERY} */
+  static final String COULD_NOT_QUERY = "Could not query the OPI machine";
+  /** {@value COULD_NOT_SETUP} */
+  static final String COULD_NOT_SETUP = "Could not setup the background and fixation target on the OPI machine";
+  /** {@value COULD_NOT_PRESENT} */
+  static final String COULD_NOT_PRESENT = "Could not present on the OPI machine";
+  /** {@value COULD_NOT_DISCONNECT} */
+  static final String COULD_NOT_DISCONNECT = "Could not disconnect from OPI machine at";
+  /** {@value DISCONNECTED_TO_HOST} */
+  static final String DISCONNECTED_TO_HOST = "Connected from host at ";
+  /** {@value OPI_SETUP_FAILED} */
+  static final String OPI_SETUP_FAILED = "Failed to complete opiSetup. ";
+  /** {@value OPI_PRESENT_FAILED} */
+  static final String OPI_PRESENT_FAILED = "Failed to complete opiPresent. ";
 
   /**
    * Class to hold information of the 5 key OPI methods ready for use.
-   * Should be set in the constructor.
+   * Should be set in the constructor
+   * 
+   * @since 0.0.1
    */
   protected class MethodData {
+    // All methods of the class to find the achine-dependent implementations of the 5 key OPI commands
     Method method;
-    Parameters parameters; // The names expected in the JSON string that is a parameter of the 5 key OPI
-                           // methods.
+    // The names expected in the JSON string that is a parameter of the 5 key OPI methods
+    Parameters parameters;
   };
 
+  /** The methods of the OpiMachine */
   protected HashMap<String, MethodData> opiMethods;
-  protected HashMap<String, List<String>> enums; // Enum class : enum values defined in the package.
-
-  /** Connection to perimeter */
-  private Socket perimeter;
-  /** Outgoing messages to perimeter */
-  private BufferedWriter outgoing;
-  /** Incoming messages from perimeter */
-  private BufferedReader incoming;
+  /** Enum class : enum values defined in the package */
+  protected HashMap<String, List<String>> enums; 
+  /**
+   * The machine connector to the OPI server.
+   * It is setup in the device-dependent implementation of initialize
+   * */
+  protected CSWriter writer;
   /** Whether perimeter is initialized */
-  private boolean initialized;
+  protected boolean initialized;
 
   /**
-   * Set the information about the 5 OPI methods in opiMethods.
-   * It is assumed this is called by a subclass.
+   * Set the information about the 5 OPI methods in opiMethods
+   * It is assumed this is called by a subclass
+   * 
+   * @since 0.0.1
    */
   public OpiMachine() {
     initialized = false;
@@ -89,38 +104,36 @@ public abstract class OpiMachine {
   }
 
   /**
-   * Map the 'command' to a function, check it has the right parameters, and then
-   * call it.
+   * Map the 'command' to a function, check it has the right parameters, and the call it
    *
-   * @param nameValuePairs A list of name:value pairs with at least the name
-   *                       "command".
+   * @param pairs A list of name:value pairs with at least the name "command"
    * 
    * @return Json object like OpiManger.ok() or OpiManager.error()
+   * 
+   * @since 0.0.1
    */
-  public MessageProcessor.Packet process(HashMap<String, Object> nameValuePairs) {
-    // (1) Find the function which is the value of the JSON name "command"
-    // (2) Check that the params for the function are in the JSON (via the Params
-    // Annotation)
-    // (3) Then execute the function.
-    String funcName = (String) nameValuePairs.get("command");
+  public MessageProcessor.Packet process(HashMap<String, Object> pairs) {
+    /*
+     * Processing consist of the following three steps:
+     *    (1) Find the function which is the value of the JSON name "command"
+     *    (2) Check that the params for the function are in the JSON (via the Params Annotation)
+     *    (3) Then execute corresponding method
+     */
+    // (1) find the function
+    String funcName = (String) pairs.get("command");
     MethodData methodData = opiMethods.get(funcName);
-
     if (methodData == null)
       return OpiManager.error(String.format("cannot find function %s in %s.",
           funcName, this.getClass()));
-
-    // (2)
+    // (2) Check params
     if (methodData.parameters != null)
       for (Parameter param : methodData.parameters.value()) {
-        if (!nameValuePairs.containsKey(param.name()) && !param.optional())
+        if (!pairs.containsKey(param.name()) && !param.optional())
           return OpiManager.error(
               String.format("Parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
-
-        if (!nameValuePairs.containsKey(param.name()) && param.optional())
+        if (!pairs.containsKey(param.name()) && param.optional())
           continue;
-
-        Object valueObj = nameValuePairs.get(param.name());
-
+        Object valueObj = pairs.get(param.name());
         if (param.isList() && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
           return OpiManager
               .error(String.format("Parameter %s should be a non-empty list but is not for function %s in %s.",
@@ -128,18 +141,14 @@ public abstract class OpiMachine {
         if (!param.isList() && (valueObj instanceof ArrayList))
           return OpiManager.error(String.format("Parameter %s should not be a list but is not for function %s in %s.",
               param.name(), funcName, this.getClass()));
-
         List<Object> pList = !param.isList() ? Arrays.asList(valueObj) : ((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList();
-
         if (enums.containsKey(param.className().getName())) {
           List<String> enumVals = enums.get(param.className().getName());
           System.out.println(param.name());
-
           Optional<Object> result = pList.stream()
               .filter(p -> !(p instanceof String)
                   || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
               .findAny();
-
           if (result.isPresent())
             return OpiManager
                 .error(String.format("I cannot find %s in enum type %s for parameter %s in function %s in %s.",
@@ -169,11 +178,11 @@ public abstract class OpiMachine {
                 param.name(), funcName, this.getClass()));
         }
       }
-    // (3)
+    // (3) execute method
     MessageProcessor.Packet result;
     try {
       result = methodData.parameters == null ? (MessageProcessor.Packet) methodData.method.invoke(this)
-          : (MessageProcessor.Packet) methodData.method.invoke(this, nameValuePairs);
+          : (MessageProcessor.Packet) methodData.method.invoke(this, pairs);
     } catch (IllegalAccessException | InvocationTargetException e) {
       return new MessageProcessor.Packet(true, false,
           String.format("cannot execute %s in %s. %s", funcName, this.getClass(), e));
@@ -190,20 +199,24 @@ public abstract class OpiMachine {
    * 
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet initialize(HashMap<String, Object> args);
-
-  /**
-   * opiInitialise: initialize OPI
-   * 
-   * @param args A map of name:value pairs for Params
-   * 
-   * @return A JSON object with return messages
-   * 
-   * @since 0.0.1
-   */
-  public MessageProcessor.Packet initialise(HashMap<String, Object> args) {
-    return this.initialize(args);
-  }
+  @Parameter(name = "ip", desc = "IP Address of the OPI machine.")
+  @Parameter(name = "port", desc = "TCP port of the OPI machine.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
+  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.")
+  @Parameter(name = "portMonitor", desc = "TCP port of the OPI monitor.", className = Double.class, min = 0, max = 65535, defaultValue = "50008")
+  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, '1' something wrong.")
+  @ReturnMsg(name = "res.msg", desc = "The error message if an error occured or empty otherwise.")
+  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
+    try {
+      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
+      initialized = true;
+      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
+    } catch (ClassCastException e) {
+      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
+    } catch (UnknownHostException e) {
+      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
+    }
+  };
 
   /**
    * opiQuery: Query device
@@ -212,7 +225,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet query();
+  public abstract MessageProcessor.Packet query(HashMap<String, Object> args);
 
   /**
    * opiSetup: Change device background and overall settings
@@ -246,109 +259,5 @@ public abstract class OpiMachine {
    * @since 0.0.1
    */
   public abstract MessageProcessor.Packet close();
-
-  /**
-   * Get whether perimeter is initialized
-   * 
-   * @return initialized whether initrialized or not
-   *
-   * @since 0.0.1
-   */
-  public boolean getInitialised() {
-    return initialized;
-  }
-
-  /**
-   * Send opiInitialize command to perimeter
-   * 
-   * @param jsonStr
-   *
-   * @throws IOException if something went wrong making the socket connection
-   *
-   * @since 0.0.1
-   */
-  public MessageProcessor.Packet sendInitCommand(String ip, int port, String jsonStr) {
-    try {
-      openConnection(ip, port);
-      outgoing.write(jsonStr);
-      // TODO get feedback
-      String msg = "FEEDBACK";
-      return OpiManager.ok(msg, false);
-    } catch (IOException e) {
-      return OpiManager.error(COULD_NOT_CONNECT + ip + ":" + port);
-    }
-  }
-
-  /**
-   * Send opiQuery command to perimeter
-   *
-   * @throws IOException if something went wrong making the socket connection
-   *
-   * @since 0.0.1
-   */
-  public MessageProcessor.Packet sendQueryCommand() {
-    // TODO CONSTRUCT QUERY COMMAND
-    String jsonStr = "QUERY COMMAND";
-    try {
-      outgoing.write(jsonStr);
-      // TODO get feedback
-      String msg = "FEEDBACK";
-      return OpiManager.ok(msg, false);
-    } catch (IOException e) {
-      return OpiManager.ok(COULD_NOT_QUERY, false);
-    }
-  }
-
-  /**
-   * Send opiClose command to perimeter
-   * 
-   * @param jsonStr
-   *
-   * @throws IOException if something went wrong making the socket connection
-   *
-   * @since 0.0.1
-   */
-  public MessageProcessor.Packet sendCloseCommand(String jsonStr) {
-    try {
-      outgoing.write(jsonStr);
-      // TODO get feedback
-      String msg = "FEEDBACK";
-      closeConnection();
-      return OpiManager.ok(msg, false);
-    } catch (IOException e) {
-      return OpiManager.ok(COULD_NOT_DISCONNECT, false);
-    }
-  }
-
-  /**
-   * Open socket connection
-   * 
-   * @param ip perimeter IP address
-   * @param port perimeter port
-   *
-   * @throws IOException if something went wrong making the socket connection
-   *
-   * @since 0.0.1
-   */
-  private void openConnection(String ip, int port) throws IOException {
-    perimeter = new Socket(ip, port);
-    outgoing = new BufferedWriter(new OutputStreamWriter(perimeter.getOutputStream()));
-    incoming = new BufferedReader(new InputStreamReader(perimeter.getInputStream()));
-    initialized = true;
-  }
-
-  /**
-   * Close socket connection
-   *
-   * @throws IOException if something went wrong making the socket connection
-   *
-   * @since 0.0.1
-   */
-  private void closeConnection() throws IOException {
-    perimeter.close();
-    outgoing.close();
-    incoming.close();
-    initialized = false;
-  }
 
 }

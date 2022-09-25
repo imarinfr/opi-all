@@ -3,8 +3,13 @@ package org.lei.opi.jovp;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-import org.lei.opi.core.MessageProcessor;
+import org.lei.opi.core.definitions.Setup;
 import org.lei.opi.core.OpiManager;
+import org.lei.opi.core.OpiManager.Command;
+import org.lei.opi.core.definitions.MessageProcessor;
+import org.lei.opi.core.definitions.Present;
+import org.lei.opi.core.definitions.Query;
+import org.lei.opi.core.definitions.Response;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -12,7 +17,6 @@ import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.Monitor;
 import es.optocom.jovp.PsychoEngine;
-import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ViewMode;
 
 /**
@@ -32,9 +36,9 @@ public class OpiDriver extends MessageProcessor {
   /** The psychoEngine */
   private PsychoEngine psychoEngine = null;
   /** A background record to communicate with OpiLogic */
-  protected Background[] backgrounds;
+  protected Setup[] backgrounds;
   /** A stimulus record to communicate with OpiLogic */
-  protected Stimulus stimulus;
+  protected Present stimulus;
   /** A record to record the results after a stimulus prsentation */
   protected Response response;
   /** Whether opiInitialized has been invoked and not closed later on by opiClose */
@@ -53,8 +57,8 @@ public class OpiDriver extends MessageProcessor {
     this.settings = settings;
     this.prefix = "OPI JOVP " + settings.machine() + ": ";
     switch (settings.viewMode()) {
-      case MONO -> backgrounds = new Background[] {null};
-      case STEREO -> backgrounds = new Background[] {null, null};
+      case MONO -> backgrounds = new Setup[] {null};
+      case STEREO -> backgrounds = new Setup[] {null, null};
     }
   }
 
@@ -93,9 +97,9 @@ public class OpiDriver extends MessageProcessor {
       return OpiManager.error(OpiManager.NO_COMMAND_FIELD);
       String cmd = pairs.get("command").toString();
     // check it is a valid command from Command.*
-    if (!Stream.of(OpiManager.Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
+    if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
       return OpiManager.error(OpiManager.BAD_COMMAND_FIELD);
-    return switch (OpiManager.Command.valueOf(cmd.toUpperCase())) {
+    return switch (Command.valueOf(cmd.toUpperCase())) {
       case INITIALIZE -> initialize();
       case QUERY -> query();
       case SETUP -> setup(pairs);
@@ -119,9 +123,10 @@ public class OpiDriver extends MessageProcessor {
         if (settings.viewMode() == ViewMode.STEREO) fov[0] /= 2;
         monitor = psychoEngine.getWindow().getMonitor();
       }
-      Query query = new Query(settings.distance(), settings.viewMode(), settings.input(), settings.depth(), fov, monitor);
+      Query query = new Query(false, "", settings.distance(), settings.viewMode(), settings.input(), settings.depth(), fov, monitor);
       return OpiManager.ok(prefix + "opiQuery successful: " + query, false); 
     } catch (Exception e) {
+      Query query = new Query(true, "", -1, null, null, -1, null, null);
       return OpiManager.error(prefix + "problem with opiQuery", e);
     }
   }
@@ -145,6 +150,7 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet setup(HashMap<String, Object> args) {
+/**
     try {
       // Get eye for the instruction
       Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());
@@ -157,6 +163,8 @@ public class OpiDriver extends MessageProcessor {
     } catch (ClassCastException e) {
       return OpiManager.error(prefix + "problem with opiSetup", e);
     }
+*/
+    return OpiManager.ok(prefix + "TODO", false);
   }
 
   /**
@@ -167,14 +175,17 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet present(HashMap<String, Object> args) {
+/**
     try {
-      stimulus = Stimulus.set(args);
+      stimulus = Present.set(args);
       state = State.PRESENT;
       while (state != State.RESPONDED) Thread.onSpinWait(); // wait for response
       return OpiManager.ok(prefix + "opiPresent successful: " + response, false);
     } catch (Exception e) {
       return OpiManager.error(prefix + "problem with opiPresent", e);
     }
+*/
+    return OpiManager.ok(prefix + "TODO", false);
   }
 
   /**
@@ -184,7 +195,7 @@ public class OpiDriver extends MessageProcessor {
    */
   private MessageProcessor.Packet close() {
     state = State.CLOSE;
-    return OpiManager.ok(prefix + "opiClose successful", true);
+    return OpiManager.ok("Closed"); // ignored
   }
 
 }

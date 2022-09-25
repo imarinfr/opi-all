@@ -12,7 +12,7 @@ public class ConnectionTests {
 
   /**
    *
-   * Create listener for IMO driver, get local ID and port, and cleanup after use
+   * Create listener for Display driver, get local ID and port, and cleanup after use
    *
    * @since 0.0.1
    */
@@ -26,7 +26,7 @@ public class ConnectionTests {
 
   /**
    *
-   * Open connection, change local port, and close connection to IMO driver
+   * Open connection, change local port, and close connection to Display driver
    *
    * @since 0.0.1
    */

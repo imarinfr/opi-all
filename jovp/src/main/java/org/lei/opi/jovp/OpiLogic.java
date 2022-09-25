@@ -1,5 +1,7 @@
 package org.lei.opi.jovp;
 
+import org.lei.opi.core.definitions.Response;
+
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
 import es.optocom.jovp.Timer;
@@ -15,15 +17,15 @@ import es.optocom.jovp.structures.ModelType;
  */
 public class OpiLogic implements PsychoLogic {
 
-  /** Default background shape */
+  /** {@value DEFAULT_BACKGROUND_SHAPE} */
   private static final ModelType DEFAULT_BACKGROUND_SHAPE = ModelType.CIRCLE;
-  /** Default background shape */
+  /** {@value DEFAULT_FIXATION_SHAPE} */
   private static final ModelType DEFAULT_FIXATION_SHAPE = ModelType.MALTESE;
-  /** Default stimulus shape */
+  /** {@value DEFAULT_STIMULUS_SHAPE} */
   private static final ModelType DEFAULT_STIMULUS_SHAPE = ModelType.CIRCLE;
-  /** Default fixation size */
+  /** {@value DEFAULT_FIXATION_SIZE} */
   private static final int DEFAULT_FIXATION_SIZE = 1;
-  /** Minimum time from stimulus onset */
+  /** {@value MINIMUM_TIME_FROM_ONSET} */
   private static final int MINIMUM_TIME_FROM_ONSET = 50;
 
   /** The OPI driver */
@@ -186,7 +188,7 @@ public class OpiLogic implements PsychoLogic {
 
   /** Send response from stimulus presentation */
   private void respond() {
-    driver.response = new Response(false, 1234, -1, -1, -1, -1);
+    driver.response = new Response(true, "ERROR MESSAGE", false, 1234, -1, -1, -1, -1);
     driver.state = OpiDriver.State.IDLE;
   }
 
