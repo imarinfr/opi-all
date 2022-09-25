@@ -65,7 +65,7 @@ public class ClientToMonitor {
    * @since 0.0.1
    */
   @Test
-  public void driveDisplay() {
+  public void Display() {
     String[] ss = {
         "jsons/Display/opiSetup.json"
     };
@@ -85,7 +85,7 @@ public class ClientToMonitor {
    * @since 0.0.1
    */
   @Test
-  public void driveImoVifa() {
+  public void ImoVifa() {
     String[] ss = {
         "jsons/ImoVifa/opiSetup.json"
     };
@@ -134,7 +134,7 @@ public class ClientToMonitor {
    * @since 0.0.1
    */
   @Test
-  public void driveO900() {
+  public void O900() {
     serverDriver("jsons/O900/opiChoose.json",
         "jsons/O900/opiInit.json",
         "jsons/O900/opiSetup.json",
@@ -147,7 +147,7 @@ public class ClientToMonitor {
    * @since 0.0.1
    */
   @Test
-  public void driveCompass() {
+  public void Compass() {
     serverDriver("jsons/Compass/opiChoose.json",
         "jsons/Compass/opiInit.json",
         "jsons/Compass/opiSetup.json",
