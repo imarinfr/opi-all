@@ -7,7 +7,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.net.UnknownHostException;
 
 /**
  *
@@ -24,44 +23,32 @@ public class CSWriter {
   /** Socket client */
   private Socket client;
   /** Writer for outgoing command messages to server */
-  BufferedWriter outgoingMsg;
+  BufferedWriter outgoing;
   /** Reader for incoming feedback messages from server */
-  BufferedReader incomingMsg;
+  BufferedReader incoming;
 
   /**
    * Constructs a CSWriter for a host server
    * 
    * @param ip Server IP address
    * @param port Server port
-   * @param msgProcessor Processor object
    *
-   * @throws UnknownHostException
+   * @throws IOException If could not initialize connection
    * 
    * @since 0.1.0
    */
-  public CSWriter(String ip, int port) throws UnknownHostException {
+  public CSWriter(String ip, int port) throws IOException {
     this.address = InetAddress.getByName(ip);
     this.port = port;
-  }
-
-  /**
-   * Open connection to server
-   *
-   * @throws IOException
-   *
-   * @since 0.0.1
-   */
-  public void open() throws IOException {
     client = new Socket(address, port);
-    // for sending strings
-    outgoingMsg = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-    incomingMsg = new BufferedReader(new InputStreamReader(client.getInputStream()));
+    outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
+    incoming = new BufferedReader(new InputStreamReader(client.getInputStream()));
   }
 
   /**
    * Close connection to server
    *
-   * @throws IOException
+   * @throws IOException If could not close connection
    *
    * @since 0.0.1
    */
@@ -76,25 +63,27 @@ public class CSWriter {
    * 
    * @return Message received
    *
-   * @throws IOException
+   * @throws IOException If could not send message
    *
    * @since 0.0.1
    */
   public void send(String message) throws IOException {
-    outgoingMsg.write(message);
-    outgoingMsg.newLine();
-    outgoingMsg.flush();
+    outgoing.write(message);
+    outgoing.newLine();
+    outgoing.flush();
   }
 
   /**
    * Check whether incoming buffer is empty
    *
    * @return Whether incoming buffer is empty
+   * 
+   * @throws IOException If could not check incoming state
    *
    * @since 0.0.1
    */
   public boolean empty() throws IOException {
-    return !incomingMsg.ready();
+    return !incoming.ready();
   }
 
   /**
@@ -102,14 +91,14 @@ public class CSWriter {
    *
    * @return The message received
    * 
-   * @throws IOException
+   * @throws IOException If could not receive message
    *
    * @since 0.0.1
    */
   public String receive() throws IOException {
     StringBuilder message = new StringBuilder();
-    while (incomingMsg.ready()) {
-      String line = incomingMsg.readLine();
+    while (incoming.ready()) {
+      String line = incoming.readLine();
       message.append(line);
     }
     return message.toString();
@@ -123,7 +112,7 @@ public class CSWriter {
    * @since 0.0.1
    */
   public String toString() {
-    return "Server socket connection at " + address.toString() + ":" + port;
+    return "Server socket connection at " + getIP() + ":" + getPort();
   }
 
   /**
@@ -138,9 +127,20 @@ public class CSWriter {
   }
 
   /**
-   * Get local address
+   * Get local IP address
    *
-   * @return the listener port
+   * @return the local IP address
+   *
+   * @since 0.0.1
+   */
+  public String getIP() {
+    return address.getHostAddress();
+  }
+
+  /**
+   * Get local port
+   *
+   * @return the local port
    *
    * @since 0.0.1
    */

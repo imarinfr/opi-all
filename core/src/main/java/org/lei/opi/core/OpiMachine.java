@@ -1,8 +1,8 @@
 package org.lei.opi.core;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -181,11 +181,11 @@ public abstract class OpiMachine {
     // (3) execute method
     MessageProcessor.Packet result;
     try {
-      result = methodData.parameters == null ? (MessageProcessor.Packet) methodData.method.invoke(this)
+      result = methodData.parameters == null
+          ? (MessageProcessor.Packet) methodData.method.invoke(this)
           : (MessageProcessor.Packet) methodData.method.invoke(this, pairs);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      return new MessageProcessor.Packet(true, false,
-          String.format("cannot execute %s in %s. %s", funcName, this.getClass(), e));
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      return OpiManager.error(String.format("Cannot execute %s in %s.", funcName, this.getClass()), e);
     }
     return result;
   };
@@ -213,7 +213,7 @@ public abstract class OpiMachine {
       return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
     } catch (ClassCastException e) {
       return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
-    } catch (UnknownHostException e) {
+    } catch (IOException e) {
       return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
     }
   };
@@ -225,7 +225,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  public abstract MessageProcessor.Packet query(HashMap<String, Object> args);
+  public abstract MessageProcessor.Packet query();
 
   /**
    * opiSetup: Change device background and overall settings

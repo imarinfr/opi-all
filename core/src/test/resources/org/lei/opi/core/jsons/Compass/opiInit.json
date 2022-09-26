@@ -2,7 +2,7 @@
   "command": "initialize",
   "ip": "127.0.0.1",
   "port": 50008,
-  "ip_Monitor": "127.0.0.1",
-  "port_Monitor": 50001,
+  "ipMonitor": "127.0.0.1",
+  "portMonitor": 50001,
   "eye": "right"
 }

@@ -82,7 +82,7 @@ public class O900 extends OpiMachine {
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The success or error message.")
-  public MessageProcessor.Packet query(HashMap<String, Object> args) {
+  public MessageProcessor.Packet query() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     // TODO QUERY
     return new MessageProcessor.Packet("");

@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
@@ -166,7 +167,8 @@ public enum Command {
       String className = OpiMachine.class.getPackage().getName() + "." + pairs.get("machine");
       try {
         machine = (OpiMachine) Class.forName(className).getDeclaredConstructor().newInstance();
-      } catch (Exception e) {
+      } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException |
+               InvocationTargetException | NoSuchMethodException | SecurityException e) {
         return error(String.format(WRONG_MACHINE_NAME, className), e);
       }
       return ok("", false);

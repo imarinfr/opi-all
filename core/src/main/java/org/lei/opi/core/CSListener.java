@@ -66,8 +66,7 @@ public class CSListener extends Thread {
     this.address = obtainPublicAddress();
     this.start();
     // wait for server to be ready
-    while (this.server == null)
-      Thread.onSpinWait();
+    while (this.server == null) Thread.onSpinWait();
   }
 
   /**
@@ -197,7 +196,7 @@ public class CSListener extends Thread {
    * @since 0.0.1
    */
   public String toString() {
-    return "Local socket connection at " + address.toString() + ":" + port;
+    return "Local socket connection at " + getIP() + ":" + getPort();
   }
 
   /**
@@ -212,9 +211,20 @@ public class CSListener extends Thread {
   }
 
   /**
-   * Get local address
+   * Get local IP address
    *
-   * @return the listener port
+   * @return the local IP address
+   *
+   * @since 0.0.1
+   */
+  public String getIP() {
+    return address.getHostAddress();
+  }
+
+  /**
+   * Get local port
+   *
+   * @return the local port
    *
    * @since 0.0.1
    */
