@@ -22,6 +22,29 @@ import es.optocom.jovp.structures.TextureType;
 public class Jovp extends OpiMachine {  
 
   /**
+   * opiInitialise: initialize OPI
+   * 
+   * @param args A map of name:value pairs for Params
+   * 
+   * @return A JSON object with machine specific initialise information
+   * 
+   * @since 0.0.1
+   */
+  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.", defaultValue = "localhost")
+  @Parameter(name = "portMonitor", className = Double.class, desc = "TCP port of the OPI monitor.", min = 0, max = 65535, defaultValue = "50008")
+  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
+    try {
+      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
+      initialized = true;
+      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
+    } catch (ClassCastException e) {
+      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
+    } catch (IOException e) {
+      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
+    }
+  };
+
+  /**
    * opiQuery: Query device
    * 
    * @return settings and state machine state
@@ -37,10 +60,9 @@ public class Jovp extends OpiMachine {
       writer.send(Command.QUERY.toString());
       while (writer.empty()) Thread.onSpinWait();
       return new MessageProcessor.Packet(writer.receive());
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(COULD_NOT_QUERY);
     }
-
   };
 
   /**
@@ -72,7 +94,7 @@ public class Jovp extends OpiMachine {
       writer.send(Setup.set(args).toJson());
       while (writer.empty()) Thread.onSpinWait();
       return new MessageProcessor.Packet(writer.receive());
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(COULD_NOT_SETUP);
     }
   }
@@ -118,7 +140,7 @@ public class Jovp extends OpiMachine {
       writer.send(Present.set(args).toJson());
       while (writer.empty()) Thread.onSpinWait();
       return new MessageProcessor.Packet(writer.receive());
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(COULD_NOT_PRESENT);
     }
   }

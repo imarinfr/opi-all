@@ -1,8 +1,8 @@
 {
   "command": "initialize",
-  "ip": "127.0.0.1",
-  "port": 50008,
-  "ipMonitor": "127.0.0.1",
+  "ip": "localhost",
+  "port": 51234,
+  "ipMonitor": "localhost",
   "portMonitor": 50001,
   "eye": "right",
   "eyeSuite": "C:/XXX/eyeSuite/",

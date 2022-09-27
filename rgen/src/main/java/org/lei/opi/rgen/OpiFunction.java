@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -18,9 +19,9 @@ import org.lei.opi.core.definitions.ReturnMsg;
 */
 public class OpiFunction {
         /** This is the parameter name for the ip on which OPI R should create socket */
-    static final String parameterForIp = "ip_Monitor";
+    static final String parameterForIp = "ipMonitor";
         /** This is the parameter name for the port on which OPI R should create socket */
-    static final String parameterForPort = "port_Monitor";
+    static final String parameterForPort = "portMonitor";
         /** This is the name of the OPI environemnt for storing variables, settings, etc */
     static final String opiEnvName = ".opi_env";
 
@@ -52,14 +53,23 @@ public class OpiFunction {
         this.createSocket = createSocket;
         this.machineName = machine.getClass().getSimpleName();
 
-        this.methodData = Stream.of(machine.getClass().getMethods())
+        MethodData commonMethodData = Stream.of(OpiMachine.class.getMethods())
                 .filter((Method m) -> m.getName() == this.opiCoreName)
                 .findAny()
                 .map((Method m) -> new MethodData(
                     m.getAnnotationsByType(Parameter.class), 
                     m.getAnnotationsByType(ReturnMsg.class)))
                 .orElse(null);
-
+        MethodData machineMethodData = Stream.of(machine.getClass().getMethods())
+                .filter((Method m) -> m.getName() == this.opiCoreName)
+                .findAny()
+                .map((Method m) -> new MethodData(
+                    m.getAnnotationsByType(Parameter.class), 
+                    m.getAnnotationsByType(ReturnMsg.class)))
+                .orElse(null);
+        this.methodData = new MethodData(
+            ArrayUtils.addAll(commonMethodData.parameters, machineMethodData.parameters),
+            ArrayUtils.addAll(commonMethodData.returnMsgs, machineMethodData.returnMsgs));
         if (methodData == null) {
             System.err.print(String.format("Cannot generate R code for function %s in machine %s", 
                 this.opiCoreName, machine));
@@ -117,7 +127,7 @@ public class OpiFunction {
         String params = Stream.of(methodData.parameters)
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
-
+        System.out.println(params);
         String rets = "#' @return a list contianing:\n" + 
             Stream.of(methodData.returnMsgs)
             .map(prettyReturn)

@@ -51,7 +51,8 @@ public enum Command {
   private static final String MACHINE_NEEDS_CLOSING = "Close the previous machine before choosing another.";
   /** Constant for exception messages: {@value WRONG_MACHINE_NAME} */
   private static final String WRONG_MACHINE_NAME = "Cannot create the selected machine %s in 'command:'" + Command.CHOOSE.name() + "' as it does not exist.";
-
+  /** Constant for exception messages: {@value MACHINE_SELECTED} */
+  private static final String MACHINE_SELECTED = "Machine %s selected";
   /** name:value pair in JSON output if there is an error */
   public static String ERROR_YES = "\"error\" : 1";
   /** name:value pair in JSON output if there is not an error */
@@ -124,7 +125,7 @@ public enum Command {
    * @since 0.1.0
    */
   public static MessageProcessor.Packet error(String description, Exception exception) {
-    System.err.println(exception);
+    exception.printStackTrace();
     return new MessageProcessor.Packet(
         String.format("{%s, \"msg\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, exception.toString()));
   }
@@ -171,7 +172,7 @@ public enum Command {
                InvocationTargetException | NoSuchMethodException | SecurityException e) {
         return error(String.format(WRONG_MACHINE_NAME, className), e);
       }
-      return ok("", false);
+      return ok(String.format(MACHINE_SELECTED, className), false);
     } else { // If it is not a CHOOSE command and there is no machine open, give up else try it out
       if (this.machine == null)
         return error(NO_CHOOSE_COMMAND);

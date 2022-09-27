@@ -41,15 +41,33 @@ public class Compass extends OpiMachine {
   private static final String OPI_SET_TRACKING_FAILED = "Problem with OPI-SET-TRACKING";
 
   /**
+   * opiInitialise: initialize OPI
+   * 
+   * @param args A map of name:value pairs for Params
+   * 
+   * @return A JSON object with machine specific initialise information
+   * 
+   * @since 0.0.1
+   */
+  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
+    try {
+      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
+      initialized = true;
+      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
+    } catch (ClassCastException e) {
+      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
+    } catch (IOException e) {
+      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
+    }
+  };
+
+  /**
    * opiQuery: Query device
    * 
    * @return settings and state machine state
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public MessageProcessor.Packet query() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     // Get from presentation parameters
@@ -112,7 +130,7 @@ public class Compass extends OpiMachine {
       writer.send(OPI_SET_TRACKING + tracking);
       result = (writer.receive());
       if (!result.equals("1")) return OpiManager.error(OPI_SET_TRACKING_FAILED);
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
     }
     return new MessageProcessor.Packet("");
@@ -158,7 +176,7 @@ public class Compass extends OpiMachine {
         writer.send(opiMessage.toString());
         while (writer.empty()) Thread.onSpinWait();
         return parseResults(writer.receive());  
-      } catch (IOException | ClassCastException | IllegalArgumentException e) {
+      } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
     }
   }

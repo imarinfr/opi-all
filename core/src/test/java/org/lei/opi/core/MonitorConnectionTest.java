@@ -22,4 +22,21 @@ public class MonitorConnectionTest {
     System.out.println("[getIDAndPort] " + monitor);
     monitor.close();
   }
+
+  /**
+   *
+   * Open connection, change local port, and close connection to Display driver
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void changeLocalPort() {
+    CSListener monitor = new CSListener(50001, new OpiManager());
+    System.out.println("[changeLocalPort] Address was at " + monitor);
+    monitor.close();
+    monitor = new CSListener(50008, new OpiManager());
+    System.out.println("[changeLocalPort] Address is at " + monitor);
+    monitor.close();
+  }
+
 }

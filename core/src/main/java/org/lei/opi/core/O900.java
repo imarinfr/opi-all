@@ -73,15 +73,33 @@ public class O900 extends OpiMachine {
   private boolean f310;
 
   /**
+   * opiInitialise: initialize OPI
+   * 
+   * @param args A map of name:value pairs for Params
+   * 
+   * @return A JSON object with machine specific initialise information
+   * 
+   * @since 0.0.1
+   */
+  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
+    try {
+      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
+      initialized = true;
+      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
+    } catch (ClassCastException e) {
+      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
+    } catch (IOException e) {
+      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
+    }
+  };
+
+  /**
    * opiQuery: Query device
    * 
    * @return settings and state machine state
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
   public MessageProcessor.Packet query() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     // TODO QUERY
@@ -167,7 +185,7 @@ public class O900 extends OpiMachine {
       if ((int) ((double) args.get("f310")) == 0) f310 = false;
       else f310 = false;
       return new MessageProcessor.Packet(result); // TODO build result
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
     }
   }
@@ -204,7 +222,7 @@ public class O900 extends OpiMachine {
       writer.send(opiMessage.toString());
       while (writer.empty()) Thread.onSpinWait();
       return parseResult(writer.receive());  
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_PRESENT_FAILED, e);
     }
   }

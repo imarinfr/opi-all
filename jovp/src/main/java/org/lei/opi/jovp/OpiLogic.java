@@ -29,7 +29,7 @@ public class OpiLogic implements PsychoLogic {
   private static final int MINIMUM_TIME_FROM_ONSET = 50;
 
   /** The OPI driver */
-  private final OpiDriver driver;
+  private final OpiJovp driver;
 
   /** Background PsychoEngine item */
   private Item[] backgrounds;
@@ -43,7 +43,7 @@ public class OpiLogic implements PsychoLogic {
   /** time from onset to keep track of the presentation */
   private long ellapseTime = -1;
 
-  OpiLogic(OpiDriver driver) {
+  OpiLogic(OpiJovp driver) {
     this.driver = driver;
     // Init background, fixation depending on whether viewMode is MONO or STEREO
     switch(driver.settings.viewMode()) {
@@ -93,7 +93,7 @@ public class OpiLogic implements PsychoLogic {
     }
     stimulus.position(0, 0, 99);
     items.add(stimulus);
-    driver.state = OpiDriver.State.IDLE; // State to idle and wait for instructions
+    driver.state = OpiJovp.State.IDLE; // State to idle and wait for instructions
   }
 
   /**
@@ -137,13 +137,13 @@ public class OpiLogic implements PsychoLogic {
   /** Show psychoEngine window */
   private void initialize(PsychoEngine psychoEngine) {
     psychoEngine.show();
-    driver.state = OpiDriver.State.IDLE;
+    driver.state = OpiJovp.State.IDLE;
   }
 
   /** Hide psychoEngine window */
   private void close(PsychoEngine psychoEngine) {
     psychoEngine.hide();
-    driver.state = OpiDriver.State.IDLE;
+    driver.state = OpiJovp.State.IDLE;
   }
   
   /** Change background */
@@ -158,7 +158,7 @@ public class OpiLogic implements PsychoLogic {
       // set new luminance and color in fixation target
       fixations[i].setColor(driver.backgrounds[i].fixCol());
     }
-    driver.state = OpiDriver.State.IDLE;
+    driver.state = OpiJovp.State.IDLE;
   }
 
   /** Present stimulus upon request */
@@ -175,7 +175,7 @@ public class OpiLogic implements PsychoLogic {
     stimulus.texRotation(driver.stimulus.texRotation()[0]);
     stimulus.show();
     timer.start();
-    driver.state = OpiDriver.State.WAIT;
+    driver.state = OpiJovp.State.WAIT;
   }
 
   /** Wait for obersver's response */
@@ -183,15 +183,15 @@ public class OpiLogic implements PsychoLogic {
     if(timer.getElapsedTime() >= 1500) {
       System.out.println(timer.getElapsedTime());
       stimulus.hide();
-      driver.state = OpiDriver.State.RESPONDED;
+      driver.state = OpiJovp.State.RESPONDED;
     }
   }
 
   /** Send response from stimulus presentation */
   private void respond() {
     // TODO: build response
-    driver.response = new Response(true, driver.prefix + OpiDriver.PRESENT_ERROR, false, 1234, -1, -1, -1, -1);
-    driver.state = OpiDriver.State.IDLE;
+    driver.response = new Response(true, driver.prefix + OpiJovp.PRESENT_ERROR, false, 1234, -1, -1, -1, -1);
+    driver.state = OpiJovp.State.IDLE;
   }
 
 }

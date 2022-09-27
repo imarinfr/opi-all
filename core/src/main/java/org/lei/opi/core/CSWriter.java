@@ -10,11 +10,18 @@ import java.net.Socket;
 
 /**
  *
- * Sender and Receiver on socket with Listener thread.
+ * Sender and Receiver on socket with Writer thread.
  *
  * @since 0.0.1
  */
 public class CSWriter {
+
+  /** {@value CANNOT_SEND} */
+  private static final String CANNOT_SEND = "Cannot send message in CSWriter";
+  /** {@value CANNOT_CHECK_EMPTY} */
+  private static final String CANNOT_CHECK_EMPTY = "Cannot check if socket is empty";
+  /** {@value CANNOT_RECEIVE} */
+  private static final String CANNOT_RECEIVE = "Cannot receive message in CSWriter";
 
   /** Server onnection address */
   private InetAddress address;
@@ -38,7 +45,10 @@ public class CSWriter {
    * @since 0.1.0
    */
   public CSWriter(String ip, int port) throws IOException {
-    this.address = InetAddress.getByName(ip);
+    if (ip.equalsIgnoreCase("localhost") | ip.equals("127.0.0.1"))
+      this.address = InetAddress.getLocalHost();
+    else
+      this.address = InetAddress.getByName(ip);
     this.port = port;
     client = new Socket(address, port);
     outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
@@ -63,43 +73,52 @@ public class CSWriter {
    * 
    * @return Message received
    *
-   * @throws IOException If could not send message
-   *
    * @since 0.0.1
    */
-  public void send(String message) throws IOException {
-    outgoing.write(message);
-    outgoing.newLine();
-    outgoing.flush();
+  public void send(String message) {
+    try {
+      outgoing.write(message);
+      outgoing.newLine();
+      outgoing.flush();
+    } catch (IOException e) {
+      System.err.println(CANNOT_SEND);
+      throw new RuntimeException(e);
+    }
   }
 
   /**
    * Check whether incoming buffer is empty
    *
    * @return Whether incoming buffer is empty
-   * 
-   * @throws IOException If could not check incoming state
    *
    * @since 0.0.1
    */
-  public boolean empty() throws IOException {
-    return !incoming.ready();
+  public boolean empty() {
+    try {
+      return !incoming.ready();
+    } catch (IOException e) {
+      System.err.println(CANNOT_CHECK_EMPTY);
+      throw new RuntimeException(e);
+    }
   }
 
   /**
    * Receive message
    *
    * @return The message received
-   * 
-   * @throws IOException If could not receive message
    *
    * @since 0.0.1
    */
-  public String receive() throws IOException {
+  public String receive() {
     StringBuilder message = new StringBuilder();
-    while (incoming.ready()) {
-      String line = incoming.readLine();
-      message.append(line);
+    try {
+      while (incoming.ready()) {
+        String line = incoming.readLine();
+        message.append(line);
+      }
+    } catch (IOException e) {
+      System.err.println(CANNOT_RECEIVE);
+      throw new RuntimeException(e);
     }
     return message.toString();
   }

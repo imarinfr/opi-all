@@ -25,8 +25,10 @@ import org.lei.opi.core.definitions.MessageProcessor;
  */
 public class CSListener extends Thread {
 
+  /** {@value CANNOT_CHECK_EMPTY} */
+  private static final String CANNOT_CHECK_EMPTY = "Cannot check if socket is empty";
   /** {@value CANNOT_RECEIVE} */
-  private static final String CANNOT_RECEIVE = "Cannot write recieve() message to receiveWriter in CSListener";
+  private static final String CANNOT_RECEIVE = "Cannot write receive() message to receiveWriter in CSListener";
   /** {@value CANNOT_SEND} */
   private static final String CANNOT_SEND = "Cannot write send() message to sendWriter in CSListener";
 
@@ -103,8 +105,7 @@ public class CSListener extends Thread {
             if (incoming.ready()) {
               MessageProcessor.Packet pack = msgProcessor.process(receive());
               send(pack.msg);
-              if (pack.close)
-                break; // if close requested, break loop
+              if (pack.close) break; // if close requested, break loop
             }
           }
           break;
@@ -125,8 +126,13 @@ public class CSListener extends Thread {
    *
    * @since 0.0.1
    */
-  public boolean empty() throws IOException {
-    return !incoming.ready();
+  public boolean empty() {
+    try {
+      return !incoming.ready();
+    } catch (IOException e) {
+      System.err.println(CANNOT_CHECK_EMPTY);
+      throw new RuntimeException(e);
+    }
   }
  
   /**

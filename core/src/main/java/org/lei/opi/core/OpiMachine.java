@@ -1,6 +1,5 @@
 package org.lei.opi.core;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -209,22 +208,10 @@ public abstract class OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the OPI machine.", defaultValue = "localhost")
   @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI machine.", min = 0, max = 65535, defaultValue = "50001")
-  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.", defaultValue = "localhost")
-  @Parameter(name = "portMonitor", className = Double.class, desc = "TCP port of the OPI monitor.", min = 0, max = 65535, defaultValue = "50008")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, '1' something wrong.")
   @ReturnMsg(name = "res.msg", desc = "The error message if an error occured or empty otherwise.")
-  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    try {
-      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      initialized = true;
-      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
-    } catch (ClassCastException e) {
-      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
-    } catch (IOException e) {
-      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
-    }
-  };
+  public abstract MessageProcessor.Packet initialize(HashMap<String, Object> args);
 
   /**
    * opiQuery: Query device
@@ -233,6 +220,9 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
+  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
+  @ReturnMsg(name = "res.msg", desc = "Error message or a structure with QUERY data.")
   public abstract MessageProcessor.Packet query();
 
   /**
