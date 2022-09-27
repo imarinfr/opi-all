@@ -81,7 +81,7 @@ public class O900 extends OpiMachine {
    */
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message.")
+  @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
   public MessageProcessor.Packet query() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     // TODO QUERY
@@ -97,18 +97,18 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", desc = "Eye to set.", className = Eye.class, defaultValue = "left")
-  @Parameter(name = "eyeSuite", desc = "Path to EyeSuite.", className = String.class, defaultValue = "C:/ProgramData/Haag-Streit/EyeSuite/")
-  @Parameter(name = "gazeFeed", desc = "Path where to save gaze feed. Directory must exists", className = String.class, defaultValue = "C:/XXX/gazeFeed/")
-  @Parameter(name = "bigWheel", desc = "Whether O900 has a big wheel for displaying Goldmann Size VI stimuli.", className = Double.class, min = 0, max = 1, defaultValue = "0")
-  @Parameter(name = "pres", desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.", className = Double.class, min = 0, max = 3, defaultValue = "0")
-  @Parameter(name = "resp", desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", className = Double.class, min = 0, max = 3, defaultValue = "0")
-  @Parameter(name = "max10000", desc = "Whether O900 can handle a maximum luminance of 10000 apostilbs instead of 4000. Check the settings in EyeSuite", className = Double.class, min = 0, max = 1, defaultValue = "0")
-  @Parameter(name = "bgLum", desc = "Background luminance for eye.", className = Double.class, defaultValue = "10", min = 0, max = 3183.099)
-  @Parameter(name = "bgCol", desc = "Background color for eye.", className = BackgroundColor.class, defaultValue = "white")
-  @Parameter(name = "fixType", desc = "Fixation target.", className = Fixation.class, defaultValue = "center")
-  @Parameter(name = "fixIntensity", desc = "Fixation intensity(from 0% to 100%).", className = Double.class, defaultValue = "50", min = 0, max = 100)
-  @Parameter(name = "f310", desc = "Whether to use Logitech's F310 controller", className = Double.class, defaultValue = "0", min = 0, max = 1)
+  @Parameter(name = "eye", className = Eye.class, desc = "Eye to set.", defaultValue = "left")
+  @Parameter(name = "eyeSuite", desc = "Path to EyeSuite.", defaultValue = "C:/ProgramData/Haag-Streit/EyeSuite/")
+  @Parameter(name = "gazeFeed", desc = "Path where to save gaze feed. Directory must exists", defaultValue = "")
+  @Parameter(name = "bigWheel", className = Double.class, desc = "Whether O900 has a big wheel for displaying Goldmann Size VI stimuli.", min = 0, max = 1, defaultValue = "0")
+  @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
+  @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
+  @Parameter(name = "max10000", className = Double.class, desc = "Whether O900 can handle a maximum luminance of 10000 apostilbs instead of 4000. Check the settings in EyeSuite", min = 0, max = 1, defaultValue = "0")
+  @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
+  @Parameter(name = "bgCol", className = BackgroundColor.class, desc = "Background color for eye.", defaultValue = "white")
+  @Parameter(name = "fixType", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
+  @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
+  @Parameter(name = "f310", className = Double.class, desc = "Whether to use Logitech's F310 controller", min = 0, max = 1, defaultValue = "0")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The success or error message.")
@@ -181,19 +181,19 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "type", desc = "Stimulus type: STATIC, KINETIC, TEMPORAL.", className = Type.class, defaultValue = "static")
-  @Parameter(name = "x", desc = "List of x co-ordinates of stimuli (degrees).", className = Double.class, min = -90, max = 90, isList = true, defaultValue = "list(0)")
-  @Parameter(name = "y", desc = "List of y co-ordinates of stimuli (degrees).", className = Double.class, min = -90, max = 90, isList = true, defaultValue = "list(0)")
-  @Parameter(name = "lum", desc = "List of stimuli luminances (cd/m^2).", className = Double.class, min = 0, max = 3183.099, isList = true, defaultValue = "list(100)")
-  @Parameter(name = "size", desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", className = Size.class, isList = true, defaultValue = "list('GV')")
-  @Parameter(name = "t", desc = "List of stimuli presentation times (ms).", className = Double.class, min = 0, isList = true, defaultValue = "list(200)")
-  @Parameter(name = "color", desc = "Stimulus color (degrees) [STATIC].", className = Color.class, defaultValue = "white")
-  @Parameter(name = "w", desc = "List of stimuli response windows (ms) [STATIC].", className = Double.class, min = 0, defaultValue = "1500")
+  @Parameter(name = "type", className = Type.class, desc = "Stimulus type: STATIC or KINETIC.", defaultValue = "static")
+  @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
+  @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
+  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, max = 3183.099, defaultValue = "list(100)")
+  @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", isList = true, defaultValue = "list('GV')")
+  @Parameter(name = "color", className = Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
+  @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms). For static, it must have length 1. For kinetic, it is time between segments defined by coordinates (x, y) and so it must have length(x) - 1", isList = true, min = 0, defaultValue = "list(200)")
+  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms) [STATIC].", min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
-  @ReturnMsg(name = "res.msg.seen", desc = "true if seen, false if not.", className = Boolean.class)
-  @ReturnMsg(name = "res.msg.time", desc = "Response time from stimulus onset if button pressed, -1 otherwise (ms).", className = Double.class, min = -1)
+  @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
+  @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed.", min = 0)
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     try {

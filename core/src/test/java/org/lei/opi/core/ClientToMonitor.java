@@ -73,7 +73,7 @@ public class ClientToMonitor {
     };
     String[] present = {
         "jsons/Display/opiPresentStatic.json",
-        "jsons/ImoVifa/opiPresentDynamic.json"
+        "jsons/Display/opiPresentDynamic.json"
     };
     RClientToMonitor("jsons/Display/opiChoose.json",
         "jsons/Display/opiInit.json", setup, present);

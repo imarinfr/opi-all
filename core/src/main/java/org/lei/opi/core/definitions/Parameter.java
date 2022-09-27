@@ -9,10 +9,11 @@ import java.lang.annotation.*;
 public @interface Parameter {
   String name();
   Class<?> className() default String.class;
-  boolean isList() default false;
-  boolean optional() default false;
-  double min() default Double.MIN_VALUE;
-  double max() default Double.MAX_VALUE;
   String desc();
+  boolean isList() default false;
+  boolean isListList() default false; // for list of lists, as list of RGB color values
+  boolean optional() default false;
+  double min() default -1e10;
+  double max() default 1e10;
   String defaultValue() default "?";   // maybe only used for generating R @example code...
 }

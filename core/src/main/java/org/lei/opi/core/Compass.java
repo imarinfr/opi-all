@@ -52,7 +52,17 @@ public class Compass extends OpiMachine {
   @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public MessageProcessor.Packet query() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
-    // TODO QUERY
+    // Get from presentation parameters
+/**
+    .OpiEnv$Compass$MIN_X <- -30
+    .OpiEnv$Compass$MAX_X <- 30  
+    .OpiEnv$Compass$MIN_Y <- -30
+    .OpiEnv$Compass$MAX_Y <- 30  
+    .OpiEnv$Compass$MIN_RESP_WINDOW <- 0    
+    .OpiEnv$Compass$MAX_RESP_WINDOW <- 2680
+    .OpiEnv$Compass$MIN_DURATION <- 200
+    .OpiEnv$Compass$MAX_DURATION <- 200
+*/
     return new MessageProcessor.Packet("");
   };
 
@@ -65,9 +75,9 @@ public class Compass extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "fixType", desc = "Fixation target type for eye.", className = Fixation.class, defaultValue = "spot")
-  @Parameter(name = "fixCx", desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", className = Double.class, min = -20, max = 20, defaultValue = "0")
-  @Parameter(name = "tracking", desc = "Whether to correct stimulus location based on eye position.", className = Double.class, min = 0, max = 1, defaultValue = "0")
+  @Parameter(name = "fixType", className = Fixation.class, desc = "Fixation target type for eye.", defaultValue = "spot")
+  @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", min = -20, max = 20, defaultValue = "0")
+  @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", min = 0, max = 1, defaultValue = "0")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The success or error message.")
@@ -94,7 +104,7 @@ public class Compass extends OpiMachine {
       writer.send(OPI_OPEN);
       while (writer.empty()) Thread.onSpinWait();
       result = parseOpiOpen(writer.receive());
-      if (!result.equals("1")) return OpiManager.error(OPI_OPEN_FAILED); // TODO figure out how to send error message
+      if (!result.equals("1")) return OpiManager.error(OPI_OPEN_FAILED);
       writer.send(OPI_SET_FIXATION + fixCx + " 0 " + fixType);
       while (writer.empty()) Thread.onSpinWait();
       result = (writer.receive());
@@ -117,20 +127,24 @@ public class Compass extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "x", desc = "x co-ordinates of stimulus (degrees).", className = Double.class, min = -30, max = 30, defaultValue = "0")
-  @Parameter(name = "y", desc = "y co-ordinates of stimulus (degrees).", className = Double.class, min = -30, max = 30, defaultValue = "0")
-  @Parameter(name = "t", desc = "Presentation time (ms).", className = Double.class, min = 200, max = 200, defaultValue = "200")
-  @Parameter(name = "w", desc = "Response window (ms).", className = Double.class, min = 200, max = 2680, defaultValue = "1500")
-  @Parameter(name = "lum", desc = "Stimuli luminance (cd/m^2).", className = Double.class, min = 0, max = 3183.099, defaultValue = "100")
+  @Parameter(name = "x", className = Double.class, desc = "x co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
+  @Parameter(name = "y", className = Double.class, desc = "y co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
+  @Parameter(name = "lum", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100")
+  @Parameter(name = "t", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200")
+  @Parameter(name = "w", className = Double.class, desc = "Response window (ms).", min = 200, max = 2680, defaultValue = "1500")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
-  @ReturnMsg(name = "res.msg.seen", desc = "true if seen, false if not.", className = Boolean.class)
-  @ReturnMsg(name = "res.msg.time", desc = "Response time from stimulus onset if button pressed, -1 otherwise (ms).", className = Double.class, min = -1)
-  @ReturnMsg(name = "res.msg.eyex", desc = "x co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
-  @ReturnMsg(name = "res.msg.eyey", desc = "y co-ordinates of pupil at times eyet (degrees).", className = Double.class, isList = true)
-  @ReturnMsg(name = "res.msg.eyed", desc = "Diameter of pupil at times eyet (degrees).", className = Double.class, isList = true)
-  @ReturnMsg(name = "res.msg.eyet", desc = "Time of (eyex,eyey) pupil relative to stimulus onset t=0 (ms).", className = Double.class, isList = true)
+  @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
+  @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed (ms).", min = 0)
+  @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (pixels).")
+  @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (pixels).")
+  @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
+  @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
+  @ReturnMsg(name = "res.msg.time_rec", className = Double.class, desc = "Time since 'epoch' when command was received at Compass (ms).", min = 0)
+  @ReturnMsg(name = "res.msg.time_resp", className = Double.class, desc = "Time since 'epoch' when stimulus response is received, or response window expired (ms).", min = 0)
+  @ReturnMsg(name = "res.msg.num_track_events", className = Double.class, desc = "Number of tracking events that occurred during presentation.", min = 0)
+  @ReturnMsg(name = "res.msg.num_motor_fails", className = Double.class, desc = "Number of times motor could not follow fixation movement during presentation.", min = 0)
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     try {

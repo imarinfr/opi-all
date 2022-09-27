@@ -23,14 +23,24 @@ import org.reflections.Reflections;
  */
 public abstract class OpiMachine {
 
-  /** {@value BAD_CHOOSE} */
-  static final String BAD_CHOOSE = "JSON object does not contain 'command:choose'.";
-  /** {@value BAD_MACHINE} */
-  static final String BAD_MACHINE = "JSON choos object does not contain the name 'machine'";
-  /** {@value UNKNOWN_MACHINE} */
-  static final String UNKNOWN_MACHINE = "machine:%s in JSON choose object is unknown.";
-  /** {@value BAD_MACHINE_CONSTRUCT} */
-  static final String BAD_MACHINE_CONSTRUCT = "Cannot construct machine %s in JSON choose object.\n";
+  /** {@value BAD_COMMAND} */
+  static final String BAD_COMMAND = "Cannot find command '%s' in %s.";
+  /** {@value MISSING_PARAMETER} */
+  static final String MISSING_PARAMETER = "Parameter '%s' is missing for function '%s' in %s.";
+  /** {@value NOT_LIST} */
+  static final String NOT_LIST = "Parameter '%s' should be a non-empty list but it is not for function '%s' in %s.";
+  /** {@value NOT_LISTLIST} */
+  static final String NOT_LISTLIST = "Parameter '%s' should be a non-empty list of non-empty lists but it is not for function '%s' in %s.";
+  /** {@value YES_LIST} */
+  static final String YES_LIST = "Parameter '%s' should not be a list but it is for function '%s' in %s.";
+  /** {@value NOT_IN_ENUM} */
+  static final String NOT_IN_ENUM = "I cannot find '%s' in enum type '%s' for parameter '%s' in function '%s' in %s.";
+  /** {@value NOT_DOUBLE} */
+  static final String NOT_A_DOUBLE = "Parameter '%s' in function '%s' of '%s' is not double.";
+  /** {@value NOT_A_STRING} */
+  static final String NOT_A_STRING = "Parameter '%s' in function '%s' of '%s' should be a String.";
+  /** {@value NOT_DOUBLE} */
+  static final String OUT_OF_RANGE = "Parameter '%s' in function '%s' of '%s' is not in range [%s, %s]. It is %s.";
   /** {@value INCORRECT_FORMAT_IP_PORT} */
   static final String INCORRECT_FORMAT_IP_PORT = "IP and port have the wrong format";
   /** {@value UNKNOWN_HOST} */
@@ -123,59 +133,57 @@ public abstract class OpiMachine {
     String funcName = (String) pairs.get("command");
     MethodData methodData = opiMethods.get(funcName);
     if (methodData == null)
-      return OpiManager.error(String.format("cannot find function %s in %s.",
-          funcName, this.getClass()));
+      return OpiManager.error(String.format(BAD_COMMAND, funcName, this.getClass()));
     // (2) Check params
     if (methodData.parameters != null)
       for (Parameter param : methodData.parameters.value()) {
+        // mandatory parameter not received
         if (!pairs.containsKey(param.name()) && !param.optional())
-          return OpiManager.error(
-              String.format("Parameter %s is missing for function %s in %s.", param.name(), funcName, this.getClass()));
-        if (!pairs.containsKey(param.name()) && param.optional())
-          continue;
+          return OpiManager.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
+        if (!pairs.containsKey(param.name()) && param.optional()) continue;
         Object valueObj = pairs.get(param.name());
-        if (param.isList() && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
-          return OpiManager
-              .error(String.format("Parameter %s should be a non-empty list but is not for function %s in %s.",
-                  param.name(), funcName, this.getClass()));
-        if (!param.isList() && (valueObj instanceof ArrayList))
-          return OpiManager.error(String.format("Parameter %s should not be a list but is not for function %s in %s.",
-              param.name(), funcName, this.getClass()));
-        List<Object> pList = !param.isList() ? Arrays.asList(valueObj) : ((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList();
-        if (enums.containsKey(param.className().getName())) {
+        // check lists and list of lists
+        if ((param.isListList() || param.isList()) && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
+          return OpiManager.error(String.format(NOT_LIST, param.name(), funcName, this.getClass()));
+        if (!(param.isListList() || param.isList()) && (valueObj instanceof ArrayList))
+          return OpiManager.error(String.format(YES_LIST, param.name(), funcName, this.getClass()));
+        // if list is actually made of lists, need to make them into a single list of values
+        if (param.isListList() &&
+            ((ArrayList<?>) valueObj).stream().anyMatch(val -> !(val instanceof ArrayList) || ((ArrayList<?>) val).size() == 0))
+          return OpiManager.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
+        // recast
+        List<Object> pList;
+        if (param.isListList())
+          pList = (((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList()).stream()
+            .map(vector -> (ArrayList<?>) vector).flatMap(List::stream).map(Object.class::cast).toList();
+        else if (param.isList()) 
+          pList = ((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList();
+        else
+          pList = Arrays.asList(valueObj);
+        if (enums.containsKey(param.className().getName())) { // validate enums
           List<String> enumVals = enums.get(param.className().getName());
-          System.out.println(param.name());
           Optional<Object> result = pList.stream()
-              .filter(p -> !(p instanceof String)
-                  || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
+              .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
               .findAny();
           if (result.isPresent())
-            return OpiManager
-                .error(String.format("I cannot find %s in enum type %s for parameter %s in function %s in %s.",
-                    result.get(), param.className(), param.name(), funcName, this.getClass()));
-        } else if (param.className().getSimpleName().equals("Double")) {
+            return OpiManager.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
+        } else if (param.className().getSimpleName().equals("Double")) { // validate doubles
           try {
+            double minVal = Math.round(1e10 * param.min()) / 1e10; // avoid weird rounding problems
+            double maxVal = Math.round(1e10 * param.max()) / 1e10;
             Optional<Double> result = pList.stream()
                 .map((Object o) -> (Double) o)
-                .filter(
-                    (Object v) -> ((Double) v).doubleValue() < param.min() || ((Double) v).doubleValue() > param.max())
+                .filter((Object v) -> ((Double) v).doubleValue() < minVal || ((Double) v).doubleValue() > maxVal)
                 .findAny();
-
             if (result.isPresent())
-              return OpiManager.error(String.format(
-                  "Parameter %s in function %s of %s is either not a double or not in range [%s,%s]. It is %s.",
-                  param.name(), funcName, this.getClass(), param.min(), param.max(), result.get()));
+              return OpiManager.error(String.format(OUT_OF_RANGE, param.name(), funcName, this.getClass(), minVal, maxVal, result.get()));
           } catch (ClassCastException e) {
-            return OpiManager.error(String.format("A parameter in %s in function %s of %s is not a double.",
-                param.name(), funcName, this.getClass()));
+            return OpiManager.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
           }
-        } else { // assuming param is a String
-          Optional<Object> result = pList.stream()
-              .filter(v -> !(v instanceof String))
-              .findAny();
+        } else { // assume param is a String, then validate
+          Optional<Object> result = pList.stream().filter(v -> !(v instanceof String)).findAny();
           if (result.isPresent())
-            return OpiManager.error(String.format("Parameter %s in function %s of %s should be a String.",
-                param.name(), funcName, this.getClass()));
+            return OpiManager.error(String.format(NOT_A_STRING, param.name(), funcName, this.getClass()));
         }
       }
     // (3) execute method
@@ -199,10 +207,10 @@ public abstract class OpiMachine {
    * 
    * @since 0.0.1
    */
-  @Parameter(name = "ip", desc = "IP Address of the OPI machine.")
-  @Parameter(name = "port", desc = "TCP port of the OPI machine.", className = Double.class, min = 0, max = 65535, defaultValue = "50001")
-  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.")
-  @Parameter(name = "portMonitor", desc = "TCP port of the OPI monitor.", className = Double.class, min = 0, max = 65535, defaultValue = "50008")
+  @Parameter(name = "ip", desc = "IP Address of the OPI machine.", defaultValue = "localhost")
+  @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI machine.", min = 0, max = 65535, defaultValue = "50001")
+  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.", defaultValue = "localhost")
+  @Parameter(name = "portMonitor", className = Double.class, desc = "TCP port of the OPI monitor.", min = 0, max = 65535, defaultValue = "50008")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, '1' something wrong.")
   @ReturnMsg(name = "res.msg", desc = "The error message if an error occured or empty otherwise.")

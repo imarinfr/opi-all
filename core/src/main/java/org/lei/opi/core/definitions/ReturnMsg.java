@@ -9,8 +9,9 @@ import java.lang.annotation.*;
 public @interface ReturnMsg {
   String name();
   Class<?> className() default String.class;
+  String desc();
   boolean isList() default false;
   double min() default Double.MIN_VALUE;
   double max() default Double.MAX_VALUE;
-  String desc();
+  double naValue() default -1;
 }
