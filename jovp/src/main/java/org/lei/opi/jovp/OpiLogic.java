@@ -151,7 +151,7 @@ public class OpiLogic implements PsychoLogic {
     for (int i = 0; i < backgrounds.length; i++) {
       backgrounds[i].setColor(driver.backgrounds[i].bgCol());
       // set new shape, position, size and rotation in fixation target
-      // TODO: allow to change shape of fixation target
+      fixations[i].update(new Model(driver.backgrounds[i].fixShape()));
       fixations[i].position(driver.backgrounds[i].fixCx(), driver.backgrounds[i].fixCy());
       fixations[i].size(driver.backgrounds[i].fixSx(), driver.backgrounds[i].fixSy());
       fixations[i].rotation(driver.backgrounds[i].fixRotation());
@@ -163,7 +163,8 @@ public class OpiLogic implements PsychoLogic {
 
   /** Present stimulus upon request */
   private void present() {
-    // TODO: allow to change shape of stimulus
+    // TODO expand to allows dynamic stimuli
+    stimulus.update(new Model(driver.stimulus.shape()[0]));
     stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
     stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
     stimulus.rotation(driver.stimulus.rotation()[0]);
@@ -188,7 +189,8 @@ public class OpiLogic implements PsychoLogic {
 
   /** Send response from stimulus presentation */
   private void respond() {
-    driver.response = new Response(true, "ERROR MESSAGE", false, 1234, -1, -1, -1, -1);
+    // TODO: build response
+    driver.response = new Response(true, driver.prefix + OpiDriver.PRESENT_ERROR, false, 1234, -1, -1, -1, -1);
     driver.state = OpiDriver.State.IDLE;
   }
 

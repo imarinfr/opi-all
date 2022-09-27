@@ -3,10 +3,10 @@ package org.lei.opi.jovp;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-import org.lei.opi.core.definitions.Setup;
 import org.lei.opi.core.OpiManager;
 import org.lei.opi.core.OpiManager.Command;
 import org.lei.opi.core.definitions.MessageProcessor;
+import org.lei.opi.core.definitions.Setup;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.Query;
 import org.lei.opi.core.definitions.Response;
@@ -17,6 +17,7 @@ import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.Monitor;
 import es.optocom.jovp.PsychoEngine;
+import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ViewMode;
 
 /**
@@ -26,13 +27,27 @@ import es.optocom.jovp.structures.ViewMode;
  */
 public class OpiDriver extends MessageProcessor {
 
+  /** {@value BAD_COMMAND} */
+  private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
+  /** {@value INITIALIZE} */
+  private static final String INITIALIZE = "INITIALIZE successful";
+  /** {@value SETUP} */
+  private static final String SETUP = "SETUP successful";
+  /** {@value SETUP_FAILED} */
+  private static final String SETUP_FAILED = "SETUP failed";
+  /** {@value CLOSED} */
+  private static final String CLOSED = "CLOSE successful";
+  /** {@value QUERY_ERROR} */
+  private static final String QUERY_ERROR = "An error occured during QUERY command";
+  /** {@value RESPONSE_ERROR} */
+  protected static final String PRESENT_ERROR = "An error occured during PRESENT command";
   /** Machine state */
   protected enum State {IDLE, INIT, SETUP, PRESENT, WAIT, RESPONDED, CLOSE};
 
+  /** Prefix for all success messages */
+  protected final String prefix;
   /** A background record to communicate with OpiLogic */
   protected final Settings settings;
-  /** Message prefix */
-  private final String prefix;
   /** The psychoEngine */
   private PsychoEngine psychoEngine = null;
   /** A background record to communicate with OpiLogic */
@@ -91,22 +106,33 @@ public class OpiDriver extends MessageProcessor {
     try {
       pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
     } catch (JsonSyntaxException e) {
-      return OpiManager.error(OpiManager.BAD_JSON);
+      return OpiManager.error(prefix + OpiManager.BAD_JSON);
     }
     if (!pairs.containsKey("command")) // needs a command
-      return OpiManager.error(OpiManager.NO_COMMAND_FIELD);
+      return OpiManager.error(prefix + OpiManager.NO_COMMAND_FIELD);
       String cmd = pairs.get("command").toString();
     // check it is a valid command from Command.*
     if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
-      return OpiManager.error(OpiManager.BAD_COMMAND_FIELD);
+      return OpiManager.error(prefix + OpiManager.BAD_COMMAND_FIELD);
     return switch (Command.valueOf(cmd.toUpperCase())) {
       case INITIALIZE -> initialize();
       case QUERY -> query();
       case SETUP -> setup(pairs);
       case PRESENT -> present(pairs);
       case CLOSE -> close();
-      default -> OpiManager.error("Wrong OPI command, you silly goose. OPI command received was: " + cmd.toUpperCase());
+      default -> OpiManager.error(prefix + BAD_COMMAND + cmd.toUpperCase());
     };
+  }
+
+  /**
+   * Start the psychoEngine
+   *
+   * @since 0.1.0
+   */
+  private MessageProcessor.Packet initialize() {
+    state = State.INIT;
+    while (state != State.IDLE) Thread.onSpinWait();
+    return OpiManager.ok(prefix + INITIALIZE, false);
   }
 
   /**
@@ -123,23 +149,12 @@ public class OpiDriver extends MessageProcessor {
         if (settings.viewMode() == ViewMode.STEREO) fov[0] /= 2;
         monitor = psychoEngine.getWindow().getMonitor();
       }
-      Query query = new Query(false, "", settings.distance(), settings.viewMode(), settings.input(), settings.depth(), fov, monitor);
-      return OpiManager.ok(prefix + "opiQuery successful: " + query, false); 
+      return OpiManager.ok((new Query(false, "", settings.distance(), settings.viewMode(),
+        settings.input(), settings.depth(), fov, monitor)).toJson(), false); 
     } catch (Exception e) {
-      Query query = new Query(true, "", -1, null, null, -1, null, null);
-      return OpiManager.error(prefix + "problem with opiQuery", e);
+      return OpiManager.error((new Query(true, prefix + QUERY_ERROR, -1, null, null, -1,
+        null, null)).toJson());
     }
-  }
-
-  /**
-   * Start the psychoEngine
-   *
-   * @since 0.1.0
-   */
-  private MessageProcessor.Packet initialize() {
-    state = State.INIT;
-    while (state != State.IDLE) Thread.onSpinWait();
-    return OpiManager.ok(prefix + "opiInitialize successful", false);
   }
 
   /**
@@ -150,21 +165,18 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet setup(HashMap<String, Object> args) {
-/**
     try {
       // Get eye for the instruction
       Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());
       if(settings.viewMode() == ViewMode.MONO || eye == Eye.BOTH || eye == Eye.LEFT)
-        backgrounds[0] = Background.set(args, settings.calibration());
+        backgrounds[0] = Setup.set(args);
       if(settings.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
-        backgrounds[1] = Background.set(args, settings.calibration());
+        backgrounds[1] = Setup.set(args);
       state = State.SETUP;
-      return OpiManager.ok(prefix + "opiSetup successful", false);
+      return OpiManager.ok(prefix + SETUP, false);
     } catch (ClassCastException e) {
-      return OpiManager.error(prefix + "problem with opiSetup", e);
+      return OpiManager.error(prefix + SETUP_FAILED, e);
     }
-*/
-    return OpiManager.ok(prefix + "TODO", false);
   }
 
   /**
@@ -175,17 +187,15 @@ public class OpiDriver extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet present(HashMap<String, Object> args) {
-/**
     try {
       stimulus = Present.set(args);
       state = State.PRESENT;
       while (state != State.RESPONDED) Thread.onSpinWait(); // wait for response
-      return OpiManager.ok(prefix + "opiPresent successful: " + response, false);
+      // TODO mount response
+      return OpiManager.ok((new Response(false, "", false, 389, -1, 5, 5.3, 389).toJson()), false);
     } catch (Exception e) {
-      return OpiManager.error(prefix + "problem with opiPresent", e);
+      return OpiManager.error((new Response(true, e.toString(), false, -1, -1, -1, -1, -1).toJson()));
     }
-*/
-    return OpiManager.ok(prefix + "TODO", false);
   }
 
   /**
@@ -195,7 +205,7 @@ public class OpiDriver extends MessageProcessor {
    */
   private MessageProcessor.Packet close() {
     state = State.CLOSE;
-    return OpiManager.ok("Closed"); // ignored
+    return OpiManager.ok(CLOSED);
   }
 
 }

@@ -23,7 +23,7 @@ public record Response(boolean error, String message,
    *
    * @since 0.0.1
    */
-  public String toString() {
+  public String toJson() {
     StringBuilder str = new StringBuilder("{\n").append("\"error\": " + (error ? 1 : 0) + ",\n").append("\"msg\": ");
     if (error) str.append(message); // if error occured, then send message
     else { // otherwise, send results
