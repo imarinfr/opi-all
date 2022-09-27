@@ -96,9 +96,6 @@ public class Compass extends OpiMachine {
   @Parameter(name = "fixType", className = Fixation.class, desc = "Fixation target type for eye.", defaultValue = "spot")
   @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", min = -20, max = 20, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", min = 0, max = 1, defaultValue = "0")
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     String result;
@@ -151,10 +148,6 @@ public class Compass extends OpiMachine {
   @Parameter(name = "t", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200")
   @Parameter(name = "w", className = Double.class, desc = "Response window (ms).", min = 200, max = 2680, defaultValue = "1500")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
-  @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
-  @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed (ms).", min = 0)
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (pixels).")
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (pixels).")
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
@@ -190,9 +183,6 @@ public class Compass extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The error message or stream of pupil fixations")
   @ReturnMsg(name = "res.msg.time", desc = "The time stamp for fixation data")
   @ReturnMsg(name = "res.msg.x", desc = "The time stamp for fixation data")
   @ReturnMsg(name = "res.msg.y", desc = "The time stamp for fixation data")

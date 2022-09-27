@@ -127,9 +127,6 @@ public class O900 extends OpiMachine {
   @Parameter(name = "fixType", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
   @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
   @Parameter(name = "f310", className = Double.class, desc = "Whether to use Logitech's F310 controller", min = 0, max = 1, defaultValue = "0")
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     StringBuilder opiMessage;
@@ -208,10 +205,6 @@ public class O900 extends OpiMachine {
   @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms). For static, it must have length 1. For kinetic, it is time between segments defined by coordinates (x, y) and so it must have length(x) - 1", isList = true, min = 0, defaultValue = "list(200)")
   @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms) [STATIC].", min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
-  @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
-  @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed.", min = 0)
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -236,9 +229,6 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message")
   public MessageProcessor.Packet close() {
     try {
       writer.send(OPI_CLOSE);

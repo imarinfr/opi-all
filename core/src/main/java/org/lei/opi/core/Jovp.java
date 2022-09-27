@@ -30,8 +30,6 @@ public class Jovp extends OpiMachine {
    * 
    * @since 0.0.1
    */
-  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.", defaultValue = "localhost")
-  @Parameter(name = "portMonitor", className = Double.class, desc = "TCP port of the OPI monitor.", min = 0, max = 65535, defaultValue = "50008")
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     try {
       writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
@@ -51,9 +49,6 @@ public class Jovp extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public MessageProcessor.Packet query() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -85,9 +80,6 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "fixSy", className = Double.class, desc = "diameter along minor axis of ellipse (degrees). If not received, then sy = sx.", optional = true, min = 0, defaultValue = "1")
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -125,11 +117,6 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "textRotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 360, defaultValue = "list(0)")
   @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "list(200)")
   @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms).", isList = true, min = 0, defaultValue = "list(1500)")
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following data.")
-  @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
-  @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed.", min = 0)
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
@@ -154,9 +141,6 @@ public class Jovp extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-  @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The success or error message")
   public MessageProcessor.Packet close() {
     if (!initialized) return OpiManager.error(NOT_INITIALIZED);
     try {
