@@ -38,7 +38,7 @@ public class MonitorToJovpServer {
 
     /** load JSON message */
     static String loadMessage(String file) throws IOException {
-      InputStream inputStream = MonitorToJovpServer.class.getResourceAsStream(file);
+      InputStream inputStream = Monitor.class.getResourceAsStream(file);
       return IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8));
     }
 
@@ -121,12 +121,12 @@ public class MonitorToJovpServer {
   private void monitorDriver(String initJson, String[] setupJson, String[] presentJson) throws InterruptedException {
     try {
       new Monitor(opiJovp.listener);
-      System.out.println("QUERY before initialized");
+      System.out.println("QUERY before INITIALIZE");
       Thread.sleep(1000);
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       sendAndReceive(Monitor.loadMessage(initJson)); // Initialize OPI
       Thread.sleep(100);
-      System.out.println("QUERY after initialized");
+      System.out.println("QUERY after INITIALIZE");
       sendAndReceive(Monitor.loadMessage("jsons/opiQuery.json")); // Query OPI
       Thread.sleep(100);
       for (String s : setupJson) sendAndReceive(Monitor.loadMessage(s)); // Setup OPI

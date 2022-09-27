@@ -1,4 +1,4 @@
-package org.lei.opi.core;
+package org.lei.opi.jovp;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,6 +6,9 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
+import org.lei.opi.core.CSListener;
+import org.lei.opi.core.CSWriter;
+import org.lei.opi.core.OpiManager;
 
 /**
  * Unitary tests for failures from R OPI protocol

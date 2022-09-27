@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 0.0.1
  */
-public class ConnectionTests {
+public class ServerConnectionTests {
 
   /**
    *

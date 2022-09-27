@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 0.0.1
  */
-public class DefaultConfigurationTests {
+public class ServerConfigurationTests {
 
   /**
    *
@@ -19,7 +19,7 @@ public class DefaultConfigurationTests {
    * @since 0.0.1
    */
   @Test
-  public void defaultJsonConfs() {
+  public void defaultConfigurations() {
     Settings settings;
     try {
       settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
