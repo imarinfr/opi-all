@@ -9,9 +9,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.lei.opi.core.OpiManager.Command;
 import org.lei.opi.core.definitions.MessageProcessor;
 import org.lei.opi.core.definitions.Parameter;
-import org.lei.opi.core.definitions.Parameters;
 import org.lei.opi.core.definitions.ReturnMsg;
 import org.reflections.Reflections;
 
@@ -38,6 +39,8 @@ public abstract class OpiMachine {
   static final String NOT_A_DOUBLE = "Parameter '%s' in function '%s' of '%s' is not double.";
   /** {@value NOT_A_STRING} */
   static final String NOT_A_STRING = "Parameter '%s' in function '%s' of '%s' should be a String.";
+  /** {@value INVOCATION_FAILED} */
+  static final String INVOCATION_FAILED = "Cannot invoke '%s' in '%s'. Either the annotation with parameters is incorrect or the method failed";
   /** {@value NOT_DOUBLE} */
   static final String OUT_OF_RANGE = "Parameter '%s' in function '%s' of '%s' is not in range [%s, %s]. It is %s.";
   /** {@value INCORRECT_FORMAT_IP_PORT} */
@@ -67,14 +70,12 @@ public abstract class OpiMachine {
    * Class to hold information of the 5 key OPI methods ready for use.
    * Should be set in the constructor
    * 
+   * @param method All methods of the class to find the machine-dependent implementations of the 5 key OPI commands
+   * @param parameters The names expected in the JSON string that is a parameter of the corresponding OPI command
+   * 
    * @since 0.0.1
    */
-  protected class MethodData {
-    // All methods of the class to find the achine-dependent implementations of the 5 key OPI commands
-    Method method;
-    // The names expected in the JSON string that is a parameter of the 5 key OPI methods
-    Parameters parameters;
-  };
+  protected record MethodData(Method method, Parameter[] parameters) {};
 
   /** The methods of the OpiMachine */
   protected HashMap<String, MethodData> opiMethods;
@@ -92,25 +93,33 @@ public abstract class OpiMachine {
    * Set the information about the 5 OPI methods in opiMethods
    * It is assumed this is called by a subclass
    * 
+   * @throws NoSuchMethodException If method cannot be found
+   * @throws SecurityException If security has been breached
+   *
    * @since 0.0.1
    */
   public OpiMachine() {
     initialized = false;
-
+    // Select the OPI commands
+    String[] commands = Arrays.stream(OpiManager.Command.values())
+      .map(Enum::name).map(String::toLowerCase).toArray(String[]::new);
+    Method[] methods = Arrays.stream(this.getClass().getMethods())
+      .filter((Method m) -> Arrays.stream(commands).anyMatch(m.getName()::equals)).toArray(Method[]::new);
     opiMethods = new HashMap<String, MethodData>();
-    for (Method method : this.getClass().getMethods()) {
-      MethodData data = new MethodData();
-      data.method = method;
-      data.parameters = method.getAnnotation(Parameters.class);
-
-      // key is method name, value is array of annotations on that method
-      Reflections reflections = new Reflections(this.getClass().getPackageName());
-      enums = new HashMap<String, List<String>>();
-      for (Class<?> e : reflections.getSubTypesOf(Enum.class))
-        enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast).map(c -> c.name().toLowerCase()).toList());
-      opiMethods.put(method.getName(), data);
-    }
+    // Get OpiMachine and machine-dependent parameters through anotations
+    for (Method method : methods) {
+      Method parentMethod = Arrays.stream(OpiMachine.class.getMethods()).filter(m -> m.getName().equals(method.getName())).findFirst().get();
+      Parameter[] parameters = ArrayUtils.addAll(parentMethod.getAnnotationsByType(Parameter.class),
+                                                 method.getAnnotationsByType(Parameter.class));
+      opiMethods.put(method.getName(), new MethodData(method, parameters));
+    }    // gather all ENUMS for the method
+    enums = new HashMap<String, List<String>>();    
+    Reflections reflections = new Reflections(this.getClass().getPackageName());
+    for (Class<?> e : reflections.getSubTypesOf(Enum.class))
+      enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast)
+        .map(c -> c.name().toLowerCase()).toList());
   }
+
 
   /**
    * Map the 'command' to a function, check it has the right parameters, and the call it
@@ -135,7 +144,7 @@ public abstract class OpiMachine {
       return OpiManager.error(String.format(BAD_COMMAND, funcName, this.getClass()));
     // (2) Check params
     if (methodData.parameters != null)
-      for (Parameter param : methodData.parameters.value()) {
+      for (Parameter param : methodData.parameters) {
         // mandatory parameter not received
         if (!pairs.containsKey(param.name()) && !param.optional())
           return OpiManager.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
@@ -188,11 +197,11 @@ public abstract class OpiMachine {
     // (3) execute method
     MessageProcessor.Packet result;
     try {
-      result = methodData.parameters == null
+      result = methodData.parameters.length == 0
           ? (MessageProcessor.Packet) methodData.method.invoke(this)
           : (MessageProcessor.Packet) methodData.method.invoke(this, pairs);
     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      return OpiManager.error(String.format("Cannot execute %s in %s.", funcName, this.getClass()), e);
+      return OpiManager.error(String.format(INVOCATION_FAILED, funcName, this.getClass()), e);
     }
     return result;
   };
@@ -224,7 +233,7 @@ public abstract class OpiMachine {
    */
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The error message or a structure with QUERY data.")
+  @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the following data.")
   public abstract MessageProcessor.Packet query();
 
   /**
@@ -238,7 +247,7 @@ public abstract class OpiMachine {
    */
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The error message or a structure with QUERY data.")
+  @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the following data.")
   public abstract MessageProcessor.Packet setup(HashMap<String, Object> args);
 
   /**
@@ -269,5 +278,36 @@ public abstract class OpiMachine {
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The error message or additional results from the CLOSE command")
   public abstract MessageProcessor.Packet close();
+
+  /**
+   * build a JSON string to send the message to OPI server
+   *
+   * @param command The OPI command
+   *
+   * @return A JSON object
+   *
+   * @since 0.0.1
+   */
+  String buildJson(Command command) {
+    return buildJson(command, null);
+  }
+
+  /**
+   * build a JSON string to send the message to OPI server
+   *
+   * @param command The OPI command
+   * @param args A string with all command arguments to send. It can be null
+   *
+   * @return A JSON object
+   *
+   * @since 0.0.1
+   */
+  String buildJson(Command command, String args) {
+    StringBuilder message = new StringBuilder("{\n\"command\": ").append(command);
+    if (args != null) {
+      System.out.println(args);
+    }
+    return message.append("\n}").toString();
+  }
 
 }

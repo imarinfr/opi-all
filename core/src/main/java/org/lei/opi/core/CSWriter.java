@@ -70,8 +70,6 @@ public class CSWriter {
    * Send message
    *
    * @param message The message to send
-   * 
-   * @return Message received
    *
    * @since 0.0.1
    */

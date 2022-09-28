@@ -52,15 +52,14 @@ public class OpiFunction {
         this.opiReturnTemplate = opiReturnTemplate;
         this.createSocket = createSocket;
         this.machineName = machine.getClass().getSimpleName();
-
-        MethodData commonMethodData = Stream.of(OpiMachine.class.getMethods())
+        MethodData parentMethod = Stream.of(OpiMachine.class.getMethods())
                 .filter((Method m) -> m.getName() == this.opiCoreName)
                 .findAny()
                 .map((Method m) -> new MethodData(
                     m.getAnnotationsByType(Parameter.class), 
                     m.getAnnotationsByType(ReturnMsg.class)))
                 .orElse(null);
-        MethodData machineMethodData = Stream.of(machine.getClass().getMethods())
+        MethodData method = Stream.of(machine.getClass().getMethods())
                 .filter((Method m) -> m.getName() == this.opiCoreName)
                 .findAny()
                 .map((Method m) -> new MethodData(
@@ -68,8 +67,8 @@ public class OpiFunction {
                     m.getAnnotationsByType(ReturnMsg.class)))
                 .orElse(null);
         this.methodData = new MethodData(
-            ArrayUtils.addAll(commonMethodData.parameters, machineMethodData.parameters),
-            ArrayUtils.addAll(commonMethodData.returnMsgs, machineMethodData.returnMsgs));
+            ArrayUtils.addAll(parentMethod.parameters, method.parameters),
+            ArrayUtils.addAll(parentMethod.returnMsgs, method.returnMsgs));
         if (methodData == null) {
             System.err.print(String.format("Cannot generate R code for function %s in machine %s", 
                 this.opiCoreName, machine));
