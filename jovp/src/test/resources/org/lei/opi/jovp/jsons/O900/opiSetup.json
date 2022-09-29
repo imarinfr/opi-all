@@ -2,7 +2,7 @@
   "command": "setup",
   "bgLum": "bg_10",
 	"bgCol": "yellow",
-  "fixType": "center",
+  "fixShape": "center",
 	"fixLum": "20",
   "f310": "false"
 }

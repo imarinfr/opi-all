@@ -3,7 +3,7 @@
   "eye": "both",
   "bgLum": 10,
   "bgCol": [1, 1, 1],
-  "fixType": "maltese",
+  "fixShape": "maltese",
   "fixLum": 20,
   "fixCol": [0, 1, 0],
   "fixCx": 0,

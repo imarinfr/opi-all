@@ -125,7 +125,7 @@ public class OpiLogic implements PsychoLogic {
     // except when presenting, where the OpiDriver waits for a response.
     switch(driver.state) {
       case IDLE -> {} //Do nothing
-      case INIT -> initialize(psychoEngine);
+      case INIT -> show(psychoEngine);
       case SETUP -> setup();
       case PRESENT -> present();
       case WAIT -> waitForResponse();
@@ -135,28 +135,22 @@ public class OpiLogic implements PsychoLogic {
   }
 
   /** Show psychoEngine window */
-  private void initialize(PsychoEngine psychoEngine) {
+  private void show(PsychoEngine psychoEngine) {
     psychoEngine.show();
-    driver.state = OpiJovp.State.IDLE;
-  }
-
-  /** Hide psychoEngine window */
-  private void close(PsychoEngine psychoEngine) {
-    psychoEngine.hide();
     driver.state = OpiJovp.State.IDLE;
   }
   
   /** Change background */
   private void setup() {
     for (int i = 0; i < backgrounds.length; i++) {
-      backgrounds[i].setColor(driver.backgrounds[i].bgCol());
+      backgrounds[i].setColor(gammaCorrection(driver.backgrounds[i].bgCol()));
       // set new shape, position, size and rotation in fixation target
       fixations[i].update(new Model(driver.backgrounds[i].fixShape()));
       fixations[i].position(driver.backgrounds[i].fixCx(), driver.backgrounds[i].fixCy());
       fixations[i].size(driver.backgrounds[i].fixSx(), driver.backgrounds[i].fixSy());
       fixations[i].rotation(driver.backgrounds[i].fixRotation());
       // set new luminance and color in fixation target
-      fixations[i].setColor(driver.backgrounds[i].fixCol());
+      fixations[i].setColor(gammaCorrection(driver.backgrounds[i].fixCol()));
     }
     driver.state = OpiJovp.State.IDLE;
   }
@@ -168,7 +162,7 @@ public class OpiLogic implements PsychoLogic {
     stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
     stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
     stimulus.rotation(driver.stimulus.rotation()[0]);
-    stimulus.setColor(driver.stimulus.color()[0]);
+    stimulus.setColor(gammaCorrection(driver.stimulus.color()[0]));
     stimulus.contrast(driver.stimulus.contrast()[0]);
     stimulus.frequency(driver.stimulus.phase()[0], driver.stimulus.frequency()[0]);
     stimulus.defocus(driver.stimulus.defocus()[0]);
@@ -178,19 +172,29 @@ public class OpiLogic implements PsychoLogic {
     driver.state = OpiJovp.State.WAIT;
   }
 
+  /** Apply gamma correction */
+  private double[] gammaCorrection(double[] bgCol) {
+    return driver.settings.calibration().colorValues(bgCol);
+  }
+
   /** Wait for obersver's response */
   private void waitForResponse() {
     if(timer.getElapsedTime() >= 1500) {
-      System.out.println(timer.getElapsedTime());
       stimulus.hide();
       driver.state = OpiJovp.State.RESPONDED;
     }
+    driver.response = new Response(false, -1, 0.4, -0.6, 5.2, 1255);
   }
 
   /** Send response from stimulus presentation */
   private void respond() {
-    // TODO: build response
-    driver.response = new Response(true, driver.prefix + OpiJovp.PRESENT_ERROR, false, 1234, -1, -1, -1, -1);
+    driver.response = new Response(true, 534, 0.4, -0.6, 5.2, 1255);
+    driver.state = OpiJovp.State.IDLE;
+  }
+
+  /** Hide psychoEngine window */
+  private void close(PsychoEngine psychoEngine) {
+    psychoEngine.hide();
     driver.state = OpiJovp.State.IDLE;
   }
 

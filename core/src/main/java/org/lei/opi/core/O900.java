@@ -2,7 +2,7 @@ package org.lei.opi.core;
 
 import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
-import static org.lei.opi.core.definitions.JsonProcessor.toEnumArray;
+import static org.lei.opi.core.definitions.JsonProcessor.toObjectStream;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -84,7 +84,6 @@ public class O900 extends OpiMachine {
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     try {
       writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      initialized = true;
       return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
     } catch (ClassCastException e) {
       return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
@@ -101,9 +100,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet query() {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
-    // TODO QUERY
-    return new MessageProcessor.Packet("");
+    return OpiManager.ok(queryResults());
   };
 
   /**
@@ -124,11 +121,11 @@ public class O900 extends OpiMachine {
   @Parameter(name = "max10000", className = Double.class, desc = "Whether O900 can handle a maximum luminance of 10000 apostilbs instead of 4000. Check the settings in EyeSuite", min = 0, max = 1, defaultValue = "0")
   @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
   @Parameter(name = "bgCol", className = BackgroundColor.class, desc = "Background color for eye.", defaultValue = "white")
-  @Parameter(name = "fixType", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
+  @Parameter(name = "fixShape", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
   @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
   @Parameter(name = "f310", className = Double.class, desc = "Whether to use Logitech's F310 controller", min = 0, max = 1, defaultValue = "0")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     StringBuilder opiMessage;
     String result;
     try {
@@ -148,7 +145,6 @@ public class O900 extends OpiMachine {
       while (writer.empty()) Thread.onSpinWait();
       result = writer.receive();
       if (!result.equals("1")) return OpiManager.error(OPI_INITIALIZE_FAILED + result);
-      initialized = true;
       // Prepare and send OPI_SET_BACKGROUND
       int bgCol = switch(BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
         case WHITE -> 0; // TODO: find correct code for background white
@@ -181,7 +177,7 @@ public class O900 extends OpiMachine {
       else bigWheel = false;
       if ((int) ((double) args.get("f310")) == 0) f310 = false;
       else f310 = false;
-      return new MessageProcessor.Packet(result); // TODO build result
+      return OpiManager.ok(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
     }
@@ -206,7 +202,7 @@ public class O900 extends OpiMachine {
   @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms) [STATIC].", min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
       String opiMessage = switch(Type.valueOf(((String) args.get("type")).toUpperCase())) {
         case STATIC -> buildStatic(args);
@@ -215,7 +211,7 @@ public class O900 extends OpiMachine {
       writer.send(opiMessage.toString());
       while (writer.empty()) Thread.onSpinWait();
       return parseResult(writer.receive());  
-    } catch (ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
       return OpiManager.error(OPI_PRESENT_FAILED, e);
     }
   }
@@ -233,11 +229,48 @@ public class O900 extends OpiMachine {
     try {
       writer.send(OPI_CLOSE);
       writer.close();
-      initialized = false;
-      return OpiManager.ok(DISCONNECTED_TO_HOST + writer, true);
+      writer = null;
+      return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
     } catch (IOException e) {
-      return OpiManager.error(COULD_NOT_DISCONNECT + writer, e);
+      return OpiManager.error(COULD_NOT_DISCONNECT, e);
     }
+  };
+
+  /**
+   * Parse query results
+   * 
+   * @return A JSON object with query results
+   *
+   * @since 0.0.1
+   */
+  private String queryResults() {
+/* CONSTANTS, ETC ARE HERE
+    Class<Const> c = com.hs.eyesuite.ext.extperimetryviewer.peristatic.data.exam.Const.class;
+    o1 = c.getDeclaredField(name).get(null);
+    Class<OCTO900> c = com.hs.eyesuite.ext.extperimetry.octo900.ifocto.device.OCTO900.class;
+    o2 = c.getDeclaredField(name).get(null);
+*/
+    return new StringBuilder("\n  {\n")
+      .append("    \"FIX_CENTER\": " + null + ",\n")
+      .append("    \"FIX_CROSS\": " + null + ",\n")
+      .append("    \"FIX_RING\": " + null + ",\n")
+      .append("    \"BG_OFF\": " + null + ",\n")
+      .append("    \"BG_1\": " + null + ",\n")
+      .append("    \"BG_10\": " + null + ",\n")
+      .append("    \"BG_100\": " + null + ",\n")
+      .append("    \"STIM_WHITE\": " + null + ",\n")
+      .append("    \"STIM_BLUE\": " + null + ",\n")
+      .append("    \"STIM_RED\": " + null + ",\n")
+      .append("    \"BG_WHITE\": " + null + ",\n")
+      .append("    \"BG_YELLOW\": " + null + ",\n")
+      .append("    \"MET_COL_WW\": " + null + ",\n")
+      .append("    \"MET_COL_BY\": " + null + ",\n")
+      .append("    \"MET_COL_RW\": " + null + ",\n")
+      .append("    \"MET_COL_BLUE_WHITE\": " + null + ",\n")
+      .append("    \"MET_COL_RED_YELLOW\": " + null + ",\n")
+      .append("    \"MET_COL_WHITE_YELLOW\": " + null + ",\n")
+      .append("    \"MET_COL_USER\": " + null + ",\n")
+      .append("\n  }").toString();
   };
 
   /**
@@ -246,14 +279,16 @@ public class O900 extends OpiMachine {
    * @param args pairs of argument name and value
    * 
    * @return A JSON object with return messages
+   * @throws SecurityException
+   * @throws NoSuchMethodException
    *
    * @since 0.0.1
    */
-  private String buildStatic(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException {
+  private String buildStatic(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException, NoSuchMethodException, SecurityException {
     int[] x = toIntArray(args.get("x"));
     int[] y = toIntArray(args.get("y"));
     double[] lum = toDoubleArray(args.get("lum"));
-    Size[] size = (Size[]) toEnumArray(args.get("size"), Size.class);
+    Size[] size = toObjectStream(args.get("size"), Size.class).toArray(Size[]::new);
     int[] t = toIntArray(args.get("t"));
     int w = (int) ((double) args.get("w"));
     String color =  Color.valueOf(((String) args.get("color")).toUpperCase()).toString().toLowerCase();

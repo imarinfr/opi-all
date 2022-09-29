@@ -127,7 +127,6 @@ public class RToMonitorToJovp {
   /** setup connections */
   private void closeConnections() {
     try {
-      server.close();
       monitor.close();
       r.close();
     } catch (IOException e) {
@@ -140,9 +139,10 @@ public class RToMonitorToJovp {
     new Thread() {
       public void run() {
         try {
-          Thread.sleep(200);
+          Thread.sleep(500); // need to wait for PsychoEngine to start
           executeCommands();
-        } catch (InterruptedException e) {
+          server.close();
+        } catch (IOException | InterruptedException e) {
           throw new RuntimeException(e);
         }
       }
@@ -150,25 +150,28 @@ public class RToMonitorToJovp {
   }
 
   /** server driver with lists of present/query etc*/
-  private void executeCommands() {
-    try {
-      sendAndReceive(RClient.loadMessage(chooseJson));
-      sendAndReceive(RClient.loadMessage(initJson)); // Initialize OPI
-      sendAndReceive(RClient.loadMessage("jsons/opiQuery.json")); // Query OPI
-      for (String s : setupJson) sendAndReceive(RClient.loadMessage(s)); // Setup OPI
-      for (String s : presentJson) sendAndReceive(RClient.loadMessage(s)); // Present OPI
-      sendAndReceive(RClient.loadMessage("jsons/opiClose.json")); // Close OPI  
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    } // Choose OPI
+  private void executeCommands() throws IOException, InterruptedException {
+    sendAndReceive(RClient.loadMessage(chooseJson)); // Choose OPI
+    System.out.println("OPI QUERY before OPI INITIALIZE");
+    sendAndReceive(RClient.loadMessage("jsons/opiQuery.json")); // Query OPI
+    sendAndReceive(RClient.loadMessage(initJson)); // Initialize OPI
+    Thread.sleep(2000);
+    System.out.println("OPI QUERY after OPI INITIALIZE");
+    sendAndReceive(RClient.loadMessage("jsons/opiQuery.json")); // Query OPI
+    for (String s : setupJson) {
+      sendAndReceive(RClient.loadMessage(s)); // Setup OPI
+      Thread.sleep(2000);
+    }
+    for (String s : presentJson) sendAndReceive(RClient.loadMessage(s)); // Present OPI
+    sendAndReceive(RClient.loadMessage("jsons/opiClose.json")); // Close OPI  
   }
   
   /** R sends to and receives from monitor */
   private void sendAndReceive(String message) throws IOException {
-    System.out.println("SENDING\n" + message);
+    System.out.println("R SENDS\n" + message);
     r.send(message);
     while (r.empty()) Thread.onSpinWait();
-    System.out.println("RECEIVED\t" + r.receive() + "\n");
+    System.out.println("R RECEIVES\n" + r.receive());
   }
 
 }

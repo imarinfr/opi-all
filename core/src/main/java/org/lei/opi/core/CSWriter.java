@@ -16,6 +16,8 @@ import java.net.Socket;
  */
 public class CSWriter {
 
+  /** {Charset is @value CHARSET_NAME} */
+  private static final String CHARSET_NAME = "UTF8";
   /** {@value CANNOT_SEND} */
   private static final String CANNOT_SEND = "Cannot send message in CSWriter";
   /** {@value CANNOT_CHECK_EMPTY} */
@@ -51,8 +53,8 @@ public class CSWriter {
       this.address = InetAddress.getByName(ip);
     this.port = port;
     client = new Socket(address, port);
-    outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream()));
-    incoming = new BufferedReader(new InputStreamReader(client.getInputStream()));
+    outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream(), CHARSET_NAME));
+    incoming = new BufferedReader(new InputStreamReader(client.getInputStream(), CHARSET_NAME));
   }
 
   /**
@@ -112,7 +114,7 @@ public class CSWriter {
     try {
       while (incoming.ready()) {
         String line = incoming.readLine();
-        message.append(line);
+        message.append(line + (incoming.ready() ? "\n" : ""));
       }
     } catch (IOException e) {
       System.err.println(CANNOT_RECEIVE);

@@ -6,5 +6,5 @@
   "input": "gamepad",
   "tracking": true,
   "depth": 8,
-  "gamma": "gamma8bit.json"
+  "gammaFile": "gamma8bit.json"
 }

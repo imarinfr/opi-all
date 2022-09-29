@@ -1,9 +1,9 @@
 package org.lei.opi.core.definitions;
 
-import java.lang.reflect.Type;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.DoubleStream;
+import java.util.stream.Stream;
 
 /**
  * Routines to convert from list to arrays
@@ -11,9 +11,6 @@ import java.util.stream.DoubleStream;
  * @since 0.0.1
  */
 public class JsonProcessor {
-
-  /** {@value COLOR_OUTSIDE_RANGE} */
-  private static final String COLOR_OUTSIDE_RANGE = "Color values outside range [0, 1]. Color was %s";
 
   /**
    * Get an array of integer values from a JSON list
@@ -84,16 +81,55 @@ public class JsonProcessor {
    * @param list list of strings from JSON
    * 
    * @return an array of enums. Need to be recast
+   * @throws SecurityException
+   * @throws NoSuchMethodException
    * 
    * @throws ClassCastException Cast exception
    * 
    * @since 0.0.1
    */
-  public static Object[] toEnumArray(Object list, Type enumType) throws ClassCastException {
-    return ((ArrayList<?>) list).stream().map(String.class::cast).map(String::toUpperCase).map(enumType.getClass()::cast).toArray();
+  public static Stream<Object> toObjectStream(Object list, Class<? extends Enum<?>> enumClass) throws NoSuchMethodException, SecurityException {
+    Method method = enumClass.getMethod("valueOf", String.class);
+    return ((ArrayList<?>) list).stream().map(String.class::cast).map(str -> mapper(method, str));
   }
 
   /**
+   * Map String to an Enum
+   *
+   * @param method The mapping method ('valueOf()' the 'Enum')
+   * @param str String to map to 'Enum'
+   * 
+   * @return Enum
+   * 
+   * @throws RuntimeException
+   * 
+   * @since 0.0.1
+   */
+  private static Enum<?> mapper(Method method, String str) {
+    try {
+      return (Enum<?>) method.invoke(JsonProcessor.class, str.toUpperCase());
+    } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Obtain color values in cd/m2 from luminance and color mixture.
+   * Color values in cd/m^2 will be converted to pixel levels based
+   * on calibration in JOVP
+   *
+   * @param lum the luminance in cd/m^2
+   * @param color The color mixture
+   * 
+   * @return the device-independent color values in cd/m^2
+   * 
+   * @since 0.0.1
+   */
+  public static double[] colorValues(double lum, double[] color) {
+    return new double[] {lum * color[0], lum * color[1], lum * color[2], 1};
+  }
+
+    /**
    * Obtain color values in cd/m2 from luminance and color mixture.
    * Color values in cd/m^2 will be converted to pixel levels based
    * on calibration in JOVP
@@ -107,10 +143,10 @@ public class JsonProcessor {
    * 
    * @since 0.0.1
    */
-  public static double[] colorValues(double lum, double[] color) throws IllegalArgumentException {
-    if (DoubleStream.of(color).anyMatch(val -> val < 0 || val > 1))
-      throw new IllegalArgumentException(String.format(COLOR_OUTSIDE_RANGE, Arrays.toString(color)));
-    return new double[] {lum * color[0], lum * color[1], lum * color[2], 1};
+  public static double[][] colorValues(double[] lum, double[][] color) {
+    double[][] col = new double[lum.length][];
+    for (int i = 0; i < lum.length; i++) col[i] = colorValues(lum[i], color[i]);
+    return col;
   }
 
 }

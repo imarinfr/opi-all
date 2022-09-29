@@ -33,8 +33,9 @@ public class Jovp extends OpiMachine {
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     try {
       writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      initialized = true;
-      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
+      writer.send(toJson(Command.INITIALIZE));
+      while (writer.empty()) Thread.onSpinWait();
+      return OpiManager.ok(writer.receive());
     } catch (ClassCastException e) {
       return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
     } catch (IOException e) {
@@ -50,9 +51,9 @@ public class Jovp extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet query() {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
-      writer.send(Command.QUERY.toString());
+      writer.send(toJson(Command.QUERY));
       while (writer.empty()) Thread.onSpinWait();
       return new MessageProcessor.Packet(writer.receive());
     } catch (ClassCastException | IllegalArgumentException e) {
@@ -69,11 +70,12 @@ public class Jovp extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
+  @Parameter(name = "eye", className = Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "list('left')")
+  @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, defaultValue = "10")
   @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye.", isList = true, min = 0, max = 1, defaultValue = "list(1, 1, 1)")
-  @Parameter(name = "fixType", className = ModelType.class, desc = "Fixation target type for eye.", defaultValue = "maltese")
-  @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, max = 3183.099, defaultValue = "20")
-  @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, defaultValue = "list(0, 1, 0)")
+  @Parameter(name = "fixShape", className = ModelType.class, desc = "Fixation target type for eye.", defaultValue = "maltese")
+  @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, defaultValue = "20")
+  @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, min = 0, max = 1, defaultValue = "list(0, 1, 0)")
   @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees).", min = -90, max = 90, defaultValue = "0")
   @Parameter(name = "fixCy", className = Double.class, desc = "y-coordinate of fixation target (degrees).", min = -90, max = 90, defaultValue = "0")
   @Parameter(name = "fixSx", className = Double.class, desc = "diameter along major axis of ellipse (degrees).", min = 0, defaultValue = "1")
@@ -81,9 +83,9 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
-      writer.send(Setup.set(args).toJson());
+      writer.send(Setup.process(args).toJson());
       while (writer.empty()) Thread.onSpinWait();
       return new MessageProcessor.Packet(writer.receive());
     } catch (ClassCastException | IllegalArgumentException e) {
@@ -107,7 +109,7 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
   @Parameter(name = "sx", className = Double.class, desc = "List of diameters along major axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "list(1.72)")
   @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "list(1.72)")
-  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, max = 3183.099, defaultValue = "list(20)")
+  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "list(20)")
   @Parameter(name = "color", className = Double.class, desc = "List of stimuli colors.", isListList = true, min = 0, max = 1, defaultValue = "list(list(1, 1, 1))")
   @Parameter(name = "rotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if sx != sy specified.", isList = true, optional = true, min = 0, max = 360, defaultValue = "list(0)")
   @Parameter(name = "contrast", className = Double.class, desc = "List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.", isList = true, optional = true, min = 0, max = 1, defaultValue = "list(1)")
@@ -122,13 +124,13 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
   @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
-      writer.send(Present.set(args).toJson());
+      writer.send(Present.process(args).toJson());
       while (writer.empty()) Thread.onSpinWait();
       return new MessageProcessor.Packet(writer.receive());
-    } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiManager.error(COULD_NOT_PRESENT);
+    } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
+      return OpiManager.error(COULD_NOT_PRESENT, e);
     }
   }
 
@@ -142,14 +144,15 @@ public class Jovp extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet close() {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
-      writer.send(Command.CLOSE.toString());
+      writer.send(toJson(Command.CLOSE));
+      while (writer.empty()) Thread.onSpinWait(); writer.receive(); // message ignored
       writer.close();
-      initialized = false;
-      return OpiManager.ok(DISCONNECTED_TO_HOST + writer, true);
+      writer = null;
+      return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
     } catch (IOException e) {
-      return OpiManager.error(COULD_NOT_DISCONNECT + writer, e);
+      return OpiManager.error(COULD_NOT_DISCONNECT, e);
     }
   }
 

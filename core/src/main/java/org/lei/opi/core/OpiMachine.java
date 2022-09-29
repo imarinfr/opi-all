@@ -58,9 +58,9 @@ public abstract class OpiMachine {
   /** {@value COULD_NOT_PRESENT} */
   static final String COULD_NOT_PRESENT = "Could not present on the OPI machine";
   /** {@value COULD_NOT_DISCONNECT} */
-  static final String COULD_NOT_DISCONNECT = "Could not disconnect from OPI machine at";
-  /** {@value DISCONNECTED_TO_HOST} */
-  static final String DISCONNECTED_TO_HOST = "Connected from host at ";
+  static final String COULD_NOT_DISCONNECT = "Could not disconnect from OPI machine";
+  /** {@value DISCONNECTED_FROM_HOST} */
+  static final String DISCONNECTED_FROM_HOST = "Disconnected from OPI machine";
   /** {@value OPI_SETUP_FAILED} */
   static final String OPI_SETUP_FAILED = "Failed to complete opiSetup. ";
   /** {@value OPI_PRESENT_FAILED} */
@@ -86,8 +86,6 @@ public abstract class OpiMachine {
    * It is setup in the device-dependent implementation of initialize
    * */
   protected CSWriter writer;
-  /** Whether perimeter is initialized */
-  protected boolean initialized;
 
   /**
    * Set the information about the 5 OPI methods in opiMethods
@@ -99,7 +97,7 @@ public abstract class OpiMachine {
    * @since 0.0.1
    */
   public OpiMachine() {
-    initialized = false;
+    writer = null;
     // Select the OPI commands
     String[] commands = Arrays.stream(OpiManager.Command.values())
       .map(Enum::name).map(String::toLowerCase).toArray(String[]::new);
@@ -247,7 +245,7 @@ public abstract class OpiMachine {
    */
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
-  @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the following data.")
+  @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the result of QUERY OPI command.")
   public abstract MessageProcessor.Packet setup(HashMap<String, Object> args);
 
   /**
@@ -288,26 +286,8 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  String buildJson(Command command) {
-    return buildJson(command, null);
-  }
-
-  /**
-   * build a JSON string to send the message to OPI server
-   *
-   * @param command The OPI command
-   * @param args A string with all command arguments to send. It can be null
-   *
-   * @return A JSON object
-   *
-   * @since 0.0.1
-   */
-  String buildJson(Command command, String args) {
-    StringBuilder message = new StringBuilder("{\n\"command\": ").append(command);
-    if (args != null) {
-      System.out.println(args);
-    }
-    return message.append("\n}").toString();
+  String toJson(Command command) {
+    return new StringBuilder("{\n  \"command\": ").append(command).append("\n}").toString();
   }
 
 }

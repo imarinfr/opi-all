@@ -25,6 +25,8 @@ import org.lei.opi.core.definitions.MessageProcessor;
  */
 public class CSListener extends Thread {
 
+  /** {Charset is @value CHARSET_NAME} */
+  private static final String CHARSET_NAME = "UTF8";
   /** {@value CANNOT_CHECK_EMPTY} */
   private static final String CANNOT_CHECK_EMPTY = "Cannot check if socket is empty";
   /** {@value CANNOT_RECEIVE} */
@@ -99,8 +101,8 @@ public class CSListener extends Thread {
       while (listen) {
         try {
           socket = server.accept();
-          incoming = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-          outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+          incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
+          outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
           while (listen) {
             if (incoming.ready()) {
               MessageProcessor.Packet pack = msgProcessor.process(receive());
@@ -148,7 +150,7 @@ public class CSListener extends Thread {
     try {
       while (incoming.ready()) {
         String line = incoming.readLine();
-        message.append(line);
+        message.append(line + (incoming.ready() ? "\n" : ""));
       }
       if (receiveWriter != null) receiveWriter.write(message.toString());
     } catch (IOException e) {

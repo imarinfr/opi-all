@@ -97,7 +97,7 @@ public enum Command {
    * @since 0.1.0
    */
   public static MessageProcessor.Packet ok(String message, boolean close) {
-    return new MessageProcessor.Packet(false, close, String.format("{%s, \"msg\": %s}", ERROR_NO, message));
+    return new MessageProcessor.Packet(false, close, String.format("{\n  %s, \n  \"msg\": %s\n}", ERROR_NO, message));
   }
 
   /**
@@ -111,7 +111,7 @@ public enum Command {
    */
   public static MessageProcessor.Packet error(String description) {
     return new MessageProcessor.Packet(
-        String.format("{%s, \"msg\": \"%s\"}", ERROR_YES, description));
+        String.format("{\n  %s, \n  \"msg\": \"%s\"\n}", ERROR_YES, description));
   }
 
   /**
@@ -127,7 +127,7 @@ public enum Command {
   public static MessageProcessor.Packet error(String description, Exception exception) {
     exception.printStackTrace();
     return new MessageProcessor.Packet(
-        String.format("{%s, \"msg\": \"%s\", \"exception\": \"%s\"}", ERROR_YES, description, exception.toString()));
+        String.format("{\n  %s, \n  \"msg\": \"%s\", \"exception\": \"%s\"\n}", ERROR_YES, description, exception.toString()));
   }
 
   /**
@@ -147,7 +147,7 @@ public enum Command {
     try {
       pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
     } catch (JsonSyntaxException e) {
-      return error(BAD_JSON);
+      return error(BAD_JSON, e);
     }
     // Get command
     if (!pairs.containsKey("command")) // needs a command
@@ -163,7 +163,7 @@ public enum Command {
       return error(BAD_COMMAND_FIELD);
     // If it is a CHOOSE command, then let's fire up the chosen machine (unless one already open)
     if (cmd.equalsIgnoreCase(Command.CHOOSE.name())) {
-      if (this.machine != null && machine.initialized)
+      if (this.machine != null && machine.writer == null)
         return error(MACHINE_NEEDS_CLOSING);
       String className = OpiMachine.class.getPackage().getName() + "." + pairs.get("machine");
       try {

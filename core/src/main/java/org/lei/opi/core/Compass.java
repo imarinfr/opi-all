@@ -52,7 +52,6 @@ public class Compass extends OpiMachine {
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     try {
       writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      initialized = true;
       return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
     } catch (ClassCastException e) {
       return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
@@ -69,19 +68,7 @@ public class Compass extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet query() {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
-    // Get from presentation parameters
-/**
-    .OpiEnv$Compass$MIN_X <- -30
-    .OpiEnv$Compass$MAX_X <- 30  
-    .OpiEnv$Compass$MIN_Y <- -30
-    .OpiEnv$Compass$MAX_Y <- 30  
-    .OpiEnv$Compass$MIN_RESP_WINDOW <- 0    
-    .OpiEnv$Compass$MAX_RESP_WINDOW <- 2680
-    .OpiEnv$Compass$MIN_DURATION <- 200
-    .OpiEnv$Compass$MAX_DURATION <- 200
-*/
-    return new MessageProcessor.Packet("");
+    return OpiManager.ok(queryResults());
   };
 
   /**
@@ -93,11 +80,11 @@ public class Compass extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "fixType", className = Fixation.class, desc = "Fixation target type for eye.", defaultValue = "spot")
+  @Parameter(name = "fixShape", className = Fixation.class, desc = "Fixation target type for eye.", defaultValue = "spot")
   @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", min = -20, max = 20, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", min = 0, max = 1, defaultValue = "0")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     String result;
     try {
       int fixCx = (int) ((double) args.get("pres"));
@@ -127,10 +114,10 @@ public class Compass extends OpiMachine {
       writer.send(OPI_SET_TRACKING + tracking);
       result = (writer.receive());
       if (!result.equals("1")) return OpiManager.error(OPI_SET_TRACKING_FAILED);
+      return OpiManager.ok(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
     }
-    return new MessageProcessor.Packet("");
   }
 
   /**
@@ -157,7 +144,7 @@ public class Compass extends OpiMachine {
   @ReturnMsg(name = "res.msg.num_track_events", className = Double.class, desc = "Number of tracking events that occurred during presentation.", min = 0)
   @ReturnMsg(name = "res.msg.num_motor_fails", className = Double.class, desc = "Number of times motor could not follow fixation movement during presentation.", min = 0)
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
-    if (!initialized) return OpiManager.error(NOT_INITIALIZED);
+    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
       int level = (int) Math.round(-10 * Math.log10((double) args.get("lum") / (10000 / Math.PI)));
       StringBuilder opiMessage = new StringBuilder(OPI_PRESENT_STATIC).append(" ")
@@ -168,7 +155,7 @@ public class Compass extends OpiMachine {
         .append((int) ((double) args.get("w")));
         writer.send(opiMessage.toString());
         while (writer.empty()) Thread.onSpinWait();
-        return parseResults(writer.receive());  
+        return OpiManager.ok(parseResults(writer.receive()));
       } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
     }
@@ -192,10 +179,10 @@ public class Compass extends OpiMachine {
       while (writer.empty()) Thread.onSpinWait();
       String message = parseOpiClose(writer.receive());
       writer.close();
-      initialized = false;
-      return OpiManager.ok(DISCONNECTED_TO_HOST + message, true);
+      writer = null;
+      return OpiManager.ok(message, true);
     } catch (IOException | ClassCastException | IllegalArgumentException e) {
-      return OpiManager.error(COULD_NOT_DISCONNECT + writer, e);
+      return OpiManager.error(COULD_NOT_DISCONNECT, e);
     }
   };
 
@@ -222,15 +209,35 @@ public class Compass extends OpiMachine {
   }
 
   /**
+   * Parse query results
+   * 
+   * @return A JSON object with query results
+   *
+   * @since 0.0.1
+   */
+  private String queryResults() {
+    return new StringBuilder("\n  {\n")
+      .append("    \"xMin\": " + -30 + ",\n")
+      .append("    \"xMax\": " + 30 + ",\n")
+      .append("    \"yMin\": " + -30 + ",\n")
+      .append("    \"yMax\": " + 30 + ",\n")
+      .append("    \"minT\": " + 200 + ",\n")
+      .append("    \"maxT\": " + 200 + ",\n")
+      .append("    \"minW\": " + 0 + ",\n")
+      .append("    \"maxW\": " + 2680 + ",\n")
+      .append("\n  }").toString();
+  };
+
+  /**
    * Parse results obtained for OPI-PRESENT-STATIC
    * 
    * @param received Message received from Compass
    * 
-   * @return A JSON object with return messages
+   * @return A JSON object with present results
    *
    * @since 0.0.1
    */
-  private MessageProcessor.Packet parseResults(String receive) {
+  private String parseResults(String receive) {
 /**
     OPI-PRESENT-STATIC x y inDegrees level size duration responseWindow
     rt: in ms from stimulus onset (integer). -1 for not seen.
@@ -243,15 +250,15 @@ public class Compass extends OpiMachine {
     x: pixels integer, location in image of presentation
     y: pixels integer, location in image of presentation
 */
-    return new MessageProcessor.Packet(""); // TODO return something
+    return ""; // TODO return something
   }
 
-    /**
-   * Parse results obtained for OPI-OPEN
+  /**
+   * Parse results obtained for OPI-CLOSE
    * 
    * @param received Message received from Compass
    * 
-   * @return A string with return messages
+   * @return A string with close results
    *
    * @since 0.0.1
    */

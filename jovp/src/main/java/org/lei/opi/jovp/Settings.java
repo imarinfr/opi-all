@@ -18,7 +18,7 @@ import es.optocom.jovp.structures.Paradigm;
 import es.optocom.jovp.structures.ViewMode;
 
 /**
- * Configurations for OPI JOVP driver
+ * Setup for OPI JOVP machine
  * 
  * @param screen screen number: 0 is main, any number > 0 are external monitors
  * @param fullScreen whether to run in full screen or windowed mode
@@ -27,14 +27,14 @@ import es.optocom.jovp.structures.ViewMode;
  * @param input input device for responses
  * @param depth depth for each color channel
  * @param tracking whether device allows eye tracking
- * @param gamma path of the display-specific calibration file of R, G, B gamma functions
+ * @param gammaFile path of the display-specific calibration file of R, G, B gamma functions
  * @param calibration the RGB calibration data
  *
  * @since 0.0.1
  */
 public record Settings(Machine machine, int screen, boolean fullScreen, int distance,
                        ViewMode viewMode, Input input, boolean tracking, int depth,
-                       String gamma, Calibration calibration) {
+                       String gammaFile, Calibration calibration) {
 
   /** Implemented display-based machines */
   enum Machine {
@@ -155,11 +155,11 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
     int depth = ((Double) pairs.get("depth")).intValue();
     if(depth < 8)
       throw new IllegalArgumentException(String.format(WRONG_DEPTH, depth));
-    String gamma = pairs.get("gamma").toString();
+    String gammaFile = pairs.get("gammaFile").toString();
     return new Settings(machine, screen, (boolean) pairs.get("fullScreen"), distance,
                         ViewMode.valueOf(pairs.get("viewMode").toString().toUpperCase()),
                         Input.valueOf(pairs.get("input").toString().toUpperCase()),
-                        (boolean) pairs.get("tracking"), depth, gamma, loadCalibration(depth, gamma));
+                        (boolean) pairs.get("tracking"), depth, gammaFile, loadCalibration(depth, gammaFile));
   }
 
   /**
@@ -174,14 +174,14 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
    *
    * @since 0.0.1
    */
-  private static Calibration loadCalibration(int depth, String gamma) throws IllegalArgumentException, ClassCastException, IOException {
+  private static Calibration loadCalibration(int depth, String gammaFile) throws IllegalArgumentException, ClassCastException, IOException {
     Gson gson = new Gson();
     String jsonStr;
     // Get calibration from a path or from resources
-    try(InputStream inputStream = new FileInputStream(gamma)) {
-      jsonStr = calibrationFromPath(gamma);
+    try(InputStream inputStream = new FileInputStream(gammaFile)) {
+      jsonStr = calibrationFromPath(gammaFile);
     } catch (IOException e) { // if gamma not path, then see if it is in resources
-      jsonStr = calibrationFromResources(gamma);
+      jsonStr = calibrationFromResources(gammaFile);
       // if gamma not path and not a resource file, then throw IOException
     }
     HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());

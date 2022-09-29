@@ -7,16 +7,15 @@ import java.util.stream.Stream;
 import org.lei.opi.core.OpiManager;
 import org.lei.opi.core.OpiManager.Command;
 import org.lei.opi.core.definitions.MessageProcessor;
-import org.lei.opi.core.definitions.Setup;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.Query;
 import org.lei.opi.core.definitions.Response;
+import org.lei.opi.core.definitions.Setup;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import es.optocom.jovp.Monitor;
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.structures.Eye;
 import es.optocom.jovp.structures.ViewMode;
@@ -28,22 +27,19 @@ import es.optocom.jovp.structures.ViewMode;
  */
 public class OpiJovp extends MessageProcessor {
 
+  /** Machine state */
+  protected enum State {IDLE, INIT, SETUP, PRESENT, WAIT, RESPONDED, CLOSE};
+
   /** {@value BAD_COMMAND} */
   private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
   /** {@value INITIALIZE} */
   private static final String INITIALIZE = "INITIALIZE successful";
-  /** {@value SETUP} */
-  private static final String SETUP = "SETUP successful";
   /** {@value SETUP_FAILED} */
   private static final String SETUP_FAILED = "SETUP failed";
+  /** {@value PRESENT_FAILED} */
+  protected static final String PRESENT_FAILED = "An error occured during PRESENT command";
   /** {@value CLOSED} */
   private static final String CLOSED = "CLOSE successful";
-  /** {@value QUERY_ERROR} */
-  private static final String QUERY_ERROR = "An error occured during QUERY command";
-  /** {@value RESPONSE_ERROR} */
-  protected static final String PRESENT_ERROR = "An error occured during PRESENT command";
-  /** Machine state */
-  protected enum State {IDLE, INIT, SETUP, PRESENT, WAIT, RESPONDED, CLOSE};
 
   /** Prefix for all success messages */
   protected final String prefix;
@@ -143,13 +139,12 @@ public class OpiJovp extends MessageProcessor {
    * @since 0.1.0
    */
   public MessageProcessor.Packet process(String jsonStr) {
-    System.out.println(jsonStr);
     Gson gson = new Gson();
     HashMap<String, Object> pairs;
     try {
       pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
     } catch (JsonSyntaxException e) {
-      return OpiManager.error(prefix + OpiManager.BAD_JSON);
+      return OpiManager.error(prefix + OpiManager.BAD_JSON, e);
     }
     if (!pairs.containsKey("command")) // needs a command
       return OpiManager.error(prefix + OpiManager.NO_COMMAND_FIELD);
@@ -174,8 +169,7 @@ public class OpiJovp extends MessageProcessor {
    */
   private MessageProcessor.Packet initialize() {
     state = State.INIT;
-    while (state != State.IDLE) Thread.onSpinWait();
-    return OpiManager.ok(prefix + INITIALIZE, false);
+    return new MessageProcessor.Packet(prefix + INITIALIZE);
   }
 
   /**
@@ -184,20 +178,9 @@ public class OpiJovp extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet query() {
-    try {
-      double[] fov = new double[] {-1, -1};
-      Monitor monitor = null;
-      if (psychoEngine != null) {
-        fov = psychoEngine.getFieldOfView();
-        if (settings.viewMode() == ViewMode.STEREO) fov[0] /= 2;
-        monitor = psychoEngine.getWindow().getMonitor();
-      }
-      return OpiManager.ok((new Query(false, "", settings.distance(), settings.viewMode(),
-        settings.input(), settings.depth(), fov, monitor)).toJson(), false); 
-    } catch (Exception e) {
-      return OpiManager.error((new Query(true, prefix + QUERY_ERROR, -1, null, null, -1,
-        null, null)).toJson());
-    }
+    return OpiManager.ok((new Query(settings.distance(), psychoEngine.getFieldOfView(),
+      settings.viewMode(), settings.input(),settings.fullScreen(), settings.tracking(), settings.depth(),
+      settings.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
   }
 
   /**
@@ -216,8 +199,10 @@ public class OpiJovp extends MessageProcessor {
       if(settings.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
         backgrounds[1] = Setup.set(args);
       state = State.SETUP;
-      return OpiManager.ok(prefix + SETUP, false);
-    } catch (ClassCastException e) {
+      return OpiManager.ok((new Query(settings.distance(), psychoEngine.getFieldOfView(),
+        settings.viewMode(), settings.input(),settings.fullScreen(), settings.tracking(), settings.depth(),
+        settings.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(prefix + SETUP_FAILED, e);
     }
   }
@@ -234,10 +219,9 @@ public class OpiJovp extends MessageProcessor {
       stimulus = Present.set(args);
       state = State.PRESENT;
       while (state != State.RESPONDED) Thread.onSpinWait(); // wait for response
-      // TODO mount response
-      return OpiManager.ok((new Response(false, "", false, 389, -1, 5, 5.3, 389).toJson()), false);
+      return OpiManager.ok(response.toJson(settings.tracking()));
     } catch (Exception e) {
-      return OpiManager.error((new Response(true, e.toString(), false, -1, -1, -1, -1, -1).toJson()));
+      return OpiManager.error(prefix + PRESENT_FAILED, e);
     }
   }
 
