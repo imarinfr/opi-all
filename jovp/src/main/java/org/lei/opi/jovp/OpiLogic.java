@@ -26,7 +26,7 @@ public class OpiLogic implements PsychoLogic {
   /** {@value DEFAULT_FIXATION_SIZE} */
   private static final int DEFAULT_FIXATION_SIZE = 1;
   /** {@value MINIMUM_TIME_FROM_ONSET} */
-  private static final int MINIMUM_TIME_FROM_ONSET = 50;
+  private static final double MINIMUM_TIME_FROM_ONSET = 50;
 
   /** The OPI driver */
   private final OpiJovp driver;
@@ -40,8 +40,6 @@ public class OpiLogic implements PsychoLogic {
 
   /** A timer to control, well, you know, er, time? */
   private Timer timer = new Timer();
-  /** time from onset to keep track of the presentation */
-  private long ellapseTime = -1;
 
   OpiLogic(OpiJovp driver) {
     this.driver = driver;
@@ -108,7 +106,10 @@ public class OpiLogic implements PsychoLogic {
     if (command == Command.NONE) return;
     System.out.println(command);
     // if no response or response is too early, do nothing
-    if(command != Command.YES || ellapseTime < MINIMUM_TIME_FROM_ONSET) return;
+    if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
+    driver.response = new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
+    timer.stop();
+    stimulus.hide();
   }
 
   /**
@@ -124,12 +125,16 @@ public class OpiLogic implements PsychoLogic {
     // OpiLogic sets state back to IDLE once instruction is carried out,
     // except when presenting, where the OpiDriver waits for a response.
     switch(driver.state) {
-      case IDLE -> {} //Do nothing
+      case IDLE -> {
+        if (timer.getElapsedTime() > 0)  // do nothing unless presenting
+         if (timer.getElapsedTime() > driver.stimulus.w()) { // if no response
+          timer.stop();
+          driver.response = new Response(false, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
+         } else updateStimulus();
+      }
       case INIT -> show(psychoEngine);
       case SETUP -> setup();
       case PRESENT -> present();
-      case WAIT -> waitForResponse();
-      case RESPONDED -> respond();
       case CLOSE -> close(psychoEngine);
     }
   }
@@ -157,8 +162,17 @@ public class OpiLogic implements PsychoLogic {
 
   /** Present stimulus upon request */
   private void present() {
+    updateStimulus();
+    stimulus.show();
+    timer.start();
+    driver.state = OpiJovp.State.IDLE;
+  }
+
+  private void updateStimulus() {
     // TODO expand to allows dynamic stimuli
+    stimulus.eye(driver.stimulus.eye()[0]);
     stimulus.update(new Model(driver.stimulus.shape()[0]));
+    //stimulus.update(new Texture(driver.stimulus.type()[0])); // TODO: not working, revise JOVP
     stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
     stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
     stimulus.rotation(driver.stimulus.rotation()[0]);
@@ -167,29 +181,11 @@ public class OpiLogic implements PsychoLogic {
     stimulus.frequency(driver.stimulus.phase()[0], driver.stimulus.frequency()[0]);
     stimulus.defocus(driver.stimulus.defocus()[0]);
     stimulus.texRotation(driver.stimulus.texRotation()[0]);
-    stimulus.show();
-    timer.start();
-    driver.state = OpiJovp.State.WAIT;
   }
 
   /** Apply gamma correction */
   private double[] gammaCorrection(double[] bgCol) {
     return driver.settings.calibration().colorValues(bgCol);
-  }
-
-  /** Wait for obersver's response */
-  private void waitForResponse() {
-    if(timer.getElapsedTime() >= 1500) {
-      stimulus.hide();
-      driver.state = OpiJovp.State.RESPONDED;
-    }
-    driver.response = new Response(false, -1, 0.4, -0.6, 5.2, 1255);
-  }
-
-  /** Send response from stimulus presentation */
-  private void respond() {
-    driver.response = new Response(true, 534, 0.4, -0.6, 5.2, 1255);
-    driver.state = OpiJovp.State.IDLE;
   }
 
   /** Hide psychoEngine window */

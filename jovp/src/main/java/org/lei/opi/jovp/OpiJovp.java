@@ -28,7 +28,7 @@ import es.optocom.jovp.structures.ViewMode;
 public class OpiJovp extends MessageProcessor {
 
   /** Machine state */
-  protected enum State {IDLE, INIT, SETUP, PRESENT, WAIT, RESPONDED, CLOSE};
+  protected enum State {IDLE, INIT, SETUP, PRESENT, CLOSE};
 
   /** {@value BAD_COMMAND} */
   private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
@@ -52,7 +52,7 @@ public class OpiJovp extends MessageProcessor {
   /** A stimulus record to communicate with OpiLogic */
   protected Present stimulus;
   /** A record to record the results after a stimulus prsentation */
-  protected Response response;
+  protected Response response = null;
   /** Whether opiInitialized has been invoked and not closed later on by opiClose */
   protected State state;
 
@@ -218,8 +218,10 @@ public class OpiJovp extends MessageProcessor {
     try {
       stimulus = Present.set(args);
       state = State.PRESENT;
-      while (state != State.RESPONDED) Thread.onSpinWait(); // wait for response
-      return OpiManager.ok(response.toJson(settings.tracking()));
+      while (response == null) Thread.onSpinWait(); // wait for response
+      String jsonStr = response.toJson(settings.tracking());
+      response = null;
+      return OpiManager.ok(jsonStr);
     } catch (Exception e) {
       return OpiManager.error(prefix + PRESENT_FAILED, e);
     }

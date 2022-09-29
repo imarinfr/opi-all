@@ -84,6 +84,10 @@ public class RToMonitorToJovp {
         };
         presentJson = new String[] {
           "jsons/Display/opiPresentStatic.json",
+          "jsons/Display/opiPresentStatic.json",
+          "jsons/Display/opiPresentStatic.json",
+          "jsons/Display/opiPresentStatic.json",
+          "jsons/Display/opiPresentStatic.json"
           //"jsons/Display/opiPresentDynamic.json"
         };
       }
@@ -162,7 +166,10 @@ public class RToMonitorToJovp {
       sendAndReceive(RClient.loadMessage(s)); // Setup OPI
       Thread.sleep(2000);
     }
-    for (String s : presentJson) sendAndReceive(RClient.loadMessage(s)); // Present OPI
+    for (String s : presentJson) { // Present OPI
+      sendAndReceive(RClient.loadMessage(s));
+      Thread.sleep(500);
+    } // Present OPI
     sendAndReceive(RClient.loadMessage("jsons/opiClose.json")); // Close OPI  
   }
   

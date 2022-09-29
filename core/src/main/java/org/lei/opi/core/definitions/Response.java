@@ -12,7 +12,7 @@ package org.lei.opi.core.definitions;
  *
  * @since 0.0.1
  */
-public record Response(boolean seen, int time, double eyex, double eyey, double eyed, int eyet) {
+public record Response(boolean seen, long time, double eyex, double eyey, double eyed, int eyet) {
                        
   /**
    * Convert to string to return back to monitor and then R OPI
