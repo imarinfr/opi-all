@@ -28,7 +28,7 @@ import es.optocom.jovp.structures.ViewMode;
 public class OpiJovp extends MessageProcessor {
 
   /** Machine state */
-  protected enum State {IDLE, INIT, SETUP, PRESENT, CLOSE};
+  protected enum State {INIT, SETUP, PRESENT, CLOSE};
 
   /** {@value BAD_COMMAND} */
   private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";

@@ -84,14 +84,14 @@ public class OpiLogic implements PsychoLogic {
     // add perimetry items: background, fixation, and stimulus.
     for (int i = 0; i < backgrounds.length; i++) {
       backgrounds[i].position(0, 0, 100);
-      backgrounds[i].size(fov[0] / backgrounds.length, fov[1]);
+      backgrounds[i].size(fov[0], fov[1]);
       items.add(backgrounds[i]);
       fixations[i].position(0, 0, 98);
       items.add(fixations[i]);
     }
     stimulus.position(0, 0, 99);
     items.add(stimulus);
-    driver.state = OpiJovp.State.IDLE; // State to idle and wait for instructions
+    driver.state = null; // State to idle and wait for instructions
   }
 
   /**
@@ -121,62 +121,76 @@ public class OpiLogic implements PsychoLogic {
    */
   @Override
   public void update(PsychoEngine psychoEngine) {
+    double[] fov = psychoEngine.getFieldOfView();
+    for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0], fov[1]);
     // Instructions are always given by the OpiDriver.
     // OpiLogic sets state back to IDLE once instruction is carried out,
     // except when presenting, where the OpiDriver waits for a response.
-    switch(driver.state) {
-      case IDLE -> {
-        if (timer.getElapsedTime() > 0)  // do nothing unless presenting
-         if (timer.getElapsedTime() > driver.stimulus.w()) { // if no response
-          timer.stop();
-          driver.response = new Response(false, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
-         } else updateStimulus();
+    if (driver.state == null) checkState();
+    else switch(driver.state) {
+        case INIT -> show(psychoEngine);
+        case SETUP -> setup();
+        case PRESENT -> present();
+        case CLOSE -> hide(psychoEngine);
       }
-      case INIT -> show(psychoEngine);
-      case SETUP -> setup();
-      case PRESENT -> present();
-      case CLOSE -> close(psychoEngine);
-    }
   }
 
-  /** Show psychoEngine window */
+  /** Show psychoEngine */
   private void show(PsychoEngine psychoEngine) {
     psychoEngine.show(true);
-    driver.state = OpiJovp.State.IDLE;
+    driver.state = null;
   }
-  
+
+  /** Show psychoEngine */
+  private void hide(PsychoEngine psychoEngine) {
+    psychoEngine.show(true);
+    driver.state = null;
+  }
+
   /** Change background */
   private void setup() {
     for (int i = 0; i < backgrounds.length; i++) {
       backgrounds[i].setColor(gammaCorrection(driver.backgrounds[i].bgCol()));
-      // set new shape, position, size and rotation in fixation target
       fixations[i].update(new Model(driver.backgrounds[i].fixShape()));
       fixations[i].position(driver.backgrounds[i].fixCx(), driver.backgrounds[i].fixCy());
       fixations[i].size(driver.backgrounds[i].fixSx(), driver.backgrounds[i].fixSy());
       fixations[i].rotation(driver.backgrounds[i].fixRotation());
-      // set new luminance and color in fixation target
       fixations[i].setColor(gammaCorrection(driver.backgrounds[i].fixCol()));
     }
-    driver.state = OpiJovp.State.IDLE;
+    driver.state = null;
   }
 
   /** Present stimulus upon request */
   private void present() {
     updateStimulus();
-    stimulus.show();
+    stimulus.show(true);
     timer.start();
-    driver.state = OpiJovp.State.IDLE;
+    driver.state = null;
   }
 
+  /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
+  private void checkState() {
+    if (timer.getElapsedTime() > 0)// if not presenting do nothing
+      if (stimulus.show() && timer.getElapsedTime() > driver.stimulus.t()[0]) {
+        // if presentation time is over
+        stimulus.show(false);
+      } else if (timer.getElapsedTime() > driver.stimulus.w()) {
+        // if no response, reset timer and send negative response
+        timer.stop();
+        driver.response = new Response(false, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
+      };// else updateStimulus();  
+  }
+
+  /** Update stimulus upon request */
   private void updateStimulus() {
     // TODO expand to allows dynamic stimuli
     stimulus.eye(driver.stimulus.eye()[0]);
     stimulus.update(new Model(driver.stimulus.shape()[0]));
-    //stimulus.update(new Texture(driver.stimulus.type()[0], new double[] {1, 0, 1, 1}, new double[] {0, 1, 0, 1}));
+    stimulus.update(new Texture(driver.stimulus.type()[0]));
     stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
     stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
     stimulus.rotation(driver.stimulus.rotation()[0]);
-    stimulus.setColor(gammaCorrection(driver.stimulus.color()[0]));
+    stimulus.setColors(gammaCorrection(driver.stimulus.color()[0]), new double[] {0, 1, 0, 1}); // TODO how to do patterns in OPI?
     stimulus.contrast(driver.stimulus.contrast()[0]);
     stimulus.frequency(driver.stimulus.phase()[0], driver.stimulus.frequency()[0]);
     stimulus.defocus(driver.stimulus.defocus()[0]);
@@ -186,12 +200,6 @@ public class OpiLogic implements PsychoLogic {
   /** Apply gamma correction */
   private double[] gammaCorrection(double[] bgCol) {
     return driver.settings.calibration().colorValues(bgCol);
-  }
-
-  /** Hide psychoEngine window */
-  private void close(PsychoEngine psychoEngine) {
-    psychoEngine.show(false);
-    driver.state = OpiJovp.State.IDLE;
   }
 
 }

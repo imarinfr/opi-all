@@ -1,6 +1,6 @@
 {
   "command": "present",
-  "eye": ["right"],
+  "eye": ["both"],
   "shape": ["circle"],
   "type": ["sine"],
   "x": [10],
@@ -13,7 +13,7 @@
   "contrast": [1],
   "defocus": [0],
   "phase": [0],
-  "frequency": [2],
+  "frequency": [0.2],
   "texRotation": [45],
   "t": [1000],
   "w": [1500]
