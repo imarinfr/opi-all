@@ -26,7 +26,7 @@ public class OpiLogic implements PsychoLogic {
   /** {@value DEFAULT_FIXATION_SIZE} */
   private static final int DEFAULT_FIXATION_SIZE = 1;
   /** {@value MINIMUM_TIME_FROM_ONSET} */
-  private static final double MINIMUM_TIME_FROM_ONSET = 50;
+  private static final double MINIMUM_TIME_FROM_ONSET = 80;
 
   /** The OPI driver */
   private final OpiJovp driver;
@@ -37,6 +37,8 @@ public class OpiLogic implements PsychoLogic {
   private Item[] fixations;
   /** Background PsychoEngine stimulus */
   private Item stimulus;
+  /** Array index for dynamic stimuli presentation */
+  private int index = -1;
 
   /** A timer to control, well, you know, er, time? */
   private Timer timer = new Timer();
@@ -104,7 +106,6 @@ public class OpiLogic implements PsychoLogic {
   @Override
   public void input(Command command) {
     if (command == Command.NONE) return;
-    System.out.println(command);
     // if no response or response is too early, do nothing
     if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
     driver.response = new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
@@ -162,7 +163,8 @@ public class OpiLogic implements PsychoLogic {
 
   /** Present stimulus upon request */
   private void present() {
-    updateStimulus();
+    index = 0;
+    updateStimulus(index);
     stimulus.show(true);
     timer.start();
     driver.state = null;
@@ -171,9 +173,10 @@ public class OpiLogic implements PsychoLogic {
   /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
   private void checkState() {
     if (timer.getElapsedTime() > 0)// if not presenting do nothing
-      if (stimulus.show() && timer.getElapsedTime() > driver.stimulus.t()[0]) {
-        // if presentation time is over
-        stimulus.show(false);
+      if (stimulus.show() && timer.getElapsedTime() > driver.stimulus.t()[index]) {
+        // if presentation time is over for the last element of the array, then hide stimulus
+        if (index == driver.stimulus.length() - 1) stimulus.show(false);
+        else updateStimulus(++index);
       } else if (timer.getElapsedTime() > driver.stimulus.w()) {
         // if no response, reset timer and send negative response
         timer.stop();
@@ -182,19 +185,23 @@ public class OpiLogic implements PsychoLogic {
   }
 
   /** Update stimulus upon request */
-  private void updateStimulus() {
-    // TODO expand to allows dynamic stimuli
-    stimulus.eye(driver.stimulus.eye()[0]);
-    stimulus.update(new Model(driver.stimulus.shape()[0]));
-    stimulus.update(new Texture(driver.stimulus.type()[0]));
-    stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
-    stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
-    stimulus.rotation(driver.stimulus.rotation()[0]);
-    stimulus.setColors(gammaCorrection(driver.stimulus.color()[0]), new double[] {0, 1, 0, 1}); // TODO how to do patterns in OPI?
-    stimulus.contrast(driver.stimulus.contrast()[0]);
-    stimulus.frequency(driver.stimulus.phase()[0], driver.stimulus.frequency()[0]);
-    stimulus.defocus(driver.stimulus.defocus()[0]);
-    stimulus.texRotation(driver.stimulus.texRotation()[0]);
+  private void updateStimulus(int index) {
+    stimulus.eye(driver.stimulus.eye()[index]);
+    if (index > 0) {
+      // for performance, do not regenerate stimulus model and texture unless it has changed
+      if(driver.stimulus.shape()[index] != driver.stimulus.shape()[index - 1])
+        stimulus.update(new Model(driver.stimulus.shape()[index]));
+      if(driver.stimulus.type()[index] != driver.stimulus.type()[index - 1])
+        stimulus.update(new Texture(driver.stimulus.type()[index]));
+    } else stimulus.update(new Model(driver.stimulus.shape()[index]), new Texture(driver.stimulus.type()[index]));
+    stimulus.position(driver.stimulus.x()[index], driver.stimulus.y()[index]);
+    stimulus.size(driver.stimulus.sx()[index], driver.stimulus.sy()[index]);
+    stimulus.rotation(driver.stimulus.rotation()[index]);
+    stimulus.setColors(gammaCorrection(driver.stimulus.color()[index]), new double[] {0, 1, 0, 1}); // TODO how to do patterns in OPI?
+    stimulus.contrast(driver.stimulus.contrast()[index]);
+    stimulus.frequency(driver.stimulus.phase()[index], driver.stimulus.frequency()[index]);
+    stimulus.defocus(driver.stimulus.defocus()[index]);
+    stimulus.texRotation(driver.stimulus.texRotation()[index]);
   }
 
   /** Apply gamma correction */

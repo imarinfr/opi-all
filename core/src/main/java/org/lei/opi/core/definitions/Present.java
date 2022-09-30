@@ -18,6 +18,7 @@ import es.optocom.jovp.structures.TextureType;
 /**
  * Stimulus
  * 
+ * @param length length of arrays for stimulus presentations
  * @param eye eye where to present the stimulus
  * @param shape stimulus shape
  * @param type stimulus type
@@ -37,7 +38,7 @@ import es.optocom.jovp.structures.TextureType;
  *
  * @since 0.0.1
  */
-public record Present(Eye[] eye, ModelType[] shape, TextureType[] type,
+public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] type,
                       double[] x, double[] y, double[] sx, double[] sy,
                       double[][] color, double[] rotation, double[] contrast,
                       double[] phase, double[] frequency, double[] defocus,
@@ -111,7 +112,7 @@ public record Present(Eye[] eye, ModelType[] shape, TextureType[] type,
     int[] w = toIntArray(args.get("w"));
     if (w.length != 1)
       throw new IllegalArgumentException(BAD_RESPONSE_WINDOW + w.length);
-    return new Present(eye, shape, type, x, y, sx, sy, colorValues(lum, color), rotation, contrast, phase, frequency, defocus, texRotation, t, w[0]);
+    return new Present(length, eye, shape, type, x, y, sx, sy, colorValues(lum, color), rotation, contrast, phase, frequency, defocus, texRotation, t, w[0]);
   }
 
   /**
@@ -129,7 +130,8 @@ public record Present(Eye[] eye, ModelType[] shape, TextureType[] type,
    * @since 0.0.1
    */
   public static Present set(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException, NoSuchMethodException, SecurityException {
-    return new Present(toObjectStream(args.get("eye"), Eye.class).toArray(Eye[]::new),
+    return new Present((int) (double) args.get("length"),
+                       toObjectStream(args.get("eye"), Eye.class).toArray(Eye[]::new),
                        toObjectStream(args.get("shape"), ModelType.class).toArray(ModelType[]::new),
                        toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new),
                        toDoubleArray(args.get("x")), toDoubleArray(args.get("y")),
@@ -150,6 +152,7 @@ public record Present(Eye[] eye, ModelType[] shape, TextureType[] type,
    */
   public String toJson() {
     return new StringBuilder("{\n  \"command\": " + Command.PRESENT + ",\n")
+      .append("  \"length\": " + length + ",\n")
       .append("  \"eye\": " + Arrays.toString(eye) + ",\n")
       .append("  \"type\": " + Arrays.toString(type) + ",\n")
       .append("  \"shape\": " + Arrays.toString(shape) + ",\n")
