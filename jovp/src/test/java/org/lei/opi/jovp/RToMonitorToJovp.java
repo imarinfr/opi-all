@@ -44,7 +44,7 @@ public class RToMonitorToJovp {
     setupConnections(Machine.DISPLAY_MONO);
     setupCommands(Machine.DISPLAY_MONO);
     clientDriver();
-    server.start();
+    server.run();
     closeConnections();
   }
 
@@ -58,7 +58,7 @@ public class RToMonitorToJovp {
     setupConnections(Machine.DISPLAY_STEREO);
     setupCommands(Machine.DISPLAY_STEREO);
     clientDriver();
-    server.start();
+    server.run();
     closeConnections();
   }
 

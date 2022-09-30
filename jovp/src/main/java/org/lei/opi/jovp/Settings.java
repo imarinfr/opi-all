@@ -1,10 +1,13 @@
 package org.lei.opi.jovp;
 
+import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.apache.commons.io.IOUtils;
@@ -20,19 +23,21 @@ import es.optocom.jovp.structures.ViewMode;
 /**
  * Setup for OPI JOVP machine
  * 
+ * @param machine the OPI machine
  * @param screen screen number: 0 is main, any number > 0 are external monitors
+ * @param physicalSize the physical size of the display (in case it is necessary to input it manually) or empty.
  * @param fullScreen whether to run in full screen or windowed mode
  * @param distance viewing distance
  * @param viewMode viewing mode: MONO or STEREO
  * @param input input device for responses
- * @param depth depth for each color channel
  * @param tracking whether device allows eye tracking
+ * @param depth depth for each color channel
  * @param gammaFile path of the display-specific calibration file of R, G, B gamma functions
  * @param calibration the RGB calibration data
  *
  * @since 0.0.1
  */
-public record Settings(Machine machine, int screen, boolean fullScreen, int distance,
+public record Settings(Machine machine, int screen, int[] physicalSize, boolean fullScreen, int distance,
                        ViewMode viewMode, Input input, boolean tracking, int depth,
                        String gammaFile, Calibration calibration) {
 
@@ -69,7 +74,9 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
   static final boolean API_DUMP = false;
 
   /** {@value WRONG_SCREEN} */
-  private static final String WRONG_SCREEN = "'screen' value has to be 0 (default screen or positive). It is %s";
+  private static final String WRONG_SCREEN = "'screen' value has to be 0 (default screen) or positive. It is %s";
+  /** {@value WRONG_SCREEN} */
+  private static final String WRONG_PHYSICAL_SIZE = "'physicalSize' has to be an array with two positive integers for width and size in mm. It is %s";
   /** {@value WRONG_DISTANCE} */
   private static final String WRONG_DISTANCE = "'distance' cannot be negative, you silly goose. It is %s";
   /** {@value WRONG_DEPTH} */
@@ -149,6 +156,9 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
     int screen = ((Double) pairs.get("screen")).intValue();
     if(screen < 0)
       throw new IllegalArgumentException(String.format(WRONG_SCREEN, screen));
+    int[] physicalSize = toIntArray(pairs.get("physicalSize"));
+      if(physicalSize.length != 0 && (physicalSize.length != 2 || physicalSize[0] <= 0 || physicalSize[1] <= 0))
+        throw new IllegalArgumentException(String.format(WRONG_PHYSICAL_SIZE, Arrays.toString(physicalSize)));
     int distance = ((Double) pairs.get("distance")).intValue();
     if(distance < 0)
       throw new IllegalArgumentException(String.format(WRONG_DISTANCE, distance));
@@ -156,7 +166,7 @@ public record Settings(Machine machine, int screen, boolean fullScreen, int dist
     if(depth < 8)
       throw new IllegalArgumentException(String.format(WRONG_DEPTH, depth));
     String gammaFile = pairs.get("gammaFile").toString();
-    return new Settings(machine, screen, (boolean) pairs.get("fullScreen"), distance,
+    return new Settings(machine, screen, physicalSize, (boolean) pairs.get("fullScreen"), distance,
                         ViewMode.valueOf(pairs.get("viewMode").toString().toUpperCase()),
                         Input.valueOf(pairs.get("input").toString().toUpperCase()),
                         (boolean) pairs.get("tracking"), depth, gammaFile, loadCalibration(depth, gammaFile));

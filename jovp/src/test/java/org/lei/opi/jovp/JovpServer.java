@@ -58,8 +58,8 @@ class JovpServer {
    *
    * @since 0.0.1
    */
-  void start() {
-    opiJovp.start();
+  void run() {
+    opiJovp.run();
   }
 
   /**

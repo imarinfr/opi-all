@@ -67,7 +67,7 @@ public class OpiLogic implements PsychoLogic {
     // set size of the backgroud to be the field of view
     for (int i = 0; i < fixations.length; i++) fixations[i].size(DEFAULT_FIXATION_SIZE);
     stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
-    stimulus.hide();
+    stimulus.show(false);
   }
 
   /**
@@ -109,7 +109,7 @@ public class OpiLogic implements PsychoLogic {
     if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
     driver.response = new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
     timer.stop();
-    stimulus.hide();
+    stimulus.show(false);
   }
 
   /**
@@ -141,7 +141,7 @@ public class OpiLogic implements PsychoLogic {
 
   /** Show psychoEngine window */
   private void show(PsychoEngine psychoEngine) {
-    psychoEngine.show();
+    psychoEngine.show(true);
     driver.state = OpiJovp.State.IDLE;
   }
   
@@ -172,7 +172,7 @@ public class OpiLogic implements PsychoLogic {
     // TODO expand to allows dynamic stimuli
     stimulus.eye(driver.stimulus.eye()[0]);
     stimulus.update(new Model(driver.stimulus.shape()[0]));
-    //stimulus.update(new Texture(driver.stimulus.type()[0])); // TODO: not working, revise JOVP
+    //stimulus.update(new Texture(driver.stimulus.type()[0], new double[] {1, 0, 1, 1}, new double[] {0, 1, 0, 1}));
     stimulus.position(driver.stimulus.x()[0], driver.stimulus.y()[0]);
     stimulus.size(driver.stimulus.sx()[0], driver.stimulus.sy()[0]);
     stimulus.rotation(driver.stimulus.rotation()[0]);
@@ -190,7 +190,7 @@ public class OpiLogic implements PsychoLogic {
 
   /** Hide psychoEngine window */
   private void close(PsychoEngine psychoEngine) {
-    psychoEngine.hide();
+    psychoEngine.show(false);
     driver.state = OpiJovp.State.IDLE;
   }
 

@@ -100,19 +100,22 @@ public class OpiJovp extends MessageProcessor {
       case MONO -> backgrounds = new Setup[] {null};
       case STEREO -> backgrounds = new Setup[] {null, null};
     }
+    psychoEngine = new PsychoEngine(new OpiLogic(this), settings.distance(), settings.viewMode(), settings.input(),
+                                    Settings.PARADIGM, Settings.VALIDATION_LAYERS, Settings.API_DUMP);
+    psychoEngine.show(false);
+    psychoEngine.setMonitor(settings.screen());
+    if(settings.physicalSize().length != 0)
+      psychoEngine.setPhysicalSize(settings.physicalSize()[0], settings.physicalSize()[1]);
+    if (settings.fullScreen())
+      psychoEngine.setFullScreen();
   }
 
   /**
-   * Initialize the psychoEngine. Needs to be started from the main thread
+   * Run the psychoEngine. Needs to be started from the main thread
    *
    * @since 0.1.0
    */
-  public void start() {
-    psychoEngine = new PsychoEngine(new OpiLogic(this), settings.distance(), settings.viewMode(), settings.input(),
-                                    Settings.PARADIGM, Settings.VALIDATION_LAYERS, Settings.API_DUMP);
-    psychoEngine.hide();
-    psychoEngine.setWindowMonitor(settings.screen());
-    if (settings.fullScreen()) psychoEngine.setFullScreen();
+  public void run() {
     psychoEngine.start();
     psychoEngine.cleanup();
     psychoEngine = null;

@@ -1,5 +1,6 @@
 {
-  "screen": 0,
+  "screen": 1,
+  "physicalSize": [],
   "fullScreen": false,
   "distance": 100,
   "viewMode": "stereo",
