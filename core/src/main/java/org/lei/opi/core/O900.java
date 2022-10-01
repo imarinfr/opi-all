@@ -5,6 +5,8 @@ import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 import static org.lei.opi.core.definitions.JsonProcessor.toObjectStream;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.MessageProcessor;
@@ -65,12 +67,126 @@ public class O900 extends OpiMachine {
   /** {@value WRONG_SIZE} */
   private static final String WRONG_SIZE = "Wrong stimulus size. It is ";
 
+  /** O900 constants */
+  private static int EYE_RIGHT;
+  private static int EYE_LEFT;
+  private static int EYE_BOTH;
+  private static int EYE_BINOCULAR;
+  private static int EYE_UNDEF;
+  private static double BLIND_SPOT_POS_X;
+  private static double BLIND_SPOT_POS_Y;
+  private static double BLIND_SPOT_WIDTH;
+  private static double BLIND_SPOT_HEIGHT;
+  private static int MIN_STIMULUS_DURATION;
+  private static int MAX_STIMULUS_DURATION;
+  private static int COL_WHITE;
+  private static int COL_BLUE;
+  private static int COL_YELLOW;
+  private static int COL_RED;
+  private static int COL_GREEN;
+  private static int FIX_CENTER;
+  private static int FIX_CROSS;
+  private static int FIX_RING;
+  private static int BG_OFF;
+  private static int BG_1;
+  private static int BG_10;
+  private static int BG_100;
+  private static int STIM_WHITE;
+  private static int STIM_BLUE;
+  private static int STIM_RED;
+  private static int BG_WHITE;
+  private static int BG_YELLOW;
+  private static int MET_COL_WW;
+  private static int MET_COL_BY;
+  private static int MET_COL_RW;
+  private static int MET_COL_BLUE_WHITE;
+  private static int MET_COL_RED_YELLOW;
+  private static int MET_COL_WHITE_YELLOW;
+
   /** Whether device maximum is 10000 abs or 4000 abs */
   private boolean max10000;
   /** Whether device has a big wheel (i.e., allows presentation of Goldmann VI stimulus sizes) */
   private boolean bigWheel;
   /** Whether clicker is Logitech's F310 */
   private boolean f310;
+
+  public O900() {
+    fillConstants();
+    fillO900Constants();
+  }
+
+  /**
+   * Get constants
+   * 
+   * @throws IllegalAccessException
+   * @throws IllegalArgumentException
+   *
+   * @since 0.0.1
+   */
+  private static void fillConstants() {
+    Field[] fields = com.hs.eyesuite.ext.extperimetryviewer.peristatic.data.exam.Const.class.getDeclaredFields();
+    EYE_RIGHT = getFieldValue("EYE_RIGHT", fields);
+    EYE_LEFT = getFieldValue("EYE_LEFT", fields);
+    EYE_BOTH = getFieldValue("EYE_BOTH", fields);
+    EYE_BINOCULAR = getFieldValue("EYE_BINOCULAR", fields);
+    EYE_UNDEF = getFieldValue("EYE_UNDEF", fields);
+    BLIND_SPOT_POS_X = getFieldValue("BLIND_SPOT_POS_X", fields) / 10.0;
+    BLIND_SPOT_POS_Y = getFieldValue("BLIND_SPOT_POS_Y", fields) / 10.0;
+    BLIND_SPOT_WIDTH = getFieldValue("BLIND_SPOT_WIDTH", fields) / 10.0;
+    BLIND_SPOT_HEIGHT = getFieldValue("BLIND_SPOT_HEIGHT", fields) / 10.0;
+  }
+  
+  /**
+   * Get O900 specific constants
+   * 
+   * @throws IllegalAccessException
+   * @throws IllegalArgumentException
+   *
+   * @since 0.0.1
+   */
+  private static void fillO900Constants() {
+    Field[] fields = com.hs.eyesuite.ext.extperimetry.octo900.ifocto.device.OCTO900.class.getDeclaredFields();
+    MIN_STIMULUS_DURATION = getFieldValue("MIN_STIMULUS_DURATION", fields);
+    MAX_STIMULUS_DURATION = getFieldValue("MAX_STIMULUS_DURATION", fields);
+    FIX_CENTER = getFieldValue("FIX_CENTRE", fields);
+    FIX_CROSS = getFieldValue("FIX_CROSS", fields);
+    FIX_RING = getFieldValue("FIX_RING", fields);
+    BG_OFF = getFieldValue("BG_OFF", fields);
+    BG_1 = getFieldValue("BG_1", fields);
+    BG_10 = getFieldValue("BG_10", fields);
+    BG_100 = getFieldValue("BG_100", fields);
+    COL_WHITE = getFieldValue("COL_WHITE", fields);
+    COL_BLUE = getFieldValue("COL_BLUE", fields);
+    COL_YELLOW = getFieldValue("COL_YELLOW", fields);
+    COL_RED = getFieldValue("COL_RED", fields);
+    COL_GREEN = getFieldValue("COL_GREEN", fields);
+    STIM_WHITE = getFieldValue("STIM_WHITE", fields);
+    STIM_BLUE = getFieldValue("STIM_BLUE", fields);
+    STIM_RED = getFieldValue("STIM_RED", fields);
+    BG_WHITE = getFieldValue("BG_WHITE", fields);
+    BG_YELLOW = getFieldValue("BG_YELLOW", fields);
+    MET_COL_WW = getFieldValue("MET_COL_WW", fields);
+    MET_COL_BY = getFieldValue("MET_COL_BY", fields);
+    MET_COL_RW = getFieldValue("MET_COL_RW", fields);
+    MET_COL_BLUE_WHITE = getFieldValue("MET_COL_BLUE_WHITE", fields);
+    MET_COL_RED_YELLOW = getFieldValue("MET_COL_RED_YELLOW", fields);
+    MET_COL_WHITE_YELLOW = getFieldValue("MET_COL_WHITE_YELLOW", fields);
+  }
+
+  private static int getFieldValue(String constant, Field[] fields) {
+    Integer value = Arrays.stream(fields).filter(field -> field.getName() == constant).findFirst()
+                         .map(field -> getValue(field)).map(Integer.class::cast)
+                         .orElse(null);
+    return value != null ? (int) value : - 1;
+  }
+
+  private static Integer getValue(Field field) {
+    try {
+      return (int) field.get(null);
+    } catch (IllegalArgumentException | IllegalAccessException e) {
+      return null;
+    }
+  }
 
   /**
    * opiInitialise: initialize OPI
@@ -147,19 +263,19 @@ public class O900 extends OpiMachine {
       if (!result.equals("1")) return OpiManager.error(OPI_INITIALIZE_FAILED + result);
       // Prepare and send OPI_SET_BACKGROUND
       int bgCol = switch(BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
-        case WHITE -> 0; // TODO: find correct code for background white
-        case YELLOW -> 1; // TODO: find correct code for background yellow
+        case WHITE -> BG_WHITE;
+        case YELLOW -> BG_YELLOW;
       };
       int bgLum = switch(Luminance.valueOf(((String) args.get("bgLum")).toUpperCase())) {
-        case BG_OFF -> 0; // TODO: find correct code for background 0 cdm2
-        case BG_1 -> 1; // TODO: find correct code for background 1 cdm2
-        case BG_10 -> 10; // TODO: find correct code for background 10 cdm2
-        case BG_100 -> 100; // TODO: find correct code for background 100 cdm2
+        case BG_OFF -> BG_OFF;
+        case BG_1 -> BG_1;
+        case BG_10 -> BG_10;
+        case BG_100 -> BG_100;
       };
       int fixType = switch(Fixation.valueOf(((String) args.get("fixType")).toUpperCase())) {
-        case CENTER -> 0; // TODO: find correct code for fixation CENTER
-        case CROSS -> 1; // TODO: find correct code for fixation CROSS
-        case RING -> 10; // TODO: find correct code for fixation RING
+        case CENTER -> FIX_CENTER;
+        case CROSS -> FIX_CROSS;
+        case RING -> FIX_RING;
       };
       opiMessage = new StringBuilder(OPI_SET_BACKGROUND).append(" ")
         .append(bgCol).append(" ")
@@ -196,9 +312,10 @@ public class O900 extends OpiMachine {
   @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
   @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, max = 3183.099, defaultValue = "list(100)")
-  @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", isList = true, defaultValue = "list('GV')")
+  @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "list('GV')")
   @Parameter(name = "color", className = Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
-  @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms). For static, it must have length 1. For kinetic, it is time between segments defined by coordinates (x, y) and so it must have length(x) - 1", isList = true, min = 0, defaultValue = "list(200)")
+  @Parameter(name = "t", className = Double.class, desc = "[STATIC] List of stimuli presentation times (ms).", min = 0, defaultValue = "list(200)")
+  @Parameter(name = "v", className = Double.class, desc = "[KINETIC] List of stimuli segment speeds (degs/s). Size must have length(x) - 1", isList = true, min = 0, defaultValue = "list(5)")
   @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms) [STATIC].", min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
@@ -244,33 +361,42 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   private String queryResults() {
-/* CONSTANTS, ETC ARE HERE
-    Class<Const> c = com.hs.eyesuite.ext.extperimetryviewer.peristatic.data.exam.Const.class;
-    o1 = c.getDeclaredField(name).get(null);
-    Class<OCTO900> c = com.hs.eyesuite.ext.extperimetry.octo900.ifocto.device.OCTO900.class;
-    o2 = c.getDeclaredField(name).get(null);
-*/
     return new StringBuilder("\n  {\n")
-      .append("    \"FIX_CENTER\": " + null + ",\n")
-      .append("    \"FIX_CROSS\": " + null + ",\n")
-      .append("    \"FIX_RING\": " + null + ",\n")
-      .append("    \"BG_OFF\": " + null + ",\n")
-      .append("    \"BG_1\": " + null + ",\n")
-      .append("    \"BG_10\": " + null + ",\n")
-      .append("    \"BG_100\": " + null + ",\n")
-      .append("    \"STIM_WHITE\": " + null + ",\n")
-      .append("    \"STIM_BLUE\": " + null + ",\n")
-      .append("    \"STIM_RED\": " + null + ",\n")
-      .append("    \"BG_WHITE\": " + null + ",\n")
-      .append("    \"BG_YELLOW\": " + null + ",\n")
-      .append("    \"MET_COL_WW\": " + null + ",\n")
-      .append("    \"MET_COL_BY\": " + null + ",\n")
-      .append("    \"MET_COL_RW\": " + null + ",\n")
-      .append("    \"MET_COL_BLUE_WHITE\": " + null + ",\n")
-      .append("    \"MET_COL_RED_YELLOW\": " + null + ",\n")
-      .append("    \"MET_COL_WHITE_YELLOW\": " + null + ",\n")
-      .append("    \"MET_COL_USER\": " + null + ",\n")
-      .append("\n  }").toString();
+    .append("    \"EYE_RIGHT\": " + EYE_RIGHT + ",\n")
+    .append("    \"EYE_LEFT\": " + EYE_LEFT + ",\n")
+    .append("    \"EYE_BOTH\": " + EYE_BOTH + ",\n")
+    .append("    \"EYE_BINOCULAR\": " + EYE_BINOCULAR + ",\n")
+    .append("    \"EYE_UNDEF\": " + EYE_UNDEF + ",\n")
+    .append("    \"BLIND_SPOT_POS_X\": " + BLIND_SPOT_POS_X + ",\n")
+    .append("    \"BLIND_SPOT_POS_Y\": " + BLIND_SPOT_POS_Y + ",\n")
+    .append("    \"BLIND_SPOT_WIDTH\": " + BLIND_SPOT_WIDTH + ",\n")
+    .append("    \"BLIND_SPOT_HEIGHT\": " + BLIND_SPOT_HEIGHT + ",\n")
+    .append("    \"MIN_STIMULUS_DURATION\": " + MIN_STIMULUS_DURATION + ",\n")
+    .append("    \"MAX_STIMULUS_DURATION\": " + MAX_STIMULUS_DURATION + ",\n")
+    .append("    \"COL_WHITE\": " + COL_WHITE + ",\n")
+    .append("    \"COL_BLUE\": " + COL_BLUE + ",\n")
+    .append("    \"COL_YELLOW\": " + COL_YELLOW + ",\n")
+    .append("    \"COL_RED\": " + COL_RED + ",\n")
+    .append("    \"COL_GREEN\": " + COL_GREEN + ",\n")
+    .append("    \"FIX_CENTER\": " + FIX_CENTER + ",\n")
+    .append("    \"FIX_CROSS\": " + FIX_CROSS + ",\n")
+    .append("    \"FIX_RING\": " + FIX_RING + ",\n")
+    .append("    \"BG_OFF\": " + BG_OFF + ",\n")
+    .append("    \"BG_1\": " + BG_1 + ",\n")
+    .append("    \"BG_10\": " + BG_10 + ",\n")
+    .append("    \"BG_100\": " + BG_100 + ",\n")
+    .append("    \"STIM_WHITE\": " + STIM_WHITE + ",\n")
+    .append("    \"STIM_BLUE\": " + STIM_BLUE + ",\n")
+    .append("    \"STIM_RED\": " + STIM_RED + ",\n")
+    .append("    \"BG_WHITE\": " + BG_WHITE + ",\n")
+    .append("    \"BG_YELLOW\": " + BG_YELLOW + ",\n")
+    .append("    \"MET_COL_WW\": " + MET_COL_WW + ",\n")
+    .append("    \"MET_COL_BY\": " + MET_COL_BY + ",\n")
+    .append("    \"MET_COL_RW\": " + MET_COL_RW + ",\n")
+    .append("    \"MET_COL_BLUE_WHITE\": " + MET_COL_BLUE_WHITE + ",\n")
+    .append("    \"MET_COL_RED_YELLOW\": " + MET_COL_RED_YELLOW + ",\n")
+    .append("    \"MET_COL_WHITE_YELLOW\": " + MET_COL_WHITE_YELLOW)
+    .append("\n  }").toString();
   };
 
   /**

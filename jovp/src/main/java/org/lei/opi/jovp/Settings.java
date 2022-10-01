@@ -56,7 +56,7 @@ public record Settings(Machine machine, int screen, int[] physicalSize, boolean 
   }
 
   /** {@value IMO_PARAMS} */
-  public static final String IMO_PARAMS = "IMOParams.json";
+  public static final String IMOVIFA_PARAMS = "ImovifaParams.json";
   /** {@value DISPLAY_MONO_PARAMS} */
   public static final String DISPLAY_MONO_PARAMS = "DisplayMonoParams.json";
   /** {@value DISPLAY_STEREO_PARAMS} */
@@ -95,7 +95,7 @@ public record Settings(Machine machine, int screen, int[] physicalSize, boolean 
    */
   public static Settings defaultSettings(Machine machine) throws IOException {
     String jsonStr = switch (machine) {
-      case IMOVIFA -> loadJsonResource(Settings.IMO_PARAMS);
+      case IMOVIFA -> loadJsonResource(Settings.IMOVIFA_PARAMS);
       case PICOVR -> loadJsonResource(Settings.PICOVR_PARAMS);
       case PHONEHMD -> loadJsonResource(Settings.PHONEHMD_PARAMS);
       case DISPLAY_MONO -> loadJsonResource(Settings.DISPLAY_MONO_PARAMS);

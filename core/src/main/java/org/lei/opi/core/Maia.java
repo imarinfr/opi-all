@@ -12,7 +12,7 @@ import org.lei.opi.core.definitions.ReturnMsg;
  *
  * @since 0.0.1
  */
-public class Compass extends OpiMachine {
+public class Maia extends OpiMachine {
 
   /** Allowed eye values */
   public enum Eye {LEFT, RIGHT}
@@ -40,19 +40,19 @@ public class Compass extends OpiMachine {
   /** {@value OPI_SET_TRACKING_FAILED} */
   private static final String OPI_SET_TRACKING_FAILED = "Problem with OPI-SET-TRACKING";
 
-    /** Compass constants */
-    private static final int MIN_X = -30;
-    private static final int MAX_X = 30;
-    private static final int MIN_Y = -30;
-    private static final int MAX_Y = 30;
-    private static final int MIN_PRESENTATION_TIME = 200;
-    private static final int MAX_PRESENTATION_TIME = 200;
-    private static final int MIN_RESPONSE_WINDOW = 0;
-    private static final int MAX_RESPONSE_WINDOW = 2680;
-    private static final double BACKGROUND_LUMINANCE = 31.4 / Math.PI;
-    private static final double MIN_LUMINANCE = BACKGROUND_LUMINANCE;
-    private static final double MAX_LUMINANCE = 10000.0 / Math.PI;
-    private static final boolean TRACKING = true;
+  /** MAIA constants */
+  private static final int MIN_X = -20;
+  private static final int MAX_X = 20;
+  private static final int MIN_Y = -20;
+  private static final int MAX_Y = 20;
+  private static final int MIN_PRESENTATION_TIME = 200;
+  private static final int MAX_PRESENTATION_TIME = 200;
+  private static final int MIN_RESPONSE_WINDOW = 0;
+  private static final int MAX_RESPONSE_WINDOW = 2680;
+  private static final double BACKGROUND_LUMINANCE = 4.0 / Math.PI;
+  private static final double MIN_LUMINANCE = BACKGROUND_LUMINANCE;
+  private static final double MAX_LUMINANCE = 1000.0 / Math.PI;
+  private static final boolean TRACKING = false;
 
   /**
    * opiInitialise: initialize OPI
@@ -95,8 +95,6 @@ public class Compass extends OpiMachine {
    * @since 0.0.1
    */
   @Parameter(name = "fixShape", className = Fixation.class, desc = "Fixation target type for eye.", defaultValue = "spot")
-  @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", min = -20, max = 20, defaultValue = "0")
-  @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", min = 0, max = 1, defaultValue = "0")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     String result;
@@ -155,8 +153,6 @@ public class Compass extends OpiMachine {
   @ReturnMsg(name = "res.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
   @ReturnMsg(name = "res.time_rec", className = Double.class, desc = "Time since 'epoch' when command was received at Compass (ms).", min = 0)
   @ReturnMsg(name = "res.time_resp", className = Double.class, desc = "Time since 'epoch' when stimulus response is received, or response window expired (ms).", min = 0)
-  @ReturnMsg(name = "res.num_track_events", className = Double.class, desc = "Number of tracking events that occurred during presentation.", min = 0)
-  @ReturnMsg(name = "res.num_motor_fails", className = Double.class, desc = "Number of times motor could not follow fixation movement during presentation.", min = 0)
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
@@ -257,7 +253,7 @@ public class Compass extends OpiMachine {
    */
   private String parseResults(String receive) {
 /**
-    OPI-PRESENT-STATIC x y level size duration responseWindow
+    OPI-PRESENT-STATIC x y inDegrees level size duration responseWindow
     rt: in ms from stimulus onset (integer). -1 for not seen.
     th: hardware time of button press or response window expired (integer ms)
     tr: time since “epoch” when command was received at Compass (integer ms)

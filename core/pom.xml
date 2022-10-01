@@ -20,6 +20,11 @@
       <artifactId>reflections</artifactId> 
       <version>${reflections.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.hs.eyesuite</groupId>
+      <artifactId>o900</artifactId> 
+      <version>0.0.1</version>
+    </dependency>
   </dependencies>
 
 </project>

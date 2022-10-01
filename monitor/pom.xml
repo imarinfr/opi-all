@@ -51,6 +51,11 @@
       <artifactId>core</artifactId>
       <version>0.1.0-SNAPSHOT</version>
     </dependency>
+     <dependency>
+      <groupId>org.lei.opi</groupId>
+      <artifactId>jovp</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 
 </project>

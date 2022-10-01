@@ -7,11 +7,11 @@ import org.lei.opi.jovp.Settings.Machine;
 
 /**
  *
- * Unitary tests for connection in series from client to OPI JOVP
+ * Integrated tests for connection in series from client to OPI JOVP
  *
  * @since 0.0.1
  */
-public class RToMonitorToJovp {
+public class RToMonitorToJovpTests {
 
   /** JOVP server port */
   private static final int JOVP_PORT = 51234;
@@ -21,7 +21,7 @@ public class RToMonitorToJovp {
   /** The JOVP server */
   private JovpServer server;
   /** The OPI monitor */
-  private Monitor monitor;
+  private Core monitor;
   /** The R client */
   private RClient r;
 
@@ -66,7 +66,7 @@ public class RToMonitorToJovp {
   private void setupConnections(Machine machine) {
     try {
       server = new JovpServer(machine, JOVP_PORT); // first setup JOVP server
-      monitor = new Monitor(MONITOR_PORT); // then setup monitor
+      monitor = new Core(MONITOR_PORT); // then setup monitor
       r = new RClient(monitor.getIP(), monitor.getPort()); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -128,7 +128,7 @@ public class RToMonitorToJovp {
     }
   }
 
-  /** setup connections */
+  /** close connections */
   private void closeConnections() {
     try {
       monitor.close();

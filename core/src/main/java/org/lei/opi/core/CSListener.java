@@ -34,7 +34,7 @@ public class CSListener extends Thread {
   /** {@value CANNOT_SEND} */
   private static final String CANNOT_SEND = "Cannot write send() message to sendWriter in CSListener";
 
-  /** listen backlog */
+  /** listen backlog, which is @value BACKLOG */
   private static final int BACKLOG = 1;
 
   /** Local connection address */
@@ -111,8 +111,7 @@ public class CSListener extends Thread {
             }
           }
           break;
-        } catch (SocketTimeoutException ignored) {
-        }
+        } catch (SocketTimeoutException ignored) {}
       }
       server.close();
     } catch (IOException e) {

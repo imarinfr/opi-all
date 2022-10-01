@@ -1,0 +1,20 @@
+{
+  "command": "present",
+  "eye": ["right"],
+  "shape": ["circle"],
+  "type": ["flat"],
+  "x": [10],
+  "y": [-5],
+  "sx": [3.44],
+  "sy": [1.72],
+  "lum": [90],
+  "color": [[1, 1, 1], [0.3, 0.4, 0.5]],
+  "rotation": [45],
+  "contrast": [1],
+  "defocus": [0],
+  "phase": [0],
+  "frequency": [2],
+  "texRotation": [45],
+  "t": [1000],
+  "w": [1500]
+}

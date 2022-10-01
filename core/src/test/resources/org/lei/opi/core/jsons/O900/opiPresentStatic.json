@@ -1,0 +1,11 @@
+{
+  "command": "present",
+  "type": "static",
+  "x": [10],
+  "y": [-5],
+  "lum": [1000],
+  "size": "GV",
+  "color": "white",
+  "t": 200,
+  "w": 1500
+}

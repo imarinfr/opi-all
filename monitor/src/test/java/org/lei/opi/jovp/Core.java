@@ -10,7 +10,7 @@ import org.lei.opi.core.OpiManager;
    *
    * @since 0.0.1
    */
-  class Monitor {
+  class Core {
 
   /** listener for OpiJovp */
   private static CSListener monitor;
@@ -24,7 +24,7 @@ import org.lei.opi.core.OpiManager;
    *
    * @since 0.0.1
    */
-  Monitor(int port) throws IOException {
+  Core(int port) throws IOException {
     monitor = new CSListener(port, new OpiManager());
   }
 
