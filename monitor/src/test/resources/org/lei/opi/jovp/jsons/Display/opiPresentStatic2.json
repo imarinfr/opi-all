@@ -1,0 +1,21 @@
+{
+  "command": "present",
+  "eye": ["both"],
+  "shape": ["circle"],
+  "type": ["checkerboard"],
+  "x": [-10],
+  "y": [15],
+  "sx": [8],
+  "sy": [4],
+  "lum": [200],
+  "color1": [[1, 0, 0]],
+  "color2": [[0, 0, 1]],
+  "rotation": [45],
+  "contrast": [1],
+  "defocus": [0],
+  "phase": [0],
+  "frequency": [0.2],
+  "texRotation": [0],
+  "t": [1000],
+  "w": [1500]
+}

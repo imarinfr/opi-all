@@ -42,6 +42,8 @@ public class OpiLogic implements PsychoLogic {
 
   /** A timer to control, well, you know, er, time? */
   private Timer timer = new Timer();
+  /** Accumulates presentation time: useful for dynamic stimulus */
+  int presentationType;
 
   OpiLogic(OpiJovp driver) {
     this.driver = driver;
@@ -167,13 +169,16 @@ public class OpiLogic implements PsychoLogic {
     updateStimulus(index);
     stimulus.show(true);
     timer.start();
+    presentationType = 0;
     driver.state = null;
   }
 
   /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
   private void checkState() {
     if (timer.getElapsedTime() > 0)// if not presenting do nothing
-      if (stimulus.show() && timer.getElapsedTime() > driver.stimulus.t()[index]) {
+      if (stimulus.show() && timer.getElapsedTime() > presentationType + driver.stimulus.t()[index]) {
+        presentationType += driver.stimulus.t()[index];
+        System.out.println(driver.stimulus.t()[index]);
         // if presentation time is over for the last element of the array, then hide stimulus
         if (index == driver.stimulus.length() - 1) stimulus.show(false);
         else updateStimulus(++index);
@@ -181,7 +186,7 @@ public class OpiLogic implements PsychoLogic {
         // if no response, reset timer and send negative response
         timer.stop();
         driver.response = new Response(false, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255);
-      };// else updateStimulus();  
+      };
   }
 
   /** Update stimulus upon request */
@@ -197,7 +202,7 @@ public class OpiLogic implements PsychoLogic {
     stimulus.position(driver.stimulus.x()[index], driver.stimulus.y()[index]);
     stimulus.size(driver.stimulus.sx()[index], driver.stimulus.sy()[index]);
     stimulus.rotation(driver.stimulus.rotation()[index]);
-    stimulus.setColors(gammaCorrection(driver.stimulus.color()[index]), new double[] {0, 1, 0, 1}); // TODO how to do patterns in OPI?
+    stimulus.setColors(gammaCorrection(driver.stimulus.color1()[index]), gammaCorrection(driver.stimulus.color2()[index]));
     stimulus.contrast(driver.stimulus.contrast()[index]);
     stimulus.frequency(driver.stimulus.phase()[index], driver.stimulus.frequency()[index]);
     stimulus.defocus(driver.stimulus.defocus()[index]);

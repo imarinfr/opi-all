@@ -8,8 +8,8 @@
   "resp": 3,
   "max10000": 1,
   "bgLum": "bg_10",
-	"bgCol": "yellow",
+  "bgCol": "yellow",
   "fixShape": "center",
-	"fixIntensity": "50",
-  "f310": "false"
+  "fixIntensity": 50,
+  "f310": 0
 }

@@ -26,7 +26,8 @@ import es.optocom.jovp.structures.TextureType;
  * @param y y center of the stimulus in degrees of visual angle
  * @param sx major axis size of the stimulus in degrees of visual angle
  * @param sy minor axis size of the stimulus in degrees of visual angle
- * @param color stimulus color
+ * @param color1 stimulus color 1 for flat surfaces and patterns
+ * @param color2 stimulus color 2 for patterns
  * @param rotation rotation of the stimulus in degrees
  * @param contrast stimulus contrast
  * @param phase stimulus spatial phase
@@ -40,7 +41,7 @@ import es.optocom.jovp.structures.TextureType;
  */
 public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] type,
                       double[] x, double[] y, double[] sx, double[] sy,
-                      double[][] color, double[] rotation, double[] contrast,
+                      double[][] color1, double[][] color2, double[] rotation, double[] contrast,
                       double[] phase, double[] frequency, double[] defocus,
                       double[] texRotation, int[] t, int w) {
 
@@ -83,7 +84,6 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
    * 
    * @since 0.0.1
    */
-
   public static Present process(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException, NoSuchMethodException, SecurityException {
     // Mandatory fields
     Eye[] eye = toObjectStream(args.get("eye"), Eye.class).toArray(Eye[]::new);
@@ -94,25 +94,28 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
     double[] x = toDoubleArray(args.get("x"));
     double[] y = toDoubleArray(args.get("y"));
     double[] sx = toDoubleArray(args.get("sx"));
+    double[] sy = args.get("sy") == null ? sx : toDoubleArray(args.get("sy"));
     double[] lum = toDoubleArray(args.get("lum"));
-    double[][] color = toColorArray(args.get("color"));
+    double[][] color1 = toColorArray(args.get("color1"));
+    double[][] color2 = args.get("color2") == null ? color1 : toColorArray(args.get("color2"));
     int[] t = toIntArray(args.get("t"));
     // Check size consistency
     if (shape.length != length || type.length != length || x.length != length || y.length != length ||
-        sx.length != length || lum.length != length || color.length != length || t.length != length)
+        sx.length != length || sy.length != length || lum.length != length ||
+        color1.length != length || color2.length != length || t.length != length)
       throw new IllegalArgumentException(INCONSISTENT_ARRAY_LENGTH);
     // Fill optional fields if necessary
-    double[] sy = optionalField(toDoubleArray(args.get("sy")), sx, length);
-    double[] rotation = optionalField(toDoubleArray(args.get("rotation")), DEFAULT_ROTATION, length);
-    double[] contrast = optionalField(toDoubleArray(args.get("contrast")), DEFAULT_CONTRAST, length);
-    double[] phase = optionalField(toDoubleArray(args.get("phase")), DEFAULT_PHASE, length);
-    double[] frequency = optionalField(toDoubleArray(args.get("frequency")), DEFAULT_FREQUENCY, length);
-    double[] defocus = optionalField(toDoubleArray(args.get("defocus")), DEFAULT_DEFOCUS, length);
-    double[] texRotation = optionalField(toDoubleArray(args.get("texRotation")), DEFAULT_TEXTURE_ROTATION, length);
+    double[] rotation = args.get("rotation") == null ? optionalField(DEFAULT_ROTATION, length) : toDoubleArray(args.get("rotation"));
+    double[] contrast = args.get("contrast") == null ? optionalField(DEFAULT_CONTRAST, length) : toDoubleArray(args.get("contrast"));
+    double[] phase = args.get("phase") == null ? optionalField(DEFAULT_PHASE, length) : toDoubleArray(args.get("phase"));
+    double[] frequency = args.get("frequency") == null ? optionalField(DEFAULT_FREQUENCY, length) : toDoubleArray(args.get("frequency"));
+    double[] defocus = args.get("defocus") == null ? optionalField(DEFAULT_DEFOCUS, length) : toDoubleArray(args.get("defocus"));
+    double[] texRotation = args.get("texRotation") == null ? optionalField(DEFAULT_TEXTURE_ROTATION, length) : toDoubleArray(args.get("texRotation"));
     int[] w = toIntArray(args.get("w"));
     if (w.length != 1)
       throw new IllegalArgumentException(BAD_RESPONSE_WINDOW + w.length);
-    return new Present(length, eye, shape, type, x, y, sx, sy, colorValues(lum, color), rotation, contrast, phase, frequency, defocus, texRotation, t, w[0]);
+    return new Present(length, eye, shape, type, x, y, sx, sy, colorValues(lum, color1), colorValues(lum, color2),
+                       rotation, contrast, phase, frequency, defocus, texRotation, t, w[0]);
   }
 
   /**
@@ -136,7 +139,7 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
                        toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new),
                        toDoubleArray(args.get("x")), toDoubleArray(args.get("y")),
                        toDoubleArray(args.get("sx")), toDoubleArray(args.get("sy")),
-                       toColorArray(args.get("color")),
+                       toColorArray(args.get("color1")), toColorArray(args.get("color2")),
                        toDoubleArray(args.get("rotation")), toDoubleArray(args.get("contrast")),
                        toDoubleArray(args.get("phase")), toDoubleArray(args.get("frequency")),
                        toDoubleArray(args.get("defocus")), toDoubleArray(args.get("texRotation")),
@@ -160,7 +163,8 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
       .append("  \"y\": " + Arrays.toString(y) + ",\n")
       .append("  \"sx\": " + Arrays.toString(sx) + ",\n")
       .append("  \"sy\": " + Arrays.toString(sy)+ ",\n")
-      .append("  \"color\": " + Arrays.deepToString(color) + ",\n")
+      .append("  \"color1\": " + Arrays.deepToString(color1) + ",\n")
+      .append("  \"color2\": " + Arrays.deepToString(color2) + ",\n")
       .append("  \"rotation\": " + Arrays.toString(rotation) + ",\n")
       .append("  \"contrast\": " + Arrays.toString(contrast) + ",\n")
       .append("  \"phase\": " + Arrays.toString(phase) + ",\n")
@@ -172,11 +176,9 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
       .append("\n}").toString();
   }
 
-
   /**
    * Fill optional fields with default values if they are empty
    * 
-   * @param val the values received via JSON
    * @param defaultVal the default value or values to apply if 'val' is empty
    * @param length the length of the final array returned
    * 
@@ -186,31 +188,8 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
    * 
    * @since 0.0.1
    */
-  private static double[] optionalField(double[] val, double[] defaultVal, int length) throws IllegalArgumentException {
-    if (val.length == length) return val;
-    if (val.length != 0)
-      throw new IllegalArgumentException(INCONSISTENT_ARRAY_LENGTH);
-    return defaultVal;
-  }
-
-  /**
-   * Fill optional fields with default values if they are empty
-   * 
-   * @param val the values received via JSON
-   * @param defaultVal the default value or values to apply if 'val' is empty
-   * @param length the length of the final array returned
-   * 
-   * @return either the values received or default values
-   * 
-   * @throws IllegalArgumentException If any value is bad
-   * 
-   * @since 0.0.1
-   */
-  private static double[] optionalField(double[] val, double defaultValue, int length) throws IllegalArgumentException {
-    if (val.length == length) return val;
-    if (val.length != 0)
-      throw new IllegalArgumentException(INCONSISTENT_ARRAY_LENGTH);
-    val = new double[length];
+  private static double[] optionalField(double defaultValue, int length) {
+    double[] val = new double[length];
     Arrays.fill(val, defaultValue);
     return val;
   }

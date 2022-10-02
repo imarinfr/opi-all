@@ -2,7 +2,6 @@ package org.lei.opi.core;
 
 import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
-import static org.lei.opi.core.definitions.JsonProcessor.toObjectStream;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -21,19 +20,19 @@ import org.lei.opi.core.definitions.ReturnMsg;
 public class O900 extends OpiMachine {
 
   /** Allowed eye values */
-  public enum Eye {LEFT, RIGHT}
+  private enum Eye {LEFT, RIGHT}
   /** Allowed background luminances */
-  public enum Luminance {BG_OFF, BG_1, BG_10, BG_100}
-  /** Allowed fixation types */
-  public enum Fixation {CENTER, CROSS, RING}
+  private enum BackgroundLuminance {BG_OFF, BG_1, BG_10, BG_100}
   /** Allowed background colors */
-  public enum BackgroundColor {WHITE, YELLOW}
+  private enum BackgroundColor {WHITE, YELLOW}
+  /** Allowed fixation types */
+  private enum Fixation {CENTER, CROSS, RING}
   /** Stimulus type */
-  public enum Type {STATIC, KINETIC}
+  private enum Type {STATIC, KINETIC}
   /** Allowed stimulus colors */
-  public enum Color {WHITE, RED, BLUE}
+  private enum Color {WHITE, RED, BLUE}
   /** Allowed sizes */
-  public enum Size {GI, GII, GIII, GIV, GV, GVI}
+  private enum Size {GI, GII, GIII, GIV, GV, GVI}
 
   /** {@value DEFAULT_EYESUITE} */
   private static final String DEFAULT_EYESUITE = "C:/ProgramData/Haag-Streit/EyeSuite/";
@@ -57,15 +56,15 @@ public class O900 extends OpiMachine {
   /** {@value OPI_SET_BACKGROUND_FAILED} */
   private static final String OPI_SET_BACKGROUND_FAILED = "Problem with OPI_SET_BACKGROUND: ";
   /** {@value LIST_SIZE_TOO_LONG} */
-  private static final String LIST_SIZE_TOO_LONG = "Stimulus list sizes must be either 1 or 2 (for sending the position of the next stimulus).";
-  /** {@value INCONSISTENT_ARGUMENTS} */
-  private static final String INCONSISTENT_ARGUMENTS = "List sizes are inconsistent.";
-  /** {@value WRONG_STATIC_LUM_SIZE} */
-  private static final String WRONG_STATIC_LUM_SIZE_T = "For a static stimulus, size, luminance, and presentation time must be an array of length 1.";
-  /** {@value WRONG_PRESENTATION_TIME} */
-  private static final String WRONG_STATIC_PRESENTATION_TIME = "Presentation time cannot be greater than response window";
+  private static final String XY_SIZE_TOO_LONG = "Stimulus list sizes must be either 1 or 2 (for sending the position of the next stimulus).";
+  /** {@value INCONSISTENT_XY_SIZES} */
+  private static final String INCONSISTENT_XY_SIZES = "Lists for 'x' and 'y' coordinates have to be of the same size..";
   /** {@value WRONG_SIZE} */
   private static final String WRONG_SIZE = "Wrong stimulus size. It is ";
+  /** {@value WRONG_PRESENTATION_TIME} */
+  private static final String WRONG_STATIC_PRESENTATION_TIME = "Presentation time cannot be greater than response window";
+  /** {@value WRONG_PRESENTATION_TIME} */
+  private static final String WRONG_SPEED_SIZE = "List of speeds for kinetic presentations must be length of x or y minus 1";
 
   /** O900 constants */
   private static int EYE_RIGHT;
@@ -235,57 +234,59 @@ public class O900 extends OpiMachine {
   @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
   @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
   @Parameter(name = "max10000", className = Double.class, desc = "Whether O900 can handle a maximum luminance of 10000 apostilbs instead of 4000. Check the settings in EyeSuite", min = 0, max = 1, defaultValue = "0")
-  @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
+  @Parameter(name = "bgLum", className = BackgroundLuminance.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
   @Parameter(name = "bgCol", className = BackgroundColor.class, desc = "Background color for eye.", defaultValue = "white")
   @Parameter(name = "fixShape", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
   @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
   @Parameter(name = "f310", className = Double.class, desc = "Whether to use Logitech's F310 controller", min = 0, max = 1, defaultValue = "0")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (writer == null) return OpiManager.error(NOT_INITIALIZED);
-    StringBuilder opiMessage;
+    StringBuilder message;
     String result;
     try {
-      // Prepare and send OPI_INITIALIZE
+      // Prepare OPI_INITIALIZE instruction
       String eyeSuite = (String) args.get("eyeSuite");
       if (eyeSuite.isBlank()) eyeSuite = DEFAULT_EYESUITE;
       String gazeFeed = (String) args.get("gazeFeed");
       if (eyeSuite.isBlank()) gazeFeed = NA_STRING;
-      opiMessage = new StringBuilder(OPI_INITIALIZE).append(" ")
+      message = new StringBuilder(OPI_INITIALIZE).append(" ")
         .append("\"").append(eyeSuite).append("\"").append(" ")
         .append("\"").append(((String) args.get("eye"))).append("\"").append(" ")
         .append((int) ((double) args.get("pres"))).append(" ")
         .append((int) ((double) args.get("resp"))).append(" ")
         .append((int) ((double) args.get("max10000"))).append(" ")
         .append("\"").append(gazeFeed).append("\"").append(" ");
-      writer.send(opiMessage.toString());
+      // Send OPI_INITIALIZE instruction
+      writer.send(message.toString());
       while (writer.empty()) Thread.onSpinWait();
       result = writer.receive();
-      if (!result.equals("1")) return OpiManager.error(OPI_INITIALIZE_FAILED + result);
-      // Prepare and send OPI_SET_BACKGROUND
-      int bgCol = switch(BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
+      if (!result.equals("0")) return OpiManager.error(OPI_INITIALIZE_FAILED + result);
+      // Prepare OPI_SET_BACKGROUND instruction
+      int bgCol = switch (BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
         case WHITE -> BG_WHITE;
         case YELLOW -> BG_YELLOW;
       };
-      int bgLum = switch(Luminance.valueOf(((String) args.get("bgLum")).toUpperCase())) {
+      int bgLum = switch (BackgroundLuminance.valueOf(((String) args.get("bgLum")).toUpperCase())) {
         case BG_OFF -> BG_OFF;
         case BG_1 -> BG_1;
         case BG_10 -> BG_10;
         case BG_100 -> BG_100;
       };
-      int fixType = switch(Fixation.valueOf(((String) args.get("fixType")).toUpperCase())) {
+      int fixShape = switch (Fixation.valueOf(((String) args.get("fixShape")).toUpperCase())) {
         case CENTER -> FIX_CENTER;
         case CROSS -> FIX_CROSS;
         case RING -> FIX_RING;
       };
-      opiMessage = new StringBuilder(OPI_SET_BACKGROUND).append(" ")
+      message = new StringBuilder(OPI_SET_BACKGROUND).append(" ")
         .append(bgCol).append(" ")
         .append(bgLum).append(" ")
-        .append(fixType).append(" ")
-        .append((int) ((double) args.get("fixIntensity")));
-      writer.send(opiMessage.toString());
+        .append(fixShape).append(" ")
+        .append((int) ((double) args.get("fixIntensity")));  
+      // Send OPI_SET_BACKGROUND instruction
+      writer.send(message.toString());
       while (writer.empty()) Thread.onSpinWait();
       result = writer.receive();
-      if (!result.equals("1")) return OpiManager.error(OPI_SET_BACKGROUND_FAILED + result);  
+      if (!result.equals("0")) return OpiManager.error(OPI_SET_BACKGROUND_FAILED + result);
       // finish setup, max10000, bigWheel and F310 are managed here
       if ((int) ((double) args.get("max10000")) == 0) max10000 = false;
       else max10000 = false;
@@ -311,24 +312,44 @@ public class O900 extends OpiMachine {
   @Parameter(name = "type", className = Type.class, desc = "Stimulus type: STATIC or KINETIC.", defaultValue = "static")
   @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
-  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, max = 3183.099, defaultValue = "list(100)")
+  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", min = 0, max = 3183.099, defaultValue = "3183.099")
   @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "list('GV')")
   @Parameter(name = "color", className = Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
-  @Parameter(name = "t", className = Double.class, desc = "[STATIC] List of stimuli presentation times (ms).", min = 0, defaultValue = "list(200)")
-  @Parameter(name = "v", className = Double.class, desc = "[KINETIC] List of stimuli segment speeds (degs/s). Size must have length(x) - 1", isList = true, min = 0, defaultValue = "list(5)")
-  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms) [STATIC].", min = 0, defaultValue = "1500")
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @Parameter(name = "t", className = Double.class, desc = "List of Stimulus presentation times (ms). For STATIC, list must be of length 1. For KINETIC, it must the same length and 'x' and 'y' co-ordinates minus 1", isList = true, optional = true, min = 0, defaultValue = "list(200)")
+  @Parameter(name = "w", className = Double.class, desc = "[STATIC] Response window (ms).", optional = true, min = 0, defaultValue = "1500")
+  @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
+  @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
+  @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "[KINETIC] x co-ordinate when oberver responded (degrees).")
+  @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "[KINETIC] y co-ordinate when oberver responded (degrees).")
   public MessageProcessor.Packet present(HashMap<String, Object> args) {
     if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     try {
-      String opiMessage = switch(Type.valueOf(((String) args.get("type")).toUpperCase())) {
-        case STATIC -> buildStatic(args);
-        case KINETIC -> buildKinetic(args);
+      // get common parameters
+      Type type = Type.valueOf(((String) args.get("type")).toUpperCase());
+      double[] x = toDoubleArray(args.get("x"));
+      double[] y = toDoubleArray(args.get("y"));
+      if (x.length != y.length) throw new IllegalArgumentException(INCONSISTENT_XY_SIZES);
+      double lum = (double) args.get("lum");
+      int size = switch (Size.valueOf(((String) args.get("size")).toUpperCase())) {
+        case GI -> 1;
+        case GII -> 2;
+        case GIII -> 3;
+        case GIV -> 4;
+        case GV -> 5;
+        case GVI -> 6;
       };
-      writer.send(opiMessage.toString());
+      if (!bigWheel && size == 6) throw new IllegalArgumentException(WRONG_SIZE + size);
+      String color =  Color.valueOf(((String) args.get("color")).toUpperCase()).toString().toLowerCase();
+      int[] t = toIntArray(args.get("t"));
+      // get specific parameters and mount the message to send
+      String message = switch (type) {
+        case STATIC -> presentStatic(x, y, lum, size, color, t, (int) (double) args.get("w"));
+        case KINETIC -> presentKinetic(x, y, lum, size, color, t);
+      };
+      writer.send(message.toString());
       while (writer.empty()) Thread.onSpinWait();
-      return parseResult(writer.receive());  
-    } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
+      return OpiManager.ok(parseResult(type, writer.receive()));
+    } catch (ClassCastException | IllegalArgumentException | SecurityException e) {
       return OpiManager.error(OPI_PRESENT_FAILED, e);
     }
   }
@@ -400,82 +421,84 @@ public class O900 extends OpiMachine {
   };
 
   /**
-   * Build OPI_PRESENT_KINETIC or OPI_PRESENT_STATIC_F310 command
+   * Build OPI_PRESENT_STATIC or OPI_PRESENT_STATIC_F310 command
    * 
-   * @param args pairs of argument name and value
+   * @param x list of x coordinates for static stimulus presentation
+   * @param y list of y coordinates for static stimulus presentation
+   * @param lum stimulus luminance
+   * @param size stimulus size
+   * @param color stimulus color
+   * @param t stimulus presentation time
+   * @param w response window
    * 
    * @return A JSON object with return messages
-   * @throws SecurityException
-   * @throws NoSuchMethodException
    *
    * @since 0.0.1
    */
-  private String buildStatic(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException, NoSuchMethodException, SecurityException {
-    int[] x = toIntArray(args.get("x"));
-    int[] y = toIntArray(args.get("y"));
-    double[] lum = toDoubleArray(args.get("lum"));
-    Size[] size = toObjectStream(args.get("size"), Size.class).toArray(Size[]::new);
-    int[] t = toIntArray(args.get("t"));
-    int w = (int) ((double) args.get("w"));
-    String color =  Color.valueOf(((String) args.get("color")).toUpperCase()).toString().toLowerCase();
-    if (x.length > 2) throw new IllegalArgumentException(LIST_SIZE_TOO_LONG);
-    if (x.length != y.length) throw new IllegalArgumentException(INCONSISTENT_ARGUMENTS);
-    if (lum.length != 1 || size.length != 1 || t.length != 1) throw new IllegalArgumentException(WRONG_STATIC_LUM_SIZE_T);
+  private String presentStatic(double[] x, double[] y, double lum, int size, String color, int[] t, int w) {
     if (t[0] > w) throw new IllegalArgumentException(WRONG_STATIC_PRESENTATION_TIME);
-    int xNext, yNext;
-    if(x.length == 1) {
-      xNext = x[0];
-      yNext = y[0];
-    } else {
-      xNext = x[1];
-      yNext = y[1];
+    double xNext, yNext;
+    switch (x.length) {
+      case 1 -> {
+        xNext = x[0];
+        yNext = y[0];
+      }
+      case 2 -> { // position of the next stimulus
+        xNext = x[1];
+        yNext = y[1];
+      }
+      default -> throw new IllegalArgumentException(XY_SIZE_TOO_LONG);
     }
-    int sizeValue = switch(size[0]) {
-      case GI -> 1;
-      case GII -> 2;
-      case GIII -> 3;
-      case GIV -> 4;
-      case GV -> 5;
-      case GVI -> 6;
-    };
-    if (!bigWheel & sizeValue == 6) throw new IllegalArgumentException(WRONG_SIZE + size[0]);
-    double level = Math.round(-100 * Math.log10(lum[0] / ((max10000 ? 10000 : 4000)) / Math.PI)) / 10;
-    StringBuilder opiMessage = new StringBuilder(f310 ? OPI_PRESENT_STATIC_F310 : OPI_PRESENT_STATIC).append(" ")
-      .append(10 * x[0]).append(" ").append(10 * y[0]).append("").append(" ")
-      .append(String.format("%.1f", level)).append(" ").append(size[0]).append(" ")
-      .append(t[0]).append(" ").append(w).append(" ")
-      .append(10 * xNext).append(" ").append(10 * yNext).append("").append(" ")
-      .append(color);
-    return opiMessage.toString();
+    return new StringBuilder(f310 ? OPI_PRESENT_STATIC_F310 : OPI_PRESENT_STATIC).append(" ")
+      .append((int) Math.round(10.0 * x[0])).append(" ")
+      .append((int) Math.round(10.0 * y[0])).append(" ")
+      .append((int) Math.round(10.0 * cdToDecibel(lum))).append(" ")
+      .append(size).append(" ")
+      .append(t[0]).append(" ")
+      .append(w).append(" ")
+      .append((int) Math.round(10.0 * xNext)).append(" ")
+      .append((int) Math.round(10.0 * yNext)).append(" ")
+      .append(color).toString();
   }
 
   /**
    * Build OPI_PRESENT_KINETIC command
    * 
-   * @param args pairs of argument name and value
+   * @param x list of x coordinates for kinetic stimulus presentation
+   * @param y list of y coordinates for kinetic stimulus presentation
+   * @param lum stimulus luminance
+   * @param size stimulus size
+   * @param color stimulus color
+   * @param t time between stimulus presentation segments
    * 
    * @return A JSON object with return messages
    *
    * @since 0.0.1
    */
-  private String buildKinetic(HashMap<String, Object> args) throws ClassCastException {
-    // TODO: implement kinetic instruction
-    //int[] x = toIntArray(args.get("x"));
-    //int[] y = toIntArray(args.get("y"));
-    //double[] lum = toDoubleArray(args.get("lum"));
-    //double[] size = toDoubleArray(args.get("size"));
-    //double[] speed = toDoubleArray(args.get("size"));
+  private String presentKinetic(double[] x, double[] y, double lum, int size, String color, int[] t) {
+    if (t.length != x.length - 1) throw new IllegalArgumentException(WRONG_SPEED_SIZE);
+    StringBuilder message = new StringBuilder(OPI_PRESENT_KINETIC).append(" ")
+      .append(x.length).append(" ");
+      for (int i = 0; i < x.length; i++)
+        message.append((int) Math.round(10.0 * x[i])).append(" ")
+               .append((int) Math.round(10.0 * y[i])).append(" ");
+      message.append((int) Math.round(-100.0 * Math.log10(lum / (4000 / Math.PI)))).append(" ")
+             .append(size).append(" ");
+      for (int i = 0; i < t.length; i++)
+        message.append((int) Math.round(10.0 * t[i])).append(" ");
+      return message.toString();
+  }
 
-    //stim$speeds[i-1] <- d/stim$speeds[i-1]
-
-    StringBuilder opiMessage = new StringBuilder(OPI_PRESENT_KINETIC).append(" ");
-/**
-    msg <- paste(c(msg, length(xs), xs, ys), collapse=" ")
-    msg <- paste(c(msg, sapply(stim$levels, cdTodb, maxStim=.OpiEnv$O900$zero_db_in_asb/pi)), collapse=" ")
-    msg <- paste(c(msg, stim$sizes), collapse=" ")
-    msg <- paste(c(msg, stim$speeds), collapse=" ")  
- */
-    return opiMessage.toString();
+  /**
+   * For static stimuli, convert from luminance in cd/m^2 to dB
+   * It depends on the maximum luminance
+   * 
+   * @return Luminace level in dB
+   *
+   * @since 0.0.1
+   */
+  private double cdToDecibel(double lum) {
+    return -10.0 * Math.log10(lum / ((max10000 ? 10000.0 : 4000.0) / Math.PI));
   }
 
   /**
@@ -487,8 +510,27 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  private MessageProcessor.Packet parseResult(String received) {
-    return new MessageProcessor.Packet(""); // TODO return something
+  private String parseResult(Type type, String received) {
+    String[] message = received.split("\\|\\|\\|");
+    if (message[0] != "null") OpiManager.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
+    StringBuilder jsonStr = new StringBuilder("\n  {\n")
+      .append("    \"seen\": " + message[1] + ",\n")
+      .append("    \"time\": " + message[2]);
+    switch (type) {
+      case STATIC -> {
+        jsonStr.append(",\n")
+        .append("    \"eyex\": " + (message.length == 5 ? message[3] : NA_STRING) + ",\n")
+        .append("    \"eyey\": " + (message.length == 5 ? message[4] : NA_STRING));
+      }
+      case KINETIC -> {
+        jsonStr.append(",\n")
+        .append("    \"x\": " + message[3] + ",\n")
+        .append("    \"y\": " + message[4] + ",\n")
+        .append("    \"eyex\": " + (message.length == 7 ? message[5] : NA_STRING) + ",\n")
+        .append("    \"eyey\": " + (message.length == 7 ? message[6] : NA_STRING));
+      }
+    }
+    return jsonStr.append("\n  }").toString();
   }
 
 }

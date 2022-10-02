@@ -1,4 +1,6 @@
 {
   "command": "setup",
-  "fixShape": "SPOT"
+  "fixShape": "SQUARE",
+  "fixCx": 0,
+  "tracking": 1
 }

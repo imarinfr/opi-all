@@ -8,7 +8,7 @@ import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.Arrays;
+import java.nio.ByteBuffer;
 
 /**
  * Simulates the O900 machine
@@ -69,7 +69,7 @@ class Perimeter extends Thread {
           socket = server.accept();
           incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
           outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
-          while (listen) if (incoming.ready()) send(process(receive()));
+          while (listen) if (incoming.ready()) process(receive());
           break;
         } catch (SocketTimeoutException ignored) {
         }
@@ -81,37 +81,33 @@ class Perimeter extends Thread {
   }
 
   /** process message */
-  private String process(String message) {
+  private void process(String message) {
+    System.out.println("[Perimeter " + machine + "] received instruction: " + message);
     String[] input = message.split(" ");
     switch(machine) {
-      case O900 -> processO900(input[0], Arrays.copyOfRange(input, 1, input.length));
-      case COMPASS, MAIA -> processICare(input[0], Arrays.copyOfRange(input, 1, input.length));
-    }
-    return message;
+      case O900 -> processO900(input[0]);
+      case COMPASS, MAIA -> processICare(input[0]);
+    };
   }
 
   /** process O900 message */
-  private String processO900(String cmd, String[] pars) {
-    return switch(cmd) {
-      case "OPI_INITIALIZE" -> "OPI_INITIALIZE with params " + Arrays.toString(pars);
-      case "OPI_SET_BACKGROUND" -> "OPI_SET_BACKGROUND with params " + Arrays.toString(pars);
-      case "OPI_PRESENT_STATIC" -> "OPI_PRESENT_STATIC with params " + Arrays.toString(pars);
-      case "OPI_PRESENT_STATIC_F310" -> "OPI_PRESENT_STATIC_F310 with params " + Arrays.toString(pars);
-      case "OPI_PRESENT_KINETIC" -> "OPI_PRESENT_KINETIC with params " + Arrays.toString(pars);
-      case "OPI_CLOSE" -> "OPI_CLOSE with params " + Arrays.toString(pars);
-      default -> "WRONG COMMAND";
+  private void processO900(String cmd) {
+    switch(cmd) {
+      case "OPI_INITIALIZE", "OPI_SET_BACKGROUND" -> send("0");
+      case "OPI_PRESENT_STATIC", "OPI_PRESENT_STATIC_F310" -> send("null|||1|||798|||0.5|||1");
+      case "OPI_PRESENT_KINETIC" -> send("null|||1|||5|||-1.5|||1|||0.5|||1");
+      default -> send("WRONG COMMAND");
     };
   }
 
   /** process Compass or Maia message */
-  private String processICare(String cmd, String[] pars) {
-    return switch(cmd) {
-      case "OPI-OPEN" -> "OPI-OPEN with params " + Arrays.toString(pars);
-      case "OPI-SET-FIXATION" -> "OPI-SET-FIXATION with params " + Arrays.toString(pars);
-      case "OPI-SET-TRACKING" -> "OPI-SET-TRACKING with params " + Arrays.toString(pars);
-      case "OPI-PRESENT-STATIC" -> "OPI-PRESENT-STATIC with params " + Arrays.toString(pars);
-      case "OPI-CLOSE" -> "OPI-CLOSE with params " + Arrays.toString(pars);
-      default -> "WRONG COMMAND";
+  private void processICare(String cmd) {
+    switch(cmd) {
+      case "OPI-OPEN" -> send(sendOpenIcare());
+      case "OPI-SET-FIXATION", "OPI-SET-TRACKING", "OPI-MOVE-STIMULUS" -> send("0");
+      case "OPI-PRESENT-STATIC" -> send("0 1 582 6395477 1498888428 1498889999 2 0 0.212 912 753");
+      case "OPI-CLOSE" -> send(sendCloseIcare());
+      default -> send("WRONG COMMAND");
     };
   }
 
@@ -146,6 +142,7 @@ class Perimeter extends Thread {
     }
     return message.toString();
   }
+
   /**
    * Send message
    *
@@ -156,6 +153,26 @@ class Perimeter extends Thread {
   public void send(String message) {
     try {
       outgoing.write(message);
+      outgoing.newLine();
+      outgoing.flush();
+    } catch (IOException e) {
+      System.err.println(CANNOT_SEND);
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Send message
+   *
+   * @param message The message to send
+   *
+   * @since 0.0.1
+   */
+  public void send(ByteBuffer byteBuffer) {
+    StringBuilder message = new StringBuilder();
+    for (byte value : byteBuffer.array()) message.append(value).append(" ");
+    try {
+      outgoing.write(message.toString());
       outgoing.newLine();
       outgoing.flush();
     } catch (IOException e) {
@@ -178,6 +195,38 @@ class Perimeter extends Thread {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  /** simulates OPI-OPEN return */
+  private ByteBuffer sendOpenIcare() {
+    float prlx = 0.05f;
+    float prly = 0.08f;
+    float onhx = 15.2f;
+    float onhy = -2.5f;
+    float[] image = new float[] {1, 2, 3, 4,
+                                 5, 6, 7, 8,
+                                 9, 10, 11, 12,
+                                 13, 14, 15, 16};
+    int length = 4 * (5 + image.length);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(length)
+      .putInt(length - 4)
+      .putFloat(prlx)
+      .putFloat(prly)
+      .putFloat(onhx)
+      .putFloat(onhy);
+    for (float value : image) byteBuffer.putFloat(value);
+    return byteBuffer;
+  }
+
+  /** simulates OPI-CLOSE return */
+  private ByteBuffer sendCloseIcare() {
+    int[] times = new int[] {1000001, 1000002, 1000003, 1000004};
+    float[] posx = new float[] {0.0f, 0.0f, 1.0f, 1.0f};
+    float[] posy = new float[] {0.0f, 1.0f, 0.0f, 1.0f};
+    int length = 4 * (1 + 3 * times.length);
+    ByteBuffer byteBuffer = ByteBuffer.allocate(length).putInt(length - 4);
+    for (int i = 0; i < times.length; i++) byteBuffer.putInt(times[i]).putFloat(posx[i]).putFloat(posy[i]);
+    return byteBuffer;
   }
 
 }

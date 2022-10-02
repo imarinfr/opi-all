@@ -13,5 +13,4 @@ public @interface ReturnMsg {
   boolean isList() default false;
   double min() default Double.MIN_VALUE;
   double max() default Double.MAX_VALUE;
-  double naValue() default -1;
 }
