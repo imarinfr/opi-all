@@ -83,13 +83,13 @@ public class RToMonitorToJovpTests {
           "jsons/Display/opiSetup.json"
         };
         presentJson = new String[] {
-          //"jsons/Display/opiPresentStatic1.json",
-          //"jsons/Display/opiPresentStatic2.json",
-          //"jsons/Display/opiPresentStatic3.json",
-          //"jsons/Display/opiPresentStatic1.json",
-          //"jsons/Display/opiPresentStatic2.json",
-          //"jsons/Display/opiPresentStatic3.json",
-          //"jsons/Display/opiPresentDynamic1.json",
+          "jsons/Display/opiPresentStatic1.json",
+          "jsons/Display/opiPresentStatic2.json",
+          "jsons/Display/opiPresentStatic3.json",
+          "jsons/Display/opiPresentStatic1.json",
+          "jsons/Display/opiPresentStatic2.json",
+          "jsons/Display/opiPresentStatic3.json",
+          "jsons/Display/opiPresentDynamic1.json",
           "jsons/Display/opiPresentDynamic2.json"
         };
       }
