@@ -178,7 +178,6 @@ public class OpiLogic implements PsychoLogic {
     if (timer.getElapsedTime() > 0)// if not presenting do nothing
       if (stimulus.show() && timer.getElapsedTime() > presentationType + driver.stimulus.t()[index]) {
         presentationType += driver.stimulus.t()[index];
-        System.out.println(driver.stimulus.t()[index]);
         // if presentation time is over for the last element of the array, then hide stimulus
         if (index == driver.stimulus.length() - 1) stimulus.show(false);
         else updateStimulus(++index);
