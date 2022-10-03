@@ -1,33 +1,32 @@
 package org.lei.opi.monitor;
 
-import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Button;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.image.ImageView;
-import javafx.scene.image.Image;
-import javafx.geometry.Pos;
-import javafx.stage.Stage;
-
-import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Options;
+
+import javafx.application.Application;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 /**
  * JavaFX App
  */
 public class OpiMonitor extends Application {
-
     /**
      *  Presumably plot something representing the current state of 
      * the VF measurement going on...
@@ -186,7 +185,7 @@ public class OpiMonitor extends Application {
         }
         else {
             System.out.println("Starting server");
-            Server s = new Server(51434, new PrintWriter(System.out));
+            Server s = new Server(51001, new PrintWriter(System.out));
             System.exit(0);
         }
     }

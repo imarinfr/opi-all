@@ -26,6 +26,7 @@ assign("machine_list", list(
     "Compass",
     "ImoVifa",
     "Kowa",
+    "Maia",
     "O900",
     "O600",
     "SimNo",
@@ -55,10 +56,17 @@ chooseOPI <- function(machine = NULL) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
         print(unlist(.opi_env$machine_list))
     } else {
+        if (machine == "Compass") machine <- "Icare"
+        if (machine == "Maia") machine <- "Icare"
+        if (machine == "PicoVR") machine <- "Jovp"
+        if (machine == "Display") machine <- "Jovp"
+        if (machine == "PhoneHMD") machine <- "Jovp"
+        if (machine == "ImoVifa") machine <- "Jovp"
         assign("chosen_machine", machine, .opi_env)
     }
     return(NULL)
 }
+
 #' @rdname chooseOPI
 #' @export
 chooseOpi <- chooseOPI
@@ -182,21 +190,16 @@ opiPresent <- function(stim, ...) {
 open_socket <- function(ip, port, machineName) {
     cat("Looking for a server at ", ip, port, "...\n")
 
-    suppressWarnings(tryCatch(
-        v <- socketConnection(host = ip, port,
+    suppressWarnings(socket <- tryCatch(
+        socketConnection(host = ip, port,
                     blocking = TRUE, open = "w+b",
                     timeout = 10)
         , error = function(e) {
             stop(paste("Cannot find a server at", ip, "on port", port))
         }
     ))
-    close(v)
 
     cat("Found server at", ip, port, "\n")
 
-    socket <- tryCatch(
-        socketConnection(host = ip, port, open = "w+b", blocking = TRUE, timeout = 1000), 
-        error = function(e) stop(paste("Cannot connect to", machineName, "at", ip, "on port", port))
-    )
     return(socket)
 }

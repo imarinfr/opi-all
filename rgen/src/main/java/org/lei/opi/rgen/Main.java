@@ -66,6 +66,7 @@ machineName, machineName);  // environment name
             new OpiFunction(machine, "opiClose", "close", "", "%s", false)
         };
 
+            // TODO: need to ad parent/OpiMachine params here
         String callingExample = Stream.of(functions)
             .map((OpiFunction f) -> {
                 String s = Stream.of(f.methodData.parameters())
@@ -96,8 +97,8 @@ opiSetBackground_for_%s <- function(lum, color, ...) {return("Deprecated")}
     } 
   
     public static void main(String args[]) {
-        String path = "opi-rgen/src/main/OPI/R/";
-        for (String m : new String[] {"ImoVifa", "Compass", "O900", "PicoVR", "O600", "PhoneHMD", "Kowa", "Display"}) {
+        String path = "rgen/src/main/OPI/R/";
+        for (String m : new String[] {"Jovp", "Icare", "O900"}) {
             PrintStream printStream = null;
             OpiMachine machine = null;
             try {
