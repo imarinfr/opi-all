@@ -47,8 +47,6 @@ public abstract class OpiMachine {
   static final String INCORRECT_FORMAT_IP_PORT = "IP and port have the wrong format";
   /** {@value UNKNOWN_HOST} */
   static final String SERVER_NOT_READY = "Server at %s is unknown or does not exist";
-  /** {@value CONNECTED_TO_HOST} */
-  static final String CONNECTED_TO_HOST = "Connected to host at ";
   /** {@value NOT_INITIALIZED} */
   static final String NOT_INITIALIZED = "OPI machine has not yet been initialized";
   /** {@value COULD_NOT_QUERY} */
@@ -59,12 +57,14 @@ public abstract class OpiMachine {
   static final String COULD_NOT_PRESENT = "Could not present on the OPI machine";
   /** {@value COULD_NOT_DISCONNECT} */
   static final String COULD_NOT_DISCONNECT = "Could not disconnect from OPI machine";
-  /** {@value DISCONNECTED_FROM_HOST} */
-  static final String DISCONNECTED_FROM_HOST = "Disconnected from OPI machine";
   /** {@value OPI_SETUP_FAILED} */
   static final String OPI_SETUP_FAILED = "Failed to complete opiSetup. ";
   /** {@value OPI_PRESENT_FAILED} */
   static final String OPI_PRESENT_FAILED = "Failed to complete opiPresent. ";
+  /** {@value CONNECTED_TO_HOST} */
+  static final String CONNECTED_TO_HOST = "\"Connected to host at %s:%s\"";
+  /** {@value DISCONNECTED_FROM_HOST} */
+  static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
 
   /**
    * Class to hold information of the 5 key OPI methods ready for use.

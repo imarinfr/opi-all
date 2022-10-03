@@ -199,7 +199,7 @@ public class O900 extends OpiMachine {
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     try {
       writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
+      return OpiManager.ok(String.format(CONNECTED_TO_HOST, args.get("ip"), (int) ((double) args.get("port"))));
     } catch (ClassCastException e) {
       return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
     } catch (IOException e) {

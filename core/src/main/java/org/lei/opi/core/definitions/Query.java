@@ -1,5 +1,7 @@
 package org.lei.opi.core.definitions;
 
+import java.util.Arrays;
+
 import es.optocom.jovp.Monitor;
 import es.optocom.jovp.structures.Input;
 import es.optocom.jovp.structures.ViewMode;
@@ -14,12 +16,13 @@ import es.optocom.jovp.structures.ViewMode;
  * @param fullScreen whether JOVP machine is running on full screen mode
  * @param tracking  whether JOVP machine is able to do eye tracking
  * @param depth depth to use for all color channels
+ * @param maxLum maximum luminance on the R, G, and B channels (cd/m^2)
  * @param gammaFile the path of the gamma file
  * @param monitor display of the OPI JOVP machine
  * @since 0.0.1
  */
 public record Query(int distance, double[] fov, ViewMode viewMode, Input input, boolean fullScreen, boolean tracking,
-                    int depth, String gammaFile, Monitor monitor) {
+                    int depth, double[] maxLum, String gammaFile, Monitor monitor) {
 
   /**
    * Convert to string to return back to R OPI
@@ -31,19 +34,20 @@ public record Query(int distance, double[] fov, ViewMode viewMode, Input input, 
   public String toJson() {
     StringBuilder str = new StringBuilder("\n  {\n")
       .append("    \"distance\": " + distance + ",\n")
-      .append("    \"viewMode\": " + viewMode + ",\n")
-      .append("    \"input\": " + input + ",\n")
+      .append("    \"viewMode\": \"" + viewMode + "\",\n")
+      .append("    \"input\": \"" + input + "\",\n")
       .append("    \"fullScreen\": " + fullScreen + ",\n")
       .append("    \"tracking\": " + tracking + ",\n")
       .append("    \"depth\": " + depth + ",\n")
-      .append("    \"gammaFile\": " + gammaFile);
+      .append("    \"gammaFile\": \"" + gammaFile + "\"\n")
+      .append("    \"maxLum\": " + Arrays.toString(maxLum));
     if (monitor != null) {
       int[] colorDepth = monitor.getColorDepth();
       double[] dpi = monitor.getDpi();  
-      str.append("\n")
+      str.append(",\n")
         .append("    \"xFov\": " + fov[0] + ",\n")
         .append("    \"yFov\": " + fov[1] + ",\n")
-        .append("    \"monitorName\": " + monitor.getName() + ",\n")
+        .append("    \"monitorName\": \"" + monitor.getName() + "\",\n")
         .append("    \"width\": " + monitor.getWidth() + ",\n")
         .append("    \"height\": " + monitor.getHeight() + ",\n")
         .append("    \"widthMM\": " + monitor.getWidthMM() + ",\n")

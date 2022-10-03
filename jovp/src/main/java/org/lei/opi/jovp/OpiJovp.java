@@ -39,7 +39,7 @@ public class OpiJovp extends MessageProcessor {
   /** {@value PRESENT_FAILED} */
   protected static final String PRESENT_FAILED = "An error occured during PRESENT command";
   /** {@value CLOSED} */
-  private static final String CLOSED = "CLOSE successful";
+  private static final String CLOSED = "\"CLOSE successful\"";
 
   /** Prefix for all success messages */
   protected final String prefix;
@@ -172,7 +172,7 @@ public class OpiJovp extends MessageProcessor {
    */
   private MessageProcessor.Packet initialize() {
     state = State.INIT;
-    return new MessageProcessor.Packet(prefix + INITIALIZE);
+    return new MessageProcessor.Packet("\"" + prefix + INITIALIZE + "\"");
   }
 
   /**
@@ -183,7 +183,7 @@ public class OpiJovp extends MessageProcessor {
   private MessageProcessor.Packet query() {
     return OpiManager.ok((new Query(settings.distance(), psychoEngine.getFieldOfView(),
       settings.viewMode(), settings.input(),settings.fullScreen(), settings.tracking(), settings.depth(),
-      settings.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
+      settings.calibration().maxLum(), settings.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
   }
 
   /**
@@ -202,9 +202,7 @@ public class OpiJovp extends MessageProcessor {
       if(settings.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
         backgrounds[1] = Setup.set(args);
       state = State.SETUP;
-      return OpiManager.ok((new Query(settings.distance(), psychoEngine.getFieldOfView(),
-        settings.viewMode(), settings.input(),settings.fullScreen(), settings.tracking(), settings.depth(),
-        settings.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
+      return query();
     } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(prefix + SETUP_FAILED, e);
     }

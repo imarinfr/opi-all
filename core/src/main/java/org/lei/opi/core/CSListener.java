@@ -169,7 +169,7 @@ public class CSListener extends Thread {
    */
   public void send(String message) {
     try {
-      outgoing.write(message);
+      outgoing.write(message.replace("\n", ""));
       outgoing.newLine();
       outgoing.flush();
       if (sendWriter != null) sendWriter.write(message);

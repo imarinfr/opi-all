@@ -22,8 +22,6 @@ public record Calibration(double[] maxLum, int[] depth, double[][] gamma) {
   private static final String UNSORTED_GAMMA_FUNCTION = "The gamma function needs to be sorted";
   /** {@value WRONG_GAMMA_VALUE} */
   private static final String WRONG_GAMMA_VALUE = "Invalid gamma function. Some values our outside the range [0, 1]";
-  /** {@value LUMINANCES_OUTSIDE_RANGE} */
-  private static final String LUMINANCES_OUTSIDE_RANGE = "Requested RGB luminances %s cd/m^2 are too high. Maximum luminances are %s cd/m^2";
 
   /**
    * Calibration data
@@ -67,12 +65,12 @@ public record Calibration(double[] maxLum, int[] depth, double[][] gamma) {
    * 
    * @since 0.0.1
    */
-  public double[] colorValues(double[] color) throws IllegalArgumentException {
-    if (color[0] < 0 || color[1] <0 || color[2] <0 || color[0] > maxLum[0] || color[1] > maxLum[1] || color[2] > maxLum[2])
-      throw new IllegalArgumentException(String.format(LUMINANCES_OUTSIDE_RANGE,
-        Arrays.toString(color), Arrays.toString(maxLum)));
+  public double[] colorValues(double[] color) {
+    color[0] = color[0] < 0 ? 0 : (color[0] > maxLum[0] ? 1 : color[0] / maxLum[0]);
+    color[1] = color[1] < 0 ? 0 : (color[1] > maxLum[1] ? 1 : color[1] / maxLum[1]);
+    color[2] = color[2] < 0 ? 0 : (color[2] > maxLum[2] ? 1 : color[2] / maxLum[2]);
     // TODO: make proper use of max luminance and gamma function: stuff below is incorrect.
-    return new double[] {color[0] / maxLum[0], color[1] / maxLum[1], color[2] / maxLum[2], 1};
+    return new double[] {color[0], color[1], color[2], 1};
   }
 
 }

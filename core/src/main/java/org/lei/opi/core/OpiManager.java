@@ -52,7 +52,7 @@ public enum Command {
   /** Constant for exception messages: {@value WRONG_MACHINE_NAME} */
   private static final String WRONG_MACHINE_NAME = "Cannot create the selected machine %s in 'command:'" + Command.CHOOSE.name() + "' as it does not exist.";
   /** Constant for exception messages: {@value MACHINE_SELECTED} */
-  private static final String MACHINE_SELECTED = "Machine %s selected";
+  private static final String MACHINE_SELECTED = "\"Machine %s selected\"";
   /** name:value pair in JSON output if there is an error */
   public static String ERROR_YES = "\"error\" : 1";
   /** name:value pair in JSON output if there is not an error */
