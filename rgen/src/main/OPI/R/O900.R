@@ -46,7 +46,16 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 opiInitialise_for_O900 <- function(ipMonitor = NULL, portMonitor = NULL, ip = NULL, port = NULL) {
     assign("socket", open_socket(ipMonitor, portMonitor), .opi_env$O900)
+
+    msg <- list(command = "choose", machine = "O900")
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$Jovp$socket)
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
+
     msg <- list(ipMonitor = ipMonitor, portMonitor = portMonitor, ip = ip, port = port)
+    msg <- c(list(command = "initialize"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
@@ -76,10 +85,12 @@ opiInitialise_for_O900 <- function(ipMonitor = NULL, portMonitor = NULL, ip = NU
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_O900 <- function() {
-if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
+    msg <- c(list(command = "query"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
@@ -125,10 +136,12 @@ if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_e
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_O900 <- function(settings = list(eye = NULL, eyeSuite = NULL, gazeFeed = NULL, bigWheel = NULL, pres = NULL, resp = NULL, max10000 = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixIntensity = NULL, f310 = NULL)) {
-if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(eye = settings$eye, eyeSuite = settings$eyeSuite, gazeFeed = settings$gazeFeed, bigWheel = settings$bigWheel, pres = settings$pres, resp = settings$resp, max10000 = settings$max10000, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixIntensity = settings$fixIntensity, f310 = settings$f310)
+    msg <- c(list(command = "setup"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
@@ -172,10 +185,12 @@ if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_e
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_O900 <- function(stim = list(type = NULL, x = NULL, y = NULL, lum = NULL, size = NULL, color = NULL, t = NULL, w = NULL)) {
-if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(type = stim$type, x = stim$x, y = stim$y, lum = stim$lum, size = stim$size, color = stim$color, t = stim$t, w = stim$w)
+    msg <- c(list(command = "present"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
@@ -205,10 +220,12 @@ if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_e
 #' @seealso [opiClose()]
 #'
 opiClose_for_O900 <- function() {
-if(!exists(".opi_env$O900") || !exists(".opi_env$O900$socket") || is.null(.opi_env$O900$socket))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
+    msg <- c(list(command = "close"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 

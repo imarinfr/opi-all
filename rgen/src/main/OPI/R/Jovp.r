@@ -51,10 +51,11 @@ opiInitialise_for_Jovp <- function(ipMonitor = NULL, portMonitor = NULL, ip = NU
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
     res <- readLines(.opi_env$Jovp$socket, n = 1)
-    print(res)
     res <- rjson::fromJSON(res)
 
-    msg <- list(ipMonitor = ipMonitor, portMonitor = portMonitor, ip = ip, port = port, command = "initialize")
+    msg <- list(ipMonitor = ipMonitor, portMonitor = portMonitor, ip = ip, port = port)
+    msg <- c(list(command = "initialize"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
@@ -84,10 +85,12 @@ opiInitialise_for_Jovp <- function(ipMonitor = NULL, portMonitor = NULL, ip = NU
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Jovp <- function() {
-if(!exists(".opi_env$Jovp") || !exists(".opi_env$Jovp$socket") || is.null(.opi_env$Jovp$socket))
+if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% names(.opi_env$Jovp)) || is.null(.opi_env$Jovp$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
+    msg <- c(list(command = "query"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
@@ -131,10 +134,12 @@ if(!exists(".opi_env$Jovp") || !exists(".opi_env$Jovp$socket") || is.null(.opi_e
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_Jovp <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixLum = NULL, fixCol = NULL, fixCx = NULL, fixCy = NULL, fixSx = NULL, fixSy = NULL, fixRotation = NULL, tracking = NULL)) {
-if(!exists(".opi_env$Jovp") || !exists(".opi_env$Jovp$socket") || is.null(.opi_env$Jovp$socket))
+if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% names(.opi_env$Jovp)) || is.null(.opi_env$Jovp$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCol = settings$fixCol, fixCx = settings$fixCx, fixCy = settings$fixCy, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, tracking = settings$tracking)
+    msg <- c(list(command = "setup"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
@@ -192,20 +197,16 @@ if(!exists(".opi_env$Jovp") || !exists(".opi_env$Jovp$socket") || is.null(.opi_e
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Jovp <- function(stim = list(eye = NULL, shape = NULL, type = NULL, x = NULL, y = NULL, sx = NULL, sy = NULL, lum = NULL, color1 = NULL, color2 = NULL, rotation = NULL, contrast = NULL, phase = NULL, frequency = NULL, defocus = NULL, textRotation = NULL, t = NULL, w = NULL)) {
-if (!exists(".opi_env") || !exists("Jovp", envir = .opi_env))
-    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
-if (!("socket" %in% names(.opi_env$Jovp)) || is.null(.opi_env$Jovp$socket))
+if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% names(.opi_env$Jovp)) || is.null(.opi_env$Jovp$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- c(list(command = "present"), lapply(stim, function(p) ifelse(is.null(p), NULL, p)))
-    print(msg)
-    #msg <- list(command = "present", eye = stim$eye, shape = stim$shape, type = stim$type, x = stim$x, y = stim$y, sx = stim$sx, sy = stim$sy, lum = stim$lum, color1 = stim$color1, color2 = stim$color2, rotation = stim$rotation, contrast = stim$contrast, phase = stim$phase, frequency = stim$frequency, defocus = stim$defocus, textRotation = stim$textRotation, t = stim$t, w = stim$w)
+    msg <- list(eye = stim$eye, shape = stim$shape, type = stim$type, x = stim$x, y = stim$y, sx = stim$sx, sy = stim$sy, lum = stim$lum, color1 = stim$color1, color2 = stim$color2, rotation = stim$rotation, contrast = stim$contrast, phase = stim$phase, frequency = stim$frequency, defocus = stim$defocus, textRotation = stim$textRotation, t = stim$t, w = stim$w)
+    msg <- c(list(command = "present"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
-    res <- readLines(.opi_env$Jovp$socket, n = 1)
-    print(res)
-    res <- rjson::fromJSON(res)
+    res <- rjson::fromJSON(readLines(.opi_env$Jovp$socket, n = 1))
     return(res)
 }
 
@@ -231,10 +232,12 @@ if (!("socket" %in% names(.opi_env$Jovp)) || is.null(.opi_env$Jovp$socket))
 #' @seealso [opiClose()]
 #'
 opiClose_for_Jovp <- function() {
-if(!exists(".opi_env$Jovp") || !exists(".opi_env$Jovp$socket") || is.null(.opi_env$Jovp$socket))
+if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% names(.opi_env$Jovp)) || is.null(.opi_env$Jovp$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
+    msg <- c(list(command = "close"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 

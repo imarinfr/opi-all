@@ -46,7 +46,16 @@ if (exists(".opi_env") && !exists("Icare", where = .opi_env))
 #'
 opiInitialise_for_Icare <- function(ipMonitor = NULL, portMonitor = NULL, ip = NULL, port = NULL) {
     assign("socket", open_socket(ipMonitor, portMonitor), .opi_env$Icare)
+
+    msg <- list(command = "choose", machine = "Icare")
+    msg <- rjson::toJSON(msg)
+    writeLines(msg, .opi_env$Jovp$socket)
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
+
     msg <- list(ipMonitor = ipMonitor, portMonitor = portMonitor, ip = ip, port = port)
+    msg <- c(list(command = "initialize"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Icare$socket)
 
@@ -76,10 +85,12 @@ opiInitialise_for_Icare <- function(ipMonitor = NULL, portMonitor = NULL, ip = N
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Icare <- function() {
-if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi_env$Icare$socket))
+if(!exists(".opi_env") || !exists("Icare", envir = .opi_env) || !("socket" %in% names(.opi_env$Icare)) || is.null(.opi_env$Icare$socket))
     stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
+    msg <- c(list(command = "query"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Icare$socket)
 
@@ -114,10 +125,12 @@ if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_Icare <- function(settings = list(fixShape = NULL, fixCx = NULL, tracking = NULL)) {
-if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi_env$Icare$socket))
+if(!exists(".opi_env") || !exists("Icare", envir = .opi_env) || !("socket" %in% names(.opi_env$Icare)) || is.null(.opi_env$Icare$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking)
+    msg <- c(list(command = "setup"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Icare$socket)
 
@@ -165,10 +178,12 @@ if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Icare <- function(stim = list(x = NULL, y = NULL, lum = NULL, t = NULL, w = NULL)) {
-if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi_env$Icare$socket))
+if(!exists(".opi_env") || !exists("Icare", envir = .opi_env) || !("socket" %in% names(.opi_env$Icare)) || is.null(.opi_env$Icare$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(x = stim$x, y = stim$y, lum = stim$lum, t = stim$t, w = stim$w)
+    msg <- c(list(command = "present"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Icare$socket)
 
@@ -201,10 +216,12 @@ if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi
 #' @seealso [opiClose()]
 #'
 opiClose_for_Icare <- function() {
-if(!exists(".opi_env$Icare") || !exists(".opi_env$Icare$socket") || is.null(.opi_env$Icare$socket))
+if(!exists(".opi_env") || !exists("Icare", envir = .opi_env) || !("socket" %in% names(.opi_env$Icare)) || is.null(.opi_env$Icare$socket))
     stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
+    msg <- c(list(command = "close"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Icare$socket)
 

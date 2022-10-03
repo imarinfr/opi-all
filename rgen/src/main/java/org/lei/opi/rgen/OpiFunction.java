@@ -167,8 +167,11 @@ public class OpiFunction {
      * @param params List of params to send to machine
      */
     private final String sendMessage() {
+        //msg <- c(list(command = "present"), lapply(stim, function(p) ifelse(is.null(p), NULL, p)))
         return String.format("""
         msg <- list(%s)
+        msg <- c(list(command = "%s"), msg)
+        msg <- msg[!unlist(lapply(msg, is.null))]
         msg <- rjson::toJSON(msg)
         writeLines(msg, %s$%s$socket)
     """, 
@@ -179,6 +182,7 @@ public class OpiFunction {
                 p.name()))
             .collect(Collectors.joining(", "))
         ,
+        this.opiCoreName,
         opiEnvName, this.machineName);
     }
 
@@ -234,11 +238,22 @@ public class OpiFunction {
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
             if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
+
+            socketCode = String.format("""
+        %s
+
+            msg <- list(command = "choose", machine = "%s")
+            msg <- rjson::toJSON(msg)
+            writeLines(msg, .opi_env$Jovp$socket)
+            res <- readLines(.opi_env$Jovp$socket, n = 1)
+            res <- rjson::fromJSON(res)
+                    """, socketCode, this.machineName);
         } else {
             socketCode = String.format("""
-                if(!exists("%s$%s") || !exists("%s$%s$socket") || is.null(%s$%s$socket))
+                if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
                     stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
-                """, opiEnvName, machineName,
+                """, opiEnvName, 
+                machineName, opiEnvName,
                 opiEnvName, machineName, 
                 opiEnvName, machineName,
                 this.opiName
