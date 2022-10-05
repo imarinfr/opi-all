@@ -1,7 +1,0 @@
-{
-  "command": "initialize",
-  "ip": "localhost",
-  "port": 51234,
-  "ipMonitor": "localhost",
-  "portMonitor": 50001
-}

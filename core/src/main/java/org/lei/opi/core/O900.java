@@ -3,7 +3,6 @@ package org.lei.opi.core;
 import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -34,11 +33,8 @@ public class O900 extends OpiMachine {
   /** Allowed sizes */
   private enum Size {GI, GII, GIII, GIV, GV, GVI}
 
-  /** {@value DEFAULT_EYESUITE} */
-  private static final String DEFAULT_EYESUITE = "C:/ProgramData/Haag-Streit/EyeSuite/";
   /** {@value NA_STRING} */
   private static final String NA_STRING = "NA";
-
   /** {@value OPI_INITIALIZE} */
   private static final String OPI_INITIALIZE = "OPI_INITIALIZE ";
   /** {@value OPI_SET_BACKGROUND} */
@@ -101,13 +97,6 @@ public class O900 extends OpiMachine {
   private static int MET_COL_BLUE_WHITE;
   private static int MET_COL_RED_YELLOW;
   private static int MET_COL_WHITE_YELLOW;
-
-  /** Whether device maximum is 10000 abs or 4000 abs */
-  private boolean max10000;
-  /** Whether device has a big wheel (i.e., allows presentation of Goldmann VI stimulus sizes) */
-  private boolean bigWheel;
-  /** Whether clicker is Logitech's F310 */
-  private boolean f310;
 
   public O900() {
     fillConstants();
@@ -197,14 +186,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    try {
-      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      return OpiManager.ok(String.format(CONNECTED_TO_HOST, args.get("ip"), (int) ((double) args.get("port"))));
-    } catch (ClassCastException e) {
-      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
-    } catch (IOException e) {
-      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
-    }
+      return OpiManager.ok(String.format(CONNECTED_TO_HOST, SETTINGS.ip, SETTINGS.port));
   };
 
   /**
@@ -228,34 +210,25 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   @Parameter(name = "eye", className = Eye.class, desc = "Eye to set.", defaultValue = "left")
-  @Parameter(name = "eyeSuite", desc = "Path to EyeSuite.", defaultValue = "C:/ProgramData/Haag-Streit/EyeSuite/")
-  @Parameter(name = "gazeFeed", desc = "Path where to save gaze feed. Directory must exists", defaultValue = "")
-  @Parameter(name = "bigWheel", className = Double.class, desc = "Whether O900 has a big wheel for displaying Goldmann Size VI stimuli.", min = 0, max = 1, defaultValue = "0")
-  @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
-  @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
-  @Parameter(name = "max10000", className = Double.class, desc = "Whether O900 can handle a maximum luminance of 10000 apostilbs instead of 4000. Check the settings in EyeSuite", min = 0, max = 1, defaultValue = "0")
   @Parameter(name = "bgLum", className = BackgroundLuminance.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
   @Parameter(name = "bgCol", className = BackgroundColor.class, desc = "Background color for eye.", defaultValue = "white")
   @Parameter(name = "fixShape", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
   @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
-  @Parameter(name = "f310", className = Double.class, desc = "Whether to use Logitech's F310 controller", min = 0, max = 1, defaultValue = "0")
+  @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
+  @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
   public MessageProcessor.Packet setup(HashMap<String, Object> args) {
     if (writer == null) return OpiManager.error(NOT_INITIALIZED);
     StringBuilder message;
     String result;
     try {
       // Prepare OPI_INITIALIZE instruction
-      String eyeSuite = (String) args.get("eyeSuite");
-      if (eyeSuite.isBlank()) eyeSuite = DEFAULT_EYESUITE;
-      String gazeFeed = (String) args.get("gazeFeed");
-      if (eyeSuite.isBlank()) gazeFeed = NA_STRING;
       message = new StringBuilder(OPI_INITIALIZE).append(" ")
-        .append("\"").append(eyeSuite).append("\"").append(" ")
+        .append("\"").append(SETTINGS.o900.eyeSuite).append("\"").append(" ")
         .append("\"").append(((String) args.get("eye"))).append("\"").append(" ")
         .append((int) ((double) args.get("pres"))).append(" ")
         .append((int) ((double) args.get("resp"))).append(" ")
-        .append((int) ((double) args.get("max10000"))).append(" ")
-        .append("\"").append(gazeFeed).append("\"").append(" ");
+        .append(SETTINGS.o900.max10000).append(" ")
+        .append("\"").append(SETTINGS.o900.gazeFeed).append("\"").append(" ");
       // Send OPI_INITIALIZE instruction
       writer.send(message.toString());
       while (writer.empty()) Thread.onSpinWait();
@@ -287,13 +260,6 @@ public class O900 extends OpiMachine {
       while (writer.empty()) Thread.onSpinWait();
       result = writer.receive();
       if (!result.equals("0")) return OpiManager.error(OPI_SET_BACKGROUND_FAILED + result);
-      // finish setup, max10000, bigWheel and F310 are managed here
-      if ((int) ((double) args.get("max10000")) == 0) max10000 = false;
-      else max10000 = false;
-      if ((int) ((double) args.get("bigWheel")) == 0) bigWheel = false;
-      else bigWheel = false;
-      if ((int) ((double) args.get("f310")) == 0) f310 = false;
-      else f310 = false;
       return OpiManager.ok(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(OPI_SETUP_FAILED, e);
@@ -338,7 +304,7 @@ public class O900 extends OpiMachine {
         case GV -> 5;
         case GVI -> 6;
       };
-      if (!bigWheel && size == 6) throw new IllegalArgumentException(WRONG_SIZE + size);
+      if (!SETTINGS.o900.bigWheel && size == 6) throw new IllegalArgumentException(WRONG_SIZE + size);
       String color =  Color.valueOf(((String) args.get("color")).toUpperCase()).toString().toLowerCase();
       int[] t = toIntArray(args.get("t"));
       // get specific parameters and mount the message to send
@@ -364,14 +330,10 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet close() {
-    try {
-      writer.send(OPI_CLOSE);
-      writer.close();
-      writer = null;
-      return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
-    } catch (IOException e) {
-      return OpiManager.error(COULD_NOT_DISCONNECT, e);
-    }
+    writer.send(OPI_CLOSE);
+    writer.close();
+    writer = null;
+    return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
   };
 
   /**
@@ -449,7 +411,7 @@ public class O900 extends OpiMachine {
       }
       default -> throw new IllegalArgumentException(XY_SIZE_TOO_LONG);
     }
-    return new StringBuilder(f310 ? OPI_PRESENT_STATIC_F310 : OPI_PRESENT_STATIC).append(" ")
+    return new StringBuilder(SETTINGS.o900.f310 ? OPI_PRESENT_STATIC_F310 : OPI_PRESENT_STATIC).append(" ")
       .append((int) Math.round(10.0 * x[0])).append(" ")
       .append((int) Math.round(10.0 * y[0])).append(" ")
       .append((int) Math.round(10.0 * cdToDecibel(lum))).append(" ")
@@ -498,7 +460,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   private double cdToDecibel(double lum) {
-    return -10.0 * Math.log10(lum / ((max10000 ? 10000.0 : 4000.0) / Math.PI));
+    return -10.0 * Math.log10(lum / ((SETTINGS.o900.max10000 ? 10000.0 : 4000.0) / Math.PI));
   }
 
   /**

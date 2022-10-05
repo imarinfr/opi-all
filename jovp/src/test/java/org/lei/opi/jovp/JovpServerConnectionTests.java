@@ -1,9 +1,12 @@
 package org.lei.opi.jovp;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.core.CSListener;
+
+import es.optocom.jovp.Controller;
 
 /**
  *
@@ -48,6 +51,42 @@ public class JovpServerConnectionTests {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   *
+   * Load default configuration files
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void defaultConfigurations() {
+    Settings settings;
+    try {
+      settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
+      System.out.println(settings);
+      settings = Settings.defaultSettings(Settings.Machine.PICOVR);
+      System.out.println(settings);
+      settings = Settings.defaultSettings(Settings.Machine.PHONEHMD);
+      System.out.println(settings);
+      settings = Settings.defaultSettings(Settings.Machine.DISPLAY_MONO);
+      System.out.println(settings);
+      settings = Settings.defaultSettings(Settings.Machine.DISPLAY_STEREO);
+      System.out.println(settings);
+    } catch (IllegalArgumentException | IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   *
+   * List of suitable USB serial controllers attached to the computer
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void listUsbControllers() {
+    System.out.println(Arrays.toString(Controller.getSuitableControllers()));
   }
 
 }

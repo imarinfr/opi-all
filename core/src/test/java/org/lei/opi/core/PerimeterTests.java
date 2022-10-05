@@ -1,25 +1,24 @@
-package org.lei.opi.jovp;
+package org.lei.opi.core;
 
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
-import org.lei.opi.jovp.Settings.Machine;
 
 /**
  *
- * Integrated tests for connection in series from client to OPI JOVP
+ * Unitary tests for socket connections
  *
  * @since 0.0.1
  */
-public class RToMonitorToJovpTests {
+public class PerimeterTests {
 
   /** JOVP server port */
-  private static final int JOVP_PORT = 51234;
+  private static final int PERIMETER_PORT = 51234;
   /** JOVP monitor port */
   private static final int MONITOR_PORT = 50001;
 
   /** The JOVP server */
-  private JovpServer server;
+  private Perimeter server;
   /** The OPI monitor */
   private Core monitor;
   /** The R client */
@@ -35,37 +34,51 @@ public class RToMonitorToJovpTests {
   private String[] presentJson;
 
   /**
-   * Monitor controlling Display on monoscopic view
+   *
+   * Test O900
    *
    * @since 0.0.1
    */
   @Test
-  public void monitorDisplayMono() {
-    setupConnections(Machine.DISPLAY_MONO);
-    setupCommands(Machine.DISPLAY_MONO);
+  public void o900() {
+    setupConnections(Perimeter.Machine.O900);
+    setupCommands(Perimeter.Machine.O900);
     clientDriver();
-    server.run();
     closeConnections();
   }
 
   /**
-   * Monitor controlling Display on stereoscopic view
+   *
+   * Test Compass
    *
    * @since 0.0.1
    */
   @Test
-  public void monitorDisplayStereo() {
-    setupConnections(Machine.DISPLAY_STEREO);
-    setupCommands(Machine.DISPLAY_STEREO);
+  public void Compass() {
+    setupConnections(Perimeter.Machine.COMPASS);
+    setupCommands(Perimeter.Machine.COMPASS);
     clientDriver();
-    server.run();
+    closeConnections();
+  }
+
+    /**
+   *
+   * Test Maia
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void Maia() {
+    setupConnections(Perimeter.Machine.MAIA);
+    setupCommands(Perimeter.Machine.MAIA);
+    clientDriver();
     closeConnections();
   }
 
   /** setup connections */
-  private void setupConnections(Machine machine) {
+  private void setupConnections(Perimeter.Machine machine) {
     try {
-      server = new JovpServer(machine, JOVP_PORT); // first setup JOVP server
+      server = new Perimeter(machine, PERIMETER_PORT); // first setup JOVP server
       monitor = new Core(MONITOR_PORT); // then setup monitor
       r = new RClient(monitor.getIP(), monitor.getPort()); // finally setup R client
     } catch (IOException e) {
@@ -74,57 +87,37 @@ public class RToMonitorToJovpTests {
   }
 
   /** setup commands */
-  private void setupCommands(Machine machine) {
+  private void setupCommands(Perimeter.Machine machine) {
     switch(machine) {
-      case DISPLAY_MONO, DISPLAY_STEREO -> {
-        chooseJson = "Display/opiChoose.json";
-        initJson = "Display/opiInit.json";
+      case O900 -> {
+        chooseJson = "O900/opiChoose.json";
+        initJson = "O900/opiInit.json";
         setupJson = new String[] {
-          "Display/opiSetup.json"
+          "O900/opiSetup.json"
         };
         presentJson = new String[] {
-          "Display/opiPresentStatic1.json",
-          "Display/opiPresentStatic2.json",
-          "Display/opiPresentStatic3.json",
-          "Display/opiPresentStatic1.json",
-          "Display/opiPresentStatic2.json",
-          "Display/opiPresentStatic3.json",
-          "Display/opiPresentDynamic1.json",
-          "Display/opiPresentDynamic2.json"
+          "O900/opiPresentStatic.json",
+          "O900/opiPresentKinetic.json"
         };
       }
-      case IMOVIFA -> {
-        chooseJson = "ImoVifa/opiChoose.json";
-        initJson = "ImoVifa/opiInit.json";
+      case COMPASS -> {
+        chooseJson = "Compass/opiChoose.json";
+        initJson = "Compass/opiInit.json";
         setupJson = new String[] {
-          "ImoVifa/opiSetup.json"
+          "Compass/opiSetup.json"
         };
         presentJson = new String[] {
-          "ImoVifa/opiPresent.json",
-          "ImoVifa/opiPresent2.json",
-          "ImoVifa/opiPresent3.json",
-          "ImoVifa/opiPresent4.json",
-          "ImoVifa/opiPresent5.json"
+          "Compass/opiPresent.json",
         };
       }
-      case PICOVR -> {
-        chooseJson = "PicoVR/opiChoose.json";
-        initJson = "PicoVR/opiInit.json";
+      case MAIA -> {
+        chooseJson = "Maia/opiChoose.json";
+        initJson = "Maia/opiInit.json";
         setupJson = new String[] {
-          "PicoVR/opiSetup.json"
+          "Maia/opiSetup.json"
         };
         presentJson = new String[] {
-          "PicoVR/opiPresent.json",
-        };
-      }
-      case PHONEHMD -> {
-        chooseJson = "PhoneHMD/opiChoose.json";
-        initJson = "PhoneHMD/opiInit.json";
-        setupJson = new String[] {
-          "PhoneHMD/opiSetup.json"
-        };
-        presentJson = new String[] {
-          "PhoneHMD/opiPresent.json",
+          "Maia/opiPresent.json",
         };
       }
     }
@@ -142,17 +135,12 @@ public class RToMonitorToJovpTests {
 
   /** execute commands from driver */
   private void clientDriver() {
-    new Thread() {
-      public void run() {
-        try {
-          Thread.sleep(500); // need to wait for PsychoEngine to start
-          executeCommands();
-          server.close();
-        } catch (IOException | InterruptedException e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }.start();
+    try {
+      executeCommands();
+      server.close();
+    } catch (IOException | InterruptedException e) {
+      throw new RuntimeException(e);
+    }  
   }
 
   /** server driver with lists of present/query etc*/
@@ -161,20 +149,17 @@ public class RToMonitorToJovpTests {
     System.out.println("OPI QUERY before OPI INITIALIZE");
     sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
     sendAndReceive(RClient.loadMessage(initJson)); // Initialize OPI
-    Thread.sleep(2000);
     System.out.println("OPI QUERY after OPI INITIALIZE");
     sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
     for (String s : setupJson) {
       sendAndReceive(RClient.loadMessage(s)); // Setup OPI
-      Thread.sleep(2000);
     }
     for (String s : presentJson) { // Present OPI
       sendAndReceive(RClient.loadMessage(s));
-      Thread.sleep(500);
     } // Present OPI
     sendAndReceive(RClient.loadMessage("opiClose.json")); // Close OPI  
   }
-  
+
   /** R sends to and receives from monitor */
   private void sendAndReceive(String message) throws IOException {
     System.out.println("R SENDS\n" + message);

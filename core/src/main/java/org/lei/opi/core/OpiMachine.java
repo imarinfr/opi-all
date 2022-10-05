@@ -1,7 +1,10 @@
 package org.lei.opi.core;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,12 +12,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.OpiManager.Command;
 import org.lei.opi.core.definitions.MessageProcessor;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 import org.reflections.Reflections;
+
+import com.google.gson.Gson;
 
 /**
  * The OPI machine standard for communication with perimeters
@@ -43,10 +49,6 @@ public abstract class OpiMachine {
   static final String INVOCATION_FAILED = "Cannot invoke '%s' in '%s'. Either the annotation with parameters is incorrect or the method failed";
   /** {@value NOT_DOUBLE} */
   static final String OUT_OF_RANGE = "Parameter '%s' in function '%s' of '%s' is not in range [%s, %s]. It is %s.";
-  /** {@value INCORRECT_FORMAT_IP_PORT} */
-  static final String INCORRECT_FORMAT_IP_PORT = "IP and port have the wrong format";
-  /** {@value UNKNOWN_HOST} */
-  static final String SERVER_NOT_READY = "Server at %s is unknown or does not exist";
   /** {@value NOT_INITIALIZED} */
   static final String NOT_INITIALIZED = "OPI machine has not yet been initialized";
   /** {@value COULD_NOT_QUERY} */
@@ -65,6 +67,55 @@ public abstract class OpiMachine {
   static final String CONNECTED_TO_HOST = "\"Connected to host at %s:%s\"";
   /** {@value DISCONNECTED_FROM_HOST} */
   static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
+
+  protected class Jovp {
+    int screen;
+    int[] physicalSize;
+    boolean fullScreen;
+    int distance;
+    String viewMode;
+    String input;
+    boolean tracking;
+    int depth;
+    String gammaFile;
+  };
+  protected class O900 {
+    String eyeSuite;
+    String gazeFeed;
+    boolean bigWheel;
+    boolean max10000;
+    boolean f310;
+  };
+  protected class Settings {
+    String ip;
+    int port;
+    Jovp jovp;
+    O900 o900;
+  };
+
+  /** All machine settings from a JSON file */
+  protected static final Settings SETTINGS;
+  static {
+     try {
+      InputStream inputStream = OpiManager.class.getResourceAsStream("settings.json");
+      SETTINGS = (new Gson()).fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
+        Settings.class);
+    } catch (IOException | AssertionError e) {
+      e.printStackTrace();
+      throw new RuntimeException("Could not load 'settings.json' file", e);
+    }
+  };
+
+  /**
+   *
+   * Get the settings for a specific machine class
+   *
+   * @since 0.0.1
+   */
+  protected static Settings getMachineSettings(String machine) {
+    System.out.println(SETTINGS);
+    return SETTINGS;
+  }
 
   /**
    * Class to hold information of the 5 key OPI methods ready for use.
@@ -97,7 +148,7 @@ public abstract class OpiMachine {
    * @since 0.0.1
    */
   public OpiMachine() {
-    writer = null;
+    writer = new CSWriter(SETTINGS.ip, SETTINGS.port);
     // Select the OPI commands
     String[] commands = Arrays.stream(OpiManager.Command.values())
       .map(Enum::name).map(String::toLowerCase).toArray(String[]::new);
@@ -213,8 +264,6 @@ public abstract class OpiMachine {
    * 
    * @since 0.0.1
    */
-  @Parameter(name = "ipMonitor", desc = "IP Address of the OPI monitor.", defaultValue = "localhost")
-  @Parameter(name = "portMonitor", className = Double.class, desc = "TCP port of the OPI monitor.", min = 0, max = 65535, defaultValue = "50008")
   @Parameter(name = "ip", desc = "IP Address of the OPI machine.", defaultValue = "localhost")
   @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI machine.", min = 0, max = 65535, defaultValue = "50001")
   @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")

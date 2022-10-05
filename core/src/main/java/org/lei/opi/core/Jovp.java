@@ -1,6 +1,5 @@
 package org.lei.opi.core;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.lei.opi.core.OpiManager.Command;
@@ -31,16 +30,9 @@ public class Jovp extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    try {
-      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      writer.send(toJson(Command.INITIALIZE));
-      while (writer.empty()) Thread.onSpinWait();
-      return OpiManager.ok(writer.receive());
-    } catch (ClassCastException e) {
-      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
-    } catch (IOException e) {
-      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
-    }
+    writer.send(toJson(Command.INITIALIZE));
+    while (writer.empty()) Thread.onSpinWait();
+    return OpiManager.ok(writer.receive()); // TODO error handling
   };
 
   /**
@@ -146,15 +138,11 @@ public class Jovp extends OpiMachine {
    */
   public MessageProcessor.Packet close() {
     if (writer == null) return OpiManager.error(NOT_INITIALIZED);
-    try {
-      writer.send(toJson(Command.CLOSE));
-      while (writer.empty()) Thread.onSpinWait(); writer.receive(); // message ignored
-      writer.close();
-      writer = null;
-      return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
-    } catch (IOException e) {
-      return OpiManager.error(COULD_NOT_DISCONNECT, e);
-    }
+    writer.send(toJson(Command.CLOSE));
+    while (writer.empty()) Thread.onSpinWait(); writer.receive(); // message ignored
+    writer.close();
+    writer = null;
+    return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
   }
 
 }

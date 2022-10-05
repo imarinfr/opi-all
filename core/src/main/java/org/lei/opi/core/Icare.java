@@ -1,6 +1,5 @@
 package org.lei.opi.core;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,14 +63,7 @@ public class Icare extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    try {
-      writer = new CSWriter((String) args.get("ip"), (int) ((double) args.get("port")));
-      return OpiManager.ok(CONNECTED_TO_HOST + args.get("ip") + ":" + (int) ((double) args.get("port")));
-    } catch (ClassCastException e) {
-      return OpiManager.error(INCORRECT_FORMAT_IP_PORT);
-    } catch (IOException e) {
-      return OpiManager.error(String.format(SERVER_NOT_READY, args.get("ip") + ":" + (int) ((double) args.get("port"))));
-    }
+    return OpiManager.ok(String.format(CONNECTED_TO_HOST, SETTINGS.ip, SETTINGS.port));
   };
 
   /**
@@ -195,7 +187,7 @@ public class Icare extends OpiMachine {
       writer.close();
       writer = null;
       return OpiManager.ok(message, true);
-    } catch (IOException | ClassCastException | IllegalArgumentException e) {
+    } catch (ClassCastException | IllegalArgumentException e) {
       return OpiManager.error(COULD_NOT_DISCONNECT, e);
     }
   };

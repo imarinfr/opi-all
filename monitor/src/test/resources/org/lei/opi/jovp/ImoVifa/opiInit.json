@@ -1,0 +1,5 @@
+{
+  "command": "initialize",
+  "ip": "localhost",
+  "port": 51234
+}

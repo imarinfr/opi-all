@@ -33,8 +33,6 @@ public class OpiJovp extends MessageProcessor {
 
   /** {@value BAD_COMMAND} */
   private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
-  /** {@value INITIALIZE} */
-  private static final String INITIALIZE = "INITIALIZE successful";
   /** {@value SETUP_FAILED} */
   private static final String SETUP_FAILED = "SETUP failed";
   /** {@value PRESENT_FAILED} */
@@ -171,7 +169,7 @@ public class OpiJovp extends MessageProcessor {
    */
   private MessageProcessor.Packet initialize() {
     state = State.INIT;
-    return new MessageProcessor.Packet("\"" + prefix + INITIALIZE + "\"");
+    return OpiManager.ok("ignored"); // TODO
   }
 
   /**

@@ -40,9 +40,6 @@ public class CSListener extends Thread {
   /** {@value CLOSE_FAILED} */
   private static final String CANNOT_OBTAIN_ADDRESS = "Cannot obtain public address.";
 
-  /** listen backlog, which is @value BACKLOG */
-  private static final int BACKLOG = 1;
-
   /** Local connection address */
   private InetAddress address;
   /** Local connection port */
@@ -102,21 +99,21 @@ public class CSListener extends Thread {
   public void run() {
     Socket socket;
     try {
-      server = new ServerSocket(port, BACKLOG, address);
+      server = new ServerSocket(port, 0, address);
       server.setSoTimeout(100);
       while (listen) {
         try {
           socket = server.accept();
           incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
           outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
-          while (listen) {
+          while (true) {
+            if (!listen) break;
             if (incoming.ready()) {
               MessageProcessor.Packet pack = msgProcessor.process(receive());
               send(pack.msg);
               if (pack.close) break; // if close requested, break loop
             }
           }
-          break;
         } catch (SocketTimeoutException ignored) {}
       }
       server.close();

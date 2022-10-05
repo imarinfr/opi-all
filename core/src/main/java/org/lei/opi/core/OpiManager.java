@@ -18,27 +18,27 @@ import com.google.gson.reflect.TypeToken;
  */
 public class OpiManager extends MessageProcessor {
 
-/**
- * Command. In JSON files they will appear as:
- *    name:value pair where name == "command"
- *
- * @since 0.0.1
- */
-public enum Command {
-  /** Choose OPI implementation */
-  CHOOSE,
-  /** Query device constants */
-  QUERY,
-  /** Setup OPI */
-  SETUP,
-  /** Initialize OPI connection */
-  INITIALIZE,
-  /** Present OPI static, kinetic, or temporal stimulus */
-  PRESENT,
-  /** Close OPI connection */
-  CLOSE
-}
-
+  /**
+   * Command. In JSON files they will appear as:
+   *    name:value pair where name == "command"
+   *
+   * @since 0.0.1
+   */
+  public enum Command {
+    /** Choose OPI implementation */
+    CHOOSE,
+    /** Query device constants */
+    QUERY,
+    /** Setup OPI */
+    SETUP,
+    /** Initialize OPI connection */
+    INITIALIZE,
+    /** Present OPI static, kinetic, or temporal stimulus */
+    PRESENT,
+    /** Close OPI connection */
+    CLOSE
+  }
+  
   /** Constant for exception messages: {@value BAD_JSON} */
   public static final String BAD_JSON = "String is not a valid Json object.";
   /** Constant for exception messages: {@value NO_COMMAND_FIELD} */
@@ -47,8 +47,6 @@ public enum Command {
   public static final String BAD_COMMAND_FIELD = "value of 'command' name in Json message is not one of Command'.";
   /** Constant for exception messages: {@value NO_CHOOSE_COMMAND} */
   private static final String NO_CHOOSE_COMMAND = "No machine selected yet. First 'command' must be " + Command.CHOOSE.name();
-  /** Constant for exception messages: {@value MACHINE_NEEDS_CLOSING} */
-  private static final String MACHINE_NEEDS_CLOSING = "Close the previous machine before choosing another.";
   /** Constant for exception messages: {@value WRONG_MACHINE_NAME} */
   private static final String WRONG_MACHINE_NAME = "Cannot create the selected machine %s in 'command:'" + Command.CHOOSE.name() + "' as it does not exist.";
   /** Constant for exception messages: {@value MACHINE_SELECTED} */
@@ -58,10 +56,11 @@ public enum Command {
   /** name:value pair in JSON output if there is not an error */
   private static String ERROR_NO = "\"error\" : 0";
 
+  /** to parse JSONs with fromJson method */
+  private static Gson gson = new Gson();
+
   /** The OpiMachine object that is instantiated when a Command.CHOOSE is received */
   private OpiMachine machine;
-
-  private static Gson gson = new Gson(); // for fromJson method
 
   /**
    *
@@ -164,15 +163,15 @@ public enum Command {
     // If it is a CHOOSE command, then let's fire up the chosen machine (unless one already open)
     if (cmd.equalsIgnoreCase(Command.CHOOSE.name())) {
       if (this.machine != null && machine.writer == null)
-        return error(MACHINE_NEEDS_CLOSING);
+        this.machine.close();
       String className = OpiMachine.class.getPackage().getName() + "." + pairs.get("machine");
       try {
         machine = (OpiMachine) Class.forName(className).getDeclaredConstructor().newInstance();
+        return ok(String.format(MACHINE_SELECTED, className), false);
       } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException |
                InvocationTargetException | NoSuchMethodException | SecurityException e) {
         return error(String.format(WRONG_MACHINE_NAME, className), e);
       }
-      return ok(String.format(MACHINE_SELECTED, className), false);
     } else { // If it is not a CHOOSE command and there is no machine open, give up else try it out
       if (this.machine == null)
         return error(NO_CHOOSE_COMMAND);

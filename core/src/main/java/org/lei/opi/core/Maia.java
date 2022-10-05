@@ -24,7 +24,7 @@ public class Maia extends Icare {
     BACKGROUND_LUMINANCE = 4.0 / Math.PI;
     MIN_LUMINANCE = BACKGROUND_LUMINANCE;
     MAX_LUMINANCE = 1000.0 / Math.PI;
-    TRACKING = false;  
+    TRACKING = true;
   }
 
 }
