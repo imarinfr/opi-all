@@ -16,14 +16,18 @@ import java.net.Socket;
  */
 public class CSWriter {
 
-  /** {Charset is @value CHARSET_NAME} */
+  /** Charset is {@value CHARSET_NAME} */
   private static final String CHARSET_NAME = "UTF8";
-  /** {@value CANNOT_SEND} */
-  private static final String CANNOT_SEND = "Cannot send message in CSWriter";
-  /** {@value CANNOT_CHECK_EMPTY} */
-  private static final String CANNOT_CHECK_EMPTY = "Cannot check if socket is empty";
-  /** {@value CANNOT_RECEIVE} */
-  private static final String CANNOT_RECEIVE = "Cannot receive message in CSWriter";
+  /** {@value OPEN_FAILED} */
+  private static final String OPEN_FAILED = "Cannot open the socket.";
+  /** {@value CHECK_FAILED} */
+  private static final String CHECK_FAILED = "Cannot check if socket is empty.";
+  /** {@value RECEIVE_FAILED} */
+  private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in CSListener.";
+  /** {@value SEND_FAILED} */
+  private static final String SEND_FAILED = "Cannot write send() message to sendWriter in CSListener.";
+  /** {@value CLOSE_FAILED} */
+  private static final String CLOSE_FAILED = "Cannot close the socket.";
 
   /** Server onnection address */
   private InetAddress address;
@@ -41,31 +45,35 @@ public class CSWriter {
    * 
    * @param ip Server IP address
    * @param port Server port
-   *
-   * @throws IOException If could not initialize connection
    * 
    * @since 0.1.0
    */
-  public CSWriter(String ip, int port) throws IOException {
-    if (ip.equalsIgnoreCase("localhost") | ip.equals("127.0.0.1"))
-      this.address = InetAddress.getLocalHost();
-    else
-      this.address = InetAddress.getByName(ip);
-    this.port = port;
-    client = new Socket(address, port);
-    outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream(), CHARSET_NAME));
-    incoming = new BufferedReader(new InputStreamReader(client.getInputStream(), CHARSET_NAME));
+  public CSWriter(String ip, int port) {
+    try {
+      if (ip.equalsIgnoreCase("localhost") | ip.equals("127.0.0.1"))
+        this.address = InetAddress.getLocalHost();
+      else
+        this.address = InetAddress.getByName(ip);
+      this.port = port;
+      client = new Socket(address, port);
+      outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream(), CHARSET_NAME));
+      incoming = new BufferedReader(new InputStreamReader(client.getInputStream(), CHARSET_NAME));
+    } catch (IOException e) {
+      throw new RuntimeException(OPEN_FAILED, e);
+    }
   }
 
   /**
    * Close connection to server
    *
-   * @throws IOException If could not close connection
-   *
    * @since 0.0.1
    */
-  public void close() throws IOException {
-    client.close();
+  public void close() {
+    try {
+      client.close();
+    } catch (IOException e) {
+      throw new RuntimeException(CLOSE_FAILED, e);
+    }
   }
 
   /**
@@ -81,8 +89,8 @@ public class CSWriter {
       outgoing.newLine();
       outgoing.flush();
     } catch (IOException e) {
-      System.err.println(CANNOT_SEND);
-      throw new RuntimeException(e);
+      System.err.println(SEND_FAILED);
+      throw new RuntimeException(SEND_FAILED, e);
     }
   }
 
@@ -97,11 +105,11 @@ public class CSWriter {
     try {
       return !incoming.ready();
     } catch (IOException e) {
-      System.err.println(CANNOT_CHECK_EMPTY);
-      throw new RuntimeException(e);
+      System.err.println(CHECK_FAILED);
+      throw new RuntimeException(CHECK_FAILED, e);
     }
   }
-
+      
   /**
    * Receive message
    *
@@ -117,8 +125,8 @@ public class CSWriter {
         message.append(line + (incoming.ready() ? "\n" : ""));
       }
     } catch (IOException e) {
-      System.err.println(CANNOT_RECEIVE);
-      throw new RuntimeException(e);
+      System.err.println(RECEIVE_FAILED);
+      throw new RuntimeException(RECEIVE_FAILED, e);
     }
     return message.toString();
   }

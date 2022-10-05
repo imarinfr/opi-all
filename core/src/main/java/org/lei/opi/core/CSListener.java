@@ -25,14 +25,20 @@ import org.lei.opi.core.definitions.MessageProcessor;
  */
 public class CSListener extends Thread {
 
-  /** {Charset is @value CHARSET_NAME} */
+  /** Charset is {@value CHARSET_NAME} */
   private static final String CHARSET_NAME = "UTF8";
-  /** {@value CANNOT_CHECK_EMPTY} */
-  private static final String CANNOT_CHECK_EMPTY = "Cannot check if socket is empty";
-  /** {@value CANNOT_RECEIVE} */
-  private static final String CANNOT_RECEIVE = "Cannot write receive() message to receiveWriter in CSListener";
-  /** {@value CANNOT_SEND} */
-  private static final String CANNOT_SEND = "Cannot write send() message to sendWriter in CSListener";
+  /** {@value LISTENER_FAILED} */
+  private static final String LISTENER_FAILED = "CSListener failed.";
+  /** {@value CHECK_FAILED} */
+  private static final String CHECK_FAILED = "Cannot check if socket is empty.";
+  /** {@value RECEIVE_FAILED} */
+  private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in CSListener.";
+  /** {@value SEND_FAILED} */
+  private static final String SEND_FAILED = "Cannot write send() message to sendWriter in CSListener.";
+  /** {@value CLOSE_FAILED} */
+  private static final String CLOSE_FAILED = "Cannot close the socket.";
+  /** {@value CLOSE_FAILED} */
+  private static final String CANNOT_OBTAIN_ADDRESS = "Cannot obtain public address.";
 
   /** listen backlog, which is @value BACKLOG */
   private static final int BACKLOG = 1;
@@ -93,7 +99,7 @@ public class CSListener extends Thread {
   }
 
   /** run listener on a different thread */
-  public void run() throws RuntimeException {
+  public void run() {
     Socket socket;
     try {
       server = new ServerSocket(port, BACKLOG, address);
@@ -115,7 +121,7 @@ public class CSListener extends Thread {
       }
       server.close();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(LISTENER_FAILED, e);
     }
   }
 
@@ -131,11 +137,11 @@ public class CSListener extends Thread {
     try {
       return !incoming.ready();
     } catch (IOException e) {
-      System.err.println(CANNOT_CHECK_EMPTY);
-      throw new RuntimeException(e);
+      System.err.println(CHECK_FAILED);
+      throw new RuntimeException(CHECK_FAILED, e);
     }
   }
- 
+
   /**
    *
    * Receive message
@@ -153,8 +159,8 @@ public class CSListener extends Thread {
       }
       if (receiveWriter != null) receiveWriter.write(message.toString());
     } catch (IOException e) {
-      System.err.println(CANNOT_RECEIVE);
-      throw new RuntimeException(e);
+      System.err.println(RECEIVE_FAILED);
+      throw new RuntimeException(RECEIVE_FAILED, e);
     }
     return message.toString();
   }
@@ -174,8 +180,8 @@ public class CSListener extends Thread {
       outgoing.flush();
       if (sendWriter != null) sendWriter.write(message);
     } catch (IOException e) {
-      System.err.println(CANNOT_SEND);
-      throw new RuntimeException(e);
+      System.err.println(SEND_FAILED);
+      throw new RuntimeException(SEND_FAILED, e);
     }
   }
 
@@ -190,7 +196,7 @@ public class CSListener extends Thread {
       try {
         this.join();
       } catch (InterruptedException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException(CLOSE_FAILED, e);
       }
     }
   }
@@ -252,7 +258,7 @@ public class CSListener extends Thread {
         }
       }
     } catch (SocketException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(CANNOT_OBTAIN_ADDRESS, e);
     }
     return null;
   }

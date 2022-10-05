@@ -12,6 +12,9 @@ import java.util.stream.Stream;
  */
 public class JsonProcessor {
 
+  /** {@value CANNOT_PARSE_STRING} */
+  private static final String CANNOT_PARSE_STRING = "Cannot parse the String to an Enum";
+
   /**
    * Get an array of integer values from a JSON list
    * 
@@ -101,15 +104,13 @@ public class JsonProcessor {
    * 
    * @return Enum
    * 
-   * @throws RuntimeException
-   * 
    * @since 0.0.1
    */
   private static Enum<?> mapper(Method method, String str) {
     try {
       return (Enum<?>) method.invoke(JsonProcessor.class, str.toUpperCase());
     } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException(CANNOT_PARSE_STRING, e);
     }
   }
 
