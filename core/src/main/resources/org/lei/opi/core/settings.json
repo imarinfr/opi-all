@@ -1,7 +1,7 @@
 {
   "ip" : "localhost",
   "port" : 51234,
-  "jovp" :
+  "Jovp" :
     {
       "screen": 0,
       "physicalSize": [],
@@ -13,12 +13,16 @@
       "depth": 8,
       "gammaFile": "linearGamma8bit.json"        
     },
-  "o900" :
+  "O900" :
     {
-      "eyeSuite" : "C:/ProgramData/Haag-Streit/EyeSuite/",
-      "gazeFeed" : "",
+      "eyeSuiteDirectory" : "C:/ProgramData/Haag-Streit/EyeSuite/",
+      "gazeFeedPath" : "",
       "bigWheel" : false,
       "max10000" : true,
       "f310" : false
+    },
+  "Icare" : 
+    {
+      "imagePath" : ""
     }
 }

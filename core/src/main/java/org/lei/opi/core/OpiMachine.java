@@ -68,43 +68,25 @@ public abstract class OpiMachine {
   /** {@value DISCONNECTED_FROM_HOST} */
   static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
 
-  protected class Jovp {
-    int screen;
-    int[] physicalSize;
-    boolean fullScreen;
-    int distance;
-    String viewMode;
-    String input;
-    boolean tracking;
-    int depth;
-    String gammaFile;
+  protected static class Settings {
+    public String ip;
+    public int port;
   };
-  protected class O900 {
-    String eyeSuite;
-    String gazeFeed;
-    boolean bigWheel;
-    boolean max10000;
-    boolean f310;
-  };
-  protected class Settings {
-    String ip;
-    int port;
-    Jovp jovp;
-    O900 o900;
-  };
+  protected OpiMachine.Settings settings;
 
-  /** All machine settings from a JSON file */
-  protected static final Settings SETTINGS;
-  static {
-     try {
-      InputStream inputStream = OpiManager.class.getResourceAsStream("settings.json");
-      SETTINGS = (new Gson()).fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
-        Settings.class);
+  /**
+   * Join this class {@link Settings} and implementing subclass Settings 
+   * and populate them with data in JSON settings file.
+   */
+  public void fillSettings(Class<? extends OpiMachine.Settings> cls) {
+    try {
+        InputStream inputStream = OpiManager.class.getResourceAsStream("settings.json");
+        this.settings = (new Gson()).fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)), cls);
     } catch (IOException | AssertionError e) {
-      e.printStackTrace();
-      throw new RuntimeException("Could not load 'settings.json' file", e);
+        e.printStackTrace();
+        throw new RuntimeException("Could not load 'settings.json' file", e);
     }
-  };
+  }
 
   /**
    *
@@ -112,9 +94,9 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  protected static Settings getMachineSettings(String machine) {
-    System.out.println(SETTINGS);
-    return SETTINGS;
+  protected Settings getMachineSettings(String machine) {
+    System.out.println(settings);
+    return settings;
   }
 
   /**
@@ -148,7 +130,7 @@ public abstract class OpiMachine {
    * @since 0.0.1
    */
   public OpiMachine() {
-    writer = new CSWriter(SETTINGS.ip, SETTINGS.port);
+    writer = new CSWriter(settings.ip, settings.port);
     // Select the OPI commands
     String[] commands = Arrays.stream(OpiManager.Command.values())
       .map(Enum::name).map(String::toLowerCase).toArray(String[]::new);

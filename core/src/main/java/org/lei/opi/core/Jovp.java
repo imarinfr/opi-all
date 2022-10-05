@@ -19,6 +19,22 @@ import es.optocom.jovp.definitions.TextureType;
  * @since 0.0.1
  */
 public class Jovp extends OpiMachine {  
+    class Settings extends OpiMachine.Settings {
+        int screen;
+        int[] physicalSize;
+        boolean fullScreen;
+        int distance;
+        String viewMode;
+        String input;
+        boolean tracking;
+        int depth;
+        String gammaFile;
+    };
+    private Settings settings;
+
+    public Jovp() {
+        fillSettings(Settings.class);
+    }
 
   /**
    * opiInitialise: initialize OPI

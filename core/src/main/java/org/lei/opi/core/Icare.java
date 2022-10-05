@@ -53,6 +53,15 @@ public class Icare extends OpiMachine {
   static double MAX_LUMINANCE;
   static boolean TRACKING;
 
+  class Settings extends OpiMachine.Settings {
+      String imagePath;  // what is this? delete
+  };
+  private Settings settings;
+
+  public Icare() {
+      fillSettings(Settings.class);
+  }
+
   /**
    * opiInitialise: initialize OPI
    * 
@@ -63,7 +72,7 @@ public class Icare extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    return OpiManager.ok(String.format(CONNECTED_TO_HOST, SETTINGS.ip, SETTINGS.port));
+    return OpiManager.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
   };
 
   /**

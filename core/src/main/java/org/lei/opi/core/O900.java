@@ -98,9 +98,19 @@ public class O900 extends OpiMachine {
   private static int MET_COL_RED_YELLOW;
   private static int MET_COL_WHITE_YELLOW;
 
+  class Settings extends OpiMachine.Settings {
+    String eyeSuiteDirectory;
+    String gazeFeedPath;
+    boolean bigWheel;
+    boolean max10000;
+    boolean f310;
+  };
+  private Settings settings;
+
   public O900() {
     fillConstants();
     fillO900Constants();
+    fillSettings(Settings.class);
   }
 
   /**
@@ -186,7 +196,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-      return OpiManager.ok(String.format(CONNECTED_TO_HOST, SETTINGS.ip, SETTINGS.port));
+      return OpiManager.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
   };
 
   /**
@@ -223,12 +233,12 @@ public class O900 extends OpiMachine {
     try {
       // Prepare OPI_INITIALIZE instruction
       message = new StringBuilder(OPI_INITIALIZE).append(" ")
-        .append("\"").append(SETTINGS.o900.eyeSuite).append("\"").append(" ")
+        .append("\"").append(settings.eyeSuiteDirectory).append("\"").append(" ")
         .append("\"").append(((String) args.get("eye"))).append("\"").append(" ")
         .append((int) ((double) args.get("pres"))).append(" ")
         .append((int) ((double) args.get("resp"))).append(" ")
-        .append(SETTINGS.o900.max10000).append(" ")
-        .append("\"").append(SETTINGS.o900.gazeFeed).append("\"").append(" ");
+        .append(settings.max10000).append(" ")
+        .append("\"").append(settings.gazeFeedPath).append("\"").append(" ");
       // Send OPI_INITIALIZE instruction
       writer.send(message.toString());
       while (writer.empty()) Thread.onSpinWait();
@@ -304,7 +314,7 @@ public class O900 extends OpiMachine {
         case GV -> 5;
         case GVI -> 6;
       };
-      if (!SETTINGS.o900.bigWheel && size == 6) throw new IllegalArgumentException(WRONG_SIZE + size);
+      if (!settings.bigWheel && size == 6) throw new IllegalArgumentException(WRONG_SIZE + size);
       String color =  Color.valueOf(((String) args.get("color")).toUpperCase()).toString().toLowerCase();
       int[] t = toIntArray(args.get("t"));
       // get specific parameters and mount the message to send
@@ -411,7 +421,7 @@ public class O900 extends OpiMachine {
       }
       default -> throw new IllegalArgumentException(XY_SIZE_TOO_LONG);
     }
-    return new StringBuilder(SETTINGS.o900.f310 ? OPI_PRESENT_STATIC_F310 : OPI_PRESENT_STATIC).append(" ")
+    return new StringBuilder(settings.f310 ? OPI_PRESENT_STATIC_F310 : OPI_PRESENT_STATIC).append(" ")
       .append((int) Math.round(10.0 * x[0])).append(" ")
       .append((int) Math.round(10.0 * y[0])).append(" ")
       .append((int) Math.round(10.0 * cdToDecibel(lum))).append(" ")
@@ -460,7 +470,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   private double cdToDecibel(double lum) {
-    return -10.0 * Math.log10(lum / ((SETTINGS.o900.max10000 ? 10000.0 : 4000.0) / Math.PI));
+    return -10.0 * Math.log10(lum / ((settings.max10000 ? 10000.0 : 4000.0) / Math.PI));
   }
 
   /**
