@@ -8,8 +8,8 @@ import org.lei.opi.core.OpiManager.Command;
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 import static org.lei.opi.core.definitions.JsonProcessor.colorValues;
 
-import es.optocom.jovp.structures.Eye;
-import es.optocom.jovp.structures.ModelType;
+import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ModelType;
 
 /**
  * Background and fixation target settings

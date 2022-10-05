@@ -3,8 +3,7 @@ package org.lei.opi.core.definitions;
 import java.util.Arrays;
 
 import es.optocom.jovp.Monitor;
-import es.optocom.jovp.structures.Input;
-import es.optocom.jovp.structures.ViewMode;
+import es.optocom.jovp.definitions.ViewMode;
 
 /**
  * Device settings to return upon query from OPI monitor
@@ -12,7 +11,7 @@ import es.optocom.jovp.structures.ViewMode;
  * @param distance viewing distance
  * @param fov current horizontal and vertical field of view in degrees of visual angle
  * @param viewMode viewing mode: MONO or STEREO
- * @param input input device for responses
+ * @param input Either 'mouse', 'keypad', or the name of a suitable USB controller
  * @param fullScreen whether JOVP machine is running on full screen mode
  * @param tracking  whether JOVP machine is able to do eye tracking
  * @param depth depth to use for all color channels
@@ -21,7 +20,7 @@ import es.optocom.jovp.structures.ViewMode;
  * @param monitor display of the OPI JOVP machine
  * @since 0.0.1
  */
-public record Query(int distance, double[] fov, ViewMode viewMode, Input input, boolean fullScreen, boolean tracking,
+public record Query(int distance, double[] fov, ViewMode viewMode, String input, boolean fullScreen, boolean tracking,
                     int depth, double[] maxLum, String gammaFile, Monitor monitor) {
 
   /**

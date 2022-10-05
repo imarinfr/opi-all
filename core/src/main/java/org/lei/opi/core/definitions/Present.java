@@ -11,9 +11,9 @@ import java.util.HashMap;
 
 import org.lei.opi.core.OpiManager.Command;
 
-import es.optocom.jovp.structures.Eye;
-import es.optocom.jovp.structures.ModelType;
-import es.optocom.jovp.structures.TextureType;
+import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ModelType;
+import es.optocom.jovp.definitions.TextureType;
 
 /**
  * Stimulus

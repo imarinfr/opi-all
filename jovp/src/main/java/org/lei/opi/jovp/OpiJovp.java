@@ -17,8 +17,9 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.PsychoEngine;
-import es.optocom.jovp.structures.Eye;
-import es.optocom.jovp.structures.ViewMode;
+import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.Paradigm;
+import es.optocom.jovp.definitions.ViewMode;
 
 /**
  * The OPI JOVP driver
@@ -100,14 +101,12 @@ public class OpiJovp extends MessageProcessor {
       case MONO -> backgrounds = new Setup[] {null};
       case STEREO -> backgrounds = new Setup[] {null, null};
     }
-    psychoEngine = new PsychoEngine(new OpiLogic(this), settings.distance(), settings.viewMode(), settings.input(),
-                                    Settings.PARADIGM, Settings.VALIDATION_LAYERS, Settings.API_DUMP);
-    psychoEngine.show(false);
+    psychoEngine = new PsychoEngine(new OpiLogic(this), settings.distance(), Settings.VALIDATION_LAYERS, Settings.API_DUMP);
+    psychoEngine.hide();
     psychoEngine.setMonitor(settings.screen());
     if(settings.physicalSize().length != 0)
       psychoEngine.setPhysicalSize(settings.physicalSize()[0], settings.physicalSize()[1]);
-    if (settings.fullScreen())
-      psychoEngine.setFullScreen();
+    if (settings.fullScreen()) psychoEngine.setFullScreen();
   }
 
   /**
@@ -116,7 +115,7 @@ public class OpiJovp extends MessageProcessor {
    * @since 0.1.0
    */
   public void run() {
-    psychoEngine.start();
+    psychoEngine.start(settings.input(), Paradigm.CLICKER, settings.viewMode());
     psychoEngine.cleanup();
     psychoEngine = null;
   }

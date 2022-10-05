@@ -16,9 +16,8 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.PsychoEngine;
-import es.optocom.jovp.structures.Input;
-import es.optocom.jovp.structures.Paradigm;
-import es.optocom.jovp.structures.ViewMode;
+import es.optocom.jovp.definitions.Paradigm;
+import es.optocom.jovp.definitions.ViewMode;
 
 /**
  * Setup for OPI JOVP machine
@@ -29,7 +28,7 @@ import es.optocom.jovp.structures.ViewMode;
  * @param fullScreen whether to run in full screen or windowed mode
  * @param distance viewing distance
  * @param viewMode viewing mode: MONO or STEREO
- * @param input input device for responses
+ * @param input Either 'mouse', 'keypad', or the name of a suitable USB controller
  * @param tracking whether device allows eye tracking
  * @param depth depth for each color channel
  * @param gammaFile path of the display-specific calibration file of R, G, B gamma functions
@@ -38,7 +37,7 @@ import es.optocom.jovp.structures.ViewMode;
  * @since 0.0.1
  */
 public record Settings(Machine machine, int screen, int[] physicalSize, boolean fullScreen, int distance,
-                       ViewMode viewMode, Input input, boolean tracking, int depth,
+                       ViewMode viewMode, String input, boolean tracking, int depth,
                        String gammaFile, Calibration calibration) {
 
   /** Implemented display-based machines */
@@ -168,7 +167,7 @@ public record Settings(Machine machine, int screen, int[] physicalSize, boolean 
     String gammaFile = pairs.get("gammaFile").toString();
     return new Settings(machine, screen, physicalSize, (boolean) pairs.get("fullScreen"), distance,
                         ViewMode.valueOf(pairs.get("viewMode").toString().toUpperCase()),
-                        Input.valueOf(pairs.get("input").toString().toUpperCase()),
+                        pairs.get("input").toString().toUpperCase(),
                         (boolean) pairs.get("tracking"), depth, gammaFile, loadCalibration(depth, gammaFile));
   }
 

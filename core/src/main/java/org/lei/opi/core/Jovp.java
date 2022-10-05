@@ -10,9 +10,9 @@ import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.ReturnMsg;
 import org.lei.opi.core.definitions.Setup;
 
-import es.optocom.jovp.structures.Eye;
-import es.optocom.jovp.structures.ModelType;
-import es.optocom.jovp.structures.TextureType;
+import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ModelType;
+import es.optocom.jovp.definitions.TextureType;
 
 /**
  * JOVP client

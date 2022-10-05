@@ -8,8 +8,8 @@ import es.optocom.jovp.Timer;
 import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Texture;
-import es.optocom.jovp.structures.Command;
-import es.optocom.jovp.structures.ModelType;
+import es.optocom.jovp.definitions.Command;
+import es.optocom.jovp.definitions.ModelType;
 /**
  * Logic for the PsychoEngine
  *
@@ -106,7 +106,7 @@ public class OpiLogic implements PsychoLogic {
    * @since 0.0.1
    */
   @Override
-  public void input(Command command) {
+  public void input(PsychoEngine psychoEngine, Command command) {
     if (command == Command.NONE) return;
     // if no response or response is too early, do nothing
     if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
@@ -140,13 +140,13 @@ public class OpiLogic implements PsychoLogic {
 
   /** Show psychoEngine */
   private void show(PsychoEngine psychoEngine) {
-    psychoEngine.show(true);
+    psychoEngine.show();
     driver.state = null;
   }
 
   /** Show psychoEngine */
   private void hide(PsychoEngine psychoEngine) {
-    psychoEngine.show(true);
+    psychoEngine.show();
     driver.state = null;
   }
 
