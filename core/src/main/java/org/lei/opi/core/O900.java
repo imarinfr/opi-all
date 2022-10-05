@@ -108,8 +108,8 @@ public class O900 extends OpiMachine {
   private Settings settings;
 
   public O900() {
-    fillConstants();
-    fillO900Constants();
+    //fillConstants();
+    //fillO900Constants();
     fillSettings(Settings.class);
   }
 
@@ -120,7 +120,6 @@ public class O900 extends OpiMachine {
    * @throws IllegalArgumentException
    *
    * @since 0.0.1
-   */
   private static void fillConstants() {
     Field[] fields = com.hs.eyesuite.ext.extperimetryviewer.peristatic.data.exam.Const.class.getDeclaredFields();
     EYE_RIGHT = getFieldValue("EYE_RIGHT", fields);
@@ -133,6 +132,7 @@ public class O900 extends OpiMachine {
     BLIND_SPOT_WIDTH = getFieldValue("BLIND_SPOT_WIDTH", fields) / 10.0;
     BLIND_SPOT_HEIGHT = getFieldValue("BLIND_SPOT_HEIGHT", fields) / 10.0;
   }
+   */
   
   /**
    * Get O900 specific constants
@@ -141,7 +141,6 @@ public class O900 extends OpiMachine {
    * @throws IllegalArgumentException
    *
    * @since 0.0.1
-   */
   private static void fillO900Constants() {
     Field[] fields = com.hs.eyesuite.ext.extperimetry.octo900.ifocto.device.OCTO900.class.getDeclaredFields();
     MIN_STIMULUS_DURATION = getFieldValue("MIN_STIMULUS_DURATION", fields);
@@ -177,6 +176,7 @@ public class O900 extends OpiMachine {
                          .orElse(null);
     return value != null ? (int) value : - 1;
   }
+   */
 
   private static Integer getValue(Field field) {
     try {
