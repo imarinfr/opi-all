@@ -1,7 +1,7 @@
 {
   "Jovp" :
     {
-      "ip" : "localhost",
+      "ip" : "10.4.112.236",
       "port" : 51234,
       "screen": 0,
       "physicalSize": [],
@@ -28,5 +28,10 @@
       "ip" : "localhost",
       "port" : 51234,
       "imagePath" : ""
+    },
+  "Compass" : 
+    {
+      "ip" : "192.168.42.11",
+      "port" : 50001
     }
 }

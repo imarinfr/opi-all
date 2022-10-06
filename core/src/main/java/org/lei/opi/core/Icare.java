@@ -62,6 +62,10 @@ public class Icare extends OpiMachine {
       fillSettings(Settings.class);
   }
 
+  public Icare(boolean noSocket) {
+      fillSettings(Settings.class);
+  }
+
   /**
    * opiInitialise: initialize OPI
    * 

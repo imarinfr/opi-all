@@ -19,9 +19,9 @@ import org.lei.opi.core.definitions.ReturnMsg;
 */
 public class OpiFunction {
         /** This is the parameter name for the ip on which OPI R should create socket */
-    static final String parameterForIp = "ipMonitor";
+    static final String parameterForIp = "ip";
         /** This is the parameter name for the port on which OPI R should create socket */
-    static final String parameterForPort = "portMonitor";
+    static final String parameterForPort = "port";
         /** This is the name of the OPI environemnt for storing variables, settings, etc */
     static final String opiEnvName = ".opi_env";
 
@@ -253,9 +253,9 @@ public class OpiFunction {
                 if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
                     stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
                 """, opiEnvName, 
-                machineName, opiEnvName,
-                opiEnvName, machineName, 
-                opiEnvName, machineName,
+                this.machineName, opiEnvName,
+                opiEnvName, this.machineName, 
+                opiEnvName, this.machineName,
                 this.opiName
                 );
         }

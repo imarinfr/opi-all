@@ -27,8 +27,6 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param ipMonitor IP Address of the OPI monitor.
-#' @param portMonitor TCP port of the OPI monitor.
 #' @param ip IP Address of the OPI machine.
 #' @param port TCP port of the OPI machine.
 #'
@@ -44,8 +42,8 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_O900 <- function(ipMonitor = NULL, portMonitor = NULL, ip = NULL, port = NULL) {
-    assign("socket", open_socket(ipMonitor, portMonitor), .opi_env$O900)
+opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
+    assign("socket", open_socket(ip, port), .opi_env$O900)
 
     msg <- list(command = "choose", machine = "O900")
     msg <- rjson::toJSON(msg)
@@ -53,7 +51,7 @@ opiInitialise_for_O900 <- function(ipMonitor = NULL, portMonitor = NULL, ip = NU
     res <- readLines(.opi_env$Jovp$socket, n = 1)
     res <- rjson::fromJSON(res)
 
-    msg <- list(ipMonitor = ipMonitor, portMonitor = portMonitor, ip = ip, port = port)
+    msg <- list(ip = ip, port = port)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -106,21 +104,14 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @usage NULL
 #'
 #' @param eye Eye to set.
-#' @param eyeSuite Path to EyeSuite.
-#' @param gazeFeed Path where to save gaze feed. Directory must exists
-#' @param bigWheel Whether O900 has a big wheel for displaying Goldmann Size VI
-#'                    stimuli.
-#' @param pres Volume for auditory feedback when a stimulus is presented: 0
-#'                means no buzzer.
-#' @param resp Volume for auditory feedback when observer presses the clicker: 0
-#'                means no buzzer.
-#' @param max10000 Whether O900 can handle a maximum luminance of 10000
-#'                    apostilbs instead of 4000. Check the settings in EyeSuite
 #' @param bgLum Background luminance for eye.
 #' @param bgCol Background color for eye.
 #' @param fixShape Fixation target.
 #' @param fixIntensity Fixation intensity(from 0% to 100%).
-#' @param f310 Whether to use Logitech's F310 controller
+#' @param pres Volume for auditory feedback when a stimulus is presented: 0
+#'                means no buzzer.
+#' @param resp Volume for auditory feedback when observer presses the clicker: 0
+#'                means no buzzer.
 #'
 #' @return a list contianing:
 #'  * res JSON Object with all of the other fields described in @ReturnMsg
@@ -135,11 +126,11 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_O900 <- function(settings = list(eye = NULL, eyeSuite = NULL, gazeFeed = NULL, bigWheel = NULL, pres = NULL, resp = NULL, max10000 = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixIntensity = NULL, f310 = NULL)) {
+opiSetup_for_O900 <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixIntensity = NULL, pres = NULL, resp = NULL)) {
 if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(eye = settings$eye, eyeSuite = settings$eyeSuite, gazeFeed = settings$gazeFeed, bigWheel = settings$bigWheel, pres = settings$pres, resp = settings$resp, max10000 = settings$max10000, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixIntensity = settings$fixIntensity, f310 = settings$f310)
+    msg <- list(eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixIntensity = settings$fixIntensity, pres = settings$pres, resp = settings$resp)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

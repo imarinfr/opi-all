@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
+
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -28,7 +29,14 @@ import javafx.stage.Stage;
 public class OpiMonitor extends Application {
     private int port; // Port on which to listen for R/Json commands
 
+    Thread listenerThread;
+
+    public OpiMonitor(int port) {
+        this.port = port;
+    }    
+    
     /**
+
      * Presumably plot something representing the current state of 
      * the VF measurement going on...
      * 
@@ -165,9 +173,5 @@ public class OpiMonitor extends Application {
 
         MessageWriter mw = new MessageWriter(messages);
         Server s = new Server(51434, mw);
-    }
-
-    public OpiMonitor(int port) {
-        this.port = port;
     }
 }

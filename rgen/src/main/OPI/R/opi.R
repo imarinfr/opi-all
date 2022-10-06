@@ -27,6 +27,8 @@ assign("machine_list", list(
     "ImoVifa",
     "Kowa",
     "Maia",
+    "Jovp",
+    "Icare",
     "O900",
     "O600",
     "SimNo",
@@ -56,8 +58,6 @@ chooseOPI <- function(machine = NULL) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
         print(unlist(.opi_env$machine_list))
     } else {
-        if (machine == "Compass") machine <- "Icare"
-        if (machine == "Maia") machine <- "Icare"
         if (machine == "PicoVR") machine <- "Jovp"
         if (machine == "Display") machine <- "Jovp"
         if (machine == "PhoneHMD") machine <- "Jovp"

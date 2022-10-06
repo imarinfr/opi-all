@@ -98,7 +98,7 @@ opiSetBackground_for_%s <- function(lum, color, ...) {return("Deprecated")}
   
     public static void main(String args[]) {
         String path = "rgen/src/main/OPI/R/";
-        for (String m : new String[] {"Jovp", "Icare", "O900"}) {
+        for (String m : new String[] {"Jovp", "Compass", "Maia", "O900"}) {
             PrintStream printStream = null;
             OpiMachine machine = null;
             try {
@@ -106,10 +106,10 @@ opiSetBackground_for_%s <- function(lum, color, ...) {return("Deprecated")}
                 printStream = new PrintStream(file);
 
                 Class<?> c = Class.forName("org.lei.opi.core." + m);
-                Constructor<?> ctor = c.getConstructor();
-                machine = (OpiMachine)ctor.newInstance();
+                Constructor<?> ctor = c.getConstructor(boolean.class);
+                machine = (OpiMachine)ctor.newInstance(true);
             } catch (Exception e) {
-                System.err.println(e);
+                System.err.println(m + "\n" + e);
                 System.exit(-1);
             }
             makeR(machine, printStream);

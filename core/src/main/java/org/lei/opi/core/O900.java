@@ -114,6 +114,10 @@ public class O900 extends OpiMachine {
     writer = new CSWriter(settings.ip, settings.port);
   }
 
+  public O900(boolean noSocket) {
+    this.settings = (Settings) fillSettings(Settings.class);
+  }
+
   /**
    * Get constants
    * 
