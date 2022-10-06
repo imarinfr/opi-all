@@ -1,0 +1,11 @@
+{
+  "screen": 0,
+  "physicalSize": [],
+  "fullScreen": false,
+  "distance": 100,
+  "viewMode": "stereo",
+  "input": "mouse",
+  "tracking": false,
+  "depth": 8,
+  "gammaFile": "linearGamma8bit.json"
+}

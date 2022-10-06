@@ -18,7 +18,8 @@ import es.optocom.jovp.definitions.TextureType;
  *
  * @since 0.0.1
  */
-public class Jovp extends OpiMachine {  
+public class Jovp extends OpiMachine {
+
     class Settings extends OpiMachine.Settings {
         int screen;
         int[] physicalSize;
@@ -30,10 +31,12 @@ public class Jovp extends OpiMachine {
         int depth;
         String gammaFile;
     };
-    private Settings settings;
+
+    Settings settings;
 
     public Jovp() {
-        fillSettings(Settings.class);
+        this.settings = (Settings) fillSettings(Settings.class);
+        writer = new CSWriter(settings.ip, settings.port);
     }
 
   /**

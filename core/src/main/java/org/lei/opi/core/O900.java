@@ -4,7 +4,6 @@ import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.MessageProcessor;
@@ -105,12 +104,14 @@ public class O900 extends OpiMachine {
     boolean max10000;
     boolean f310;
   };
-  private Settings settings;
+
+  Settings settings;
 
   public O900() {
     //fillConstants();
     //fillO900Constants();
-    fillSettings(Settings.class);
+    this.settings = (Settings) fillSettings(Settings.class);
+    writer = new CSWriter(settings.ip, settings.port);
   }
 
   /**

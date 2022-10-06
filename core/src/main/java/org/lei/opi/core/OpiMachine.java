@@ -21,6 +21,7 @@ import org.lei.opi.core.definitions.ReturnMsg;
 import org.reflections.Reflections;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 /**
  * The OPI machine standard for communication with perimeters
@@ -69,34 +70,27 @@ public abstract class OpiMachine {
   static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
 
   protected static class Settings {
-    public String ip;
-    public int port;
+    String ip;
+    int port;
   };
-  protected OpiMachine.Settings settings;
 
   /**
    * Join this class {@link Settings} and implementing subclass Settings 
    * and populate them with data in JSON settings file.
    */
-  public void fillSettings(Class<? extends OpiMachine.Settings> cls) {
+  public Settings fillSettings(Class<? extends Settings> cls) {
+    Gson gson = new Gson();
+    HashMap<String, Object> jsonSettings = new HashMap<> ();
     try {
         InputStream inputStream = OpiManager.class.getResourceAsStream("settings.json");
-        this.settings = (new Gson()).fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)), cls);
+        jsonSettings = gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
+          new TypeToken<HashMap<String, Object>>() {}.getType());
+        String j = gson.toJson(jsonSettings.get(this.getClass().getSimpleName()));
+        return gson.fromJson(j, cls);
     } catch (IOException | AssertionError e) {
         e.printStackTrace();
         throw new RuntimeException("Could not load 'settings.json' file", e);
     }
-  }
-
-  /**
-   *
-   * Get the settings for a specific machine class
-   *
-   * @since 0.0.1
-   */
-  protected Settings getMachineSettings(String machine) {
-    System.out.println(settings);
-    return settings;
   }
 
   /**
@@ -130,7 +124,6 @@ public abstract class OpiMachine {
    * @since 0.0.1
    */
   public OpiMachine() {
-    writer = new CSWriter(settings.ip, settings.port);
     // Select the OPI commands
     String[] commands = Arrays.stream(OpiManager.Command.values())
       .map(Enum::name).map(String::toLowerCase).toArray(String[]::new);

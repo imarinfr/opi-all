@@ -54,16 +54,16 @@ public record Settings(Machine machine, int screen, int[] physicalSize, boolean 
     DISPLAY_STEREO
   }
 
-  /** {@value IMO_PARAMS} */
-  public static final String IMOVIFA_PARAMS = "ImovifaParams.json";
+  /** {@value IMOVIFA_PARAMS} */
+  public static final String IMOVIFA_PARAMS = "imovifaParams.json";
   /** {@value DISPLAY_MONO_PARAMS} */
-  public static final String DISPLAY_MONO_PARAMS = "DisplayMonoParams.json";
+  public static final String DISPLAY_MONO_PARAMS = "displayMonoParams.json";
   /** {@value DISPLAY_STEREO_PARAMS} */
-  public static final String DISPLAY_STEREO_PARAMS = "DisplayStereoParams.json";
+  public static final String DISPLAY_STEREO_PARAMS = "displayStereoParams.json";
   /** {@value PHONEHMD_PARAMS} */
-  public static final String PHONEHMD_PARAMS = "PhoneHMDParams.json";
+  public static final String PHONEHMD_PARAMS = "displayStereoParams.json";
   /** {@value PICOVR_PARAMS} */
-  public static final String PICOVR_PARAMS = "PicoVRParams.json";
+  public static final String PICOVR_PARAMS = "displayStereoParams.json";
 
   /** {@value PARADIGM} */
   static final Paradigm PARADIGM = Paradigm.CLICKER;
