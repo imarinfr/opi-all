@@ -19,6 +19,7 @@ public class MonitorTests {
   @Test
   public void launchMonitor() {
     String[] args = new String[] {"false", "true"};
-    OpiMonitor.main(args);
+    OpiMonitor opiM = new OpiMonitor(50001);
+    opiM.launch();
   }
 }

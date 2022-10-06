@@ -3,12 +3,6 @@ package org.lei.opi.monitor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.Options;
 
 import javafx.application.Application;
 import javafx.geometry.Pos;
@@ -25,10 +19,17 @@ import javafx.stage.Stage;
 
 /**
  * JavaFX App
+ * The startup screen allows selection of machines and possibly alteration of settings, 
+ * and setting of the port for core/monitor on the localhost (or possibly remote IP).
+ *
+ * Each subclass of OpiMachine in core has a Scene that will be displayed for that machine
+ * when it is selected. (Maybe as tabs?)
  */
 public class OpiMonitor extends Application {
+    private int port; // Port on which to listen for R/Json commands
+
     /**
-     *  Presumably plot something representing the current state of 
+     * Presumably plot something representing the current state of 
      * the VF measurement going on...
      * 
      * @param view Imageview to update
@@ -166,27 +167,7 @@ public class OpiMonitor extends Application {
         Server s = new Server(51434, mw);
     }
 
-    public static void main(String[] args) {
-        Options options = new Options();
-        options.addOption("nw", false, "Do not draw GUI window");
-        options.addOption("p", true, "Port number to use on localhost");
-
-        CommandLineParser parser = new GnuParser();
-        CommandLine cmd = null;
-        try {
-            cmd = parser.parse(options, args);
-        } catch (org.apache.commons.cli.ParseException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
-
-        if(!cmd.hasOption("nw")) {
-            launch();
-        }
-        else {
-            System.out.println("Starting server");
-            Server s = new Server(51001, new PrintWriter(System.out));
-            System.exit(0);
-        }
+    public OpiMonitor(int port) {
+        this.port = port;
     }
 }
