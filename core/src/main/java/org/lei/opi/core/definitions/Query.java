@@ -38,7 +38,7 @@ public record Query(int distance, double[] fov, ViewMode viewMode, String input,
       .append("    \"fullScreen\": " + fullScreen + ",\n")
       .append("    \"tracking\": " + tracking + ",\n")
       .append("    \"depth\": " + depth + ",\n")
-      .append("    \"gammaFile\": \"" + gammaFile + "\"\n")
+      .append("    \"gammaFile\": \"" + gammaFile + "\",\n")
       .append("    \"maxLum\": " + Arrays.toString(maxLum));
     if (monitor != null) {
       int[] colorDepth = monitor.getColorDepth();

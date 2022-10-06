@@ -62,6 +62,20 @@ public class RToMonitorToJovpTests {
     closeConnections();
   }
 
+    /**
+   * Monitor controlling Display on stereoscopic view
+   *
+   * @since 0.0.1
+   */
+  @Test
+  public void imovifa() {
+    setupConnections(Machine.IMOVIFA);
+    setupCommands(Machine.IMOVIFA);
+    clientDriver();
+    server.run();
+    closeConnections();
+  }
+
   /** setup connections */
   private void setupConnections(Machine machine) {
     try {
@@ -104,7 +118,8 @@ public class RToMonitorToJovpTests {
           "ImoVifa/opiPresent2.json",
           "ImoVifa/opiPresent3.json",
           "ImoVifa/opiPresent4.json",
-          "ImoVifa/opiPresent5.json"
+          "ImoVifa/opiPresent5.json",
+          "Display/opiPresentDynamic2.json"
         };
       }
       case PICOVR -> {

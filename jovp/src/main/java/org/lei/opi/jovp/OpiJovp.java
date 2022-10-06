@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
+import org.lei.opi.core.CSListener;
 import org.lei.opi.core.OpiManager;
 import org.lei.opi.core.OpiManager.Command;
 import org.lei.opi.core.definitions.MessageProcessor;
@@ -33,6 +34,8 @@ public class OpiJovp extends MessageProcessor {
 
   /** {@value BAD_COMMAND} */
   private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
+  /** {@value INITIALIZED} */
+  private static final String INITIALIZED = "\"INITIALIZE successful\"";
   /** {@value SETUP_FAILED} */
   private static final String SETUP_FAILED = "SETUP failed";
   /** {@value PRESENT_FAILED} */
@@ -169,7 +172,7 @@ public class OpiJovp extends MessageProcessor {
    */
   private MessageProcessor.Packet initialize() {
     state = State.INIT;
-    return OpiManager.ok("ignored"); // TODO
+    return OpiManager.ok(INITIALIZED);
   }
 
   /**
@@ -235,4 +238,13 @@ public class OpiJovp extends MessageProcessor {
     return OpiManager.ok(CLOSED);
   }
 
+  public static void main(String args[]) {
+    try {
+      CSListener listener = new CSListener(Integer.parseInt(args[0]), new OpiJovp(Settings.Machine.IMOVIFA));
+      System.out.println("Machine address is " + listener.getIP() + ":" + listener.getPort());
+      while (true) Thread.onSpinWait();
+    } catch (NumberFormatException | IOException e) {
+      e.printStackTrace();
+    }
+  }
 }

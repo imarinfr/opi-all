@@ -129,6 +129,7 @@ public class OpiLogic implements PsychoLogic {
     // Instructions are always given by the OpiDriver.
     // OpiLogic sets state back to IDLE once instruction is carried out,
     // except when presenting, where the OpiDriver waits for a response.
+    if (driver.state != null) System.out.println(driver.state);
     if (driver.state == null) checkState();
     else switch(driver.state) {
         case INIT -> show(psychoEngine);
@@ -146,7 +147,7 @@ public class OpiLogic implements PsychoLogic {
 
   /** Show psychoEngine */
   private void hide(PsychoEngine psychoEngine) {
-    psychoEngine.show();
+    psychoEngine.hide();
     driver.state = null;
   }
 

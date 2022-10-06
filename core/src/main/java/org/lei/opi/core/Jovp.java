@@ -51,7 +51,7 @@ public class Jovp extends OpiMachine {
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
     writer.send(toJson(Command.INITIALIZE));
     while (writer.empty()) Thread.onSpinWait();
-    return OpiManager.ok(writer.receive()); // TODO error handling
+    return new MessageProcessor.Packet(writer.receive());
   };
 
   /**
