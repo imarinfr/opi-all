@@ -125,8 +125,10 @@ public class OpiManager extends MessageProcessor {
    */
   public static MessageProcessor.Packet error(String description, Exception exception) {
     exception.printStackTrace();
+    String eStr = exception.toString().replace("\"", "\\\"");
+    eStr = eStr.replace("\0", "0");
     return new MessageProcessor.Packet(
-        String.format("{\n  %s, \n  \"msg\": \"%s\", \"exception\": \"%s\"\n}", ERROR_YES, description, exception.toString()));
+        String.format("{\n  %s, \n  \"msg\": \"%s\", \"exception\": \"%s\"\n}", ERROR_YES, description, eStr));
   }
 
   /**

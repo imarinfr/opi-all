@@ -59,11 +59,12 @@ public class Icare extends OpiMachine {
   private Settings settings;
 
   public Icare() {
-      fillSettings(Settings.class);
+      this.settings = (Settings)fillSettings(Settings.class);
+      writer = new CSWriter(settings.ip, settings.port);
   }
 
   public Icare(boolean noSocket) {
-      fillSettings(Settings.class);
+      this.settings = (Settings)fillSettings(Settings.class);
   }
 
   /**
@@ -247,7 +248,7 @@ public class Icare extends OpiMachine {
       .append("    \"BACKGROUND_LUMINANCE\": " + BACKGROUND_LUMINANCE + ",\n")
       .append("    \"MIN_LUMINANCE\": " + MIN_LUMINANCE + ",\n")
       .append("    \"MAX_LUMINANCE\": " + MAX_LUMINANCE + ",\n")
-      .append("    \"TRACKING\": " + TRACKING + ",\n")
+      .append("    \"TRACKING\": " + TRACKING + "\n")
       .append("\n  }").toString();
   };
 
@@ -326,11 +327,13 @@ public class Icare extends OpiMachine {
       posx[i] = (double) imageBuffer.getFloat(12 * i + 4);
       posy[i] = (double) imageBuffer.getFloat(12 * i + 8);
     }
-    return new StringBuilder("\n  {\n")
+    String sb = new StringBuilder("\n  {\n")
       .append("    \"time\": " + Arrays.toString(time) + ",\n")
       .append("    \"posx\": " + Arrays.toString(posx) + ",\n")
       .append("    \"posy\": " + Arrays.toString(posy))
       .append("\n  }").toString();
+
+      return(sb);
   }
  
 }

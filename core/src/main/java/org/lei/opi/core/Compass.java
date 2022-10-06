@@ -12,7 +12,8 @@ public class Compass extends Icare {
    *
    * @since 0.0.1
    */
-  Compass() {
+  public Compass() {
+    super();
     MIN_X = -30;
     MAX_X = 30;
     MIN_Y = -30;
@@ -27,4 +28,7 @@ public class Compass extends Icare {
     TRACKING = true;  
   }
  
+  public Compass(boolean noSocket) {
+    this();
+  }
 }

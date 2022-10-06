@@ -23,15 +23,9 @@
       "max10000" : true,
       "f310" : false
     },
-  "Icare" : 
-    {
-      "ip" : "localhost",
-      "port" : 51234,
-      "imagePath" : ""
-    },
   "Compass" : 
     {
-      "ip" : "192.168.42.11",
+      "ip" : "10.101.53.35",
       "port" : 50001
     }
 }
