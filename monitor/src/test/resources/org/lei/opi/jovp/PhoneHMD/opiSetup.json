@@ -1,10 +1,10 @@
 {
   "command": "setup",
   "eye": "both",
-  "bgLum": 50,
+  "bgLum": 0.1,
   "bgCol": [1, 1, 1],
   "fixShape": "maltese",
-  "fixLum": 100,
+  "fixLum": 0.8,
   "fixCol": [0, 1, 0],
   "fixCx": 0,
   "fixCy": 0,
