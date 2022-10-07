@@ -1,5 +1,6 @@
 package org.lei.opi.jovp;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
@@ -35,6 +36,8 @@ public class OpiJovp extends MessageProcessor {
   private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
   /** {@value INITIALIZED} */
   private static final String INITIALIZED = "\"INITIALIZE successful\"";
+  /** {@value INITIALIZE_FAILED =} */
+  private static final String INITIALIZE_FAILED = "\"INITIALIZE failed. \"";
   /** {@value SETUP_FAILED} */
   private static final String SETUP_FAILED = "SETUP failed";
   /** {@value PRESENT_FAILED} */
@@ -45,9 +48,9 @@ public class OpiJovp extends MessageProcessor {
   /** Prefix for all success messages */
   protected String prefix;
   /** A background record to communicate with OpiLogic */
-  protected Configuration configuration;
+  protected Configuration configuration = null;
   /** The psychoEngine */
-  private PsychoEngine psychoEngine = null;
+  private PsychoEngine psychoEngine;
   /** A background record to communicate with OpiLogic */
   protected Setup[] backgrounds;
   /** A stimulus record to communicate with OpiLogic */
@@ -62,10 +65,20 @@ public class OpiJovp extends MessageProcessor {
    *
    * @since 0.1.0
    */
-  public void run() {
+  public void start() {
+    // not great, but necessary: wait until INITIALIZE command has been triggered
+    while (configuration == null) Thread.onSpinWait();
+    psychoEngine = new PsychoEngine(new OpiLogic(this), configuration.distance(),
+    Configuration.VALIDATION_LAYERS, Configuration.API_DUMP);
+    psychoEngine.hide();
+    psychoEngine.setMonitor(configuration.screen());
+    if(configuration.physicalSize().length != 0)
+    psychoEngine.setPhysicalSize(configuration.physicalSize()[0], configuration.physicalSize()[1]);
+    if (configuration.fullScreen()) psychoEngine.setFullScreen();
+    state = State.INIT;
     psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
     psychoEngine.cleanup();
-    psychoEngine = null;
+    configuration = null;
   }
 
   /**
@@ -118,20 +131,18 @@ public class OpiJovp extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    // get settings
-    this.prefix = "OPI JOVP " + configuration.machine() + ": ";
-    switch (configuration.viewMode()) {
-      case MONO -> backgrounds = new Setup[] {null};
-      case STEREO -> backgrounds = new Setup[] {null, null};
+    try {
+      // get congiguration
+      configuration = Configuration.set(args);
+      this.prefix = "OPI JOVP " + configuration.machine() + ": ";
+      switch (configuration.viewMode()) {
+        case MONO -> backgrounds = new Setup[] {null};
+        case STEREO -> backgrounds = new Setup[] {null, null};
+      }
+      return OpiManager.ok(INITIALIZED);
+    } catch (IllegalArgumentException | ClassCastException | IOException e) {
+      return OpiManager.error(INITIALIZE_FAILED, e);
     }
-    psychoEngine = new PsychoEngine(new OpiLogic(this), configuration.distance(), Configuration.VALIDATION_LAYERS, Configuration.API_DUMP);
-    psychoEngine.hide();
-    psychoEngine.setMonitor(configuration.screen());
-    if(configuration.physicalSize().length != 0)
-      psychoEngine.setPhysicalSize(configuration.physicalSize()[0], configuration.physicalSize()[1]);
-    if (configuration.fullScreen()) psychoEngine.setFullScreen();
-    state = State.INIT;
-    return OpiManager.ok(INITIALIZED);
   }
 
   /**

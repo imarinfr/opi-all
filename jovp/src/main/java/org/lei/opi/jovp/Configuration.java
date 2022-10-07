@@ -70,24 +70,22 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
    *
    * @since 0.0.1
    */
-  public static Configuration set(String jsonStr)  throws IllegalArgumentException, ClassCastException, IOException {
-    Gson gson = new Gson();
-    HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
-    Machine machine = Machine.valueOf(pairs.get("machine").toString().toUpperCase());
-    int screen = ((Double) pairs.get("screen")).intValue();
+  public static Configuration set(HashMap<String, Object> args) throws IllegalArgumentException, ClassCastException, IOException {
+    Machine machine = Machine.valueOf(args.get("machine").toString().toUpperCase());
+    int screen = ((Double) args.get("screen")).intValue();
     if(screen < 0)
       throw new IllegalArgumentException(String.format(WRONG_SCREEN, screen));
-    int[] physicalSize = toIntArray(pairs.get("physicalSize"));
+    int[] physicalSize = toIntArray(args.get("physicalSize"));
       if(physicalSize.length != 0 && (physicalSize.length != 2 || physicalSize[0] <= 0 || physicalSize[1] <= 0))
         throw new IllegalArgumentException(String.format(WRONG_PHYSICAL_SIZE, Arrays.toString(physicalSize)));
-    int distance = ((Double) pairs.get("distance")).intValue();
+    int distance = ((Double) args.get("distance")).intValue();
     if(distance < 0)
       throw new IllegalArgumentException(String.format(WRONG_DISTANCE, distance));
-    ViewMode viewMode = ViewMode.valueOf(pairs.get("viewMode").toString().toUpperCase());
-    String gammaFile = pairs.get("gammaFile").toString();
-    return new Configuration(machine, screen, physicalSize, (boolean) pairs.get("bitStealing"), (boolean) pairs.get("fullScreen"),
-                             distance, viewMode, pairs.get("input").toString().toUpperCase(),
-                             (boolean) pairs.get("tracking"), gammaFile, loadCalibration(gammaFile));
+    ViewMode viewMode = ViewMode.valueOf(args.get("viewMode").toString().toUpperCase());
+    String gammaFile = args.get("gammaFile").toString();
+    return new Configuration(machine, screen, physicalSize, (boolean) args.get("bitStealing"), (boolean) args.get("fullScreen"),
+                             distance, viewMode, args.get("input").toString().toUpperCase(),
+                             (boolean) args.get("tracking"), gammaFile, loadCalibration(gammaFile));
   }
 
   /**

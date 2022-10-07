@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.OpiManager.Command;
@@ -20,30 +21,29 @@ import es.optocom.jovp.definitions.TextureType;
  */
 public class Jovp extends OpiMachine {
 
-    class Settings extends OpiMachine.Settings {
-        int screen;
-        int[] physicalSize;
-        boolean bitStealing;
-        boolean fullScreen;
-        int distance;
-        String viewMode;
-        String input;
-        boolean tracking;
-        int depth;
-        String gammaFile;
-    };
+  class Settings extends OpiMachine.Settings {
+      int screen;
+      int[] physicalSize;
+      boolean bitStealing;
+      boolean fullScreen;
+      int distance;
+      String viewMode;
+      String input;
+      boolean tracking;
+      String gammaFile;
+  };
 
   /** Settings */
   Settings settings;
 
-    public Jovp() {
-      this.settings = (Settings) fillSettings(Settings.class);
-      writer = new CSWriter(settings.ip, settings.port);
-    }
-    
-    public Jovp(boolean noSocket) {
-      this.settings = (Settings) fillSettings(Settings.class);
-    }
+  public Jovp() {
+    this.settings = (Settings) fillSettings(Settings.class);
+    writer = new CSWriter(settings.ip, settings.port);
+  }
+
+  public Jovp(boolean noSocket) {
+    this.settings = (Settings) fillSettings(Settings.class);
+  }
 
   /**
    * opiInitialise: initialize OPI
@@ -55,7 +55,7 @@ public class Jovp extends OpiMachine {
    * @since 0.0.1
    */
   public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    writer.send(toJson(Command.INITIALIZE));
+    writer.send(initConfiguration());
     while (writer.empty()) Thread.onSpinWait();
     return new MessageProcessor.Packet(writer.receive());
   };
@@ -168,6 +168,22 @@ public class Jovp extends OpiMachine {
     writer.close();
     writer = null;
     return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
+  }
+
+  /** Initialize command with */
+  private String initConfiguration() {
+    return new StringBuilder("{\n  \"command\": " + Command.INITIALIZE + ",\n")
+    .append("  \"machine\": " + this.getClass().getSimpleName() + ",\n")
+    .append("  \"screen\": " + settings.screen + ",\n")
+    .append("  \"physicalSize\": " + Arrays.toString(settings.physicalSize) + ",\n")
+    .append("  \"bitStealing\": " + settings.bitStealing + ",\n")
+    .append("  \"fullScreen\": " + settings.fullScreen + ",\n")
+    .append("  \"distance\": " + settings.distance + ",\n")
+    .append("  \"viewMode\": " + settings.viewMode + ",\n")
+    .append("  \"input\": " + settings.input + ",\n")
+    .append("  \"tracking\": " + settings.tracking + ",\n")
+    .append("  \"gammaFile\": " + settings.gammaFile)
+    .append("\n}").toString();
   }
 
 }

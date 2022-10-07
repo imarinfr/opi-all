@@ -7,7 +7,7 @@
       "physicalSize": [],
       "bitStealing": false,
       "fullScreen": false,
-      "distance": 500,
+      "distance": 100,
       "viewMode": "mono",
       "input": "mouse",
       "tracking": false,

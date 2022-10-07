@@ -44,21 +44,7 @@ public class RToMonitorToJovpTests {
     setupConnections(Machine.DISPLAY);
     setupCommands(Machine.DISPLAY);
     clientDriver();
-    server.run();
-    closeConnections();
-  }
-
-  /**
-   * Monitor controlling Display on stereoscopic view
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void imovifa() {
-    setupConnections(Machine.IMOVIFA);
-    setupCommands(Machine.IMOVIFA);
-    clientDriver();
-    server.run();
+    server.start();
     closeConnections();
   }
 
@@ -159,15 +145,12 @@ public class RToMonitorToJovpTests {
   /** server driver with lists of present/query etc*/
   private void executeCommands() throws IOException, InterruptedException {
     sendAndReceive(RClient.loadMessage(chooseJson)); // Choose OPI
-    System.out.println("OPI QUERY before OPI INITIALIZE");
-    sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
     sendAndReceive(RClient.loadMessage(initJson)); // Initialize OPI
-    Thread.sleep(2000);
-    System.out.println("OPI QUERY after OPI INITIALIZE");
+    Thread.sleep(1000);
     sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
     for (String s : setupJson) {
       sendAndReceive(RClient.loadMessage(s)); // Setup OPI
-      Thread.sleep(2000);
+      Thread.sleep(1000);
     }
     for (String s : presentJson) { // Present OPI
       sendAndReceive(RClient.loadMessage(s));
