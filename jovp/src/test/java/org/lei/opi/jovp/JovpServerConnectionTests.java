@@ -1,6 +1,5 @@
 package org.lei.opi.jovp;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
@@ -24,13 +23,9 @@ public class JovpServerConnectionTests {
    */
   @Test
   public void getIDAndPort() {
-    try {
-      CSListener server = new CSListener(50001, new OpiJovp(Settings.Machine.DISPLAY_MONO));
-      System.out.println("[getIDAndPort] " + server);
-      server.close();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    CSListener server = new CSListener(50001, new OpiJovp());
+    System.out.println("[getIDAndPort] " + server);
+     server.close();
   }
 
   /**
@@ -41,41 +36,12 @@ public class JovpServerConnectionTests {
    */
   @Test
   public void changeLocalPort() {
-    try {
-      CSListener monitor = new CSListener(50001, new OpiJovp(Settings.Machine.DISPLAY_MONO));
-      System.out.println("[changeLocalPort] Address was at " + monitor);
-      monitor.close();
-      monitor = new CSListener(50008, new OpiJovp(Settings.Machine.DISPLAY_MONO));
-      System.out.println("[changeLocalPort] Address is at " + monitor);
-      monitor.close();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  /**
-   *
-   * Load default configuration files
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void defaultConfigurations() {
-    Settings settings;
-    try {
-      settings = Settings.defaultSettings(Settings.Machine.IMOVIFA);
-      System.out.println(settings);
-      settings = Settings.defaultSettings(Settings.Machine.PICOVR);
-      System.out.println(settings);
-      settings = Settings.defaultSettings(Settings.Machine.PHONEHMD);
-      System.out.println(settings);
-      settings = Settings.defaultSettings(Settings.Machine.DISPLAY_MONO);
-      System.out.println(settings);
-      settings = Settings.defaultSettings(Settings.Machine.DISPLAY_STEREO);
-      System.out.println(settings);
-    } catch (IllegalArgumentException | IOException e) {
-      throw new RuntimeException(e);
-    }
+    CSListener monitor = new CSListener(50001, new OpiJovp());
+    System.out.println("[changeLocalPort] Address was at " + monitor);
+    monitor.close();
+    monitor = new CSListener(50008, new OpiJovp());
+    System.out.println("[changeLocalPort] Address is at " + monitor);
+    monitor.close();
   }
 
   /**

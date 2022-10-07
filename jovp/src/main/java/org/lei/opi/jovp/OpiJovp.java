@@ -1,6 +1,5 @@
 package org.lei.opi.jovp;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
@@ -44,9 +43,9 @@ public class OpiJovp extends MessageProcessor {
   private static final String CLOSED = "\"CLOSE successful\"";
 
   /** Prefix for all success messages */
-  protected final String prefix;
+  protected String prefix;
   /** A background record to communicate with OpiLogic */
-  protected final Settings settings;
+  protected Configuration configuration;
   /** The psychoEngine */
   private PsychoEngine psychoEngine = null;
   /** A background record to communicate with OpiLogic */
@@ -58,65 +57,13 @@ public class OpiJovp extends MessageProcessor {
   /** Whether opiInitialized has been invoked and not closed later on by opiClose */
   protected State state;
 
-    /**
-   * Start the OPI JOVP driver with default settings settings
-   *
-   * @param machine the OPI JOVP machine
-   *
-   * @throws IOException
-   * 
-   * @since 0.0.1
-   */
-  OpiJovp(Settings.Machine machine) throws IOException {
-      this(Settings.defaultSettings(machine));
-  }
-
-  /**
-   * Start the OPI JOVP comms and driver from a record of settings
-   * 
-   * @param machine the OPI JOVP machine
-   * @param file the file path and name
-   * 
-   * @throws IOException If file does not exist
-   * @throws IllegalArgumentException If any of the parameters in the settings file is wrong
-   *
-   * @since 0.0.1
-   */
-  OpiJovp(Settings.Machine machine, String file) throws IOException, IllegalArgumentException {
-    this(Settings.load(machine, file));
-  }
-
-  /**
-   * The OpiDriver
-   *
-   * @param settings Driver settings
-   * 
-   * @return the PsychoLogic for the PsychoEngine
-   * 
-   * @since 0.1.0
-   */
-  OpiJovp(Settings settings) {
-    this.settings = settings;
-    this.prefix = "OPI JOVP " + settings.machine() + ": ";
-    switch (settings.viewMode()) {
-      case MONO -> backgrounds = new Setup[] {null};
-      case STEREO -> backgrounds = new Setup[] {null, null};
-    }
-    psychoEngine = new PsychoEngine(new OpiLogic(this), settings.distance(), Settings.VALIDATION_LAYERS, Settings.API_DUMP);
-    psychoEngine.hide();
-    psychoEngine.setMonitor(settings.screen());
-    if(settings.physicalSize().length != 0)
-      psychoEngine.setPhysicalSize(settings.physicalSize()[0], settings.physicalSize()[1]);
-    if (settings.fullScreen()) psychoEngine.setFullScreen();
-  }
-
   /**
    * Run the psychoEngine. Needs to be started from the main thread
    *
    * @since 0.1.0
    */
   public void run() {
-    psychoEngine.start(settings.input(), Paradigm.CLICKER, settings.viewMode());
+    psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
     psychoEngine.cleanup();
     psychoEngine = null;
   }
@@ -156,7 +103,7 @@ public class OpiJovp extends MessageProcessor {
     if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
       return OpiManager.error(prefix + OpiManager.BAD_COMMAND_FIELD);
     return switch (Command.valueOf(cmd.toUpperCase())) {
-      case INITIALIZE -> initialize();
+      case INITIALIZE -> initialize(pairs);
       case QUERY -> query();
       case SETUP -> setup(pairs);
       case PRESENT -> present(pairs);
@@ -170,7 +117,19 @@ public class OpiJovp extends MessageProcessor {
    *
    * @since 0.1.0
    */
-  private MessageProcessor.Packet initialize() {
+  private MessageProcessor.Packet initialize(HashMap<String, Object> args) {
+    // get settings
+    this.prefix = "OPI JOVP " + configuration.machine() + ": ";
+    switch (configuration.viewMode()) {
+      case MONO -> backgrounds = new Setup[] {null};
+      case STEREO -> backgrounds = new Setup[] {null, null};
+    }
+    psychoEngine = new PsychoEngine(new OpiLogic(this), configuration.distance(), Configuration.VALIDATION_LAYERS, Configuration.API_DUMP);
+    psychoEngine.hide();
+    psychoEngine.setMonitor(configuration.screen());
+    if(configuration.physicalSize().length != 0)
+      psychoEngine.setPhysicalSize(configuration.physicalSize()[0], configuration.physicalSize()[1]);
+    if (configuration.fullScreen()) psychoEngine.setFullScreen();
     state = State.INIT;
     return OpiManager.ok(INITIALIZED);
   }
@@ -181,9 +140,9 @@ public class OpiJovp extends MessageProcessor {
    * @since 0.1.0
    */
   private MessageProcessor.Packet query() {
-    return OpiManager.ok((new Query(settings.distance(), psychoEngine.getFieldOfView(),
-      settings.viewMode(), settings.input(),settings.fullScreen(), settings.tracking(), settings.depth(),
-      settings.calibration().maxLum(), settings.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
+    return OpiManager.ok((new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
+      configuration.input(), configuration.bitStealing(), configuration.fullScreen(), configuration.tracking(),
+      configuration.calibration().maxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
   }
 
   /**
@@ -197,9 +156,9 @@ public class OpiJovp extends MessageProcessor {
     try {
       // Get eye for the instruction
       Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());
-      if(settings.viewMode() == ViewMode.MONO || eye == Eye.BOTH || eye == Eye.LEFT)
+      if(configuration.viewMode() == ViewMode.MONO || eye == Eye.BOTH || eye == Eye.LEFT)
         backgrounds[0] = Setup.set(args);
-      if(settings.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
+      if(configuration.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
         backgrounds[1] = Setup.set(args);
       state = State.SETUP;
       return query();
@@ -220,7 +179,7 @@ public class OpiJovp extends MessageProcessor {
       stimulus = Present.set(args);
       state = State.PRESENT;
       while (response == null) Thread.onSpinWait(); // wait for response
-      String jsonStr = response.toJson(settings.tracking());
+      String jsonStr = response.toJson(configuration.tracking());
       response = null;
       return OpiManager.ok(jsonStr);
     } catch (Exception e) {
@@ -240,10 +199,10 @@ public class OpiJovp extends MessageProcessor {
 
   public static void main(String args[]) {
     try {
-      CSListener listener = new CSListener(Integer.parseInt(args[0]), new OpiJovp(Settings.Machine.IMOVIFA));
+      CSListener listener = new CSListener(Integer.parseInt(args[0]), new OpiJovp());
       System.out.println("Machine address is " + listener.getIP() + ":" + listener.getPort());
       while (true) Thread.onSpinWait();
-    } catch (NumberFormatException | IOException e) {
+    } catch (NumberFormatException e) {
       e.printStackTrace();
     }
   }

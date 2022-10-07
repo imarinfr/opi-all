@@ -23,6 +23,7 @@ public class Jovp extends OpiMachine {
     class Settings extends OpiMachine.Settings {
         int screen;
         int[] physicalSize;
+        boolean bitStealing;
         boolean fullScreen;
         int distance;
         String viewMode;
@@ -32,15 +33,16 @@ public class Jovp extends OpiMachine {
         String gammaFile;
     };
 
-    Settings settings;
+  /** Settings */
+  Settings settings;
 
     public Jovp() {
-        this.settings = (Settings) fillSettings(Settings.class);
-        writer = new CSWriter(settings.ip, settings.port);
+      this.settings = (Settings) fillSettings(Settings.class);
+      writer = new CSWriter(settings.ip, settings.port);
     }
     
     public Jovp(boolean noSocket) {
-        this.settings = (Settings) fillSettings(Settings.class);
+      this.settings = (Settings) fillSettings(Settings.class);
     }
 
   /**

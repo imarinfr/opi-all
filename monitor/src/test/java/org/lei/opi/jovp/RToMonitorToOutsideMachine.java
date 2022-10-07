@@ -3,7 +3,7 @@ package org.lei.opi.jovp;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
-import org.lei.opi.jovp.Settings.Machine;
+import org.lei.opi.jovp.Configuration.Machine;
 
 /**
  *
@@ -56,7 +56,7 @@ public class RToMonitorToOutsideMachine {
   /** setup commands */
   private void setupCommands(Machine machine) {
     switch(machine) {
-      case DISPLAY_MONO, DISPLAY_STEREO -> {
+      case DISPLAY -> {
         chooseJson = "Display/opiChoose.json";
         initJson = "Display/opiInit.json";
         setupJson = new String[] {

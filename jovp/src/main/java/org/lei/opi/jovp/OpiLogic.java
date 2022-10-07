@@ -48,7 +48,7 @@ public class OpiLogic implements PsychoLogic {
   OpiLogic(OpiJovp driver) {
     this.driver = driver;
     // Init background, fixation depending on whether viewMode is MONO or STEREO
-    switch(driver.settings.viewMode()) {
+    switch(driver.configuration.viewMode()) {
       case MONO -> {
         backgrounds = new Item[] {
           new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture())
@@ -211,7 +211,7 @@ public class OpiLogic implements PsychoLogic {
 
   /** Apply gamma correction */
   private double[] gammaCorrection(double[] bgCol) {
-    return driver.settings.calibration().colorValues(bgCol);
+    return driver.configuration.calibration().colorValues(bgCol);
   }
 
 }

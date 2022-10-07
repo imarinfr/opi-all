@@ -3,7 +3,7 @@ package org.lei.opi.jovp;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
-import org.lei.opi.jovp.Settings.Machine;
+import org.lei.opi.jovp.Configuration.Machine;
 
 /**
  *
@@ -40,29 +40,15 @@ public class RToMonitorToJovpTests {
    * @since 0.0.1
    */
   @Test
-  public void monitorDisplayMono() {
-    setupConnections(Machine.DISPLAY_MONO);
-    setupCommands(Machine.DISPLAY_MONO);
+  public void monitorDisplay() {
+    setupConnections(Machine.DISPLAY);
+    setupCommands(Machine.DISPLAY);
     clientDriver();
     server.run();
     closeConnections();
   }
 
   /**
-   * Monitor controlling Display on stereoscopic view
-   *
-   * @since 0.0.1
-   */
-  @Test
-  public void monitorDisplayStereo() {
-    setupConnections(Machine.DISPLAY_STEREO);
-    setupCommands(Machine.DISPLAY_STEREO);
-    clientDriver();
-    server.run();
-    closeConnections();
-  }
-
-    /**
    * Monitor controlling Display on stereoscopic view
    *
    * @since 0.0.1
@@ -90,7 +76,7 @@ public class RToMonitorToJovpTests {
   /** setup commands */
   private void setupCommands(Machine machine) {
     switch(machine) {
-      case DISPLAY_MONO, DISPLAY_STEREO -> {
+      case DISPLAY -> {
         chooseJson = "Display/opiChoose.json";
         initJson = "Display/opiInit.json";
         setupJson = new String[] {

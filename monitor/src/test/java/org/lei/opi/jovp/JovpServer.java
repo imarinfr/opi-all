@@ -26,8 +26,8 @@ class JovpServer {
    *
    * @since 0.0.1
    */
-  JovpServer(Settings.Machine machine, int port) throws IOException {
-    opiJovp = new OpiJovp(machine);
+  JovpServer(Configuration.Machine machine, int port) throws IOException {
+    opiJovp = new OpiJovp();
     listener = new CSListener(port, opiJovp);
   }
 
