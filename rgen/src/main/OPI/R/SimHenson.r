@@ -104,13 +104,15 @@ opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 
 #'
 #' @return NULL
 #'
-simH.opiSetup_for_SimHenson <- function(state)  NULL
+opiSetup_for_SimHenson <- function(state)  NULL
 
-#' Determine the response to a stimuli by sampling from a cummulative Gaussian 
-#' Frequency-of-Seeing (FoS) curve (also known as the psychometric function) with formula
-#' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}},
-#' where \eqn{x}{\code{x}} is the stimulus value in dB, and `pxVar` is
-#' \deqn{\min\left(\mbox{cap}, e^{A\times\mbox{tt}+B}\right).}
+#' Determine the response to a stimuli by sampling from a cummulative Gaussian
+#' Frequency-of-Seeing (FoS) curve (also known as the psychometric function).
+#' 
+#' The FoS formula is
+#' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, \mbox{pxVar})}
+#' where `x` is the stimulus value in dB, and `pxVar` is
+#' \deqn{\min(\mbox{cap}, e^{A\times\mbox{tt}+B}).}
 #' The ceiling \code{cap} is set with the call to
 #' \code{opiInitialize}, and \code{A} and \code{B} are from Table 1 in Henson
 #' et al (2000), also set in the call to `opiInitiaise` using the \code{type} parameter.
