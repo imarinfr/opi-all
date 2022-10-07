@@ -1,17 +1,59 @@
 {
-  "Jovp" :
+  "Display" :
     {
       "ip" : "localhost",
       "port" : 51234,
       "screen": 0,
       "physicalSize": [],
+      "dithering": false,
       "fullScreen": false,
       "distance": 500,
       "viewMode": "mono",
       "input": "mouse",
       "tracking": false,
-      "depth": 8,
       "gammaFile": "linearGamma8bit.json"        
+    },
+  "ImoVifa" :
+    {
+      "ip" : "localhost",
+      "port" : 51234,
+      "screen": 0,
+      "physicalSize": [],
+      "dithering": false,
+      "fullScreen": false,
+      "distance": 100,
+      "viewMode": "stereo",
+      "input": "COM10",
+      "tracking": true,
+      "gammaFile": "linearGamma8bit.json"    
+    },
+  "PicoVR" :
+    {
+      "ip" : "localhost",
+      "port" : 51234,
+      "screen": 0,
+      "physicalSize": [],
+      "`dithering`": false,
+      "fullScreen": true,
+      "distance": 100,
+      "viewMode": "stereo",
+      "input": "mouse",
+      "tracking": true,
+      "gammaFile": "linearGamma8bit.json"    
+    },
+    "PhoneHMD" :
+    {
+      "ip" : "localhost",
+      "port" : 51234,
+      "screen": 0,
+      "physicalSize": [],
+      "dithering": false,
+      "fullScreen": true,
+      "distance": 100,
+      "viewMode": "stereo",
+      "input": "mouse",
+      "tracking": false,
+      "gammaFile": "linearGamma8bit.json"    
     },
   "O900" :
     {
