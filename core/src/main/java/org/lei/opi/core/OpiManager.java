@@ -169,10 +169,10 @@ public class OpiManager extends MessageProcessor {
       String className = OpiMachine.class.getPackage().getName() + "." + pairs.get("machine");
       try {
         machine = (OpiMachine) Class.forName(className).getDeclaredConstructor().newInstance();
-        return ok(String.format(MACHINE_SELECTED, className), false);
+        return ok(String.format(MACHINE_SELECTED, pairs.get("machine")), false);
       } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException |
                InvocationTargetException | NoSuchMethodException | SecurityException e) {
-        return error(String.format(WRONG_MACHINE_NAME, className), e);
+        return error(String.format(WRONG_MACHINE_NAME, pairs.get("machine")), e);
       }
     } else { // If it is not a CHOOSE command and there is no machine open, give up else try it out
       if (this.machine == null)
