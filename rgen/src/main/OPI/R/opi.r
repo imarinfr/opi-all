@@ -23,19 +23,19 @@ packageStartupMessage("OPI version", utils::packageVersion("OPI"))
 .opi_env <- new.env(size = 20)
 
 assign("machine_list", list(
+    # "SimHensonRT",  No longer supported. Do your own outside opiPresent. data still in package.
+    # "Jovp",  Not needed as a standalone, use subclasses: Display, ...
+    #"Icare",  Not needed as a standalone, use subclasses: O900, O600
+    # "O600",  Never really supported?
     "Compass",
     "ImoVifa",
-    # "Kowa",
+    # "Kowa",   TODO
     "Maia",
-    # "Jovp",
-    #"Icare",
     "O900",
-    # "O600",
     "SimNo",
     "SimYes",
     "SimHenson",
     "SimGaussian",
-    "SimHensonRT",
     "PhoneHMD",
     "Display",
     "PicoVR"
@@ -84,7 +84,7 @@ chooseOpi <- chooseOPI
 #' [opiInitialise_for_Kowa()], [opiInitialise_for_O900()], [opiInitialise_for_O600()],
 #' [opiInitialise_for_PhoneHMD()], [opiInitialise_for_Display()], [opiInitialise_for_PicoVR()],
 #' [opiInitialise_for_SimNo()], [opiInitialise_for_SimYes()], [opiInitialise_for_SimHenson()],
-#' [opiInitialise_for_SimGaussian()], [opiInitialise_for_SimHensonRT()]
+#' [opiInitialise_for_SimGaussian()]
 #' @export
 opiInitialise <- function(...) {
     if (is.null(.opi_env$chosen_machine))
@@ -107,7 +107,7 @@ opiInitialize <- opiInitialise
 #' [opiQueryDevice_for_Kowa()], [opiQueryDevice_for_O900()], [opiQueryDevice_for_O600()],
 #' [opiQueryDevice_for_PhoneHMD()], [opiQueryDevice_for_Display()], [opiQueryDevice_for_PicoVR()],
 #' [opiQueryDevice_for_SimNo()], [opiQueryDevice_for_SimYes()], [opiQueryDevice_for_SimHenson()],
-#' [opiQueryDevice_for_SimGaussian()], [opiQueryDevice_for_SimHensonRT()]
+#' [opiQueryDevice_for_SimGaussian()]
 #' @export
 opiQueryDevice <- function() {
     if (is.null(.opi_env$chosen_machine))
@@ -128,7 +128,7 @@ opiQueryDevice <- function() {
 #' [opiSetup_for_Kowa()], [opiSetup_for_O900()], [opiSetup_for_O600()],
 #' [opiSetup_for_PhoneHMD()], [opiSetup_for_Display()], [opiSetup_for_PicoVR()],
 #' [opiSetup_for_SimNo()], [opiSetup_for_SimYes()], [opiSetup_for_SimHenson()],
-#' [opiSetup_for_SimGaussian()], [opiSetup_for_SimHensonRT()]
+#' [opiSetup_for_SimGaussian()]
 #' @export
 opiSetup <- function(state) {
     if (is.null(.opi_env$chosen_machine))
@@ -147,7 +147,7 @@ opiSetup <- function(state) {
 #' [opiClose_for_Kowa()], [opiClose_for_O900()], [opiClose_for_O600()],
 #' [opiClose_for_PhoneHMD()], [opiClose_for_Display()], [opiClose_for_PicoVR()],
 #' [opiClose_for_SimNo()], [opiClose_for_SimYes()], [opiClose_for_SimHenson()],
-#' [opiClose_for_SimGaussian()], [opiClose_for_SimHensonRT()]
+#' [opiClose_for_SimGaussian()]
 #' @export
 opiClose <- function() {
     if (is.null(.opi_env$chosen_machine))
@@ -169,7 +169,7 @@ opiClose <- function() {
 #' [opiPresent_for_Kowa()], [opiPresent_for_O900()], [opiPresent_for_O600()],
 #' [opiPresent_for_PhoneHMD()], [opiPresent_for_Display()], [opiPresent_for_PicoVR()],
 #' [opiPresent_for_SimNo()], [opiPresent_for_SimYes()], [opiPresent_for_SimHenson()],
-#' [opiPresent_for_SimGaussian()], [opiPresent_for_SimHensonRT()]
+#' [opiPresent_for_SimGaussian()]
 #' @export
 opiPresent <- function(stim, ...) {
     if (is.null(.opi_env$chosen_machine))
