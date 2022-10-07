@@ -146,17 +146,12 @@ public class PerimeterTests {
   /** server driver with lists of present/query etc*/
   private void executeCommands() throws IOException, InterruptedException {
     sendAndReceive(RClient.loadMessage(chooseJson)); // Choose OPI
-    System.out.println("OPI QUERY before OPI INITIALIZE");
-    sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
     sendAndReceive(RClient.loadMessage(initJson)); // Initialize OPI
-    System.out.println("OPI QUERY after OPI INITIALIZE");
     sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
-    for (String s : setupJson) {
+    for (String s : setupJson)
       sendAndReceive(RClient.loadMessage(s)); // Setup OPI
-    }
-    for (String s : presentJson) { // Present OPI
+    for (String s : presentJson) // Present OPI
       sendAndReceive(RClient.loadMessage(s));
-    } // Present OPI
     sendAndReceive(RClient.loadMessage("opiClose.json")); // Close OPI  
   }
 

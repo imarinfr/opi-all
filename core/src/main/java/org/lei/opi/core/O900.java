@@ -459,7 +459,7 @@ public class O900 extends OpiMachine {
       for (int i = 0; i < x.length; i++)
         message.append((int) Math.round(10.0 * x[i])).append(" ")
                .append((int) Math.round(10.0 * y[i])).append(" ");
-      message.append((int) Math.round(-100.0 * Math.log10(lum / (4000 / Math.PI)))).append(" ")
+      message.append((int) Math.round(-100.0 * Math.log10(lum / (1000 / Math.PI)))).append(" ")
              .append(size).append(" ");
       for (int i = 0; i < t.length; i++)
         message.append((int) Math.round(10.0 * t[i])).append(" ");
