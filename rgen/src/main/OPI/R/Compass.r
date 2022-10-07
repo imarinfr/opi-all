@@ -164,40 +164,40 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #' @param w Response window (ms).
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyed Diameter of pupil at times eyet (mm).
-#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'    - res$time_rec Time since 'epoch' when command was received at Compass or
-#'                      Maia (ms).
-#'    - res$time_resp Time since 'epoch' when stimulus response is received, or
-#'                       response window expired (ms).
-#'    - res$num_track_events Number of tracking events that occurred during
-#'                              presentation.
-#'    - res$num_motor_fails Number of times motor could not follow fixation
-#'                             movement during presentation.
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyed Diameter of pupil at times eyet (mm).
-#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'    - res$time_rec Time since 'epoch' when command was received at Compass or
-#'                      Maia (ms).
-#'    - res$time_resp Time since 'epoch' when stimulus response is received, or
-#'                       response window expired (ms).
-#'    - res$num_track_events Number of tracking events that occurred during
-#'                              presentation.
-#'    - res$num_motor_fails Number of times motor could not follow fixation
-#'                             movement during presentation.
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg Error message or a structure with the following fields.
 #'    - res$msg$seen '1' if seen, '0' if not.
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
+#'  * res JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
+#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
+#'    - res$eyed Diameter of pupil at times eyet (mm).
+#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'    - res$time_rec Time since 'epoch' when command was received at Compass or
+#'                      Maia (ms).
+#'    - res$time_resp Time since 'epoch' when stimulus response is received, or
+#'                       response window expired (ms).
+#'    - res$num_track_events Number of tracking events that occurred during
+#'                              presentation.
+#'    - res$num_motor_fails Number of times motor could not follow fixation
+#'                             movement during presentation.
+#'  * res JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
+#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
+#'    - res$eyed Diameter of pupil at times eyet (mm).
+#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'    - res$time_rec Time since 'epoch' when command was received at Compass or
+#'                      Maia (ms).
+#'    - res$time_resp Time since 'epoch' when stimulus response is received, or
+#'                       response window expired (ms).
+#'    - res$num_track_events Number of tracking events that occurred during
+#'                              presentation.
+#'    - res$num_motor_fails Number of times motor could not follow fixation
+#'                             movement during presentation.
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -231,16 +231,16 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #'
 #'
 #' @return a list contianing:
-#'    - res$time The time stamp for fixation data
-#'    - res$x The time stamp for fixation data
-#'    - res$y The time stamp for fixation data
-#'    - res$time The time stamp for fixation data
-#'    - res$x The time stamp for fixation data
-#'    - res$y The time stamp for fixation data
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or additional results from the CLOSE command
+#'    - res$time The time stamp for fixation data
+#'    - res$x The time stamp for fixation data
+#'    - res$y The time stamp for fixation data
+#'    - res$time The time stamp for fixation data
+#'    - res$x The time stamp for fixation data
+#'    - res$y The time stamp for fixation data
 #'
 #' @examples
 #' chooseOpi("Compass")

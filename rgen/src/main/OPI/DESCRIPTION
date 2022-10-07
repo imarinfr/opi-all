@@ -21,4 +21,4 @@ LazyData: true
 Encoding: UTF-8
 RoxygenNote: 7.2.0
 Roxygen: list(markdown = TRUE)
-Collate: opi.r Jovp.r Maia.r Compass.r O900.r dbTocd.r data-RtDbUnits.r data-RtSigmaUnits.r SimYes.r SimNo.r SimHenson.r
+Collate: opi.r Display.r Maia.r Compass.r O900.r PicoVR.r PhoneHMD.r ImoVifa.r dbTocd.r data-RtDbUnits.r data-RtSigmaUnits.r SimYes.r SimNo.r SimHenson.r

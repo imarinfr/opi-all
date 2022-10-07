@@ -164,16 +164,16 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @param w [STATIC] Response window (ms).
 #'
 #' @return a list contianing:
-#'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
-#'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
-#'    - res$msg$x [KINETIC] x co-ordinate when oberver responded (degrees).
-#'    - res$msg$y [KINETIC] y co-ordinate when oberver responded (degrees).
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg Error message or a structure with the following fields.
 #'    - res$msg$seen '1' if seen, '0' if not.
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
+#'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
+#'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
+#'    - res$msg$x [KINETIC] x co-ordinate when oberver responded (degrees).
+#'    - res$msg$y [KINETIC] y co-ordinate when oberver responded (degrees).
 #'
 #' @examples
 #' chooseOpi("O900")

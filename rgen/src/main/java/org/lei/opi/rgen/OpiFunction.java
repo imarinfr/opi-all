@@ -67,14 +67,14 @@ public class OpiFunction {
         this.methodData = new MethodData(null, null);
         Class<?> c = machine.getClass();
         while (c != null) {
-            this.methodData = MethodData.append(this.methodData, 
-                Stream.of(c.getMethods())
+            this.methodData = MethodData.append(Stream.of(c.getMethods())
                 .filter((Method m) -> m.getName() == this.opiCoreName)
                 .findAny()
                 .map((Method m) -> new MethodData(
                     m.getAnnotationsByType(Parameter.class), 
                     m.getAnnotationsByType(ReturnMsg.class)))
-                .orElse(null)
+                .orElse(null), 
+                this.methodData
             );
             c = c.getSuperclass();
         }
