@@ -63,7 +63,7 @@ public class OpiFunction {
         this.machineName = machine.getClass().getSimpleName();
 
                 // get @Parameter and @ReturnMsg annotations for this function 
-                // in the base class and any parent classes up to OpiMachine
+                // in the base class and any parent classes
         this.methodData = new MethodData(null, null);
         Class<?> c = machine.getClass();
         while (c != null) {
