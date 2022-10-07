@@ -27,25 +27,23 @@ if (exists(".opi_env") && !exists("Jovp", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param ipMonitor IP Address of the OPI monitor.
-#' @param portMonitor TCP port of the OPI monitor.
 #' @param ip IP Address of the OPI machine.
 #' @param port TCP port of the OPI machine.
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error Error code '0' if all good, '1' something wrong.
 #'    - res$msg The success or error message.
 #'
 #' @examples
 #' chooseOpi("Jovp")
-#' result <- opiInitialise(null)
+#' result <- opiInitialise(ip = "localhost", port = 50001)
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_Jovp <- function(ipMonitor = NULL, portMonitor = NULL, ip = NULL, port = NULL) {
-    assign("socket", open_socket(ipMonitor, portMonitor), .opi_env$Jovp)
+opiInitialise_for_Jovp <- function(ip = NULL, port = NULL) {
+    assign("socket", open_socket(ip, port), .opi_env$Jovp)
 
     msg <- list(command = "choose", machine = "Jovp")
     msg <- rjson::toJSON(msg)
@@ -53,13 +51,14 @@ opiInitialise_for_Jovp <- function(ipMonitor = NULL, portMonitor = NULL, ip = NU
     res <- readLines(.opi_env$Jovp$socket, n = 1)
     res <- rjson::fromJSON(res)
 
-    msg <- list(ipMonitor = ipMonitor, portMonitor = portMonitor, ip = ip, port = port)
+    msg <- list(ip = ip, port = port)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$Jovp$socket, n = 1))
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -73,14 +72,14 @@ opiInitialise_for_Jovp <- function(ipMonitor = NULL, portMonitor = NULL, ip = NU
 #'
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or a structure with the following data.
 #'
 #' @examples
 #' chooseOpi("Jovp")
-#' result <- opiQueryDevice(null)
+#' result <- opiQueryDevice()
 #'
 #' @seealso [opiQueryDevice()]
 #'
@@ -94,7 +93,8 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$Jovp$socket, n = 1))
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -121,15 +121,17 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
 #' @param tracking Whether to correct stimulus location based on eye position.
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or a structure with the result of QUERY OPI
 #'                 command.
 #'
 #' @examples
 #' chooseOpi("Jovp")
-#' result <- opiSetup(settings = list(null))
+#' result <- opiSetup(settings = list(eye = "list('left')", bgLum = 10, bgCol = list(1, 1, 1),
+#'                    fixShape = "maltese", fixLum = 20, fixCol = list(0, 1, 0),
+#'                    fixCx = 0, fixCy = 0, fixSx = 1))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -143,7 +145,8 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$Jovp$socket, n = 1))
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -181,18 +184,22 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
 #' @param w List of stimuli response windows (ms).
 #'
 #' @return a list contianing:
-#'    - res$error '0' if success, '1' if error.
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$msg$seen '1' if seen, '0' if not.
-#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
 #'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$eyed Diameter of pupil at times eyet (mm).
 #'    - res$msg$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
+#'    - res$error '0' if success, '1' if error.
+#'    - res$msg Error message or a structure with the following fields.
+#'    - res$msg$seen '1' if seen, '0' if not.
+#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
 #'
 #' @examples
 #' chooseOpi("Jovp")
-#' result <- opiPresent(stim = list(null))
+#' result <- opiPresent(stim = list(eye = list('left'), x = list(0), y = list(0),
+#'                      sx = list(1.72), lum = list(20), color1 = list(list(1, 1,
+#'                      1)), t = list(200), w = list(1500)))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -206,7 +213,8 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$Jovp$socket, n = 1))
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -220,14 +228,14 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
 #'
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'
 #' @examples
 #' chooseOpi("Jovp")
-#' result <- opiClose(null)
+#' result <- opiClose()
 #'
 #' @seealso [opiClose()]
 #'
@@ -241,7 +249,8 @@ if(!exists(".opi_env") || !exists("Jovp", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$Jovp$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$Jovp$socket, n = 1))
+    res <- readLines(.opi_env$Jovp$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 

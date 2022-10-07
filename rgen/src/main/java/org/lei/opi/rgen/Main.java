@@ -52,8 +52,8 @@ machineName, machineName);  // environment name
     /**
      * Produce the R methods for a single machine and output it on writer.
      * 
-     * @param writer  A {@link PrintWriter} to which output is sent.
      * @param machine An {@link OpiMachine} object that will be the basis for the R code.
+     * @param writer  A {@link PrintWriter} to which output is sent.
      */
     static void makeR(OpiMachine machine, PrintStream writer) {
         String machineName = machine.getClass().getSimpleName();
@@ -66,24 +66,10 @@ machineName, machineName);  // environment name
             new OpiFunction(machine, "opiClose", "close", "", "%s", false)
         };
 
-            // TODO: need to ad parent/OpiMachine params here
-        String callingExample = Stream.of(functions)
-            .map((OpiFunction f) -> {
-                String s = Stream.of(f.methodData.parameters())
-                   .filter((Parameter p) -> !p.optional())
-                   .map((Parameter p) -> 
-                       p.className().getSimpleName().equals("Double") || p.isList() ?
-                           String.format("%s = %s", p.name(), p.defaultValue()) :
-                           String.format("%s = \"%s\"", p.name(), p.defaultValue()))
-                   .collect(Collectors.joining(", "));
-                return OpiFunction.wrapR(s, 10 + f.opiName.length(), true);
-            })
-            .collect(Collectors.joining("\n"));
-
         writer.println(Main.makeHeader(machine.getClass().getSimpleName()));
 
         for (OpiFunction f : functions) 
-            f.generateR(callingExample, writer);
+            f.generateR(writer);
 
         writer.println(String.format("""
 

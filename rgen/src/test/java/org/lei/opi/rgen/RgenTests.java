@@ -25,13 +25,13 @@ public class RgenTests {
   @Test
   public void opiFunctionTest1() {
     OpiFunction f = new OpiFunction(new Jovp(), "opiInitialise", "initialize", "", "list(err = %s)", true);
-    f.generateR("#' @example\nres <- opiInitialise()", System.out);
+    f.generateR(System.out);
   }
 
   @Test
   public void opiFunctionTest2() {
     OpiFunction f = new OpiFunction(new Jovp(), "opiInitializzze", "initialize", "", "list(err = %s)", true);
-    f.generateR("#' @example\nres <- opiInitialise()", System.out);
+    f.generateR(System.out);
   }
 
 }

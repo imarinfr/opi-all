@@ -241,7 +241,7 @@ public abstract class OpiMachine {
    */
   @Parameter(name = "ip", desc = "IP Address of the OPI machine.", defaultValue = "localhost")
   @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI machine.", min = 0, max = 65535, defaultValue = "50001")
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, '1' something wrong.")
   @ReturnMsg(name = "res.msg", desc = "The success or error message.")
   public abstract MessageProcessor.Packet initialize(HashMap<String, Object> args);
@@ -253,7 +253,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the following data.")
   public abstract MessageProcessor.Packet query();
@@ -267,7 +267,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the result of QUERY OPI command.")
   public abstract MessageProcessor.Packet setup(HashMap<String, Object> args);
@@ -281,6 +281,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
+  @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following fields.")
   @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
@@ -296,7 +297,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
+  @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
   @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
   @ReturnMsg(name = "res.msg", desc = "The error message or additional results from the CLOSE command")
   public abstract MessageProcessor.Packet close();

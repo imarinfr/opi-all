@@ -25,7 +25,16 @@ public class OpiFunction {
         /** This is the name of the OPI environemnt for storing variables, settings, etc */
     static final String opiEnvName = ".opi_env";
 
-    public record MethodData(Parameter[] parameters, ReturnMsg[] returnMsgs) {};
+    public record MethodData(Parameter[] parameters, ReturnMsg[] returnMsgs) {
+        static MethodData append(MethodData m1, MethodData m2) {
+            if (m1 == null) return m2;
+            if (m2 == null) return m1;
+            return new MethodData(
+                ArrayUtils.addAll(m1.parameters, m2.parameters),
+                ArrayUtils.addAll(m1.returnMsgs, m2.returnMsgs)
+            );
+        }
+    };
     
     String opiName;
     String opiCoreName;
@@ -52,27 +61,38 @@ public class OpiFunction {
         this.opiReturnTemplate = opiReturnTemplate;
         this.createSocket = createSocket;
         this.machineName = machine.getClass().getSimpleName();
-        MethodData parentMethod = Stream.of(OpiMachine.class.getMethods())
+
+                // get @Parameter and @ReturnMsg annotations for this function 
+                // in the base class and any parent classes up to OpiMachine
+        this.methodData = new MethodData(null, null);
+        Class<?> c = machine.getClass();
+        while (c != null) {
+            this.methodData = MethodData.append(this.methodData, 
+                Stream.of(c.getMethods())
                 .filter((Method m) -> m.getName() == this.opiCoreName)
                 .findAny()
                 .map((Method m) -> new MethodData(
                     m.getAnnotationsByType(Parameter.class), 
                     m.getAnnotationsByType(ReturnMsg.class)))
-                .orElse(null);
-        MethodData method = Stream.of(machine.getClass().getMethods())
-                .filter((Method m) -> m.getName() == this.opiCoreName)
-                .findAny()
-                .map((Method m) -> new MethodData(
-                    m.getAnnotationsByType(Parameter.class), 
-                    m.getAnnotationsByType(ReturnMsg.class)))
-                .orElse(null);
-        this.methodData = new MethodData(
-            ArrayUtils.addAll(parentMethod.parameters, method.parameters),
-            ArrayUtils.addAll(parentMethod.returnMsgs, method.returnMsgs));
-        if (methodData == null) {
+                .orElse(null)
+            );
+            c = c.getSuperclass();
+        }
+
+        if (this.methodData == null) {
             System.err.print(String.format("Cannot generate R code for function %s in machine %s", 
                 this.opiCoreName, machine));
-        }
+        } 
+
+            // TODO isListList
+        String s = Stream.of(this.methodData.parameters())
+                   .filter((Parameter p) -> !p.optional())
+                   .map((Parameter p) -> 
+                       p.className().getSimpleName().equals("Double") || p.isList() ?
+                           String.format("%s = %s", p.name(), p.defaultValue()) :
+                           String.format("%s = \"%s\"", p.name(), p.defaultValue()))
+                   .collect(Collectors.joining(", "));
+        this.callingExample = OpiFunction.wrapR(s, 10 + this.opiName.length(), true);
     }
 
     /**
@@ -157,7 +177,7 @@ public class OpiFunction {
     rets.length() > 0 ? rets : "#'",
     machineName,    // chooseOpi
     this.opiName, 
-    this.opiInputFieldName.length() > 0 ? String.format("%s = list(%s)", this.opiInputFieldName, callingExample) : callingExample,
+    this.opiInputFieldName.length() > 0 ? String.format("%s = list(%s)", this.opiInputFieldName, this.callingExample) : this.callingExample,
     this.opiName   // seealso
         );
     }
@@ -191,7 +211,8 @@ public class OpiFunction {
      */
     private String makeReturnCode() {
         return String.format("""
-        res <- rjson::fromJSON(readLines(%s$%s$socket, n = 1))
+        res <- readLines(%s$%s$socket, n = 1)
+        res <- rjson::fromJSON(res)
         return(res)
     """, 
         opiEnvName, this.machineName);
@@ -201,10 +222,9 @@ public class OpiFunction {
     * Read @Parameters from opiCoreName function in machine and 
     * generate R code for function opiName.
     *
-    * @param callingExample String that is a roxygen2 @example that should at least include this function.
     * @param writer {@link PrintWriter} to which to write output.
     */
-    public void generateR(String callingExample, PrintStream writer) {
+    public void generateR(PrintStream writer) {
             // 1 Get Parameter and ResultMsg annotations for Method this.opiCoreName in machine
             // 2 Write an R function called this.opiName that takes the Parameters and 
             // 3 returns the ResultMsg fields in the this.opiReturnTemplate 

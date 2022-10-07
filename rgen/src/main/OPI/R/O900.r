@@ -31,14 +31,14 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #' @param port TCP port of the OPI machine.
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error Error code '0' if all good, '1' something wrong.
 #'    - res$msg The success or error message.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiInitialise(null)
+#' result <- opiInitialise(ip = "localhost", port = 50001)
 #'
 #' @seealso [opiInitialise()]
 #'
@@ -57,7 +57,8 @@ opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n = 1))
+    res <- readLines(.opi_env$O900$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -71,14 +72,14 @@ opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
 #'
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or a structure with the following data.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiQueryDevice(null)
+#' result <- opiQueryDevice()
 #'
 #' @seealso [opiQueryDevice()]
 #'
@@ -92,7 +93,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n = 1))
+    res <- readLines(.opi_env$O900$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -114,15 +116,16 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'                means no buzzer.
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or a structure with the result of QUERY OPI
 #'                 command.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiSetup(settings = list(null))
+#' result <- opiSetup(settings = list(eye = "left", bgLum = "10", bgCol = "white",
+#'                    fixShape = "center", fixIntensity = 50, pres = 0, resp = 0))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -136,7 +139,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n = 1))
+    res <- readLines(.opi_env$O900$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -160,18 +164,21 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @param w [STATIC] Response window (ms).
 #'
 #' @return a list contianing:
-#'    - res$error '0' if success, '1' if error.
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$msg$seen '1' if seen, '0' if not.
-#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
 #'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$x [KINETIC] x co-ordinate when oberver responded (degrees).
 #'    - res$msg$y [KINETIC] y co-ordinate when oberver responded (degrees).
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
+#'    - res$error '0' if success, '1' if error.
+#'    - res$msg Error message or a structure with the following fields.
+#'    - res$msg$seen '1' if seen, '0' if not.
+#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiPresent(stim = list(null))
+#' result <- opiPresent(stim = list(type = "static", x = list(0), y = list(0), lum = 3183.099,
+#'                      size = "list('GV')", color = "white"))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -185,7 +192,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n = 1))
+    res <- readLines(.opi_env$O900$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
@@ -199,14 +207,14 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except
+#'           'error'.
 #'    - res$error '0' if success, '1' if error.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiClose(null)
+#' result <- opiClose()
 #'
 #' @seealso [opiClose()]
 #'
@@ -220,7 +228,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
     msg <- rjson::toJSON(msg)
     writeLines(msg, .opi_env$O900$socket)
 
-    res <- rjson::fromJSON(readLines(.opi_env$O900$socket, n = 1))
+    res <- readLines(.opi_env$O900$socket, n = 1)
+    res <- rjson::fromJSON(res)
     return(res)
 }
 
