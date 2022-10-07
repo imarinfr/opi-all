@@ -38,6 +38,7 @@ public class Jovp extends OpiMachine {
         this.settings = (Settings) fillSettings(Settings.class);
         writer = new CSWriter(settings.ip, settings.port);
     }
+    
     public Jovp(boolean noSocket) {
         this.settings = (Settings) fillSettings(Settings.class);
     }

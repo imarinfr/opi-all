@@ -1,7 +1,7 @@
 {
   "Jovp" :
     {
-      "ip" : "10.4.112.236",
+      "ip" : "localhost",
       "port" : 51234,
       "screen": 0,
       "physicalSize": [],
@@ -25,7 +25,36 @@
     },
   "Compass" : 
     {
-      "ip" : "10.101.53.35",
-      "port" : 50001
+      "ip" : "localhost",
+      "port" : 51234,
+      "minX" : -30,
+      "maxX": 30,
+      "minY" : -30,
+      "maxY": 30,
+      "minPressentationTime": 200,
+      "maxPressentationTime": 200,
+      "minResponseWindow": 0,
+      "maxResponseWindow": 2680,
+      "backgroundLuminance": 10,
+      "minLuminance": 0,
+      "maxLuminance": 3183.1,
+      "tracking": true
+    },
+    "Maia" : 
+    {
+      "ip" : "localhost",
+      "port" : 51234,
+      "minX" : -20,
+      "maxX": 20,
+      "minY" : -20,
+      "maxY": 20,
+      "minPressentationTime": 200,
+      "maxPressentationTime": 200,
+      "minResponseWindow": 0,
+      "maxResponseWindow": 2680,
+      "backgroundLuminance": 1.273,
+      "minLuminance": 0,
+      "maxLuminance": 318.31,
+      "tracking": true
     }
 }

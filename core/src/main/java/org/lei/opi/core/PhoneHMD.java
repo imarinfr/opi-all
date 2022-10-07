@@ -1,7 +1,7 @@
 package org.lei.opi.core;
 
 /*
- ** Needed for rgen. Might contian some specific fields later?
+ ** Needed for rgen. Might contain some specific fields later?
  */
 public class PhoneHMD extends Jovp {
     

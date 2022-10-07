@@ -39,22 +39,19 @@ public class Icare extends OpiMachine {
   /** {@value OPI_SET_TRACKING_FAILED} */
   private static final String OPI_SET_TRACKING_FAILED = "Problem with OPI-SET-TRACKING";
 
-  /** Icare constants */
-  static int MIN_X;
-  static int MAX_X;
-  static int MIN_Y;
-  static int MAX_Y;
-  static int MIN_PRESENTATION_TIME;
-  static int MAX_PRESENTATION_TIME;
-  static int MIN_RESPONSE_WINDOW;
-  static int MAX_RESPONSE_WINDOW;
-  static double BACKGROUND_LUMINANCE;
-  static double MIN_LUMINANCE;
-  static double MAX_LUMINANCE;
-  static boolean TRACKING;
-
   class Settings extends OpiMachine.Settings {
-      String imagePath;  // what is this? delete
+    double minX;
+    double maxX;
+    double minY;
+    double maxY;
+    int minPressentationTime;
+    int maxPressentationTime;
+    int minResponseWindow;
+    int maxResponseWindow;
+    double backgroundLuminance;
+    double minLuminance;
+    double maxLuminance;
+    boolean tracking;
   };
   private Settings settings;
 
@@ -237,18 +234,18 @@ public class Icare extends OpiMachine {
    */
   private String queryResults() {
     return new StringBuilder("\n  {\n")
-      .append("    \"MIN_X\": " + MIN_X + ",\n")
-      .append("    \"MAX_X\": " + MAX_X + ",\n")
-      .append("    \"MIN_Y\": " + MIN_Y + ",\n")
-      .append("    \"MAX_Y\": " + MAX_Y + ",\n")
-      .append("    \"MIN_PRESENTATION_TIME\": " + MIN_PRESENTATION_TIME+ ",\n")
-      .append("    \"MAX_PRESENTATION_TIME\": " + MAX_PRESENTATION_TIME + ",\n")
-      .append("    \"MIN_RESPONSE_WINDOW\": " + MIN_RESPONSE_WINDOW + ",\n")
-      .append("    \"MAX_RESPONSE_WINDOW\": " + MAX_RESPONSE_WINDOW + ",\n")
-      .append("    \"BACKGROUND_LUMINANCE\": " + BACKGROUND_LUMINANCE + ",\n")
-      .append("    \"MIN_LUMINANCE\": " + MIN_LUMINANCE + ",\n")
-      .append("    \"MAX_LUMINANCE\": " + MAX_LUMINANCE + ",\n")
-      .append("    \"TRACKING\": " + TRACKING + "\n")
+      .append("    \"minX\": " + settings.minX + ",\n")
+      .append("    \"maxX\": " + settings.maxX + ",\n")
+      .append("    \"minY\": " + settings.minY + ",\n")
+      .append("    \"maxY\": " + settings.maxY + ",\n")
+      .append("    \"minPressentationTime\": " + settings.minPressentationTime + ",\n")
+      .append("    \"maxPressentationTime\": " + settings.maxPressentationTime + ",\n")
+      .append("    \"minResponseWindow\": " + settings.minResponseWindow + ",\n")
+      .append("    \"maxResponseWindow\": " + settings.maxResponseWindow+ ",\n")
+      .append("    \"backgroundLuminance\": " + settings.backgroundLuminance + ",\n")
+      .append("    \"minLuminance\": " + settings.minLuminance + ",\n")
+      .append("    \"maxLuminance\": " + settings.maxLuminance + ",\n")
+      .append("    \"tracking\": " + settings.tracking + "\n")
       .append("\n  }").toString();
   };
 
@@ -266,18 +263,18 @@ public class Icare extends OpiMachine {
       .append("    \"onhx\": " + onhx + ",\n")
       .append("    \"onhy\": " + onhy + ",\n")
       .append("    \"image\": " + Arrays.toString(image) + ",\n")
-      .append("    \"MIN_X\": " + MIN_X + ",\n")
-      .append("    \"MAX_X\": " + MAX_X + ",\n")
-      .append("    \"MIN_Y\": " + MIN_Y + ",\n")
-      .append("    \"MAX_Y\": " + MAX_Y + ",\n")
-      .append("    \"MIN_PRESENTATION_TIME\": " + MIN_PRESENTATION_TIME+ ",\n")
-      .append("    \"MAX_PRESENTATION_TIME\": " + MAX_PRESENTATION_TIME + ",\n")
-      .append("    \"MIN_RESPONSE_WINDOW\": " + MIN_RESPONSE_WINDOW + ",\n")
-      .append("    \"MAX_RESPONSE_WINDOW\": " + MAX_RESPONSE_WINDOW + ",\n")
-      .append("    \"BACKGROUND_LUMINANCE\": " + BACKGROUND_LUMINANCE + ",\n")
-      .append("    \"MIN_LUMINANCE\": " + MIN_LUMINANCE + ",\n")
-      .append("    \"MAX_LUMINANCE\": " + MAX_LUMINANCE + ",\n")
-      .append("    \"TRACKING\": " + TRACKING )
+      .append("    \"minX\": " + settings.minX + ",\n")
+      .append("    \"maxX\": " + settings.maxX + ",\n")
+      .append("    \"minY\": " + settings.minY + ",\n")
+      .append("    \"maxY\": " + settings.maxY + ",\n")
+      .append("    \"minPressentationTime\": " + settings.minPressentationTime + ",\n")
+      .append("    \"maxPressentationTime\": " + settings.maxPressentationTime + ",\n")
+      .append("    \"minResponseWindow\": " + settings.minResponseWindow + ",\n")
+      .append("    \"maxResponseWindow\": " + settings.maxResponseWindow+ ",\n")
+      .append("    \"backgroundLuminance\": " + settings.backgroundLuminance + ",\n")
+      .append("    \"minLuminance\": " + settings.minLuminance + ",\n")
+      .append("    \"maxLuminance\": " + settings.maxLuminance + ",\n")
+      .append("    \"tracking\": " + settings.tracking + "\n")
       .append("\n  }\n").toString();
   };
 
