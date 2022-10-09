@@ -2,7 +2,6 @@ package org.lei.opi.monitor;
 
 import org.lei.opi.core.CSListener;
 import org.lei.opi.core.OpiManager;
-import javafx.concurrent.Task;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -25,7 +24,6 @@ public class Main {
         }
 
         int port = Integer.parseInt(cmd.getOptionValue("p", "50002"));
-        OpiMonitor opiM = new OpiMonitor(port);
 
         class ListenerThread extends Thread {
             public void run() {
@@ -47,11 +45,15 @@ public class Main {
         Thread th = new ListenerThread();
         th.start();
 
+        /* 
         if(cmd.hasOption("w")) {
+            OpiMonitor opiM = new OpiMonitor(port);
             opiM.launch();
         } else {
             System.out.println("Starting monitor - listening on " + port);
             while (true) Thread.onSpinWait();
         }    
+        */
+        Monitor.main(args);
     }
 }

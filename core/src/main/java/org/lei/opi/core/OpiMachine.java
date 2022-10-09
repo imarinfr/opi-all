@@ -69,20 +69,28 @@ public abstract class OpiMachine {
   /** {@value DISCONNECTED_FROM_HOST} */
   static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
 
+  /** {@value SETTINGS_FILE} */
+  static final String SETTINGS_FILE = "settings.json";
+
+  /** {@value MACHINES} */
+  public static final String[] MACHINES = {"Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
+
   protected static class Settings {
     String ip;
     int port;
   };
 
   /**
-   * Join this class {@link Settings} and implementing subclass Settings 
-   * and populate them with data in JSON settings file.
+   * Create a {@link Settings} classs cls with values from the {@value SETTINGS_FILE}.
+   * 
+   * @param cls A {@link Settings} class to create and return.
+   * @return A {@link Settings} object of type cls with values from {@value SETTINGS_FILE}.
    */
   public Settings fillSettings(Class<? extends Settings> cls) {
     Gson gson = new Gson();
     HashMap<String, Object> jsonSettings = new HashMap<> ();
     try {
-        InputStream inputStream = OpiManager.class.getResourceAsStream("settings.json");
+        InputStream inputStream = OpiManager.class.getResourceAsStream(SETTINGS_FILE);
         jsonSettings = gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
           new TypeToken<HashMap<String, Object>>() {}.getType());
         String j = gson.toJson(jsonSettings.get(this.getClass().getSimpleName()));

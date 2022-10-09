@@ -84,7 +84,7 @@ opiSetBackground_for_%s <- function(lum, color, ...) {return("Deprecated")}
   
     public static void main(String args[]) {
         String path = "rgen/src/main/OPI/R/";
-        for (String m : new String[] {"Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"}) {
+        for (String m : OpiMachine.MACHINES) {
             PrintStream printStream = null;
             OpiMachine machine = null;
             try {
