@@ -25,6 +25,7 @@ public class Main {
 
         int port = Integer.parseInt(cmd.getOptionValue("p", "50002"));
 
+        /* 
         class ListenerThread extends Thread {
             public void run() {
                 System.out.println("Open");
@@ -45,7 +46,6 @@ public class Main {
         Thread th = new ListenerThread();
         th.start();
 
-        /* 
         if(cmd.hasOption("w")) {
             OpiMonitor opiM = new OpiMonitor(port);
             opiM.launch();

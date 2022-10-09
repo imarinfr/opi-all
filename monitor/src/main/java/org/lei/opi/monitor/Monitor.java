@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.ArrayList;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Field;
 
 import javafx.application.Application;
 import javafx.collections.ObservableList;
@@ -17,6 +19,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.event.ActionEvent;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.InvalidationListener;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
@@ -25,6 +28,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 
@@ -59,37 +63,56 @@ public class Monitor extends Application {
     private ObservableList<List<StringProperty>> settingsData = FXCollections.observableArrayList();
 
     private void fillSettingsData(String machineName) {
-        if (machineName == null) {
-            this.settingsData.removeAll(this.settingsData);
+        this.settingsData.removeAll(this.settingsData);
+        if (machineName == null) 
             return;
+
+        Object settings = null;
+        try {
+            @SuppressWarnings("unchecked")
+            Class<OpiMachine> cls = (Class<OpiMachine>)Class.forName("org.lei.opi.core." + machineName);
+            Constructor<?> cons = cls.getConstructor(boolean.class);
+            OpiMachine opiM = (OpiMachine)cons.newInstance(false);
+            settings = opiM.getSettings();
+        } catch (ClassNotFoundException e) {
+            System.out.println("listMachines contains a name that is not an extension of OpiMachine");
+        } catch (IllegalAccessException | IllegalArgumentException | NoSuchMethodException |
+                 InstantiationException | InvocationTargetException e) {
+            System.out.println("Attepting to construct an object of " + machineName + " but it does not have a (boolean) constructor.");
         }
 
-        /* 
-        Class<OpiMachine> cls = (Class<OpiMachine>)Class.forName(machineName);
-        Constructor<?> cons = cls.getConstructor();
-        Object object = ((OpiMachine)(cons.newInstance())).fillSettings(cls.getClass());
+        if (settings == null) 
+            return;
 
-        for each field in object {
-            List<String> line = new ArrayList<String>();
+        Field[] fields = settings.getClass().getFields(); 
+        for (Field field : fields) {
+            List<StringProperty> line = new ArrayList<StringProperty>();
     
-            line.add(field name);
-            line.add(field value as a string);
+            line.add(new SimpleStringProperty(field.getName()));
+            line.add(new SimpleStringProperty(field.toString()));
     
             this.settingsData.add(line);
         }
-        */
     }
 
     /**
      * Fill in bits of the GUI
      * 
-     * 1) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
-     * 2) Attach data to table to show settings for a selected machine.
+     * 1) Attach data {@link settingsData} to {@link tableSettings} to allow updates of table.
+     * 2) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
+     *    When one is clicked, update {@link settingsData}.
      */
     @FXML
     public void initialize() {
-            // (1) set up list of machines
-        ObservableList olMachineList =  FXCollections.observableArrayList(OpiMachine.MACHINES);
+            // (1) Set up table columns to show machine settings
+            // data is a list (cols) of list of strings (row), with first being field name in Settings and second the value
+        colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0));
+        colSettingsValue.setCellValueFactory(cellData -> cellData.getValue().get(1));
+        tableSettings.setItems(this.settingsData);
+
+            // (2) Set up list of machines
+        ObservableList<String> olMachineList =  FXCollections.observableArrayList(OpiMachine.MACHINES);
+        FXCollections.sort(olMachineList);
         listMachines.setItems(olMachineList);
         listMachines.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
@@ -98,13 +121,7 @@ public class Monitor extends Application {
                 fillSettingsData(newValue);
             }
         });
-
-            // (2) Set up table columns to show machine settings
-            // data is a list (cols) of list of strings (row), with first being field name in Settings and second the value
-        colSettingsProperty.setCellValueFactory(cdf -> cdf.getValue().get(0));
-        colSettingsValue.setCellValueFactory(cdf -> cdf.getValue().get(1));
-        tableSettings.setItems(this.settingsData);
-        fillSettingsData(null);
+        listMachines.getSelectionModel().select(0);
     }
 
     /**

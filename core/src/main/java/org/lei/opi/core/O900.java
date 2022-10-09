@@ -98,14 +98,15 @@ public class O900 extends OpiMachine {
   private static int MET_COL_WHITE_YELLOW;
 
   class Settings extends OpiMachine.Settings {
-    String eyeSuiteDirectory;
-    String gazeFeedPath;
-    boolean bigWheel;
-    boolean max10000;
-    boolean f310;
+    public String eyeSuiteDirectory;
+    public String gazeFeedPath;
+    public boolean bigWheel;
+    public boolean max10000;
+    public boolean f310;
   };
 
-  Settings settings;
+  private Settings settings;
+  public Settings getSettings() { return this.settings; }
 
   public O900() {
     //fillConstants();

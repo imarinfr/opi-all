@@ -22,19 +22,20 @@ import es.optocom.jovp.definitions.TextureType;
 public class Jovp extends OpiMachine {
 
   class Settings extends OpiMachine.Settings {
-      int screen;
-      int[] physicalSize;
-      boolean bitStealing;
-      boolean fullScreen;
-      int distance;
-      String viewMode;
-      String input;
-      boolean tracking;
-      String gammaFile;
+      public int screen;
+      public int[] physicalSize;
+      public boolean bitStealing;
+      public boolean fullScreen;
+      public int distance;
+      public String viewMode;
+      public String input;
+      public boolean tracking;
+      public String gammaFile;
   };
 
   /** Settings */
-  Settings settings;
+  private Settings settings;
+  public Settings getSettings() { return this.settings; }
 
   public Jovp() {
     this.settings = (Settings) fillSettings(Settings.class);

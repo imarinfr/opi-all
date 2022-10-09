@@ -75,10 +75,22 @@ public abstract class OpiMachine {
   /** {@value MACHINES} */
   public static final String[] MACHINES = {"Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
 
+  /** 
+   * The beginnings of machine specific settings. 
+   * 
+   * All machines have ip and port. Some might add more settings in the 
+   * subclass, and so should extend this class there. 
+   * Each subclass should also implement the accessor {@link getSettings}
+   * to return their extended Settings object.
+   * Note that the fields in Settings and its subclasses should be public 
+   * so that the Monitor GUI can grab them.
+   }
+  */
   protected static class Settings {
-    String ip;
-    int port;
+    public String ip;
+    public int port;
   };
+  public abstract Settings getSettings();
 
   /**
    * Create a {@link Settings} classs cls with values from the {@value SETTINGS_FILE}.

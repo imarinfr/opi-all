@@ -40,20 +40,21 @@ public class Icare extends OpiMachine {
   private static final String OPI_SET_TRACKING_FAILED = "Problem with OPI-SET-TRACKING";
 
   class Settings extends OpiMachine.Settings {
-    double minX;
-    double maxX;
-    double minY;
-    double maxY;
-    int minPressentationTime;
-    int maxPressentationTime;
-    int minResponseWindow;
-    int maxResponseWindow;
-    double backgroundLuminance;
-    double minLuminance;
-    double maxLuminance;
-    boolean tracking;
+    public double minX;
+    public double maxX;
+    public double minY;
+    public double maxY;
+    public int minPressentationTime;
+    public int maxPressentationTime;
+    public int minResponseWindow;
+    public int maxResponseWindow;
+    public double backgroundLuminance;
+    public double minLuminance;
+    public double maxLuminance;
+    public boolean tracking;
   };
   private Settings settings;
+  public Settings getSettings() { return this.settings; }
 
   public Icare() {
       this.settings = (Settings)fillSettings(Settings.class);
