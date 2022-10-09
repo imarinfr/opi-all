@@ -49,7 +49,7 @@
 
 <VBox prefHeight="515.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.lei.opi.monitor.Monitor">
   <children>
-    <AnchorPane fx:id="splashScreen" maxHeight="-1.0" maxWidth="-1.0" prefHeight="488.0" prefWidth="800.0" style="-fx-background-color: #787EB2;" VBox.vgrow="ALWAYS">
+    <AnchorPane fx:id="splashScreen" maxHeight="-1.0" maxWidth="-1.0" prefHeight="557.0" prefWidth="883.0" style="-fx-background-color: #787EB2;" VBox.vgrow="ALWAYS">
       <children>
             <TitledPane animated="false" collapsible="false" layoutX="27.0" layoutY="80.0" prefHeight="351.0" prefWidth="281.0" text="Machines">
               <content>
@@ -62,7 +62,7 @@
             </TitledPane>
             <TitledPane animated="false" collapsible="false" layoutX="308.0" layoutY="80.0" prefHeight="351.0" prefWidth="370.0" text="Settings">
                <content>
-                  <TableView fx:id="tableSettings" editable="true" prefHeight="449.0" prefWidth="368.0">
+                  <TableView fx:id="tableSettings" editable="true" prefHeight="325.0" prefWidth="464.0">
                     <columns>
                       <TableColumn fx:id="colSettingsProperty" editable="false" prefWidth="93.0" sortable="false" text="Property" />
                       <TableColumn fx:id="colSettingsValue" prefWidth="275.0" sortable="false" text="Value" />
@@ -70,7 +70,7 @@
                   </TableView>
                </content>
             </TitledPane>
-            <Button fx:id="btnConnect" layoutX="705.0" layoutY="402.0" mnemonicParsing="false" prefHeight="29.0" prefWidth="81.0" text="Connect" wrapText="true" />
+            <Button fx:id="btnConnect" layoutX="693.0" layoutY="402.0" mnemonicParsing="false" prefHeight="29.0" prefWidth="93.0" text="Connect" wrapText="true" />
             <Label layoutX="130.0" layoutY="23.0" text="OPI Monitor 3.0" textFill="WHITE">
                <font>
                   <Font size="24.0" />
@@ -97,6 +97,7 @@
                   <Image url="@../../../../../resources/opi_logo.png" />
                </image>
             </ImageView>
+            <Button fx:id="btnSave" layoutX="693.0" layoutY="363.0" mnemonicParsing="false" prefHeight="29.0" prefWidth="93.0" text="Save Settings" wrapText="true" />
       </children>
     </AnchorPane>
   </children>

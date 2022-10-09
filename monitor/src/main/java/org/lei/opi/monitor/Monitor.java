@@ -23,6 +23,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
+
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
@@ -30,6 +31,10 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableSelectionModel;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 
 public class Monitor extends Application {
@@ -37,6 +42,9 @@ public class Monitor extends Application {
 
     @FXML
     private Button btnConnect;
+
+    @FXML
+    private Button btnSave;
 
     @FXML
     private TextField fieldMyIP;
@@ -62,7 +70,33 @@ public class Monitor extends Application {
     // used as data for tableSettings 
     private ObservableList<List<StringProperty>> settingsData = FXCollections.observableArrayList();
 
+    // true if settings have been edited since last change. 
+    private boolean settingsHaveBeenEdited;
+    private String currentMachineChoice;
+
+    /**
+     * First checks if settings for current selection have been changed and 
+     * it is OK to junk them with an Alert dialog.
+     * If OK to proceed, gets the Settings from an instance of the class machineName.
+     * 
+     * @param machineName Name of the OpiMachine class from which to get Settings.
+     */
     private void fillSettingsData(String machineName) {
+            // If things have been edited (maybe not changed!), check OK to proceed.
+        boolean discard = true;
+        if (this.settingsHaveBeenEdited) {
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Settings check");
+            String s = "The settings for " + currentMachineChoice + " have changed. Discard the changes?";
+            alert.setContentText(s);
+             
+            discard = alert.showAndWait()
+                .map(response -> response == ButtonType.OK)
+                .orElse(false);
+        }
+        if (!discard) return;
+
+            // Remove all current data, create an instance of "org.lei.opi.core." + machineName        
         this.settingsData.removeAll(this.settingsData);
         if (machineName == null) 
             return;
@@ -84,22 +118,33 @@ public class Monitor extends Application {
         if (settings == null) 
             return;
 
+            // Now populate this.settingsData with the fields and values
         Field[] fields = settings.getClass().getFields(); 
         for (Field field : fields) {
             List<StringProperty> line = new ArrayList<StringProperty>();
     
+            field.setAccessible(true);
             line.add(new SimpleStringProperty(field.getName()));
-            line.add(new SimpleStringProperty(field.toString()));
+            try {
+                line.add(new SimpleStringProperty(field.get(settings) .toString()));
+            } catch (IllegalAccessException e) {
+                line.add(new SimpleStringProperty("Unknown"));
+            }
     
             this.settingsData.add(line);
         }
+
+        this.settingsHaveBeenEdited = false;
+        this.currentMachineChoice = machineName;
     }
 
     /**
      * Fill in bits of the GUI
      * 
-     * 1) Attach data {@link settingsData} to {@link tableSettings} to allow updates of table.
-     * 2) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
+     * 1) Attach data {@link settingsData} to {@link tableSettings} to allow updates of table
+     *    when list changes.
+     * 2) Set up column Value to be editable.
+     * 3) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
      *    When one is clicked, update {@link settingsData}.
      */
     @FXML
@@ -108,16 +153,24 @@ public class Monitor extends Application {
             // data is a list (cols) of list of strings (row), with first being field name in Settings and second the value
         colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0));
         colSettingsValue.setCellValueFactory(cellData -> cellData.getValue().get(1));
-        tableSettings.setItems(this.settingsData);
 
-            // (2) Set up list of machines
+            // (2) Make Value column editable
+        colSettingsValue.setCellFactory(TextFieldTableCell.forTableColumn());
+        colSettingsValue.setOnEditCommit(e -> {
+            e.getRowValue().set(1 ,new SimpleStringProperty(e.getNewValue()));
+            this.settingsHaveBeenEdited = true;
+        });
+
+        tableSettings.setItems(this.settingsData);
+        this.settingsHaveBeenEdited = false;
+
+            // (3) Set up list of machines
         ObservableList<String> olMachineList =  FXCollections.observableArrayList(OpiMachine.MACHINES);
         FXCollections.sort(olMachineList);
         listMachines.setItems(olMachineList);
         listMachines.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                System.out.println("Changed list");
                 fillSettingsData(newValue);
             }
         });
