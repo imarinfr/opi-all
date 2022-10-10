@@ -4,6 +4,11 @@ import org.lei.opi.core.OpiMachine;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -29,7 +34,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.control.Alert;
@@ -73,6 +77,7 @@ public class Monitor extends Application {
     // true if settings have been edited since last change. 
     private boolean settingsHaveBeenEdited;
     private String currentMachineChoice;
+    private Object currentSettings;  // an OpiMachine$Settings object
 
     /**
      * First checks if settings for current selection have been changed and 
@@ -101,13 +106,13 @@ public class Monitor extends Application {
         if (machineName == null) 
             return;
 
-        Object settings = null;
+        this.currentSettings = null;
         try {
             @SuppressWarnings("unchecked")
             Class<OpiMachine> cls = (Class<OpiMachine>)Class.forName("org.lei.opi.core." + machineName);
             Constructor<?> cons = cls.getConstructor(boolean.class);
             OpiMachine opiM = (OpiMachine)cons.newInstance(false);
-            settings = opiM.getSettings();
+            this.currentSettings = opiM.getSettings();
         } catch (ClassNotFoundException e) {
             System.out.println("listMachines contains a name that is not an extension of OpiMachine");
         } catch (IllegalAccessException | IllegalArgumentException | NoSuchMethodException |
@@ -115,18 +120,18 @@ public class Monitor extends Application {
             System.out.println("Attepting to construct an object of " + machineName + " but it does not have a (boolean) constructor.");
         }
 
-        if (settings == null) 
+        if (this.currentSettings == null) 
             return;
 
             // Now populate this.settingsData with the fields and values
-        Field[] fields = settings.getClass().getFields(); 
+        Field[] fields = this.currentSettings.getClass().getFields(); 
         for (Field field : fields) {
             List<StringProperty> line = new ArrayList<StringProperty>();
     
             field.setAccessible(true);
             line.add(new SimpleStringProperty(field.getName()));
             try {
-                line.add(new SimpleStringProperty(field.get(settings) .toString()));
+                line.add(new SimpleStringProperty(field.get(this.currentSettings) .toString()));
             } catch (IllegalAccessException e) {
                 line.add(new SimpleStringProperty("Unknown"));
             }
@@ -136,6 +141,70 @@ public class Monitor extends Application {
 
         this.settingsHaveBeenEdited = false;
         this.currentMachineChoice = machineName;
+    }
+
+    /**
+     * Get all fields in this and superclass objects.
+     * Taken from dfa's amnswer to https://stackoverflow.com/questions/1042798/retrieving-the-inherited-attribute-names-values-using-java-reflection
+     * @param fields
+     * @param type
+     * @return List of all fields in supplied object and its superclasses. 
+     */
+    public static List<Field> getAllFields(List<Field> fields, Class<?> type) {
+        fields.addAll(Arrays.asList(type.getDeclaredFields()));
+    
+        if (type.getSuperclass() != null) {
+            getAllFields(fields, type.getSuperclass());
+        }
+    
+        return fields;
+    }
+
+    /**
+     * When Sace Settings button {@link btnSave} is pressed, do this.
+     * (1) Read whole settings JSON into HashMap keyed by machine name
+     * (2) Build a JSON string representing map[this.currentMachineChoice] with values in this.settingsData
+     * (3) Convert Json string to object and put it in map.
+     * (4) Write map it to file as JSON.
+     * (5) Set this.settingsHaveBeenEdited to false
+     *
+     * @param event
+     */
+    @FXML
+    void saveSettings(ActionEvent event) {
+        HashMap<String, Object> map = OpiMachine.readSettingsFile();
+
+        List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettings.getClass());
+
+        String jsonString = "{" + 
+            this.settingsData.stream()
+                .map((List<StringProperty> row) -> {
+                    String fieldName = row.get(0).getValue();
+                    String fieldValue = row.get(1).getValue();
+                    String result = "";
+                    Field f = allFields.stream()
+                        .filter((Field ff) -> ff.getName().equals(fieldName))
+                        .findAny()
+                        .orElse(null);
+
+                    if (f == null)
+                        System.out.println("That's wierd, cannot find " + fieldName + " in field list for " + this.currentMachineChoice);
+                    else {
+                        if (f.getType() != String.class)
+                            result = String.format("\"%s\" : %s ", fieldName, fieldValue);
+                        else
+                            result = String.format("\"%s\" : \"%s\" ", fieldName, fieldValue);
+                    }
+                    return result;
+                })
+                .collect(Collectors.joining(","))
+            + "}";
+
+        Gson gson = new Gson();
+        map.put(this.currentMachineChoice, gson.fromJson(jsonString, this.currentSettings.getClass()));
+
+        OpiMachine.writeSettingsFile(map);
+        this.settingsHaveBeenEdited = false;
     }
 
     /**

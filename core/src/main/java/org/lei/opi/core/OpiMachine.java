@@ -1,6 +1,7 @@
 package org.lei.opi.core;
 
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -71,7 +72,7 @@ public abstract class OpiMachine {
   static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
 
   /** {@value SETTINGS_FILE} located in System.getProperty("user.dir") */
-  static final String SETTINGS_FILE = "settings.json";
+  static final String SETTINGS_FILE = "opi_settings.json";
 
   /** {@value MACHINES} */
   public static final String[] MACHINES = {"Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
@@ -94,25 +95,58 @@ public abstract class OpiMachine {
   public abstract Settings getSettings();
 
   /**
+   * Read in whole settings Json to a HashMap keyed by machine name.
+   *
+   * @return HashMap keyed by machine name with Settings Objects as values.
+   */
+    public static HashMap<String, Object> readSettingsFile() {
+        Gson gson = new Gson();
+        String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
+        try {
+            // Get default settings
+            InputStream inputStream = new FileInputStream(fp);
+            return gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
+              new TypeToken<HashMap<String, Object>>() {}.getType());
+        } catch (IOException | AssertionError e) {
+            System.out.println("Could not read settings file.");
+            e.printStackTrace();
+        }
+        return new HashMap<String, Object>();  // empty HashMap on error
+    }
+
+  /**
+   * Write the HashMap keyed by machine name as Json to {@link SETTINGS_FILE}.
+   *
+   * @param map HashMap keyed by machine name with Settings Objects as values.
+   */
+    public static void writeSettingsFile( HashMap<String, Object> map) {
+        Gson gson = new Gson();
+        String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
+        try {
+            FileWriter fw = new FileWriter(fp);
+            fw.write(gson.toJson(map));
+            fw.close();
+        } catch (IOException e) {
+            System.out.println("Could not write settings file.");
+            e.printStackTrace();
+        }
+    }
+
+  /**
    * Create a {@link Settings} classs cls with values from the {@value SETTINGS_FILE}.
    * 
    * @param cls A {@link Settings} class to create and return.
    * @return A {@link Settings} object of type cls with values from {@value SETTINGS_FILE}.
    */
   public Settings fillSettings(Class<? extends Settings> cls) {
-    Gson gson = new Gson();
-    HashMap<String, Object> jsonSettings = new HashMap<> ();
-    String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
-    try {
-            // Get default settings
-        InputStream inputStream = new FileInputStream(fp);
-        jsonSettings = gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
-          new TypeToken<HashMap<String, Object>>() {}.getType());
-        String j = gson.toJson(jsonSettings.get(this.getClass().getSimpleName()));
+    HashMap<String, Object> settingsMap = OpiMachine.readSettingsFile();
+    String machineName = this.getClass().getSimpleName();
+    if (settingsMap.containsKey(machineName)) {
+        Gson gson = new Gson();
+        String j = gson.toJson(settingsMap.get(machineName));
         return  gson.fromJson(j, cls);
-    } catch (IOException | AssertionError e) {
-        e.printStackTrace();
-        throw new RuntimeException("Could not load " + fp + " file.", e);
+    } else {
+        return null;
     }
   }
 
