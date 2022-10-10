@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -69,7 +70,7 @@ public abstract class OpiMachine {
   /** {@value DISCONNECTED_FROM_HOST} */
   static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
 
-  /** {@value SETTINGS_FILE} */
+  /** {@value SETTINGS_FILE} located in System.getProperty("user.dir") */
   static final String SETTINGS_FILE = "settings.json";
 
   /** {@value MACHINES} */
@@ -101,15 +102,17 @@ public abstract class OpiMachine {
   public Settings fillSettings(Class<? extends Settings> cls) {
     Gson gson = new Gson();
     HashMap<String, Object> jsonSettings = new HashMap<> ();
+    String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
     try {
-        InputStream inputStream = OpiManager.class.getResourceAsStream(SETTINGS_FILE);
+            // Get default settings
+        InputStream inputStream = new FileInputStream(fp);
         jsonSettings = gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
           new TypeToken<HashMap<String, Object>>() {}.getType());
         String j = gson.toJson(jsonSettings.get(this.getClass().getSimpleName()));
-        return gson.fromJson(j, cls);
+        return  gson.fromJson(j, cls);
     } catch (IOException | AssertionError e) {
         e.printStackTrace();
-        throw new RuntimeException("Could not load 'settings.json' file", e);
+        throw new RuntimeException("Could not load " + fp + " file.", e);
     }
   }
 
