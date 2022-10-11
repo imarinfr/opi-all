@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
@@ -20,10 +21,10 @@ import javafx.collections.FXCollections;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.fxml.FXMLLoader;
 import javafx.event.ActionEvent;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.InvalidationListener;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
@@ -31,6 +32,7 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TableColumn;
@@ -55,6 +57,9 @@ public class Monitor extends Application {
 
     @FXML
     private TextField fieldMyPort;
+
+    @FXML
+    private Label labelMessages;
 
     @FXML
     private ListView<String> listMachines;
@@ -171,7 +176,9 @@ public class Monitor extends Application {
      * @param event
      */
     @FXML
-    void saveSettings(ActionEvent event) {
+    void actionBtnSave(ActionEvent event) {
+        labelMessages.setText("Saving settings for " + this.currentMachineChoice + "...");
+
         HashMap<String, Object> map = OpiMachine.readSettingsFile();
 
         List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettings.getClass());
@@ -205,6 +212,8 @@ public class Monitor extends Application {
 
         OpiMachine.writeSettingsFile(map);
         this.settingsHaveBeenEdited = false;
+
+        labelMessages.setText("Settings saved for " + this.currentMachineChoice);
     }
 
     /**
@@ -247,11 +256,43 @@ public class Monitor extends Application {
     }
 
     /**
+     * Action when Connect button is pressed.
+     *
+     * (1) Open a CSWriter to the machine slected in {@link listMacines}
+     * (2) If succesful, switch to the Scene of the {@link OpiMachine} we have switched to.
+     *
+     * @param event
+     */
+    @FXML
+    void actionBtnConnect(ActionEvent event) {
+        labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
+
+        final Node source = (Node) event.getSource();
+        final Stage stage = (Stage) source.getScene().getWindow();
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("resources/Display.fxml"));
+            loader.setController(new org.lei.opi.core.Display(false));              // TODO: noSocket controller for testing. Need to add back controller into FXML
+            Parent root = loader.load();
+            Scene scene = new Scene(root, 800, 515);
+
+            stage.setScene(scene);
+            stage.show();
+        } catch (javafx.fxml.LoadException e) {
+            labelMessages.setText("Cannot open connection to " + this.currentMachineChoice);
+            System.out.println(e);
+        } catch (IOException e) {
+            System.out.println("Couldn't open Temp.fxml");
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Launch the main window, etc
      */
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("Monitor.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("resources/Monitor.fxml"));
     
         Scene scene = new Scene(root, 800, 515);
     

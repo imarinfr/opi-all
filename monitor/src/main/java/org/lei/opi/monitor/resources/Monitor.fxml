@@ -70,13 +70,13 @@
                   </TableView>
                </content>
             </TitledPane>
-            <Button fx:id="btnConnect" layoutX="693.0" layoutY="402.0" mnemonicParsing="false" prefHeight="29.0" prefWidth="93.0" text="Connect" wrapText="true" />
+            <Button fx:id="btnConnect" layoutX="693.0" layoutY="402.0" mnemonicParsing="false" onAction="#actionBtnConnect" prefHeight="29.0" prefWidth="93.0" text="Connect" wrapText="true" />
             <Label layoutX="130.0" layoutY="23.0" text="OPI Monitor 3.0" textFill="WHITE">
                <font>
                   <Font size="24.0" />
                </font>
             </Label>
-            <HBox alignment="CENTER_LEFT" layoutX="27.0" layoutY="473.0" prefHeight="38.0" prefWidth="632.0">
+            <HBox alignment="CENTER_LEFT" layoutX="27.0" layoutY="473.0" prefHeight="38.0" prefWidth="773.0">
                <children>
                   <Label text="My Port">
                      <padding>
@@ -90,14 +90,19 @@
                      </padding>
                   </Label>
                   <TextField fx:id="fieldMyIP" />
+                  <Label fx:id="labelMessages">
+                     <padding>
+                        <Insets left="20.0" />
+                     </padding>
+                  </Label>
                </children>
             </HBox>
             <ImageView fitHeight="62.0" fitWidth="81.0" layoutX="27.0" layoutY="6.0" pickOnBounds="true" preserveRatio="true">
                <image>
-                  <Image url="@../../../../../resources/opi_logo.png" />
+                  <Image url="@opi_logo.png" />
                </image>
             </ImageView>
-            <Button fx:id="btnSave" layoutX="693.0" layoutY="363.0" mnemonicParsing="false" onAction="#saveSettings" prefHeight="29.0" prefWidth="93.0" text="Save Settings" wrapText="true" />
+            <Button fx:id="btnSave" layoutX="693.0" layoutY="363.0" mnemonicParsing="false" onAction="#actionBtnSave" prefHeight="29.0" prefWidth="93.0" text="Save Settings" wrapText="true" />
       </children>
     </AnchorPane>
   </children>

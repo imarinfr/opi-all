@@ -20,6 +20,13 @@
       <artifactId>reflections</artifactId> 
       <version>${reflections.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-controls</artifactId>
+      <version>${openjfx.version}</version>
+    </dependency>
+
     <!-- 
     <dependency>
       <groupId>com.hs.eyesuite</groupId>
