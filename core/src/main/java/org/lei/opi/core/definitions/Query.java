@@ -12,7 +12,7 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param fov current horizontal and vertical field of view in degrees of visual angle
  * @param viewMode viewing mode: MONO or STEREO
  * @param input Either 'mouse', 'keypad', or the name of a suitable USB controller
- * @param bitStealing whether JOVP is using a bit-stealing algorithm
+ * @param pseudoGray whether JOVP is using a bit-stealing algorithm
  * @param fullScreen whether JOVP machine is running on full screen mode
  * @param tracking  whether JOVP machine is able to do eye tracking
  * @param maxLum maximum luminance on the R, G, and B channels (cd/m^2)
@@ -20,7 +20,7 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param monitor display of the OPI JOVP machine
  * @since 0.0.1
  */
-public record Query(int distance, double[] fov, ViewMode viewMode, String input, boolean bitStealing,
+public record Query(int distance, double[] fov, ViewMode viewMode, String input, boolean pseudoGray,
                     boolean fullScreen, boolean tracking, double[] maxLum, String gammaFile, Monitor monitor) {
 
   /**
@@ -35,7 +35,7 @@ public record Query(int distance, double[] fov, ViewMode viewMode, String input,
       .append("    \"distance\": " + distance + ",\n")
       .append("    \"viewMode\": \"" + viewMode + "\",\n")
       .append("    \"input\": \"" + input + "\",\n")
-      .append("    \"bitStealing\": " + bitStealing + ",\n")
+      .append("    \"pseudoGray\": " + pseudoGray + ",\n")
       .append("    \"fullScreen\": " + fullScreen + ",\n")
       .append("    \"tracking\": " + tracking + ",\n")
       .append("    \"gammaFile\": \"" + gammaFile + "\",\n")

@@ -26,7 +26,7 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param machine the OPI machine
  * @param screen screen number: 0 is main, any number > 0 are external monitors
  * @param physicalSize the physical size of the display (in case it is necessary to input it manually) or empty.
- * @param bitStealing whether to use bit-stealing during stimulus presentation (for 24-bit machines to be able to show 1786 shades of gray)
+ * @param pseudoGray whether to use bit-stealing during stimulus presentation (for 24-bit machines to be able to show 1786 shades of gray)
  * @param fullScreen whether to run in full screen or windowed mode
  * @param distance viewing distance
  * @param viewMode viewing mode: MONO or STEREO
@@ -37,7 +37,7 @@ import es.optocom.jovp.definitions.ViewMode;
  *
  * @since 0.0.1
  */
-public record Configuration(Machine machine, int screen, int[] physicalSize, boolean bitStealing, boolean fullScreen, int distance,
+public record Configuration(Machine machine, int screen, int[] physicalSize, boolean pseudoGray, boolean fullScreen, int distance,
                            ViewMode viewMode, String input, boolean tracking, String gammaFile, Calibration calibration) {
 
   /** Implemented display-based machines */
@@ -83,7 +83,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
       throw new IllegalArgumentException(String.format(WRONG_DISTANCE, distance));
     ViewMode viewMode = ViewMode.valueOf(args.get("viewMode").toString().toUpperCase());
     String gammaFile = args.get("gammaFile").toString();
-    return new Configuration(machine, screen, physicalSize, (boolean) args.get("bitStealing"), (boolean) args.get("fullScreen"),
+    return new Configuration(machine, screen, physicalSize, (boolean) args.get("pseudoGray"), (boolean) args.get("fullScreen"),
                              distance, viewMode, args.get("input").toString().toUpperCase(),
                              (boolean) args.get("tracking"), gammaFile, loadCalibration(gammaFile));
   }

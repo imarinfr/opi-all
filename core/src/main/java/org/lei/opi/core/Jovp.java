@@ -24,7 +24,7 @@ public class Jovp extends OpiMachine {
   class Settings extends OpiMachine.Settings {
       public int screen;
       public int[] physicalSize;
-      public boolean bitStealing;
+      public boolean pseudoGray;
       public boolean fullScreen;
       public int distance;
       public String viewMode;
@@ -177,7 +177,7 @@ public class Jovp extends OpiMachine {
     .append("  \"machine\": " + this.getClass().getSimpleName() + ",\n")
     .append("  \"screen\": " + settings.screen + ",\n")
     .append("  \"physicalSize\": " + Arrays.toString(settings.physicalSize) + ",\n")
-    .append("  \"bitStealing\": " + settings.bitStealing + ",\n")
+    .append("  \"pseudoGray\": " + settings.pseudoGray + ",\n")
     .append("  \"fullScreen\": " + settings.fullScreen + ",\n")
     .append("  \"distance\": " + settings.distance + ",\n")
     .append("  \"viewMode\": " + settings.viewMode + ",\n")

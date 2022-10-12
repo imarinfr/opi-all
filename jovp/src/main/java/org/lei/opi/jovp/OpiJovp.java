@@ -152,7 +152,7 @@ public class OpiJovp extends MessageProcessor {
    */
   private MessageProcessor.Packet query() {
     return OpiManager.ok((new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
-      configuration.input(), configuration.bitStealing(), configuration.fullScreen(), configuration.tracking(),
+      configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
       configuration.calibration().maxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
   }
 
