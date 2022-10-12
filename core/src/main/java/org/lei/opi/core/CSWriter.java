@@ -5,8 +5,12 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.Enumeration;
 
 /**
  *
@@ -28,6 +32,8 @@ public class CSWriter {
   private static final String SEND_FAILED = "Cannot write send() message to sendWriter in CSListener.";
   /** {@value CLOSE_FAILED} */
   private static final String CLOSE_FAILED = "Cannot close the socket.";
+  /** {@value CANNOT_OBTAIN_ADDRESS} */
+  private static final String CANNOT_OBTAIN_ADDRESS = "Cannot obtain public address.";
 
   /** Server onnection address */
   private InetAddress address;
@@ -50,8 +56,8 @@ public class CSWriter {
    */
   public CSWriter(String ip, int port) {
     try {
-      if (ip.equalsIgnoreCase("localhost") | ip.equals("127.0.0.1"))
-        this.address = InetAddress.getLocalHost();
+      if (ip.equalsIgnoreCase("localhost") || ip.equals("127.0.0.1"))
+        this.address = obtainPublicAddress();
       else
         this.address = InetAddress.getByName(ip);
       this.port = port;
@@ -173,6 +179,24 @@ public class CSWriter {
    */
   public int getPort() {
     return port;
+  }
+
+  /** get network address for public access */
+  private InetAddress obtainPublicAddress() {
+    try {
+      for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+        NetworkInterface networkInterface = en.nextElement();
+        for (Enumeration<InetAddress> address = networkInterface.getInetAddresses(); address.hasMoreElements();) {
+          InetAddress inetAddress = address.nextElement();
+          if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+            return inetAddress;
+          }
+        }
+      }
+    } catch (SocketException e) {
+      throw new RuntimeException(CANNOT_OBTAIN_ADDRESS, e);
+    }
+    return null;
   }
 
 }
