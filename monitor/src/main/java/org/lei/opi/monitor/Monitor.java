@@ -44,8 +44,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 
 public class Monitor extends Application {
-
-
     @FXML
     private Button btnConnect;
 
@@ -281,7 +279,7 @@ public class Monitor extends Application {
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("resources/Display.fxml"));
-            loader.setController(new org.lei.opi.core.Display(false));              // TODO: noSocket controller for testing. Need to add back controller into FXML
+            loader.setController(new org.lei.opi.core.Display(source.getScene()));    // TODO: noSocket controller for testing. Need to add back controller into FXML
             Parent root = loader.load();
             Scene scene = new Scene(root, 800, 515);
 

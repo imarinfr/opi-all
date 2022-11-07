@@ -14,6 +14,17 @@ import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.TextureType;
 
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.event.ActionEvent;
+import javafx.stage.Stage;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.Node;
+import javafx.fxml.FXMLLoader;
+
+
 /**
  * JOVP client
  *
@@ -37,11 +48,15 @@ public class Jovp extends OpiMachine {
   private Settings settings;
   public Settings getSettings() { return this.settings; }
 
-  public Jovp() {
+  private Scene parentScene;  // return here when btnClose is clicked on our GUI
+
+  public Jovp(Scene parentScene) {
     this.settings = (Settings) fillSettings(Settings.class);
+    this.parentScene = parentScene;
     writer = new CSWriter(settings.ip, settings.port);
   }
 
+  /** No parent Scene or connection to a machine */
   public Jovp(boolean noSocket) {
     this.settings = (Settings) fillSettings(Settings.class);
   }
@@ -186,5 +201,22 @@ public class Jovp extends OpiMachine {
     .append("  \"gammaFile\": " + settings.gammaFile)
     .append("\n}").toString();
   }
+
+  // FXML code for Monitor GUI after this line ---------------------------------------------
+
+    @FXML
+    private Button btnClose;
+
+    @FXML
+    private ListView<?> listCommands;
+
+    @FXML
+    void actionBtnClose(ActionEvent event) {
+        System.out.println("Closed Display");
+
+        final Node source = (Node) event.getSource();
+        final Stage stage = (Stage) source.getScene().getWindow();
+        stage.setScene(this.parentScene);
+    }
 
 }
