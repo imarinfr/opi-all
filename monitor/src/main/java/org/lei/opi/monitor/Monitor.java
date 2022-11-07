@@ -79,8 +79,7 @@ public class Monitor extends Application {
     // used as data for tableSettings 
     private ObservableList<List<StringProperty>> settingsData = FXCollections.observableArrayList();
 
-    // true if settings have been edited since last change. 
-    private boolean settingsHaveBeenEdited;
+    private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private String currentMachineChoice;
     private Object currentSettings;  // an OpiMachine$Settings object
 
@@ -177,6 +176,11 @@ public class Monitor extends Application {
      */
     @FXML
     void actionBtnSave(ActionEvent event) {
+        if (!this.settingsHaveBeenEdited) {
+            labelMessages.setText("Nothing to save for " + this.currentMachineChoice);
+            return;
+        }
+
         labelMessages.setText("Saving settings for " + this.currentMachineChoice + "...");
 
         HashMap<String, Object> map = OpiMachine.readSettingsFile();
@@ -228,15 +232,20 @@ public class Monitor extends Application {
     @FXML
     public void initialize() {
             // (1) Set up table columns to show machine settings
-            // data is a list (cols) of list of strings (row), with first being field name in Settings and second the value
+            // cellData is a list (cols) of list of strings (row), 
+            // with first row element being field name in Settings and second the value
         colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0));
         colSettingsValue.setCellValueFactory(cellData -> cellData.getValue().get(1));
 
             // (2) Make Value column editable
         colSettingsValue.setCellFactory(TextFieldTableCell.forTableColumn());
+        colSettingsValue.setOnEditStart(e -> {
+            labelMessages.setText("Don't forget to press Enter to save edit.");
+        });
         colSettingsValue.setOnEditCommit(e -> {
             e.getRowValue().set(1 ,new SimpleStringProperty(e.getNewValue()));
             this.settingsHaveBeenEdited = true;
+            labelMessages.setText("");
         });
 
         tableSettings.setItems(this.settingsData);
