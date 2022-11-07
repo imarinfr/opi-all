@@ -51,6 +51,9 @@ public class Monitor extends Application {
     private Button btnSave;
 
     @FXML
+    private Button btnResetSettings;
+
+    @FXML
     private TextField fieldMyIP;
 
     @FXML
@@ -74,8 +77,15 @@ public class Monitor extends Application {
     @FXML
     private TableColumn<List<StringProperty>, String> colSettingsValue;
 
-    // used as data for tableSettings 
+        // Used as data for tableSettings.
+        // Initially try to get this from the settings file.
+        // If the settings file doesn't exist, or the Reset Settings button is 
+        // pressed, then get them from the @Paramter annotations in OpiMachine classes.
     private ObservableList<List<StringProperty>> settingsData = FXCollections.observableArrayList();
+
+        // IP and port of the monitor
+    private String myIpAddress;
+    private int myPort;
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private String currentMachineChoice;
@@ -84,11 +94,13 @@ public class Monitor extends Application {
     /**
      * First checks if settings for current selection have been changed and 
      * it is OK to junk them with an Alert dialog.
-     * If OK to proceed, gets the Settings from an instance of the class machineName.
+     * If OK to proceed, gets the Settings for machineName from the settings file
+     * if it exists, else from an instance of the class machineName.
      * 
      * @param machineName Name of the OpiMachine class from which to get Settings.
      */
     private void fillSettingsData(String machineName) {
+        TODO
             // If things have been edited (maybe not changed!), check OK to proceed.
         boolean discard = true;
         if (this.settingsHaveBeenEdited) {
@@ -163,7 +175,7 @@ public class Monitor extends Application {
     }
 
     /**
-     * When Sace Settings button {@link btnSave} is pressed, do this.
+     * When Save Settings button {@link btnSave} is pressed, do this.
      * (1) Read whole settings JSON into HashMap keyed by machine name
      * (2) Build a JSON string representing map[this.currentMachineChoice] with values in this.settingsData
      * (3) Convert Json string to object and put it in map.
@@ -219,6 +231,19 @@ public class Monitor extends Application {
     }
 
     /**
+     * Action when Reset Settings button is pressed.
+     *
+     * (1) Ask for confirmation
+     * (2) If OK, use fillSettings() to get the settings for this.currentMachineChoice
+     *
+     * @param event
+     */
+    @FXML
+    void actionBtnResetSettings(ActionEvent event) {
+    TODO
+    }
+
+    /**
      * Fill in bits of the GUI
      * 
      * 1) Attach data {@link settingsData} to {@link tableSettings} to allow updates of table
@@ -232,7 +257,7 @@ public class Monitor extends Application {
             // (1) Set up table columns to show machine settings
             // cellData is a list (cols) of list of strings (row), 
             // with first row element being field name in Settings and second the value
-        colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0));
+        colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0).filter((StringProperty sp) -> sp.equals("this")));
         colSettingsValue.setCellValueFactory(cellData -> cellData.getValue().get(1));
 
             // (2) Make Value column editable
