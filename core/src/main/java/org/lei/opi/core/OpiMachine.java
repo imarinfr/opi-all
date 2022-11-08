@@ -76,6 +76,8 @@ public abstract class OpiMachine {
 
   /** {@value MACHINES} */
   public static final String[] MACHINES = {"Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
+  /** {@value GUI_MACHINE_NAME} */
+  public static final String GUI_MACHINE_NAME = "this";
 
   /** 
    * The beginnings of machine specific settings. 

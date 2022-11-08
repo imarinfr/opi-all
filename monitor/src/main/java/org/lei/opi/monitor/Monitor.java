@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -34,6 +34,7 @@ import javafx.beans.value.ChangeListener;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
@@ -87,9 +88,10 @@ public class Monitor extends Application {
 
         // IP and port of the monitor
     private String myIpAddress;
-    private int myPort;
+    private String myPort;
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
+    private boolean myIpOrPortHaveBeenEdited; // true if myIp or myPort have been edited since last change. 
     private String currentMachineChoice;
     private Object currentSettingsObject;  // an OpiMachine$Settings object
 
@@ -104,19 +106,7 @@ public class Monitor extends Application {
      * @param getFromFile If True, try and get settings from JSON settings file.
      */
     private void fillSettingsData(String machineName, boolean getFromFile) {
-            // If things have been edited (maybe not changed!), check OK to proceed.
-        boolean discard = true;
-        if (this.settingsHaveBeenEdited) {
-            Alert alert = new Alert(AlertType.CONFIRMATION);
-            alert.setTitle("Settings check");
-            String s = "The settings for " + currentMachineChoice + " have changed. Discard the changes?";
-            alert.setContentText(s);
-             
-            discard = alert.showAndWait()
-                .map(response -> response == ButtonType.OK)
-                .orElse(false);
-        }
-        if (!discard) return;
+        checkSave();
 
             // Remove all current data
         this.settingsList.removeAll(this.settingsList);
@@ -201,6 +191,25 @@ public class Monitor extends Application {
     
         return fields;
     }
+        
+    /**
+     * If settings or Ip/Port edited in GUI, prompt for discard or save.
+     */
+    private void checkSave() {
+        if (this.settingsHaveBeenEdited || this.myIpOrPortHaveBeenEdited) {
+            ButtonType save = new ButtonType("Save to File", ButtonBar.ButtonData.OK_DONE);
+            ButtonType discard = new ButtonType("Not now", ButtonBar.ButtonData.CANCEL_CLOSE);
+            Alert alert = new Alert(AlertType.CONFIRMATION,
+                "The settings for " + currentMachineChoice + " or My Ip/Port have changed. Save them to the settings file?",
+                save, discard);
+
+            alert.setTitle("Settings check");
+             
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.orElse(discard) == save)
+                this.saveCurrentSettings();
+        }
+    }
 
     /**
      * When Save Settings button {@link btnSave} is pressed, do this.
@@ -209,11 +218,10 @@ public class Monitor extends Application {
      */
     @FXML
     void actionBtnSave(ActionEvent event) {
-        if (!this.settingsHaveBeenEdited) {
-            labelMessages.setText("Nothing to save for " + this.currentMachineChoice);
-            return;
-        }
-        saveCurrentSettings();
+        if (!this.settingsHaveBeenEdited && !this.myIpOrPortHaveBeenEdited) {
+            labelMessages.setText("Nothing to save for " + this.currentMachineChoice + "or My Port of My IP Address.");
+        } else 
+            saveCurrentSettings();
     }
 
     /**
@@ -231,7 +239,7 @@ public class Monitor extends Application {
         List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettingsObject.getClass());
 
         String jsonString = "{" + 
-            String.format("\"this\":{\"ip\":%s, \"port\":%s},", this.myIpAddress, this.myPort) +
+            String.format("\"%s\":{\"ip\":%s, \"port\":%s},", OpiMachine.GUI_MACHINE_NAME, this.myIpAddress, this.myPort) +
             this.settingsList.stream()
                 .map((List<StringProperty> row) -> {
                     String fieldName = row.get(0).getValue();
@@ -260,8 +268,9 @@ public class Monitor extends Application {
 
         OpiMachine.writeSettingsFile(map);
         this.settingsHaveBeenEdited = false;
+        this.myIpOrPortHaveBeenEdited = false;
 
-        labelMessages.setText("Settings saved for " + this.currentMachineChoice);
+        labelMessages.setText("Settings saved for " + this.currentMachineChoice + "and My IP/Port.");
     }
 
     /**
@@ -291,9 +300,11 @@ public class Monitor extends Application {
      * 
      * 1) Attach data {@link settingsList} to {@link tableSettings} to allow updates of table
      *    when list changes.
-     * 2) Set up column Value to be editable.
-     * 3) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
+     * 1.2) Set up column Value to be editable.
+     * 2) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
      *    When one is clicked, update {@link settingsList}.
+     * 3) Get my ip and port from the settings file if they exist.
+     * 3.1) Add change listeners to the myport and myip text fields.
      */
     @FXML
     public void initialize() {
@@ -303,7 +314,7 @@ public class Monitor extends Application {
         colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0));
         colSettingsValue.setCellValueFactory(cellData -> cellData.getValue().get(1));
 
-            // (2) Make Value column editable
+            // (1.2) Make Value column editable
         colSettingsValue.setCellFactory(TextFieldTableCell.forTableColumn());
         colSettingsValue.setOnEditStart(e -> {
             labelMessages.setText("Don't forget to press Enter to save edit.");
@@ -317,7 +328,7 @@ public class Monitor extends Application {
         tableSettings.setItems(this.settingsList);
         this.settingsHaveBeenEdited = false;
 
-            // (3) Set up list of machines
+            // (2) Set up list of machines
         ObservableList<String> olMachineList =  FXCollections.observableArrayList(OpiMachine.MACHINES);
         FXCollections.sort(olMachineList);
         listMachines.setItems(olMachineList);
@@ -328,6 +339,37 @@ public class Monitor extends Application {
             }
         });
         listMachines.getSelectionModel().select(0);
+
+            // (3) Get myIp and myPort from settings file if they exist
+        HashMap<String, Object> settings = OpiMachine.readSettingsFile();
+        if (settings.containsKey(OpiMachine.GUI_MACHINE_NAME)) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> mySettings = (Map<String, Object>)settings.get(OpiMachine.GUI_MACHINE_NAME);
+            if (mySettings.containsKey("ip")) {
+                this.myIpAddress = (String)mySettings.get("ip");
+                this.fieldMyIP.setText(this.myIpAddress);
+            }
+            if (mySettings.containsKey("port")) {
+                this.myPort = String.format("%1.0f", mySettings.get("port"));
+                this.fieldMyPort.setText(String.format("%s",this.myPort));
+            }
+        }
+
+            // 3.1) Add change listeners to the myport and myip text fields.
+        this.fieldMyIP.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                myIpAddress = newValue;
+                myIpOrPortHaveBeenEdited = true;
+            }
+        });
+        this.fieldMyPort.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+                myPort = newValue;
+                myIpOrPortHaveBeenEdited = true;
+            }
+        });
     }
 
     /**
@@ -340,6 +382,8 @@ public class Monitor extends Application {
      */
     @FXML
     void actionBtnConnect(ActionEvent event) {
+        checkSave();
+
         labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
 
         final Node source = (Node) event.getSource();
@@ -382,19 +426,7 @@ public class Monitor extends Application {
      */
     @Override
     public void stop() throws Exception {
-        boolean discard = true;
-        if (this.settingsHaveBeenEdited) {
-            Alert alert = new Alert(AlertType.CONFIRMATION);
-            alert.setTitle("Settings check");
-            String s = "The settings for " + currentMachineChoice + " have changed. Discard the changes?";
-            alert.setContentText(s);
-             
-            discard = alert.showAndWait()
-                .map(response -> response == ButtonType.OK)
-                .orElse(false);
-        }
-        if (!discard)
-            saveCurrentSettings();
+        this.checkSave();
 
         System.out.println("Stopping");
         System.exit(0);
