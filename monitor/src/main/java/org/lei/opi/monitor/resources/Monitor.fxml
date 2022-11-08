@@ -40,6 +40,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
@@ -64,9 +65,19 @@
    <children>
       <VBox alignment="BOTTOM_CENTER" prefHeight="323.0" prefWidth="100.0" spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
          <children>
-            <Button fx:id="btnResetSettings" mnemonicParsing="false" onAction="#actionBtnResetSettings" text="Reset Settings" wrapText="true" />
-            <Button fx:id="btnSave" mnemonicParsing="false" onAction="#actionBtnSave" text="Save Settings" wrapText="true" />
-            <Button fx:id="btnConnect" mnemonicParsing="false" onAction="#actionBtnConnect" text="Connect" wrapText="true" />
+            <Button fx:id="btnResetSettings" mnemonicParsing="false" onAction="#actionBtnResetSettings" prefHeight="43.0" prefWidth="82.0" text="Reset Properties" textAlignment="CENTER" wrapText="true">
+               <tooltip>
+                  <Tooltip text="Resets all propery names from java code with default values." />
+               </tooltip>
+            </Button>
+            <Button fx:id="btnSave" mnemonicParsing="false" onAction="#actionBtnSave" text="Save Settings" wrapText="true">
+               <tooltip>
+                  <Tooltip text="Save settings for currently selected machine. Overwrites existing settings." />
+               </tooltip></Button>
+            <Button fx:id="btnConnect" mnemonicParsing="false" onAction="#actionBtnConnect" text="Connect" wrapText="true">
+               <tooltip>
+                  <Tooltip text="Connect to machine." />
+               </tooltip></Button>
          </children>
       </VBox>
       <TitledPane animated="false" collapsible="false" text="Machines" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS">

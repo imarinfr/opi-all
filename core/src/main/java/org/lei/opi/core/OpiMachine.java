@@ -173,7 +173,7 @@ public abstract class OpiMachine {
 
   /**
    * Set the information about the 5 OPI methods in opiMethods
-   * It is assumed this is called by a subclass
+   * It is assumed this is called automatically by a subclass
    * 
    * @throws NoSuchMethodException If method cannot be found
    * @throws SecurityException If security has been breached

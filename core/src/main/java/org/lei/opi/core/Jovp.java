@@ -56,7 +56,7 @@ public class Jovp extends OpiMachine {
     writer = new CSWriter(settings.ip, settings.port);
   }
 
-  /** No parent Scene or connection to a machine */
+  /** No parent Scene or connection to a machine. */
   public Jovp(boolean noSocket) {
     this.settings = (Settings) fillSettings(Settings.class);
   }

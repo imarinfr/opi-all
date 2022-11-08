@@ -5,10 +5,12 @@ import org.lei.opi.core.OpiMachine;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -77,11 +79,11 @@ public class Monitor extends Application {
     @FXML
     private TableColumn<List<StringProperty>, String> colSettingsValue;
 
-        // Used as data for tableSettings.
+        // Used as data for tableSettings (settings for {@link currentMachineChoice}).
         // Initially try to get this from the settings file.
         // If the settings file doesn't exist, or the Reset Settings button is 
         // pressed, then get them from the @Paramter annotations in OpiMachine classes.
-    private ObservableList<List<StringProperty>> settingsData = FXCollections.observableArrayList();
+    private ObservableList<List<StringProperty>> settingsList = FXCollections.observableArrayList();
 
         // IP and port of the monitor
     private String myIpAddress;
@@ -89,18 +91,19 @@ public class Monitor extends Application {
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private String currentMachineChoice;
-    private Object currentSettings;  // an OpiMachine$Settings object
+    private Object currentSettingsObject;  // an OpiMachine$Settings object
 
     /**
      * First checks if settings for current selection have been changed and 
      * it is OK to junk them with an Alert dialog.
-     * If OK to proceed, gets the Settings for machineName from the settings file
-     * if it exists, else from an instance of the class machineName.
+     * If OK to proceed
+     *     If getFromFile, try and get the Settings for machineName from the settings file
+     *     If !getFromFile or get from faile fails, get settings from an instance of the class machineName.
      * 
      * @param machineName Name of the OpiMachine class from which to get Settings.
+     * @param getFromFile If True, try and get settings from JSON settings file.
      */
-    private void fillSettingsData(String machineName) {
-        TODO
+    private void fillSettingsData(String machineName, boolean getFromFile) {
             // If things have been edited (maybe not changed!), check OK to proceed.
         boolean discard = true;
         if (this.settingsHaveBeenEdited) {
@@ -115,45 +118,70 @@ public class Monitor extends Application {
         }
         if (!discard) return;
 
-            // Remove all current data, create an instance of "org.lei.opi.core." + machineName        
-        this.settingsData.removeAll(this.settingsData);
-        if (machineName == null) 
+            // Remove all current data
+        this.settingsList.removeAll(this.settingsList);
+        if (machineName == null) // not quite sure why this is here, but too scared to remove it.
             return;
 
-        this.currentSettings = null;
+            // Create an instance of "org.lei.opi.core." + machineName 
+            // (might need it later for Save and also checks OpiMachine 
+            // subclass actually exists if someone has edited the settings file externally.)
+        this.currentSettingsObject = null;
         try {
             @SuppressWarnings("unchecked")
             Class<OpiMachine> cls = (Class<OpiMachine>)Class.forName("org.lei.opi.core." + machineName);
             Constructor<?> cons = cls.getConstructor(boolean.class);
             OpiMachine opiM = (OpiMachine)cons.newInstance(false);
-            this.currentSettings = opiM.getSettings();
+            this.currentSettingsObject = opiM.getSettings();
         } catch (ClassNotFoundException e) {
-            System.out.println("listMachines contains a name that is not an extension of OpiMachine");
+            System.out.println("Selected machine is not in the jar as a class that is an extension of OpiMachine");
         } catch (IllegalAccessException | IllegalArgumentException | NoSuchMethodException |
                  InstantiationException | InvocationTargetException e) {
             System.out.println("Attepting to construct an object of " + machineName + " but it does not have a (boolean) constructor.");
         }
 
-        if (this.currentSettings == null) 
+        if (this.currentSettingsObject == null) 
             return;
 
-            // Now populate this.settingsData with the fields and values
-        Field[] fields = this.currentSettings.getClass().getFields(); 
-        for (Field field : fields) {
-            List<StringProperty> line = new ArrayList<StringProperty>();
-    
-            field.setAccessible(true);
-            line.add(new SimpleStringProperty(field.getName()));
-            try {
-                line.add(new SimpleStringProperty(field.get(this.currentSettings) .toString()));
-            } catch (IllegalAccessException e) {
-                line.add(new SimpleStringProperty("Unknown"));
+        boolean gotThem = false;
+        if (getFromFile) {
+            Gson gson = new Gson();
+            HashMap<String, Object> map = OpiMachine.readSettingsFile();
+            if (map.containsKey(machineName)) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> params = (Map<String, Object>)map.get(machineName);
+                for (String p  : params.keySet()) {
+                    List<StringProperty> line = new ArrayList<StringProperty>();
+                    line.add(new SimpleStringProperty(p));
+                    line.add(new SimpleStringProperty(params.get(p).toString()));
+                    this.settingsList.add(line);
+                }
+                gotThem = true;
+            } else {
+                System.out.println("Could not find " + machineName + " in settings file, resetting to defauts.");
             }
-    
-            this.settingsData.add(line);
         }
 
         this.settingsHaveBeenEdited = false;
+        
+        if (!gotThem) {
+                // Populate this.settingsList with the fields and values
+            Field[] fields = this.currentSettingsObject.getClass().getFields(); 
+            for (Field field : fields) {
+                List<StringProperty> line = new ArrayList<StringProperty>();
+           
+                field.setAccessible(true);
+                line.add(new SimpleStringProperty(field.getName()));
+                try {
+                    line.add(new SimpleStringProperty(field.get(this.currentSettingsObject) .toString()));
+                } catch (IllegalAccessException e) {
+                    line.add(new SimpleStringProperty("Unknown"));
+                }
+           
+                this.settingsList.add(line);
+            }
+            this.settingsHaveBeenEdited = true;
+        }
         this.currentMachineChoice = machineName;
     }
 
@@ -176,11 +204,6 @@ public class Monitor extends Application {
 
     /**
      * When Save Settings button {@link btnSave} is pressed, do this.
-     * (1) Read whole settings JSON into HashMap keyed by machine name
-     * (2) Build a JSON string representing map[this.currentMachineChoice] with values in this.settingsData
-     * (3) Convert Json string to object and put it in map.
-     * (4) Write map it to file as JSON.
-     * (5) Set this.settingsHaveBeenEdited to false
      *
      * @param event
      */
@@ -190,15 +213,26 @@ public class Monitor extends Application {
             labelMessages.setText("Nothing to save for " + this.currentMachineChoice);
             return;
         }
+        saveCurrentSettings();
+    }
 
+    /**
+     * (1) Read whole settings JSON into HashMap keyed by machine name
+     * (2) Build a JSON string representing map[this.currentMachineChoice] with values in StringProperty List this.settingsList
+     * (3) Convert Json string to object and put it in map.
+     * (4) Write map back to file as JSON.
+     * (5) Set this.settingsHaveBeenEdited to false
+     */
+    private void saveCurrentSettings() {
         labelMessages.setText("Saving settings for " + this.currentMachineChoice + "...");
 
         HashMap<String, Object> map = OpiMachine.readSettingsFile();
 
-        List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettings.getClass());
+        List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettingsObject.getClass());
 
         String jsonString = "{" + 
-            this.settingsData.stream()
+            String.format("\"this\":{\"ip\":%s, \"port\":%s},", this.myIpAddress, this.myPort) +
+            this.settingsList.stream()
                 .map((List<StringProperty> row) -> {
                     String fieldName = row.get(0).getValue();
                     String fieldValue = row.get(1).getValue();
@@ -222,7 +256,7 @@ public class Monitor extends Application {
             + "}";
 
         Gson gson = new Gson();
-        map.put(this.currentMachineChoice, gson.fromJson(jsonString, this.currentSettings.getClass()));
+        map.put(this.currentMachineChoice, gson.fromJson(jsonString, this.currentSettingsObject.getClass()));
 
         OpiMachine.writeSettingsFile(map);
         this.settingsHaveBeenEdited = false;
@@ -240,24 +274,33 @@ public class Monitor extends Application {
      */
     @FXML
     void actionBtnResetSettings(ActionEvent event) {
-    TODO
+        Alert alert = new Alert(AlertType.CONFIRMATION);
+        alert.setTitle("Reset Settings");
+        String s = "Are you sure you want to reset the settings for " + currentMachineChoice + "?";
+        alert.setContentText(s);
+             
+        if (alert.showAndWait()
+                .map(response -> response == ButtonType.OK)
+                .orElse(false)
+        )
+            this.fillSettingsData(this.currentMachineChoice, false);
     }
 
     /**
      * Fill in bits of the GUI
      * 
-     * 1) Attach data {@link settingsData} to {@link tableSettings} to allow updates of table
+     * 1) Attach data {@link settingsList} to {@link tableSettings} to allow updates of table
      *    when list changes.
      * 2) Set up column Value to be editable.
      * 3) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
-     *    When one is clicked, update {@link settingsData}.
+     *    When one is clicked, update {@link settingsList}.
      */
     @FXML
     public void initialize() {
             // (1) Set up table columns to show machine settings
             // cellData is a list (cols) of list of strings (row), 
             // with first row element being field name in Settings and second the value
-        colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0).filter((StringProperty sp) -> sp.equals("this")));
+        colSettingsProperty.setCellValueFactory(cellData -> cellData.getValue().get(0));
         colSettingsValue.setCellValueFactory(cellData -> cellData.getValue().get(1));
 
             // (2) Make Value column editable
@@ -271,7 +314,7 @@ public class Monitor extends Application {
             labelMessages.setText("");
         });
 
-        tableSettings.setItems(this.settingsData);
+        tableSettings.setItems(this.settingsList);
         this.settingsHaveBeenEdited = false;
 
             // (3) Set up list of machines
@@ -281,7 +324,7 @@ public class Monitor extends Application {
         listMachines.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                fillSettingsData(newValue);
+                fillSettingsData(newValue, true);
             }
         });
         listMachines.getSelectionModel().select(0);
@@ -339,7 +382,20 @@ public class Monitor extends Application {
      */
     @Override
     public void stop() throws Exception {
-        // TODO prompt to save settings file
+        boolean discard = true;
+        if (this.settingsHaveBeenEdited) {
+            Alert alert = new Alert(AlertType.CONFIRMATION);
+            alert.setTitle("Settings check");
+            String s = "The settings for " + currentMachineChoice + " have changed. Discard the changes?";
+            alert.setContentText(s);
+             
+            discard = alert.showAndWait()
+                .map(response -> response == ButtonType.OK)
+                .orElse(false);
+        }
+        if (!discard)
+            saveCurrentSettings();
+
         System.out.println("Stopping");
         System.exit(0);
     }
