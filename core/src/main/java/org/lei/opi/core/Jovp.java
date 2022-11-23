@@ -3,6 +3,7 @@ package org.lei.opi.core;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import org.joml.Runtime;
 import org.lei.opi.core.OpiManager.Command;
 import org.lei.opi.core.definitions.MessageProcessor;
 import org.lei.opi.core.definitions.Parameter;
@@ -22,6 +23,7 @@ import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.Node;
+import javafx.scene.chart.ScatterChart;
 import javafx.fxml.FXMLLoader;
 
 
@@ -50,10 +52,12 @@ public class Jovp extends OpiMachine {
 
   private Scene parentScene;  // return here when btnClose is clicked on our GUI
 
-  public Jovp(Scene parentScene) {
+  public Jovp(Scene parentScene) throws RuntimeException {
     this.settings = (Settings) fillSettings(Settings.class);
     this.parentScene = parentScene;
     writer = new CSWriter(settings.ip, settings.port);
+
+    listCommands = new ListView<String>(writer.messageRecord);  // GUI element
   }
 
   /** No parent Scene or connection to a machine. */
@@ -208,7 +212,10 @@ public class Jovp extends OpiMachine {
     private Button btnClose;
 
     @FXML
-    private ListView<?> listCommands;
+    private ScatterChart<?, ?> scatterChartVF;
+
+    @FXML
+    private ListView<String> listCommands;
 
     @FXML
     void actionBtnClose(ActionEvent event) {

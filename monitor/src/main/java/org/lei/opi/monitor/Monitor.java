@@ -1,6 +1,8 @@
 package org.lei.opi.monitor;
 
+import org.lei.opi.core.CSListener;
 import org.lei.opi.core.OpiMachine;
+import org.lei.opi.core.OpiManager;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -86,9 +88,10 @@ public class Monitor extends Application {
         // pressed, then get them from the @Paramter annotations in OpiMachine classes.
     private ObservableList<List<StringProperty>> settingsList = FXCollections.observableArrayList();
 
-        // IP and port of the monitor
+        // IP and port of the monitor (myself)
     private String myIpAddress;
     private String myPort;
+    private ListenerThread myListenerThread;
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private boolean myIpOrPortHaveBeenEdited; // true if myIp or myPort have been edited since last change. 
@@ -305,6 +308,7 @@ public class Monitor extends Application {
      *    When one is clicked, update {@link settingsList}.
      * 3) Get my ip and port from the settings file if they exist.
      * 3.1) Add change listeners to the myport and myip text fields.
+     * 4) Create the myListenerThread ready for 'Connect' button
      */
     @FXML
     public void initialize() {
@@ -370,13 +374,17 @@ public class Monitor extends Application {
                 myIpOrPortHaveBeenEdited = true;
             }
         });
+
+            // 4) Create the listner thread ready for 'Connect' button
+        this.myListenerThread = new ListenerThread();
     }
 
     /**
      * Action when Connect button is pressed.
      *
-     * (1) Open a CSWriter to the machine slected in {@link listMacines}
-     * (2) If succesful, switch to the Scene of the {@link OpiMachine} we have switched to.
+     * (1) Open a CSListener for myself to get commands from (eg) R
+     * (2) Open a CSWriter to the machine slected in {@link listMacines} to pass on commands
+     * (3) If succesful, switch to the Scene of the {@link OpiMachine} we have switched to.
      *
      * @param event
      */
@@ -384,27 +392,66 @@ public class Monitor extends Application {
     void actionBtnConnect(ActionEvent event) {
         checkSave();
 
+            // (1) Open my own connection to get commands from (eg) R
+            // TODO this just assumes localhost will be the IP Address - what if myIPAddress contains something else?
+        if (this.myListenerThread.isStopped()) {
+            labelMessages.setText("Starting listener on port " + this.myPort);
+            System.out.println("Starting listener thread");
+            this.myListenerThread.setPort(this.myPort);
+            this.myListenerThread.start();
+        }
+
+            // (2 & 3)create connection to OPIMachine and switch to its Scene
         labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
 
         final Node source = (Node) event.getSource();
         final Stage stage = (Stage) source.getScene().getWindow();
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("resources/Display.fxml"));
-            loader.setController(new org.lei.opi.core.Display(source.getScene()));    // TODO: noSocket controller for testing. Need to add back controller into FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("resources/%s.fxml", this.currentMachineChoice)));
+            OpiMachine mac = new org.lei.opi.core.Display(source.getScene());   // TODo this needs to change based 
+            loader.setController(mac);
             Parent root = loader.load();
             Scene scene = new Scene(root, 800, 515);
 
             stage.setScene(scene);
             stage.show();
-        } catch (javafx.fxml.LoadException e) {
-            labelMessages.setText("Cannot open connection to " + this.currentMachineChoice);
-            System.out.println(e);
         } catch (IOException e) {
-            System.out.println("Couldn't open Temp.fxml");
+            labelMessages.setText("Cannot load FXML GUI for " + this.currentMachineChoice);
+            e.printStackTrace();
+        } catch (RuntimeException e) {
+            labelMessages.setText("Couldn't open create OpiMachine connection for " + this.currentMachineChoice);
             e.printStackTrace();
         }
     }
+
+    /**
+     * A thread that will listen in {@link myPort} for commands and pass them to {@link OpiManager}.
+     */
+    class ListenerThread extends Thread {
+        private int port;
+
+        public void setPort(String port) { this.port = Integer.parseInt(port);}
+
+        public boolean isStopped() {
+            return (this.getState() == Thread.State.NEW || this.getState() == Thread.State.TERMINATED);
+        }
+
+        public void run() {
+            CSListener csl = new CSListener(port, new OpiManager());
+            System.out.println("Started Listener on " + port);
+            while (true) {
+                try {
+                    Thread.sleep(100);
+                } catch(InterruptedException e) {
+                    System.out.println("Interrupted Listener");
+                    break;
+                }
+            }
+            System.out.println("Closed Listener");
+            csl.close();
+        }
+   };
 
     /**
      * Launch the main window, etc

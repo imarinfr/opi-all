@@ -23,37 +23,6 @@ public class Main {
             System.exit(-1);
         }
 
-        int port = Integer.parseInt(cmd.getOptionValue("p", "50002"));
-
-        /* 
-        class ListenerThread extends Thread {
-            public void run() {
-                System.out.println("Open");
-                CSListener csl = new CSListener(port, new OpiManager());
-                while (true) {
-                    try {
-                        Thread.sleep(1000);
-                    } catch(InterruptedException e) {
-                        System.out.println("Interrupted");
-                        break;
-                    }
-                }
-                System.out.println("Close");
-                csl.close();
-            }
-        };
-        System.out.println("Starting listener thread");
-        Thread th = new ListenerThread();
-        th.start();
-
-        if(cmd.hasOption("w")) {
-            OpiMonitor opiM = new OpiMonitor(port);
-            opiM.launch();
-        } else {
-            System.out.println("Starting monitor - listening on " + port);
-            while (true) Thread.onSpinWait();
-        }    
-        */
         Monitor.main(args);
     }
 }

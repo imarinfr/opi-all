@@ -4,6 +4,11 @@
   "java.dependency.syncWithFolderExplorer": true,
   "java.dependency.packagePresentation": "hierarchical",
   "java.test.config": {
-    "vmArgs": ["-XstartOnFirstThread", "-Dorg.lwjgl.vulkan.libname=${env:VULKAN_SDK}/lib/libvulkan.dylib"]
+    "vmArgs": [
+      "-XstartOnFirstThread", 
+      "-Dorg.lwjgl.vulkan.libname=${env:VULKAN_SDK}/lib/libvulkan.dylib", 
+      "--module-path=${env:M2_HOME}/repository/org/openjfx",
+      "--add-modules=ALL-MODULE-PATH"
+    ]
   }
 }

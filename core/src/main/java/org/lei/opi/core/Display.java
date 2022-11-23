@@ -6,6 +6,6 @@ import javafx.scene.Scene;
  */
 public class Display extends Jovp {
     
-    public Display(Scene parentScene) { super(parentScene); }
+    public Display(Scene parentScene) throws RuntimeException { super(parentScene); }
     public Display(boolean noSocket) { super(noSocket); }
 }

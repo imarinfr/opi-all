@@ -12,6 +12,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.Enumeration;
 
+import javafx.collections.ObservableList;
+
 /**
  *
  * Sender and Receiver on socket with Writer thread.
@@ -46,6 +48,11 @@ public class CSWriter {
   /** Reader for incoming feedback messages from server */
   BufferedReader incoming;
 
+  /**  A 'human readable' record of incoming and outgoing that might
+   * be displayed in monitor, printed, etc.
+   */
+  ObservableList<String> messageRecord;
+
   /**
    * Constructs a CSWriter for a host server
    * 
@@ -54,7 +61,7 @@ public class CSWriter {
    * 
    * @since 0.1.0
    */
-  public CSWriter(String ip, int port) {
+  public CSWriter(String ip, int port) throws RuntimeException {
     try {
       if (ip.equalsIgnoreCase("localhost") || ip.equals("127.0.0.1"))
         this.address = obtainPublicAddress();
@@ -65,6 +72,8 @@ public class CSWriter {
       outgoing = new BufferedWriter(new OutputStreamWriter(client.getOutputStream(), CHARSET_NAME));
       incoming = new BufferedReader(new InputStreamReader(client.getInputStream(), CHARSET_NAME));
     } catch (IOException e) {
+      System.out.println("Couldn' open connection to " + ip + ":" + port);
+      e.printStackTrace();
       throw new RuntimeException(OPEN_FAILED, e);
     }
   }
@@ -94,6 +103,7 @@ public class CSWriter {
       outgoing.write(message);
       outgoing.newLine();
       outgoing.flush();
+      messageRecord.add(message);
     } catch (IOException e) {
       System.err.println(SEND_FAILED);
       throw new RuntimeException(SEND_FAILED, e);
@@ -134,6 +144,7 @@ public class CSWriter {
       System.err.println(RECEIVE_FAILED);
       throw new RuntimeException(RECEIVE_FAILED, e);
     }
+    messageRecord.add(message.toString());
     return message.toString();
   }
 
