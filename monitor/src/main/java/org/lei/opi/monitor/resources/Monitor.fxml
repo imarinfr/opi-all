@@ -74,10 +74,6 @@
                <tooltip>
                   <Tooltip text="Save settings for currently selected machine. Overwrites existing settings." />
                </tooltip></Button>
-            <Button fx:id="btnConnect" mnemonicParsing="false" onAction="#actionBtnConnect" text="Connect" wrapText="true">
-               <tooltip>
-                  <Tooltip text="Connect to machine." />
-               </tooltip></Button>
          </children>
       </VBox>
       <TitledPane animated="false" collapsible="false" text="Machines" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS">

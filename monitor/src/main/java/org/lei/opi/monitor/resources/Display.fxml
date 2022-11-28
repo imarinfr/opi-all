@@ -47,7 +47,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane prefHeight="515.0" prefWidth="800.0" style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
+<GridPane prefHeight="515.0" prefWidth="800.0" style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -88,7 +88,7 @@
             <Insets right="10.0" />
          </GridPane.margin>
       </Button>
-      <ScatterChart legendVisible="false" GridPane.rowIndex="1">
+      <ScatterChart fx:id="scatterChartVF" legendVisible="false" GridPane.rowIndex="1">
         <xAxis>
           <NumberAxis lowerBound="-30.0" side="LEFT" upperBound="30.0" />
         </xAxis>

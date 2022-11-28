@@ -370,7 +370,7 @@ public abstract class OpiMachine {
    *
    * @since 0.0.1
    */
-  String toJson(Command command) {
+  protected String toJson(Command command) {
     return new StringBuilder("{\n  \"command\": ").append(command).append("\n}").toString();
   }
 

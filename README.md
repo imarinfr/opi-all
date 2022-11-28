@@ -18,3 +18,8 @@ The [OPI-project] (WEBSITE) project and all its modules are COPYRIGHTED by Andre
 * Write a doclet to format @Parmeters Annotaion nicely.
 * Modularise OpiMachine.process() so Enum, Double and List are all handled consistently.
 * Add contrast, spatial frequency and defocus @Paramters to Imo.present()
+
+* Remove??  static Gson gson from OpiManager
+* Remove CSWriter and just use CSListener
+* Remove sendWriter and receiveWriter from CSListener
+* Add GUI elements somehow...
