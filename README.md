@@ -22,16 +22,13 @@ is built upon the Vulkan platform.
 
 Some of the old implementations of the OPI Server (Octopus 900, Kowa AP7000 and iCare Compass)
 will remain the same for the short term, but will eventually be incorporated into this 
-framework (as per plans in February 2023).
+framework (planned February 2023 for implementation in late 2023).
 
 ## Overall architecture
 
 The system works using TCP/IP sockets to connect this code (the OPI SERVER II)
 with both a controlling *client* (for example, R code that uses the OPI R package)
 and a target *machine* (for example, an Octopus 900 perimeter or an Android Phone).
-(Aside: note that the "OPI SERVER II" actually becomes the client to the "Machine"
-server in a client-server style of interaction, which can become confusing. Throughout 
-we attempt to use the terminology Client, Server, Machine as in the diagram.)
 Messages are sent in JSON format according to the protocol specified as part of the 
 core code using the `@Parameter` decorator.
 
@@ -43,7 +40,7 @@ core code using the `@Parameter` decorator.
 +--------------------+        +------------+        +-----------------+
 </pre>
 
-## Executables and Modules
+## Packages
 
 ### Monitor
 The main executable of interest is driven by the `monitor` module, which displays a 
@@ -59,12 +56,36 @@ The (abstract) super class for all devices is `OpiMachine` which defines the pro
 for the 5 functions defined in the OPI Standard: `opiInitialise`, `opiQueryDevice`, `opiSetup`,
 `opiPresent`, and `opiClose`.
 
+### jovp 
+
+This package implments the Jovp Machine that in turn calls the 
+<a href = "https://github.com/imarinfr/jovp">JOVP</a> library written by Iv&aacute;n Mar&iacute;n-Franch.
+This library allows display of psychophysical stimuli on display devices.
+This repo implements the left hand box in this JOVP machine diagram.
+
+<pre>
+
+                                     JOVP Machine
+                  +-------------------------------------------------+
+                  |                     Physical Device             |
+                  |                     (eg PicoVR, imoVifa, ...)   |
+             JSON |  +---------+       +-------------------------+  |
+          --------+->|  jovp   |------>|  +---------+            |  |
+                  |  | package |       |  |  JOVP   |  Native    |  |
+          <-------+--+         |<------|  | Library |  Software  |  |
+                  |  +---------+       |  +---------+            |  |
+                  |                    |  | Vulkan  |            |  |
+                  |                    |  +---------+            |  |
+                  |                    +-------------------------+  |
+                  +-------------------------------------------------+
+
+</pre>
 ### R Generation
 In an attempt to reduce mismatches in the protocol between the Client and Server and the 
 protocol between the Server and Machine, the R code for sending messages is automatically
 generated to match that expected by the relevant Machine. 
-This happens in the `rgen` module. In essence, each `@Parameter` decorator of
-the five opi functions in the `core` `OPiMachine` subclasses are used to 
+This happens in the `rgen` package. In essence, each `@Parameter` decorator of
+the five opi functions in the `core::OpiMachine` subclasses are used to 
 create the relevant R code.
 This module is not for general use, but rather to be run to update the OPI 
 R package whenever a new machine is added, or an interface to an existing machine changes.
