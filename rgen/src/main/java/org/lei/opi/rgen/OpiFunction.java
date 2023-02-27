@@ -15,7 +15,7 @@ import org.lei.opi.core.definitions.ReturnMsg;
 
 /**
  * Class to hold information about the mapping from opi functions 
- * to funcitons in Imo.java and also to generate the R code.
+ * to functions in Imo.java and also to generate the R code.
 */
 public class OpiFunction {
         /** This is the parameter name for the ip on which OPI R should create socket */
