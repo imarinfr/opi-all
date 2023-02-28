@@ -1,5 +1,7 @@
 package org.lei.opi.core;
 
+import javafx.scene.Scene;
+
 /**
  * Compass client
  *
@@ -7,12 +9,14 @@ package org.lei.opi.core;
  */
 public class Compass extends Icare {
 
-  /**
-   * Compass client: fill constants.
-   *
-   * @since 0.0.1
-   */
-  public Compass() { super(); }
- 
-  public Compass(boolean noSocket) { super(noSocket); } 
+    public static class Settings extends Icare.Settings { ; }  // here to trick GUI
+
+    /**
+     * Compass client: fill constants.
+     *
+     * @since 0.0.1
+     */
+    public Compass(Scene parentScene) {
+        super(parentScene); 
+    }
 }

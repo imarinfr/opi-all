@@ -2,7 +2,7 @@ package org.lei.opi.jovp;
 
 import java.io.IOException;
 
-import org.lei.opi.core.CSListener;
+import org.lei.opi.core.Display;
 
 /**
  * The Jovp server
@@ -14,7 +14,7 @@ class JovpServer {
   /** The OpiJovp */
   private static OpiJovp opiJovp;
   /** The listener for OpiJovp */
-  private static CSListener listener;
+  private static Display listener;
 
   /**
    * Initialize the Jovp server
@@ -28,7 +28,14 @@ class JovpServer {
    */
   JovpServer(Configuration.Machine machine, int port) throws IOException {
     opiJovp = new OpiJovp();
-    listener = new CSListener(port, opiJovp);
+    opiJovp.connect(50005, Display.obtainPublicAddress());  // start on localhost
+    System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
+           
+    opiJovp.startPsychoEngine(); // TODO I suspect that this will take over and no messages will be processed, but let's see
+           
+    listener = new Display(null);
+
+    while (true) Thread.onSpinWait();  // not sure why, but there you go.
   }
 
   /**
@@ -71,7 +78,7 @@ class JovpServer {
    */
   void close() throws IOException {
     opiJovp.finish();
-    listener.close();
+    listener.closeListener();
   }
 
 }

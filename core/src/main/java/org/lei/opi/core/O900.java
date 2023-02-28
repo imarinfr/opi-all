@@ -6,9 +6,10 @@ import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
-import org.lei.opi.core.definitions.MessageProcessor;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
+
+import javafx.scene.Scene;
 
 /**
  * Octopus O900 client
@@ -97,7 +98,7 @@ public class O900 extends OpiMachine {
   private static int MET_COL_RED_YELLOW;
   private static int MET_COL_WHITE_YELLOW;
 
-  class Settings extends OpiMachine.Settings {
+  public static class Settings extends OpiMachine.Settings {
     public String eyeSuiteDirectory;
     public String gazeFeedPath;
     public boolean bigWheel;
@@ -108,15 +109,12 @@ public class O900 extends OpiMachine {
   private Settings settings;
   public Settings getSettings() { return this.settings; }
 
-  public O900() {
-    //fillConstants();
-    //fillO900Constants();
-    this.settings = (Settings) fillSettings(Settings.class);
-    writer = new CSWriter(settings.ip, settings.port);
-  }
+  public O900(Scene parentScene) throws RuntimeException {
+    super(parentScene);
+    this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
+    this.parentScene = parentScene;
 
-  public O900(boolean noSocket) {
-    this.settings = (Settings) fillSettings(Settings.class);
+    //this.connect(settings.port, settings.ip);
   }
 
   /**
@@ -201,8 +199,8 @@ public class O900 extends OpiMachine {
    * 
    * @since 0.0.1
    */
-  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-      return OpiManager.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+  public Packet initialize(HashMap<String, Object> args) {
+      return OpiClient.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
   };
 
   /**
@@ -212,8 +210,8 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  public MessageProcessor.Packet query() {
-    return OpiManager.ok(queryResults());
+  public Packet query() {
+    return OpiClient.ok(queryResults());
   };
 
   /**
@@ -232,8 +230,8 @@ public class O900 extends OpiMachine {
   @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
   @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
   @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
-  public MessageProcessor.Packet setup(HashMap<String, Object> args) {
-    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
+  public Packet setup(HashMap<String, Object> args) {
+    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
     StringBuilder message;
     String result;
     try {
@@ -246,10 +244,9 @@ public class O900 extends OpiMachine {
         .append(settings.max10000).append(" ")
         .append("\"").append(settings.gazeFeedPath).append("\"").append(" ");
       // Send OPI_INITIALIZE instruction
-      writer.send(message.toString());
-      while (writer.empty()) Thread.onSpinWait();
-      result = writer.receive();
-      if (!result.equals("0")) return OpiManager.error(OPI_INITIALIZE_FAILED + result);
+      this.send(message.toString());
+      result = this.receive();
+      if (!result.equals("0")) return OpiClient.error(OPI_INITIALIZE_FAILED + result);
       // Prepare OPI_SET_BACKGROUND instruction
       int bgCol = switch (BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
         case WHITE -> BG_WHITE;
@@ -272,13 +269,12 @@ public class O900 extends OpiMachine {
         .append(fixShape).append(" ")
         .append((int) ((double) args.get("fixIntensity")));  
       // Send OPI_SET_BACKGROUND instruction
-      writer.send(message.toString());
-      while (writer.empty()) Thread.onSpinWait();
-      result = writer.receive();
-      if (!result.equals("0")) return OpiManager.error(OPI_SET_BACKGROUND_FAILED + result);
-      return OpiManager.ok(queryResults());
+      this.send(message.toString());
+      result = this.receive();
+      if (!result.equals("0")) return OpiClient.error(OPI_SET_BACKGROUND_FAILED + result);
+      return OpiClient.ok(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiManager.error(OPI_SETUP_FAILED, e);
+      return OpiClient.error(OPI_SETUP_FAILED, e);
     }
   }
 
@@ -303,8 +299,8 @@ public class O900 extends OpiMachine {
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "[KINETIC] x co-ordinate when oberver responded (degrees).")
   @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "[KINETIC] y co-ordinate when oberver responded (degrees).")
-  public MessageProcessor.Packet present(HashMap<String, Object> args) {
-    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
+  public Packet present(HashMap<String, Object> args) {
+    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
     try {
       // get common parameters
       Type type = Type.valueOf(((String) args.get("type")).toUpperCase());
@@ -328,11 +324,10 @@ public class O900 extends OpiMachine {
         case STATIC -> presentStatic(x, y, lum, size, color, t, (int) (double) args.get("w"));
         case KINETIC -> presentKinetic(x, y, lum, size, color, t);
       };
-      writer.send(message.toString());
-      while (writer.empty()) Thread.onSpinWait();
-      return OpiManager.ok(parseResult(type, writer.receive()));
+      this.send(message.toString());
+      return OpiClient.ok(parseResult(type, this.receive()));
     } catch (ClassCastException | IllegalArgumentException | SecurityException e) {
-      return OpiManager.error(OPI_PRESENT_FAILED, e);
+      return OpiClient.error(OPI_PRESENT_FAILED, e);
     }
   }
 
@@ -345,11 +340,10 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  public MessageProcessor.Packet close() {
-    writer.send(OPI_CLOSE);
-    writer.close();
-    writer = null;
-    return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
+  public Packet close() {
+    this.send(OPI_CLOSE);
+    this.closeListener();
+    return OpiClient.ok(DISCONNECTED_FROM_HOST, true);
   };
 
   /**
@@ -490,7 +484,7 @@ public class O900 extends OpiMachine {
    */
   private String parseResult(Type type, String received) {
     String[] message = received.split("\\|\\|\\|");
-    if (message[0] != "null") OpiManager.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
+    if (message[0] != "null") OpiClient.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
     StringBuilder jsonStr = new StringBuilder("\n  {\n")
       .append("    \"seen\": " + message[1] + ",\n")
       .append("    \"time\": " + message[2]);

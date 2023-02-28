@@ -7,6 +7,7 @@ import javafx.scene.Scene;
  */
 public class PicoVR extends Jovp {
     
+    public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
+
     public PicoVR(Scene parentScene) { super(parentScene); }
-    public PicoVR(boolean noSocket) { super(noSocket); }
 }

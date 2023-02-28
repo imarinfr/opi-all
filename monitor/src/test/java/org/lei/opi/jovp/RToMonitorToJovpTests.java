@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.lei.opi.jovp.Configuration.Machine;
 
+import org.lei.opi.core.OpiClient;
+
 /**
  *
  * Integrated tests for connection in series from client to OPI JOVP
@@ -23,7 +25,7 @@ public class RToMonitorToJovpTests {
   /** The OPI monitor */
   private Core monitor;
   /** The R client */
-  private RClient r;
+  private OpiClient r;
 
   /** OPI_CHOOSE command */
   private String chooseJson;
@@ -53,7 +55,7 @@ public class RToMonitorToJovpTests {
     try {
       server = new JovpServer(machine, JOVP_PORT); // first setup JOVP server
       monitor = new Core(MONITOR_PORT); // then setup monitor
-      r = new RClient(monitor.getIP(), monitor.getPort()); // finally setup R client
+      r = new OpiClient(monitor.getPort()); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -121,7 +123,7 @@ public class RToMonitorToJovpTests {
   private void closeConnections() {
     try {
       monitor.close();
-      r.close();
+      r.closeListener();
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -144,19 +146,19 @@ public class RToMonitorToJovpTests {
 
   /** server driver with lists of present/query etc*/
   private void executeCommands() throws IOException, InterruptedException {
-    sendAndReceive(RClient.loadMessage(chooseJson)); // Choose OPI
-    sendAndReceive(RClient.loadMessage(initJson)); // Initialize OPI
+    sendAndReceive(chooseJson); // Choose OPI
+    sendAndReceive(initJson); // Initialize OPI
     Thread.sleep(1000);
-    sendAndReceive(RClient.loadMessage("opiQuery.json")); // Query OPI
+    sendAndReceive("opiQuery.json"); // Query OPI
     for (String s : setupJson) {
-      sendAndReceive(RClient.loadMessage(s)); // Setup OPI
+      sendAndReceive(s); // Setup OPI
       Thread.sleep(1000);
     }
     for (String s : presentJson) { // Present OPI
-      sendAndReceive(RClient.loadMessage(s));
+      sendAndReceive(s);
       Thread.sleep(500);
     } // Present OPI
-    sendAndReceive(RClient.loadMessage("opiClose.json")); // Close OPI  
+    sendAndReceive("opiClose.json"); // Close OPI  
   }
   
   /** R sends to and receives from monitor */

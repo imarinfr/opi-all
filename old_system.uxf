@@ -1,0 +1,241 @@
+<diagram program="umletino" version="15.0.0"><zoom_level>9</zoom_level><element><id>UMLClass</id><coordinates><x>549</x><y>459</y><w>378</w><h>342</h></coordinates><panel_attributes>core::OpiMachine
+--
+- public static MACHINES :String[] = {
+    "Compass", "Maia", "O900", 
+     "ImoVifa", "Display", "PhoneHMD", "PicoVR"}
+
+protected HashMap&lt;String, MethodData&gt; opiMethods
+protected HashMap&lt;String, List&lt;String&gt;&gt; enums
+protected CSWriter
+--
++{Settings}
++{MethodData}
+--
+OpiMachine()
+
+public static readSettingsFile()
+public static writeSettingsFile()
+public fillSettings()
+MessageProcessor.Packet process(HashMap&lt;String, Object&gt;) 
+
+#abstract Settings getSettings()
+#abstract MessageProcessor.Packet initialize(HashMap&lt;String, Object&gt;)
+#abstract MessageProcessor.Packet query()
+#abstract MessageProcessor.Packet setup(HashMap&lt;String, Object&gt;)
+#abstract MessageProcessor.Packet present(HashMap&lt;String, Object&gt;)
+#abstract MessageProcessor.Packet close()
+
+protected String toJson(Command command)
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>999</x><y>306</y><w>324</w><h>261</h></coordinates><panel_attributes>core::OpiManager
+--
+- public class enum Command {
+    CHOOSE, QUERY, SETUP, INITIALIZE, PRESENT, CLOSE}
+
+-private static Gson gson
+-private OpiMachine machine
+
+--
+
+--
+public OpiManager()
+
+public static MessageProcessor.Packet ok(String)
+public static MessageProcessor.Packet ok(String, boolean)
+public static MessageProcessor.Packet error(String)
+public static MessageProcessor.Packet error(String, Exception)
+
+public MessageProcessor.Packet process(String)
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1170</x><y>225</y><w>27</w><h>99</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;90</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1035</x><y>135</y><w>270</w><h>99</h></coordinates><panel_attributes>core::definitions::MessageProcessor
+--
+
+--
++{Packet}
+--
+
+#abstract public Packet process(String)</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>918</x><y>378</y><w>99</w><h>108</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;100;90;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>648</x><y>846</y><w>333</w><h>234</h></coordinates><panel_attributes>core::Jovp
+--
+settings: Settings
+--
++{Settings} extends OpiMachine.Settings
+--
+Jovp(Scene)
+Jovp(boolean)
+
+Settings getSettings()
+MessageProcessor.Packet initialize(HashMap&lt;String, Object&gt;)
+MessageProcessor.Packet query()
+MessageProcessor.Packet setup(HashMap&lt;String, Object&gt;)
+MessageProcessor.Packet present(HashMap&lt;String, Object&gt;)
+MessageProcessor.Packet close()
+
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>801</x><y>792</y><w>27</w><h>72</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;60</additional_attributes></element><element><id>UMLClass</id><coordinates><x>621</x><y>1179</y><w>144</w><h>90</h></coordinates><panel_attributes>core::ImoVifa
+--
+ImoVifa(Scene)
+ImoVifa(boolean)
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>675</x><y>1071</y><w>63</w><h>126</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>50;10;10;120</additional_attributes></element><element><id>UMLClass</id><coordinates><x>792</x><y>1179</y><w>144</w><h>90</h></coordinates><panel_attributes>core::PicoVR
+--
+PicoVR(Scene)
+PicoVR(boolean)
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>828</x><y>1071</y><w>36</w><h>126</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>20;10;10;120</additional_attributes></element><element><id>UMLClass</id><coordinates><x>963</x><y>1179</y><w>144</w><h>90</h></coordinates><panel_attributes>core::Display
+--
+Display(Scene)
+Display(boolean)
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>945</x><y>1071</y><w>90</w><h>126</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;80;120</additional_attributes></element><element><id>UMLClass</id><coordinates><x>459</x><y>1179</y><w>144</w><h>90</h></coordinates><panel_attributes>core::PhoneHMD
+--
+PhoneHMD(Scene)
+PhoneHMD(boolean)
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>522</x><y>1071</y><w>153</w><h>126</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>150;10;10;120</additional_attributes></element><element><id>UMLClass</id><coordinates><x>9</x><y>873</y><w>333</w><h>234</h></coordinates><panel_attributes>core::ICare
+--
+settings: Settings
+--
++{Settings} extends OpiMachine.Settings
+--
+Icare(Scene)
+Icare(boolean)
+
+Settings getSettings()
+MessageProcessor.Packet initialize(HashMap&lt;String, Object&gt;)
+MessageProcessor.Packet query()
+MessageProcessor.Packet setup(HashMap&lt;String, Object&gt;)
+MessageProcessor.Packet present(HashMap&lt;String, Object&gt;)
+MessageProcessor.Packet close()
+
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>198</x><y>1170</y><w>144</w><h>90</h></coordinates><panel_attributes>core::Compass
+--
+Compass(Scene)
+Compass(boolean)
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>0</x><y>1179</y><w>144</w><h>90</h></coordinates><panel_attributes>core::Maia
+--
+Maia(Scene)
+Maia(boolean)
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>261</x><y>1098</y><w>27</w><h>90</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;80</additional_attributes></element><element><id>Relation</id><coordinates><x>126</x><y>774</y><w>441</w><h>117</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>470;10;10;110</additional_attributes></element><element><id>Relation</id><coordinates><x>63</x><y>1098</y><w>27</w><h>99</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;90</additional_attributes></element><element><id>UMLClass</id><coordinates><x>405</x><y>936</y><w>144</w><h>90</h></coordinates><panel_attributes>core::O900
+--
+STUFF
+--
+
+FXML!????
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>468</x><y>792</y><w>171</w><h>162</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>170;10;10;160</additional_attributes></element><element><id>UMLClass</id><coordinates><x>639</x><y>0</y><w>306</w><h>261</h></coordinates><panel_attributes>core::CSListener extends Thread
+--
+  BufferedReader incoming;
+  BufferedWriter outgoing;
+  Writer sendWriter = null;
+  Writer receiveWriter = null;
+  private MessageProcessor msgProcessor;
+  private boolean listen = true;
+--
+  public CSListener(int, MessageProcessor)
+  public CSListener(int, MessageProcessor, Writer, Writer)
+  public void run()
+  public boolean empty()
+  public String receive()
+  public void send(String) 
+  public void close() 
+  public String toString()
+  public InetAddress getAddress()
+  public String getIP() 
+  public int getPort()</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>936</x><y>72</y><w>117</w><h>90</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>110;80;10;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>252</x><y>171</y><w>306</w><h>252</h></coordinates><panel_attributes>core::CSWriter
+--
+  BufferedReader incoming;
+  BufferedWriter outgoing;
+  ObservableList&lt;String&gt; messageRecord;
+--
+  public CSWriter(String ip, int port) 
+
+  -public boolean empty()
+  -public String receive()
+  -public void send(String) 
+  -public void close() 
+  public String toString()
+  public InetAddress getAddress()
+  public String getIP() 
+  public int getPort()</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>405</x><y>414</y><w>162</w><h>171</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;160;170</additional_attributes></element><element><id>UMLClass</id><coordinates><x>2106</x><y>288</y><w>261</w><h>288</h></coordinates><panel_attributes>jovp::OpiLogic
+--
+private final OpiJovp driver;
+private Item[] backgrounds;
+private Item[] fixations;
+private Item stimulus;
+private int index = -1;
+private Timer timer = new Timer();
+--
+ OpiLogic(OpiJovp driver) 
+
+ public void init(PsychoEngine) 
+ public void input(PsychoEngine, Command)
+ public void update(PsychoEngine)
+ private void show(PsychoEngine)
+ private void hide(PsychoEngine)
+ private void setup() 
+ private void present()
+ private void checkState()
+ private void updateStimulus(int index)</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>2124</x><y>153</y><w>207</w><h>27</h></coordinates><panel_attributes>es.optocom.jovp.PsychoLogic</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>2214</x><y>171</y><w>27</w><h>135</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;10;130</additional_attributes></element><element><id>Relation</id><coordinates><x>1926</x><y>306</y><w>198</w><h>27</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;200;10</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1566</x><y>306</y><w>369</w><h>225</h></coordinates><panel_attributes>jovp::OpiJovp
+--
+es.optocom.java.jovp.* Setup, Present, Query, ...
+
+protected Configuration configuration 
+--
+public void start()
+public void finish()
+public MessageProcessor.Packet process(String)
+
+private MessageProcessor.Packet initialize(HashMap&lt;String, Object&gt;)
+private MessageProcessor.Packet query()
+private MessageProcessor.Packet setup(HashMap&lt;String, Object&gt;)
+private MessageProcessor.Packet present(HashMap&lt;String, Object&gt;)
+private MessageProcessor.Packet close() 
+--
+--
+
+public static void main(String args[])</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1296</x><y>225</y><w>378</w><h>99</h></coordinates><panel_attributes>lt=&lt;&lt;-</panel_attributes><additional_attributes>10;10;400;90</additional_attributes></element><element><id>UMLClass</id><coordinates><x>1827</x><y>135</y><w>189</w><h>36</h></coordinates><panel_attributes>es.optocom.java.jovp.*</panel_attributes><additional_attributes></additional_attributes></element><element><id>UMLClass</id><coordinates><x>1755</x><y>621</y><w>684</w><h>270</h></coordinates><panel_attributes>jovp::Configuration
+--
+ enum Machine {IMOVIFA, PICOVR, PHONEHMD, DISPLAY}
+--
+public record Configuration(
+Machine machine, 
+int screen, 
+int[] physicalSize, 
+boolean pseudoGray, 
+boolean fullScreen,
+ int distance, 
+es.optocom.jovp.definitions.ViewMode viewMode, 
+String input, 
+boolean tracking, 
+String gammaFile, 
+Calibration calibration
+--
+
+ public static Configuration set(HashMap&lt;String, Object&gt; args) throws IllegalArgumentException, ClassCastException, IOException
+ private static Calibration loadCalibration(String gammaFile) throws IllegalArgumentException, ClassCastException, IOException 
+  private static String calibrationFromResources(String file) throws IOException 
+ private static String calibrationFromPath(String file) throws IOException</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>1980</x><y>162</y><w>45</w><h>477</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>10;10;30;510</additional_attributes></element><element><id>UMLClass</id><coordinates><x>2547</x><y>756</y><w>252</w><h>117</h></coordinates><panel_attributes>jovp::Calibration
+--
+public record Calibration
+double[] maxLum, 
+double[][] gamma
+--
+  public double[] colorValues(double[] color) </panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>2430</x><y>783</y><w>135</w><h>27</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>130;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>1764</x><y>162</y><w>171</w><h>162</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>170;10;10;160</additional_attributes></element><element><id>Relation</id><coordinates><x>1863</x><y>522</y><w>72</w><h>117</h></coordinates><panel_attributes>lt=&lt;&lt;.</panel_attributes><additional_attributes>60;110;10;10</additional_attributes></element><element><id>UMLPackage</id><coordinates><x>1539</x><y>90</y><w>1278</w><h>837</h></coordinates><panel_attributes>jovp
+--
+bg=blue</panel_attributes><additional_attributes></additional_attributes></element></diagram>

@@ -3,7 +3,7 @@ package org.lei.opi.core.definitions;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.lei.opi.core.OpiManager.Command;
+import org.lei.opi.core.OpiClient.Command;
 
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 import static org.lei.opi.core.definitions.JsonProcessor.colorValues;
@@ -33,11 +33,11 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
 
   /**
    * Processes arguments and create a background record from R OPI.
-   * The major difference with set is that 'process' expects bgLum and
-   * bgCol and fixLum and fixCol whereas 'set' only expects 'bgCol' and
+   * The major difference with 'create2' is that 'create1' expects bgLum and
+   * bgCol and fixLum and fixCol whereas 'create2' only expects 'bgCol' and
    * 'fixCol'. The vectors 'bgCol' and 'fixCol' are color mixtures with
    * values between 0 and 1 in 'process' but channel luminances in cd/m^2
-   * in 'set'. Ranges of values goes unchecked
+   * in 'create2'. Ranges of values goes unchecked
    * 
    * 
    * @param args pairs of argument name and value
@@ -49,7 +49,7 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
    * 
    * @since 0.0.1
    */
-  public static Setup process(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException {
+  public static Setup create1(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException {
     return new Setup(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
                      colorValues((double) args.get("bgLum"), toDoubleArray(args.get("bgCol"))),
                      ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
@@ -71,7 +71,7 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
    * 
    * @since 0.0.1
    */
-  public static Setup set(HashMap<String, Object> args) throws ClassCastException {
+  public static Setup create2(HashMap<String, Object> args) throws ClassCastException {
     return new Setup(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
                      toDoubleArray(args.get("bgCol")),
                      ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),

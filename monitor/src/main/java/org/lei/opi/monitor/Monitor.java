@@ -1,8 +1,7 @@
 package org.lei.opi.monitor;
 
-import org.lei.opi.core.CSListener;
 import org.lei.opi.core.OpiMachine;
-import org.lei.opi.core.OpiManager;
+import org.lei.opi.core.OpiClient;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -85,7 +84,7 @@ public class Monitor extends Application {
         // Used as data for tableSettings (settings for {@link currentMachineChoice}).
         // Initially try to get this from the settings file.
         // If the settings file doesn't exist, or the Reset Settings button is 
-        // pressed, then get them from the @Paramter annotations in OpiMachine classes.
+        // pressed, then get them from the Settings nested classes in the OpiMachine heirachy.
     private ObservableList<List<StringProperty>> settingsList = FXCollections.observableArrayList();
 
         // IP and port of the monitor (myself)
@@ -103,7 +102,7 @@ public class Monitor extends Application {
      * it is OK to junk them with an Alert dialog.
      * If OK to proceed
      *     If getFromFile, try and get the Settings for machineName from the settings file
-     *     If !getFromFile or get from faile fails, get settings from an instance of the class machineName.
+     *     If !getFromFile or get from file fails, get settings from an instance of the class machineName.
      * 
      * @param machineName Name of the OpiMachine class from which to get Settings.
      * @param getFromFile If True, try and get settings from JSON settings file.
@@ -116,21 +115,23 @@ public class Monitor extends Application {
         if (machineName == null) // not quite sure why this is here, but too scared to remove it.
             return;
 
-            // Create an instance of "org.lei.opi.core." + machineName 
-            // (might need it later for Save and also checks OpiMachine 
+            // Look for org.lei.opi.core.<machineName>$Settings
+            // If not there, look for org.lei.opi.core.<machineName>.super()$Settings
+            // If not there, look for org.lei.opi.core.<machineName>.super().super()$Settings
+            // etc up to OpiMachine$Settings
+            // (Might need it later for Save and also checks OpiMachine 
             // subclass actually exists if someone has edited the settings file externally.)
-        this.currentSettingsObject = null;
-        try {
-            @SuppressWarnings("unchecked")
-            Class<OpiMachine> cls = (Class<OpiMachine>)Class.forName("org.lei.opi.core." + machineName);
-            Constructor<?> cons = cls.getConstructor(boolean.class);
-            OpiMachine opiM = (OpiMachine)cons.newInstance(false);
-            this.currentSettingsObject = opiM.getSettings();
-        } catch (ClassNotFoundException e) {
-            System.out.println("Selected machine is not in the jar as a class that is an extension of OpiMachine");
-        } catch (IllegalAccessException | IllegalArgumentException | NoSuchMethodException |
-                 InstantiationException | InvocationTargetException e) {
-            System.out.println("Attepting to construct an object of " + machineName + " but it does not have a (boolean) constructor.");
+        String className = machineName;
+        this.currentSettingsObject = OpiMachine.fillSettings(className);
+        while (this.currentSettingsObject == null && !className.equals("OpiMachine")) {
+            try {
+                Class<?> cls = Class.forName("org.lei.opi.core." + className);
+                className = cls.getSuperclass().getSimpleName();
+                this.currentSettingsObject = OpiMachine.fillSettings(className);
+            } catch (ClassNotFoundException e) {
+                System.out.println("Something is wrong - cannot find a Settings nested class for " + machineName);
+                //e.printStackTrace();
+            }
         }
 
         if (this.currentSettingsObject == null) 
@@ -138,7 +139,6 @@ public class Monitor extends Application {
 
         boolean gotThem = false;
         if (getFromFile) {
-            Gson gson = new Gson();
             HashMap<String, Object> map = OpiMachine.readSettingsFile();
             if (map.containsKey(machineName)) {
                 @SuppressWarnings("unchecked")
@@ -438,7 +438,7 @@ public class Monitor extends Application {
         }
 
         public void run() {
-            CSListener csl = new CSListener(port, new OpiManager());
+            OpiClient opiClient = new OpiClient(port);
             System.out.println("Started Listener on " + port);
             while (true) {
                 try {
@@ -449,7 +449,7 @@ public class Monitor extends Application {
                 }
             }
             System.out.println("Closed Listener");
-            csl.close();
+            opiClient.closeListener();
         }
    };
 
@@ -479,6 +479,7 @@ public class Monitor extends Application {
         System.exit(0);
     }
 
+    // should not be called directly from command line.
     public static void main(String[] args) {
         launch(); 
     }

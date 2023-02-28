@@ -4,18 +4,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-import org.lei.opi.core.CSListener;
-import org.lei.opi.core.OpiManager;
-import org.lei.opi.core.OpiManager.Command;
-import org.lei.opi.core.definitions.MessageProcessor;
+import org.lei.opi.core.Listener;
+import org.lei.opi.core.OpiClient;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.Query;
 import org.lei.opi.core.definitions.Response;
 import org.lei.opi.core.definitions.Setup;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.definitions.Eye;
@@ -23,11 +19,11 @@ import es.optocom.jovp.definitions.Paradigm;
 import es.optocom.jovp.definitions.ViewMode;
 
 /**
- * The OPI JOVP driver
+ * The OPI JOVP server.
  *
  * @since 0.0.1
  */
-public class OpiJovp extends MessageProcessor {
+public class OpiJovp extends Listener {
 
   /** Machine state */
   protected enum State {INIT, SETUP, PRESENT, CLOSE};
@@ -60,37 +56,43 @@ public class OpiJovp extends MessageProcessor {
   /** Whether opiInitialized has been invoked and not closed later on by opiClose */
   protected State state;
 
-  /**
-   * Run the psychoEngine. Needs to be started from the main thread
-   *
-   * @since 0.1.0
-   */
-  public void start() {
-    // not great, but necessary: wait until INITIALIZE command has been triggered
-    while (configuration == null) Thread.onSpinWait();
-    psychoEngine = new PsychoEngine(new OpiLogic(this), configuration.distance(),
-    Configuration.VALIDATION_LAYERS, Configuration.API_DUMP);
-    psychoEngine.hide();
-    psychoEngine.setMonitor(configuration.screen());
-    if(configuration.physicalSize().length != 0)
-    psychoEngine.setPhysicalSize(configuration.physicalSize()[0], configuration.physicalSize()[1]);
-    if (configuration.fullScreen()) psychoEngine.setFullScreen();
-    state = State.INIT;
-    psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
-    psychoEngine.cleanup();
-    configuration = null;
-  }
+    /**
+     * Run the psychoEngine. Needs to be started from the main thread
+     *
+     * @since 0.1.0
+     */
+    public void startPsychoEngine() {
+        // not great, but necessary: wait until INITIALIZE command has been triggered
+        while (configuration == null) Thread.onSpinWait();
 
-  /**
-   * Signal the psychoEngine to finish
-   *
-   * @since 0.1.0
-   */
-  public void finish() {
-    psychoEngine.finish();
-  }
+        psychoEngine = new PsychoEngine(new OpiLogic(this), configuration.distance(), Configuration.VALIDATION_LAYERS, Configuration.API_DUMP);
 
-  /**
+        psychoEngine.hide();
+        psychoEngine.setMonitor(configuration.screen());
+
+        if(configuration.physicalSize().length != 0)
+            psychoEngine.setPhysicalSize(configuration.physicalSize()[0], configuration.physicalSize()[1]);
+
+        if (configuration.fullScreen()) psychoEngine.setFullScreen();
+
+        state = State.INIT;
+        psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
+
+        psychoEngine.cleanup();
+
+        configuration = null;
+    }
+
+   /**
+    * Signal the psychoEngine to finish
+    *
+    * @since 0.1.0
+    */
+   public void finish() {
+        psychoEngine.finish();
+   }
+
+   /**
    * Process incoming Json commands. If it is a 'choose' command, then
    * set the private field machine to a new instance of that machine.
    * If it is another command, then process it using the machine object.
@@ -101,36 +103,38 @@ public class OpiJovp extends MessageProcessor {
    * 
    * @since 0.1.0
    */
-  public MessageProcessor.Packet process(String jsonStr) {
-    Gson gson = new Gson();
-    HashMap<String, Object> pairs;
-    try {
-      pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
-    } catch (JsonSyntaxException e) {
-      return OpiManager.error(prefix + OpiManager.BAD_JSON, e);
+    public Packet process(String jsonStr) {
+        HashMap<String, Object> pairs;
+        try {
+            pairs = Listener.jsonToPairs(jsonStr);
+        } catch (JsonSyntaxException e) {
+            return error(prefix + BAD_JSON, e);
+        }
+
+        if (!pairs.containsKey("command")) // needs a command
+            return error(prefix + OpiClient.NO_COMMAND_FIELD);
+        String cmd = pairs.get("command").toString();
+
+        // check it is a valid command from Command.*
+        if (!Stream.of(OpiClient.Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
+            return error(prefix + OpiClient.BAD_COMMAND_FIELD);
+
+        return switch (OpiClient.Command.valueOf(cmd.toUpperCase())) {
+            case INITIALIZE -> initialize(pairs);
+            case QUERY -> query();
+            case SETUP -> setup(pairs);
+            case PRESENT -> present(pairs);
+            case CLOSE -> close();
+            default -> error(prefix + BAD_COMMAND + cmd.toUpperCase());
+        };
     }
-    if (!pairs.containsKey("command")) // needs a command
-      return OpiManager.error(prefix + OpiManager.NO_COMMAND_FIELD);
-      String cmd = pairs.get("command").toString();
-    // check it is a valid command from Command.*
-    if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
-      return OpiManager.error(prefix + OpiManager.BAD_COMMAND_FIELD);
-    return switch (Command.valueOf(cmd.toUpperCase())) {
-      case INITIALIZE -> initialize(pairs);
-      case QUERY -> query();
-      case SETUP -> setup(pairs);
-      case PRESENT -> present(pairs);
-      case CLOSE -> close();
-      default -> OpiManager.error(prefix + BAD_COMMAND + cmd.toUpperCase());
-    };
-  }
 
   /**
    * Start the psychoEngine
    *
    * @since 0.1.0
    */
-  private MessageProcessor.Packet initialize(HashMap<String, Object> args) {
+  private Packet initialize(HashMap<String, Object> args) {
     try {
       // get congiguration
       configuration = Configuration.set(args);
@@ -139,9 +143,9 @@ public class OpiJovp extends MessageProcessor {
         case MONO -> backgrounds = new Setup[] {null};
         case STEREO -> backgrounds = new Setup[] {null, null};
       }
-      return OpiManager.ok(INITIALIZED);
+      return ok(INITIALIZED);
     } catch (IllegalArgumentException | ClassCastException | IOException e) {
-      return OpiManager.error(INITIALIZE_FAILED, e);
+      return error(INITIALIZE_FAILED, e);
     }
   }
 
@@ -150,8 +154,8 @@ public class OpiJovp extends MessageProcessor {
    *
    * @since 0.1.0
    */
-  private MessageProcessor.Packet query() {
-    return OpiManager.ok((new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
+  private Packet query() {
+    return ok((new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
       configuration.calibration().maxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
   }
@@ -163,18 +167,18 @@ public class OpiJovp extends MessageProcessor {
    *
    * @since 0.1.0
    */
-  private MessageProcessor.Packet setup(HashMap<String, Object> args) {
+  private Packet setup(HashMap<String, Object> args) {
     try {
       // Get eye for the instruction
       Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());
       if(configuration.viewMode() == ViewMode.MONO || eye == Eye.BOTH || eye == Eye.LEFT)
-        backgrounds[0] = Setup.set(args);
+        backgrounds[0] = Setup.create2(args);
       if(configuration.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
-        backgrounds[1] = Setup.set(args);
+        backgrounds[1] = Setup.create2(args);
       state = State.SETUP;
       return query();
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiManager.error(prefix + SETUP_FAILED, e);
+      return error(prefix + SETUP_FAILED, e);
     }
   }
 
@@ -185,16 +189,16 @@ public class OpiJovp extends MessageProcessor {
    *
    * @since 0.1.0
    */
-  private MessageProcessor.Packet present(HashMap<String, Object> args) {
+  private Packet present(HashMap<String, Object> args) {
     try {
       stimulus = Present.set(args);
       state = State.PRESENT;
       while (response == null) Thread.onSpinWait(); // wait for response
       String jsonStr = response.toJson(configuration.tracking());
       response = null;
-      return OpiManager.ok(jsonStr);
+      return ok(jsonStr);
     } catch (Exception e) {
-      return OpiManager.error(prefix + PRESENT_FAILED, e);
+      return error(prefix + PRESENT_FAILED, e);
     }
   }
 
@@ -203,18 +207,24 @@ public class OpiJovp extends MessageProcessor {
    *
    * @since 0.1.0
    */
-  private MessageProcessor.Packet close() {
+  private Packet close() {
     state = State.CLOSE;
-    return OpiManager.ok(CLOSED);
+    this.closeListener();    // TODO revisit
+    return ok(CLOSED);
   }
 
-  public static void main(String args[]) {
-    try {
-      CSListener listener = new CSListener(Integer.parseInt(args[0]), new OpiJovp());
-      System.out.println("Machine address is " + listener.getIP() + ":" + listener.getPort());
-      while (true) Thread.onSpinWait();
-    } catch (NumberFormatException e) {
-      e.printStackTrace();
+    // args[0] = port number
+    public static void main(String args[]) {
+        try {
+            OpiJovp opiJovp = new OpiJovp();
+            opiJovp.connect(Integer.parseInt(args[0]), Listener.obtainPublicAddress());  // start on localhost
+            System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
+           
+            opiJovp.startPsychoEngine(); // TODO I suspect that this will take over and no messages will be processed, but let's see
+           
+            while (true) Thread.onSpinWait();  // not sure why, but there you go.
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
     }
-  }
 }

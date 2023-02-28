@@ -16,7 +16,7 @@ public class MonitorTests {
   private static final int PORT = 51234;
 
   /** Monitor */
-  CSListener monitor;
+  Listener monitor;
   /** RClient: initiator */
   RClient r;
 
@@ -28,9 +28,9 @@ public class MonitorTests {
    */
   @Test
   public void getIDAndPort() {
-    CSListener monitor = new CSListener(50001, new OpiManager());
+    Listener monitor = new OpiClient(50001);
     System.out.println("[getIDAndPort] " + monitor);
-    monitor.close();
+    monitor.closeListener();
   }
 
   /**
@@ -41,12 +41,12 @@ public class MonitorTests {
    */
   @Test
   public void changeLocalPort() {
-    CSListener monitor = new CSListener(50001, new OpiManager());
+    Listener monitor = new OpiClient(50001);
     System.out.println("[changeLocalPort] Address was at " + monitor);
-    monitor.close();
-    monitor = new CSListener(50008, new OpiManager());
+    monitor.closeListener();
+    monitor = new OpiClient(50008);
     System.out.println("[changeLocalPort] Address is at " + monitor);
-    monitor.close();
+    monitor.closeListener();
   }
 
   /**
@@ -58,7 +58,7 @@ public class MonitorTests {
   @Test
   public void machineSettings() {
     try {
-      monitor = new CSListener(PORT, new OpiManager());
+      monitor = new OpiClient(PORT);
       r = new RClient(monitor.getIP(), monitor.getPort());
       sendAndReceive("Jovp"); // Settings Jovp
       sendAndReceive("O900"); // Settings O900
@@ -67,7 +67,7 @@ public class MonitorTests {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    monitor.close();
+    monitor.closeListener();
   }
 
   /** R sends to and receives from monitor */

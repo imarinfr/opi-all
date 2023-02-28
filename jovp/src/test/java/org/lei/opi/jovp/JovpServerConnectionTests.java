@@ -3,7 +3,7 @@ package org.lei.opi.jovp;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
-import org.lei.opi.core.CSListener;
+import org.lei.opi.core.Jovp;
 
 import es.optocom.jovp.Controller;
 
@@ -23,7 +23,9 @@ public class JovpServerConnectionTests {
    */
   @Test
   public void getIDAndPort() {
-    CSListener server = new CSListener(50001, new OpiJovp());
+    Jovp server = new Jovp(null);
+
+    server.connect(50002, Jovp.obtainPublicAddress());
     System.out.println("[getIDAndPort] " + server);
      server.close();
   }
@@ -36,10 +38,12 @@ public class JovpServerConnectionTests {
    */
   @Test
   public void changeLocalPort() {
-    CSListener monitor = new CSListener(50001, new OpiJovp());
+    Jovp monitor = new Jovp(null);
+    monitor.connect(50003, Jovp.obtainPublicAddress());
     System.out.println("[changeLocalPort] Address was at " + monitor);
     monitor.close();
-    monitor = new CSListener(50008, new OpiJovp());
+    monitor = new Jovp(null);
+    monitor.connect(50008, Jovp.obtainPublicAddress());
     System.out.println("[changeLocalPort] Address is at " + monitor);
     monitor.close();
   }

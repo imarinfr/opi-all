@@ -3,9 +3,7 @@ package org.lei.opi.core;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.joml.Runtime;
-import org.lei.opi.core.OpiManager.Command;
-import org.lei.opi.core.definitions.MessageProcessor;
+import org.lei.opi.core.OpiClient.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -26,15 +24,14 @@ import javafx.scene.Node;
 import javafx.scene.chart.ScatterChart;
 import javafx.fxml.FXMLLoader;
 
-
 /**
- * JOVP client
+ * JOVP client - will send messages to JOVP server...
  *
  * @since 0.0.1
  */
 public class Jovp extends OpiMachine {
 
-  class Settings extends OpiMachine.Settings {
+public static class Settings extends OpiMachine.Settings {
       public int screen;
       public int[] physicalSize;
       public boolean pseudoGray;
@@ -50,20 +47,19 @@ public class Jovp extends OpiMachine {
   private Settings settings;
   public Settings getSettings() { return this.settings; }
 
-  private Scene parentScene;  // return here when btnClose is clicked on our GUI
-
-  public Jovp(Scene parentScene) throws RuntimeException {
-    this.settings = (Settings) fillSettings(Settings.class);
-    this.parentScene = parentScene;
-    writer = new CSWriter(settings.ip, settings.port);
-
-    listCommands = new ListView<String>(writer.messageRecord);  // GUI element
-  }
-
-  /** No parent Scene or connection to a machine. */
-  public Jovp(boolean noSocket) {
-    this.settings = (Settings) fillSettings(Settings.class);
-  }
+    /*
+     * @param parentScene The Scene to return to when this object is closed.
+     *                    If null, then do not create a connection. (Used for GUI to probe class.)
+     */
+    public Jovp(Scene parentScene) throws RuntimeException {
+        super(parentScene);
+        this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
+        this.parentScene = parentScene;
+       
+        if (parentScene != null)
+            this.connect(settings.port, settings.ip);
+        //listCommands = new ListView<String>(writer.messageRecord);  // GUI element
+    }
 
   /**
    * opiInitialise: initialize OPI
@@ -74,10 +70,9 @@ public class Jovp extends OpiMachine {
    * 
    * @since 0.0.1
    */
-  public MessageProcessor.Packet initialize(HashMap<String, Object> args) {
-    writer.send(initConfiguration());
-    while (writer.empty()) Thread.onSpinWait();
-    return new MessageProcessor.Packet(writer.receive());
+  public Packet initialize(HashMap<String, Object> args) {
+    this.send(initConfiguration());
+    return new Packet(this.receive());
   };
 
   /**
@@ -87,14 +82,14 @@ public class Jovp extends OpiMachine {
    *
    * @since 0.0.1
    */
-  public MessageProcessor.Packet query() {
-    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
+  //TODO should have @returnmsg annotator?
+  public Packet query() {
+    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
     try {
-      writer.send(toJson(Command.QUERY));
-      while (writer.empty()) Thread.onSpinWait();
-      return new MessageProcessor.Packet(writer.receive());
+      this.send(toJson(Command.QUERY));
+      return new Packet(this.receive());
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiManager.error(COULD_NOT_QUERY);
+      return OpiClient.error(COULD_NOT_QUERY);
     }
   };
 
@@ -119,14 +114,13 @@ public class Jovp extends OpiMachine {
   @Parameter(name = "fixSy", className = Double.class, desc = "diameter along minor axis of ellipse (degrees). If not received, then sy = sx.", optional = true, min = 0, defaultValue = "1")
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
-  public MessageProcessor.Packet setup(HashMap<String, Object> args) {
-    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
+  public Packet setup(HashMap<String, Object> args) {
+    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
     try {
-      writer.send(Setup.process(args).toJson());
-      while (writer.empty()) Thread.onSpinWait();
-      return new MessageProcessor.Packet(writer.receive());
+      this.send(Setup.create1(args).toJson());
+      return new Packet(this.receive());
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiManager.error(COULD_NOT_SETUP);
+      return OpiClient.error(COULD_NOT_SETUP);
     }
   }
 
@@ -161,14 +155,13 @@ public class Jovp extends OpiMachine {
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
   @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
-  public MessageProcessor.Packet present(HashMap<String, Object> args) {
-    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
+  public Packet present(HashMap<String, Object> args) {
+    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
     try {
-      writer.send(Present.process(args).toJson());
-      while (writer.empty()) Thread.onSpinWait();
-      return new MessageProcessor.Packet(writer.receive());
+      this.send(Present.process(args).toJson());
+      return new Packet(this.receive());
     } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
-      return OpiManager.error(COULD_NOT_PRESENT, e);
+      return OpiClient.error(COULD_NOT_PRESENT, e);
     }
   }
 
@@ -181,13 +174,12 @@ public class Jovp extends OpiMachine {
    *
    * @since 0.0.1
    */
-  public MessageProcessor.Packet close() {
-    if (writer == null) return OpiManager.error(NOT_INITIALIZED);
-    writer.send(toJson(Command.CLOSE));
-    while (writer.empty()) Thread.onSpinWait(); writer.receive(); // message ignored
-    writer.close();
-    writer = null;
-    return OpiManager.ok(DISCONNECTED_FROM_HOST, true);
+  public Packet close() {
+    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
+    this.send(toJson(Command.CLOSE));
+    this.receive(); // message ignored
+    this.closeListener();
+    return OpiClient.ok(DISCONNECTED_FROM_HOST, true);
   }
 
   /** Initialize command with */

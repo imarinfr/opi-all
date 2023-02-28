@@ -1,3 +1,9 @@
+/*
+ * A decorator that describes elements that can be incoming
+ * as JSON strings on a Communicator. 
+ * Used to define communication protocol in conjunction with 
+ * @ReturnMsg decorator.
+ */
 package org.lei.opi.core.definitions;
 
 import java.lang.annotation.*;
