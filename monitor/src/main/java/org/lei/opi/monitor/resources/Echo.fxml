@@ -35,75 +35,38 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.RowConstraints?>
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane prefHeight="515.0" prefWidth="834.0" style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.lei.opi.monitor.Monitor">
+<GridPane prefHeight="515.0" prefWidth="834.0" style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="295.0" minWidth="10.0" prefWidth="294.0" />
     <ColumnConstraints hgrow="ALWAYS" maxWidth="466.0" minWidth="10.0" prefWidth="399.0" />
-      <ColumnConstraints hgrow="NEVER" maxWidth="202.0" minWidth="0.0" prefWidth="106.0" />
+      <ColumnConstraints />
   </columnConstraints>
   <rowConstraints>
     <RowConstraints maxHeight="166.0" minHeight="0.0" prefHeight="87.0" vgrow="NEVER" />
-    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="359.0" valignment="CENTER" vgrow="ALWAYS" />
-    <RowConstraints maxHeight="96.0" minHeight="10.0" prefHeight="69.0" vgrow="NEVER" />
+    <RowConstraints maxHeight="1.7976931348623157E308" minHeight="10.0" prefHeight="329.0" valignment="CENTER" vgrow="ALWAYS" />
+    <RowConstraints maxHeight="138.0" minHeight="10.0" prefHeight="60.0" vgrow="NEVER" />
+      <RowConstraints maxHeight="138.0" minHeight="10.0" prefHeight="44.0" vgrow="NEVER" />
   </rowConstraints>
    <children>
-      <VBox alignment="BOTTOM_CENTER" prefHeight="323.0" prefWidth="100.0" spacing="10.0" GridPane.columnIndex="2" GridPane.rowIndex="1">
-         <children>
-            <Button fx:id="btnResetSettings" mnemonicParsing="false" onAction="#actionBtnResetSettings" prefHeight="43.0" prefWidth="82.0" text="Reset Properties" textAlignment="CENTER" wrapText="true">
-               <tooltip>
-                  <Tooltip text="Resets all propery names from java code with default values." />
-               </tooltip>
-            </Button>
-            <Button fx:id="btnSave" mnemonicParsing="false" onAction="#actionBtnSave" text="Save Settings" wrapText="true">
-               <tooltip>
-                  <Tooltip text="Save settings for currently selected machine. Overwrites existing settings." />
-               </tooltip></Button>
-            <Region prefHeight="230.0" prefWidth="106.0" />
-            <Button fx:id="btnConnect" mnemonicParsing="false" onAction="#actionBtnConnect" text="Connect" />
-         </children>
-      </VBox>
-      <TitledPane animated="false" collapsible="false" text="Machines" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS">
-        <content>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="339.0" prefWidth="240.0">
-               <children>
-                  <ListView fx:id="listMachines" layoutX="23.4" layoutY="32.4" prefHeight="285.0" prefWidth="265.0" AnchorPane.bottomAnchor="22.0" AnchorPane.leftAnchor="15.0" AnchorPane.rightAnchor="15.0" AnchorPane.topAnchor="22.0" />
-               </children>
-            </AnchorPane>
-        </content>
-      </TitledPane>
-      <TitledPane animated="false" collapsible="false" text="Settings" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS">
+      <TitledPane animated="false" collapsible="false" prefHeight="359.0" prefWidth="734.0" text="Commands coming in..." GridPane.columnSpan="3" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS">
          <content>
-            <TableView fx:id="tableSettings" editable="true">
-              <columns>
-                <TableColumn fx:id="colSettingsProperty" editable="false" maxWidth="1.7976931348623157E308" prefWidth="140.0" sortable="false" text="Property" />
-                <TableColumn fx:id="colSettingsValue" maxWidth="1.7976931348623157E308" prefWidth="281.0" sortable="false" text="Value" />
-              </columns>
-            </TableView>
+            <TextArea fx:id="textArea" editable="false" prefHeight="200.0" prefWidth="200.0" />
          </content>
-         <GridPane.margin>
-            <Insets left="1.0" />
-         </GridPane.margin>
       </TitledPane>
       <HBox alignment="CENTER_LEFT" prefHeight="38.0" prefWidth="773.0" GridPane.columnSpan="3" GridPane.rowIndex="2">
          <children>
-            <Label text="My Port">
+            <Label text="Client Port">
                <padding>
                   <Insets right="10.0" />
                </padding>
@@ -111,24 +74,21 @@
                   <Insets left="10.0" />
                </HBox.margin>
             </Label>
-            <TextField fx:id="fieldMyPort" />
+            <TextField fx:id="fieldClientPort" editable="false" />
             <Label text="localhost">
                <padding>
                   <Insets left="30.0" right="10.0" />
                </padding>
             </Label>
-            <TextField fx:id="fieldMyIP" editable="false" text="localhost" />
-            <Label fx:id="labelMessages" alignment="TOP_LEFT" prefHeight="52.0" prefWidth="339.0" style="-fx-border-color: black;" text="System Ready" wrapText="true">
+            <TextField fx:id="fieldLocalHost" editable="false" text="localhost" />
+            <Label fx:id="labelMessages">
                <padding>
                   <Insets left="10.0" />
                </padding>
-               <HBox.margin>
-                  <Insets left="10.0" />
-               </HBox.margin>
             </Label>
          </children>
       </HBox>
-      <HBox prefHeight="100.0" prefWidth="200.0">
+      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnSpan="2">
          <children>
             <ImageView fitHeight="62.0" fitWidth="81.0" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -138,7 +98,7 @@
                   <Insets left="10.0" top="10.0" />
                </HBox.margin>
             </ImageView>
-            <Label text="OPI Monitor 3.0" textFill="WHITE">
+            <Label text="OPI Monitor 3.0 - Echo Client Messages" textFill="WHITE">
                <font>
                   <Font size="24.0" />
                </font>
@@ -146,6 +106,21 @@
                   <Insets left="10.0" top="25.0" />
                </HBox.margin>
             </Label>
+         </children>
+      </HBox>
+      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnSpan="3" GridPane.rowIndex="3">
+         <children>
+            <Label text="Echo Port">
+               <padding>
+                  <Insets left="10.0" right="10.0" />
+               </padding>
+            </Label>
+            <TextField fx:id="fieldEchoPort" editable="false" />
+            <Button fx:id="btnReturnToMain" mnemonicParsing="false" onAction="#actionBtnReturnToMain" text="Return to Main Screen">
+               <HBox.margin>
+                  <Insets left="400.0" />
+               </HBox.margin>
+            </Button>
          </children>
       </HBox>
    </children>

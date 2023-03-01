@@ -14,9 +14,9 @@ import java.util.Optional;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Constructor;
 
 import javafx.application.Application;
 import javafx.collections.ObservableList;
@@ -32,7 +32,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 
-
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -46,6 +45,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
+
 
 public class Monitor extends Application {
     @FXML
@@ -87,10 +87,10 @@ public class Monitor extends Application {
         // pressed, then get them from the Settings nested classes in the OpiMachine heirachy.
     private ObservableList<List<StringProperty>> settingsList = FXCollections.observableArrayList();
 
-        // IP and port of the monitor (myself)
+        // IP and port of the monitor (myself) - this will be the address for the client to send commands.
     private String myIpAddress;
     private String myPort;
-    private ListenerThread myListenerThread;
+    private OpiClient opiClient;
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private boolean myIpOrPortHaveBeenEdited; // true if myIp or myPort have been edited since last change. 
@@ -115,12 +115,13 @@ public class Monitor extends Application {
         if (machineName == null) // not quite sure why this is here, but too scared to remove it.
             return;
 
+            // Find a Settings object for the machineName
+            // (Might need it later for Save and also checks OpiMachine 
+            // subclass actually exists if someone has edited the settings file externally.)
             // Look for org.lei.opi.core.<machineName>$Settings
             // If not there, look for org.lei.opi.core.<machineName>.super()$Settings
             // If not there, look for org.lei.opi.core.<machineName>.super().super()$Settings
             // etc up to OpiMachine$Settings
-            // (Might need it later for Save and also checks OpiMachine 
-            // subclass actually exists if someone has edited the settings file externally.)
         String className = machineName;
         this.currentSettingsObject = OpiMachine.fillSettings(className);
         while (this.currentSettingsObject == null && !className.equals("OpiMachine")) {
@@ -134,8 +135,10 @@ public class Monitor extends Application {
             }
         }
 
-        if (this.currentSettingsObject == null) 
+        if (this.currentSettingsObject == null) {
+            System.out.println("Something is wrong - cannot find a Settings nested class for " + machineName);
             return;
+        }
 
         boolean gotThem = false;
         if (getFromFile) {
@@ -150,12 +153,11 @@ public class Monitor extends Application {
                     this.settingsList.add(line);
                 }
                 gotThem = true;
+                this.settingsHaveBeenEdited = false;
             } else {
                 System.out.println("Could not find " + machineName + " in settings file, resetting to defauts.");
             }
         }
-
-        this.settingsHaveBeenEdited = false;
         
         if (!gotThem) {
                 // Populate this.settingsList with the fields and values
@@ -306,9 +308,9 @@ public class Monitor extends Application {
      * 1.2) Set up column Value to be editable.
      * 2) Read the names of machines from OpiMachine.MACHINES and put them in {@link listMachines}.
      *    When one is clicked, update {@link settingsList}.
-     * 3) Get my ip and port from the settings file if they exist.
-     * 3.1) Add change listeners to the myport and myip text fields.
-     * 4) Create the myListenerThread ready for 'Connect' button
+     * 3) Get my port from the settings file if it exists.
+     * 3.1) Add change listeners to the myport text field.
+     * 3.2) Put my IP address in the localhost box.
      */
     @FXML
     public void initialize() {
@@ -344,29 +346,22 @@ public class Monitor extends Application {
         });
         listMachines.getSelectionModel().select(0);
 
-            // (3) Get myIp and myPort from settings file if they exist
+            // (3) Get myIp from settings file if it exists
         HashMap<String, Object> settings = OpiMachine.readSettingsFile();
         if (settings.containsKey(OpiMachine.GUI_MACHINE_NAME)) {
             @SuppressWarnings("unchecked")
             Map<String, Object> mySettings = (Map<String, Object>)settings.get(OpiMachine.GUI_MACHINE_NAME);
-            if (mySettings.containsKey("ip")) {
-                this.myIpAddress = (String)mySettings.get("ip");
-                this.fieldMyIP.setText(this.myIpAddress);
-            }
+            //if (mySettings.containsKey("ip")) {
+            //    this.myIpAddress = (String)mySettings.get("ip");
+            //    this.fieldMyIP.setText(this.myIpAddress);
+           // }
             if (mySettings.containsKey("port")) {
                 this.myPort = String.format("%1.0f", mySettings.get("port"));
                 this.fieldMyPort.setText(String.format("%s",this.myPort));
             }
         }
 
-            // 3.1) Add change listeners to the myport and myip text fields.
-        this.fieldMyIP.textProperty().addListener(new ChangeListener<String>() {
-            @Override
-            public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
-                myIpAddress = newValue;
-                myIpOrPortHaveBeenEdited = true;
-            }
-        });
+            // 3.1) Add change listener to the myport text fields.
         this.fieldMyPort.textProperty().addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
@@ -375,16 +370,16 @@ public class Monitor extends Application {
             }
         });
 
-            // 4) Create the listner thread ready for 'Connect' button
-        this.myListenerThread = new ListenerThread();
+        this.myIpAddress = OpiMachine.obtainPublicAddress().toString();
+        this.fieldMyIP.setText(this.myIpAddress);
     }
 
     /**
      * Action when Connect button is pressed.
      *
-     * (1) Open a CSListener for myself to get commands from (eg) R
-     * (2) Open a CSWriter to the machine slected in {@link listMacines} to pass on commands
-     * (3) If succesful, switch to the Scene of the {@link OpiMachine} we have switched to.
+     * (1) Open an OpiMachine for the machine selected in {@link listMachines} to pass on commands 
+     * (2) If successful, switch to the Scene of the {@link OpiMachine} we have switched to.
+     * (3) Open an OpiClient for myself to get commands from (eg) R
      *
      * @param event
      */
@@ -392,24 +387,30 @@ public class Monitor extends Application {
     void actionBtnConnect(ActionEvent event) {
         checkSave();
 
-            // (1) Open my own connection to get commands from (eg) R
-            // TODO this just assumes localhost will be the IP Address - what if myIPAddress contains something else?
-        if (this.myListenerThread.isStopped()) {
-            labelMessages.setText("Starting listener on port " + this.myPort);
-            System.out.println("Starting listener thread");
-            this.myListenerThread.setPort(this.myPort);
-            this.myListenerThread.start();
-        }
-
-            // (2 & 3)create connection to OPIMachine and switch to its Scene
-        labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
-
         final Node source = (Node) event.getSource();
         final Stage stage = (Stage) source.getScene().getWindow();
 
+            // (1 & 2) create connection to OPIMachine and switch to its Scene
+        labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
+
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("resources/%s.fxml", this.currentMachineChoice)));
-            OpiMachine mac = new org.lei.opi.core.Display(source.getScene());   // TODo this needs to change based 
+            OpiMachine mac = null;
+            try {
+                Class<?> cls = Class.forName("org.lei.opi.core." + this.currentMachineChoice);
+                Constructor<?> ctor = cls.getConstructor(Scene.class);
+                mac = (OpiMachine)ctor.newInstance(source.getScene());
+            } catch (ClassNotFoundException e) {
+                System.out.println("Problem: cannot find class for " + this.currentMachineChoice);
+                return;
+            } catch (NoSuchMethodException e) {
+                System.out.println("Problem: cannot run constructor for " + this.currentMachineChoice);
+                return;
+            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+                System.out.println("Problem: cannot create an instance of " + this.currentMachineChoice);
+                e.printStackTrace();
+                return;
+            }
             loader.setController(mac);
             Parent root = loader.load();
             Scene scene = new Scene(root, 800, 515);
@@ -419,39 +420,22 @@ public class Monitor extends Application {
         } catch (IOException e) {
             labelMessages.setText("Cannot load FXML GUI for " + this.currentMachineChoice);
             e.printStackTrace();
+            return;
         } catch (RuntimeException e) {
             labelMessages.setText("Couldn't open create OpiMachine connection for " + this.currentMachineChoice);
             e.printStackTrace();
+            return;
+        }
+
+            // (3) Open my own connection to get commands from (eg) R
+            //     Put my IP address in the box so it is known (Assumes IP Address is localhost)
+            //     If opiClient already exists, then just leave it alone.
+        if (this.opiClient == null) {
+            labelMessages.setText("Starting listener on port " + this.myPort);
+            this.opiClient = new OpiClient(Integer.parseInt(this.myPort));
+            fieldMyIP.setText(OpiClient.obtainPublicAddress().toString());
         }
     }
-
-    /**
-     * A thread that will listen in {@link myPort} for commands and pass them to {@link OpiManager}.
-     */
-    class ListenerThread extends Thread {
-        private int port;
-
-        public void setPort(String port) { this.port = Integer.parseInt(port);}
-
-        public boolean isStopped() {
-            return (this.getState() == Thread.State.NEW || this.getState() == Thread.State.TERMINATED);
-        }
-
-        public void run() {
-            OpiClient opiClient = new OpiClient(port);
-            System.out.println("Started Listener on " + port);
-            while (true) {
-                try {
-                    Thread.sleep(100);
-                } catch(InterruptedException e) {
-                    System.out.println("Interrupted Listener");
-                    break;
-                }
-            }
-            System.out.println("Closed Listener");
-            opiClient.closeListener();
-        }
-   };
 
     /**
      * Launch the main window, etc

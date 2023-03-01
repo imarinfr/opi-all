@@ -56,9 +56,9 @@ public abstract class Listener extends Thread {
     private int port;
     /** Socket server */
     private ServerSocket server;
-    /** Reader for incoming messages on the socket */
+        /** Reader for incoming messages on the socket */
     BufferedReader incoming;
-    /** Writer for outgoing messages to the socket */
+        /** Writer for outgoing messages to the socket */
     BufferedWriter outgoing;
     /** If not null, add the messages processed by {@link send} to {@link sendWriter} */
     Writer sendWriter = null;
@@ -90,9 +90,7 @@ public abstract class Listener extends Thread {
         this.port = port;
         this.address = ipAddress; // ();
         this.listening = true;
-        this.start();
-        // wait for server to be ready
-        while (this.server == null) Thread.onSpinWait();
+        this.start(); // kick off this thread
     }
 
     /**
@@ -106,9 +104,9 @@ public abstract class Listener extends Thread {
         /** Some sort of message - probably Json, but maybe not. */
         public String msg;
 
-        /** Simple constrcutor 0 */
+        /** Simple constructor 0 */
         public Packet() { this.close = false ; this.msg = ""; this.error = false; }
-        /** Simple constrcutor 1 */
+        /** Simple constructor 1 */
         public Packet(String msg) { this.close = false ; this.msg = msg; this.error = false; }
         /** Simple constructor 2 */
         public Packet(boolean close, String msg) { this.close = close ; this.msg = msg; this.error = false;}
@@ -131,6 +129,7 @@ public abstract class Listener extends Thread {
      * Will run forever until process() returns a Packet with close == true.
      *
      * Runs in its own thread */
+    @Override
     public void run() {
       Socket socket;
       try {
