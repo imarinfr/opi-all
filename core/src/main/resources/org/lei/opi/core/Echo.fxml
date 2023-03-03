@@ -36,7 +36,6 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -65,22 +64,6 @@
             <Insets left="10.0" right="10.0" />
          </GridPane.margin>
       </TitledPane>
-      <HBox alignment="CENTER_LEFT" prefHeight="38.0" prefWidth="773.0" GridPane.rowIndex="2">
-         <children>
-            <Label text="Echo Port">
-               <padding>
-                  <Insets left="10.0" right="10.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="fieldEchoPort" editable="false" />
-            <Label text="localhost">
-               <padding>
-                  <Insets left="30.0" right="10.0" />
-               </padding>
-            </Label>
-            <TextField fx:id="fieldLocalHost" editable="false" text="localhost" />
-         </children>
-      </HBox>
       <HBox GridPane.columnSpan="2">
          <children>
             <ImageView fitHeight="62.0" fitWidth="81.0" pickOnBounds="true" preserveRatio="true">

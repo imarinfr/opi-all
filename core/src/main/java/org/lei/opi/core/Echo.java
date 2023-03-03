@@ -12,9 +12,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.event.ActionEvent;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
-import javafx.stage.Stage;
 import javafx.scene.Node;
 
 public class Echo extends OpiMachine {
@@ -93,6 +91,7 @@ public class Echo extends OpiMachine {
      */
     public Packet close() {
         this.textArea.appendText("Close:\n");
+        returnToParentScene((Node)textArea);
         return OpiListener.ok("Got OPI_CLOSE so closing connection.", true);
     };
 
@@ -102,12 +101,6 @@ public class Echo extends OpiMachine {
     private Button btnReturnToMain;
 
     @FXML
-    private TextField fieldEchoPort;
-
-    @FXML
-    private TextField fieldLocalHost;
-
-    @FXML
     private TextArea textArea;
 
     /*
@@ -115,22 +108,14 @@ public class Echo extends OpiMachine {
      */
     @FXML
     void actionBtnReturnToMain(ActionEvent event) {
-        final Node source = (Node) event.getSource();
-        final Stage stage = (Stage) source.getScene().getWindow();
-
-        stage.setScene(this.parentScene);
-        stage.show();
+        returnToParentScene((Node)event.getSource());
     }
 
     @FXML
     void initialize() {
         assert btnReturnToMain != null : "fx:id=\"btnReturnToMain\" was not injected: check your FXML file 'Echo.fxml'.";
-        assert fieldEchoPort != null : "fx:id=\"fieldEchoPort\" was not injected: check your FXML file 'Echo.fxml'.";
-        assert fieldLocalHost != null : "fx:id=\"fieldLocalHost\" was not injected: check your FXML file 'Echo.fxml'.";
         assert textArea != null : "fx:id=\"textArea\" was not injected: check your FXML file 'Echo.fxml'.";
         
-        fieldLocalHost.setText(OpiListener.obtainPublicAddress().getHostAddress());
-        fieldEchoPort.setText("" + settings.port);
         textArea.appendText("Connected and awaiting commands.");
     }
 }

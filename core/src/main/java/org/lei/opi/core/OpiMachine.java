@@ -33,6 +33,9 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import javafx.scene.Scene;
+import javafx.scene.Node;
+import javafx.stage.Stage;
+import javafx.application.Platform;
 
 /**
  * The OPI machine standard for communication with perimeters.
@@ -87,9 +90,9 @@ public abstract class OpiMachine {
     /** {@value OPI_PRESENT_FAILED} */
     static final String OPI_PRESENT_FAILED = "Failed to complete opiPresent. ";
     /** {@value CONNECTED_TO_HOST} */
-    static final String CONNECTED_TO_HOST = "\"Connected to host at %s:%s\"";
+    static final String CONNECTED_TO_HOST = "Connected to host at %s:%s";
     /** {@value DISCONNECTED_FROM_HOST} */
-    static final String DISCONNECTED_FROM_HOST = "\"Disconnected from Machine\"";
+    static final String DISCONNECTED_FROM_HOST = "Disconnected from Machine";
   
     /** {@value SETTINGS_FILE} located in System.getProperty("user.dir") */
     static final String SETTINGS_FILE = "opi_settings.json";
@@ -287,6 +290,23 @@ public abstract class OpiMachine {
         socket.close();
     }
   
+    /*
+     * Return the GUI to the parent scene recorded when this 
+     * instance became the scene controller for a new scene.
+     * 
+     * @param currentSource is a Node in current scene
+     */
+    protected void returnToParentScene(Node currentSource) {
+        Platform.runLater(new Runnable() {
+          public void run() {
+            final Stage stage = (Stage) currentSource.getScene().getWindow();
+
+            stage.setScene(parentScene);
+            stage.show();
+          }
+        });
+    }
+
     /**
      * Map the 'command' to a function, check it has the right parameters, and the call it
      *
@@ -404,7 +424,7 @@ public abstract class OpiMachine {
     @Parameter(name = "ip", desc = "IP Address of the OPI machine.", defaultValue = "localhost")
     @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI machine.", min = 0, max = 65535, defaultValue = "50001")
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, '1' something wrong.")
+    @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, something else otherwise.")
     @ReturnMsg(name = "res.msg", desc = "The success or error message.")
     public abstract Packet initialize(HashMap<String, Object> args);
   
@@ -416,7 +436,7 @@ public abstract class OpiMachine {
      * @since 0.0.1
      */
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
+    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the following data.")
     public abstract Packet query();
   
@@ -430,7 +450,7 @@ public abstract class OpiMachine {
      * @since 0.0.1
      */
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
+    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the result of QUERY OPI command.")
     public abstract Packet setup(HashMap<String, Object> args);
   
@@ -444,7 +464,7 @@ public abstract class OpiMachine {
      * @since 0.0.1
      */
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
+    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following fields.")
     @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
     @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed (ms).", min = 0)
@@ -460,7 +480,7 @@ public abstract class OpiMachine {
      * @since 0.0.1
      */
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, '1' if error.")
+    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "The error message or additional results from the CLOSE command")
     public abstract Packet close();
   

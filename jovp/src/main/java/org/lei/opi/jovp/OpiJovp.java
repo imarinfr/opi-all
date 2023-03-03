@@ -58,7 +58,8 @@ public class OpiJovp extends OpiListener {
   protected State state;
 
   public OpiJovp(int port) { 
-    super(port, null);   // do not give a machine to the OpiListner as we overide the process() method here and the machine is not needed.
+    super(port);   
+    // do not this.setMachine() as we overide the process() method here and the machine is not needed.
   } 
 
     /**

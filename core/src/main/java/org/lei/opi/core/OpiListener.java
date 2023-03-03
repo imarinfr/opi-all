@@ -5,17 +5,16 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import com.google.gson.JsonSyntaxException;
@@ -35,12 +34,12 @@ import com.google.gson.reflect.TypeToken;
  */
 public class OpiListener extends Thread {
 
-  /**
-   * Command. In JSON files they will appear as:
-   *    name:value pair where name == "command"
-   *
-   * @since 0.0.1
-   */
+    /**
+    * Command. In JSON files they will appear as:
+    *    name:value pair where name == "command"
+    *
+    * @since 0.0.1
+    */
     public enum Command {
       /** Query device constants */
       QUERY,
@@ -67,9 +66,9 @@ public class OpiListener extends Thread {
     /** {@value CHECK_FAILED} */
     private static final String CHECK_FAILED = "Cannot check if socket is empty.";
     /** {@value RECEIVE_FAILED} */
-    private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in Listener.";
+    private static final String RECEIVE_FAILED = "Cannot receive() message in OpiListener.";
     /** {@value SEND_FAILED} */
-    private static final String SEND_FAILED = "Cannot write send() message to sendWriter in Listener.";
+    private static final String SEND_FAILED = "Cannot send() message in OpiListener.";
     /** {@value CLOSE_FAILED} */
     private static final String CLOSE_FAILED = "Cannot close the socket.";
     /** {@value CLOSE_FAILED} */
@@ -120,27 +119,27 @@ public class OpiListener extends Thread {
     BufferedReader incoming;
         /** Writer for outgoing messages to the socket */
     BufferedWriter outgoing;
-    /** If not null, add the messages processed by {@link send} to {@link sendWriter} */
-    Writer sendWriter = null;
-    /** If not null, add the messages procesed by {@link receive} to {@link receiveBuffer} */
-    Writer receiveWriter = null;
-    /** Whether it is listening */
+    /** true while the server is running and waiting for a new connection, false when not running or already has a client */
     protected boolean listening;
     /** The OpiMachine object that commands will be passed to */
     private OpiMachine machine;
+    /** true if server is looping away accepting connections, false otherwise (or to kill it) */
+    private boolean serverIsListening;
 
     /**
      * Start the OPI manager with an opiMachine that is already chosen/constructed
      *
      * @since 0.2.0
      */
-    public OpiListener(int port, OpiMachine machine) {
-        this.machine = machine; 
+    public OpiListener(int port) {
+        this.serverIsListening = false;
+        this.machine = null;
         this.port = port; 
         this.address = obtainPublicAddress(); // run on localhost
-        this.listening = true;
         this.start(); // kick off this thread
     }
+  
+    public void setMachine(OpiMachine m) { this.machine = m; }
   
     /**
      * Process incoming Json commands. If it is a 'choose' command, then
@@ -192,49 +191,47 @@ public class OpiListener extends Thread {
      * Runs in its own thread */
     @Override
     public void run() {
-      Socket socket;
-      try {
-          server = new ServerSocket(this.port, 0, this.address);
-          server.setSoTimeout(100);
-          while (this.listening) {
-            try {
-                socket = server.accept();
-                incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
-                outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
-                while (true) {
-                    if (!this.listening) break;
-                    if (incoming.ready()) {
-                        Packet pack = process(receive());
-                        send(pack.msg);
-                        if (pack.close) break; // if close requested, break loop
-                    }
-                }
-            } catch (SocketTimeoutException ignored) {}
+        ExecutorService pool = Executors.newFixedThreadPool(100);
+        try {
+            server = new ServerSocket(this.port, 0, this.address);
+            this.serverIsListening = true;
+            while (this.serverIsListening) {
+                Socket socket = server.accept();
+                pool.execute(new ClientThread(socket));
+            }
+            pool.shutdown();
+            server.close();
+        } catch (IOException e) {
+            throw new RuntimeException(LISTENER_FAILED, e);
+        }
+    }
+  
+    class ClientThread implements Runnable {
+        protected Socket socket;
+        public ClientThread (Socket clientSocket) {
+          this.socket = clientSocket;
+        }
+
+        public void run() {
+          try {
+            incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
+            outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
+            while (true) {
+                if (incoming.ready()) {
+                   Packet pack = process(receive());
+                   send(pack.msg);
+                   if (pack.close) {
+                      break; 
+                   }
+               }
+            }
+            closeListener(); // kill off the server and this connection when/if we get at least one opiClose()
+          } catch (IOException e) {
+            e.printStackTrace();
           }
-          server.close();
-          this.listening = false;
-      } catch (IOException e) {
-          throw new RuntimeException(LISTENER_FAILED, e);
-      }
+        }
     }
-  
-    /**
-     *
-     * Check whether incoming buffer is empty
-     *
-     * @return Whether incoming buffer is empty
-     *
-     * @since 0.0.1
-     */
-    public boolean empty() {
-      try {
-        return !incoming.ready();
-      } catch (IOException e) {
-        System.err.println(CHECK_FAILED);
-        throw new RuntimeException(CHECK_FAILED, e);
-      }
-    }
-  
+
     /**
      *
      * Receive message
@@ -250,7 +247,6 @@ public class OpiListener extends Thread {
                 String line = incoming.readLine();
                 message.append(line + (incoming.ready() ? "\n" : ""));
             }
-            if (receiveWriter != null) receiveWriter.write(message.toString());
         } catch (IOException e) {
             System.err.println(RECEIVE_FAILED);
             throw new RuntimeException(RECEIVE_FAILED, e);
@@ -271,7 +267,6 @@ public class OpiListener extends Thread {
             outgoing.write(message.replace("\n", ""));
             outgoing.newLine();
             outgoing.flush();
-            if (sendWriter != null) sendWriter.write(message);
         } catch (IOException e) {
             System.err.println(SEND_FAILED);
             throw new RuntimeException(SEND_FAILED, e);
@@ -284,17 +279,7 @@ public class OpiListener extends Thread {
      * @since 0.0.1
      */
     public void closeListener() {
-      if (!this.listening)
-        return;
-
-      this.listening = false;
-      synchronized (this) {
-        try {
-          this.join();
-        } catch (InterruptedException e) {
-          throw new RuntimeException(CLOSE_FAILED, e);
-        }
-      }
+        this.serverIsListening = false;
     }
   
     public String toString() {
@@ -371,7 +356,7 @@ public class OpiListener extends Thread {
      * @since 0.1.0
      */
     public static Packet ok(String message, boolean close) {
-      return new Packet(false, close, String.format("{\n  %s, \n  \"msg\": %s\n}", ERROR_NO, message));
+      return new Packet(false, close, String.format("{\n  %s, \n  \"msg\": \"%s\"\n}", ERROR_NO, message));
     }
    
     /**

@@ -22,7 +22,7 @@ import java.io.IOException;
    * @since 0.0.1
    */
   Core(int port) throws IOException {
-    monitor = new OpiListener(port, null);
+    monitor = new OpiListener(port);
   }
 
   /**
