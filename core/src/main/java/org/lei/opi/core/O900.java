@@ -3,6 +3,7 @@ package org.lei.opi.core;
 import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
@@ -10,6 +11,8 @@ import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
 import javafx.scene.Scene;
+
+import org.lei.opi.core.OpiListener.Packet;
 
 /**
  * Octopus O900 client
@@ -113,8 +116,6 @@ public class O900 extends OpiMachine {
     super(parentScene);
     this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
     this.parentScene = parentScene;
-
-    //this.connect(settings.port, settings.ip);
   }
 
   /**
@@ -200,7 +201,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet initialize(HashMap<String, Object> args) {
-      return OpiClient.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return OpiListener.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
   };
 
   /**
@@ -211,7 +212,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet query() {
-    return OpiClient.ok(queryResults());
+    return OpiListener.ok(queryResults());
   };
 
   /**
@@ -231,7 +232,7 @@ public class O900 extends OpiMachine {
   @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
   @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
   public Packet setup(HashMap<String, Object> args) {
-    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
+    if (this.socket.isClosed()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     StringBuilder message;
     String result;
     try {
@@ -244,9 +245,13 @@ public class O900 extends OpiMachine {
         .append(settings.max10000).append(" ")
         .append("\"").append(settings.gazeFeedPath).append("\"").append(" ");
       // Send OPI_INITIALIZE instruction
-      this.send(message.toString());
-      result = this.receive();
-      if (!result.equals("0")) return OpiClient.error(OPI_INITIALIZE_FAILED + result);
+      try {
+        this.send(message.toString());
+        result = this.receive();
+      } catch (IOException e) {
+        return OpiListener.error(OPI_INITIALIZE_FAILED, e);
+      }
+      if (!result.equals("0")) return OpiListener.error(OPI_INITIALIZE_FAILED + result);
       // Prepare OPI_SET_BACKGROUND instruction
       int bgCol = switch (BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
         case WHITE -> BG_WHITE;
@@ -269,12 +274,16 @@ public class O900 extends OpiMachine {
         .append(fixShape).append(" ")
         .append((int) ((double) args.get("fixIntensity")));  
       // Send OPI_SET_BACKGROUND instruction
-      this.send(message.toString());
-      result = this.receive();
-      if (!result.equals("0")) return OpiClient.error(OPI_SET_BACKGROUND_FAILED + result);
-      return OpiClient.ok(queryResults());
+      try {
+        this.send(message.toString());
+        result = this.receive();
+      } catch (IOException e) {
+        return OpiListener.error(OPI_SET_BACKGROUND_FAILED, e);
+      }
+      if (!result.equals("0")) return OpiListener.error(OPI_SET_BACKGROUND_FAILED + result);
+      return OpiListener.ok(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiClient.error(OPI_SETUP_FAILED, e);
+      return OpiListener.error(OPI_SETUP_FAILED, e);
     }
   }
 
@@ -300,7 +309,7 @@ public class O900 extends OpiMachine {
   @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "[KINETIC] x co-ordinate when oberver responded (degrees).")
   @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "[KINETIC] y co-ordinate when oberver responded (degrees).")
   public Packet present(HashMap<String, Object> args) {
-    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
+    if (this.socket.isClosed()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     try {
       // get common parameters
       Type type = Type.valueOf(((String) args.get("type")).toUpperCase());
@@ -324,10 +333,14 @@ public class O900 extends OpiMachine {
         case STATIC -> presentStatic(x, y, lum, size, color, t, (int) (double) args.get("w"));
         case KINETIC -> presentKinetic(x, y, lum, size, color, t);
       };
-      this.send(message.toString());
-      return OpiClient.ok(parseResult(type, this.receive()));
+      try {
+        this.send(message.toString());
+        return OpiListener.ok(parseResult(type, this.receive()));
+      } catch (IOException e) {
+        return OpiListener.error(OPI_PRESENT_FAILED, e);
+      }
     } catch (ClassCastException | IllegalArgumentException | SecurityException e) {
-      return OpiClient.error(OPI_PRESENT_FAILED, e);
+      return OpiListener.error(OPI_PRESENT_FAILED, e);
     }
   }
 
@@ -341,9 +354,13 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet close() {
-    this.send(OPI_CLOSE);
-    this.closeListener();
-    return OpiClient.ok(DISCONNECTED_FROM_HOST, true);
+    try {
+      this.send(OPI_CLOSE);
+      this.closeSocket();
+    } catch (IOException e) {
+      return OpiListener.error(OPI_CLOSE, e);
+    }
+    return OpiListener.ok(DISCONNECTED_FROM_HOST, true);
   };
 
   /**
@@ -484,7 +501,7 @@ public class O900 extends OpiMachine {
    */
   private String parseResult(Type type, String received) {
     String[] message = received.split("\\|\\|\\|");
-    if (message[0] != "null") OpiClient.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
+    if (message[0] != "null") OpiListener.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
     StringBuilder jsonStr = new StringBuilder("\n  {\n")
       .append("    \"seen\": " + message[1] + ",\n")
       .append("    \"time\": " + message[2]);

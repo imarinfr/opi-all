@@ -22,11 +22,11 @@ class Perimeter extends Thread {
   /** Charset is {@value CHARSET_NAME} */
   private static final String CHARSET_NAME = "UTF8";
   /** {@value LISTENER_FAILED} */
-  private static final String LISTENER_FAILED = "CSListener failed.";
+  private static final String LISTENER_FAILED = "Listener failed.";
   /** {@value RECEIVE_FAILED} */
-  private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in CSListener.";
+  private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in Listener.";
   /** {@value SEND_FAILED} */
-  private static final String SEND_FAILED = "Cannot write send() message to sendWriter in CSListener.";
+  private static final String SEND_FAILED = "Cannot write send() message to sendWriter in Listener.";
   /** {@value CLOSE_FAILED} */
   private static final String CLOSE_FAILED = "Cannot close the socket.";
 

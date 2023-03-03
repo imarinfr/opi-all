@@ -3,7 +3,7 @@ package org.lei.opi.core.definitions;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.lei.opi.core.OpiClient.Command;
+import org.lei.opi.core.OpiListener.Command;
 
 import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
 import static org.lei.opi.core.definitions.JsonProcessor.colorValues;

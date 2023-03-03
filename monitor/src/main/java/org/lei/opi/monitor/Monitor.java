@@ -1,7 +1,7 @@
 package org.lei.opi.monitor;
 
 import org.lei.opi.core.OpiMachine;
-import org.lei.opi.core.OpiClient;
+import org.lei.opi.core.OpiListener;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.Optional;
-
-import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -45,7 +43,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
-
 
 public class Monitor extends Application {
     @FXML
@@ -90,10 +87,10 @@ public class Monitor extends Application {
         // IP and port of the monitor (myself) - this will be the address for the client to send commands.
     private String myIpAddress;
     private String myPort;
-    private OpiClient opiClient;
+    private OpiListener opiClient;
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
-    private boolean myIpOrPortHaveBeenEdited; // true if myIp or myPort have been edited since last change. 
+    private boolean myPortHasBeenEdited; // true if myIp or myPort have been edited since last change. 
     private String currentMachineChoice;
     private Object currentSettingsObject;  // an OpiMachine$Settings object
 
@@ -201,7 +198,7 @@ public class Monitor extends Application {
      * If settings or Ip/Port edited in GUI, prompt for discard or save.
      */
     private void checkSave() {
-        if (this.settingsHaveBeenEdited || this.myIpOrPortHaveBeenEdited) {
+        if (this.settingsHaveBeenEdited || this.myPortHasBeenEdited) {
             ButtonType save = new ButtonType("Save to File", ButtonBar.ButtonData.OK_DONE);
             ButtonType discard = new ButtonType("Not now", ButtonBar.ButtonData.CANCEL_CLOSE);
             Alert alert = new Alert(AlertType.CONFIRMATION,
@@ -223,7 +220,7 @@ public class Monitor extends Application {
      */
     @FXML
     void actionBtnSave(ActionEvent event) {
-        if (!this.settingsHaveBeenEdited && !this.myIpOrPortHaveBeenEdited) {
+        if (!this.settingsHaveBeenEdited && !this.myPortHasBeenEdited) {
             labelMessages.setText("Nothing to save for " + this.currentMachineChoice + "or My Port of My IP Address.");
         } else 
             saveCurrentSettings();
@@ -244,7 +241,7 @@ public class Monitor extends Application {
         List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettingsObject.getClass());
 
         String jsonString = "{" + 
-            String.format("\"%s\":{\"ip\":%s, \"port\":%s},", OpiMachine.GUI_MACHINE_NAME, this.myIpAddress, this.myPort) +
+            String.format("\"%s\":{\"port\":%s},", OpiMachine.GUI_MACHINE_NAME, this.myPort) +
             this.settingsList.stream()
                 .map((List<StringProperty> row) -> {
                     String fieldName = row.get(0).getValue();
@@ -268,12 +265,11 @@ public class Monitor extends Application {
                 .collect(Collectors.joining(","))
             + "}";
 
-        Gson gson = new Gson();
-        map.put(this.currentMachineChoice, gson.fromJson(jsonString, this.currentSettingsObject.getClass()));
+        map.put(this.currentMachineChoice, OpiListener.gson.fromJson(jsonString, this.currentSettingsObject.getClass()));
 
         OpiMachine.writeSettingsFile(map);
         this.settingsHaveBeenEdited = false;
-        this.myIpOrPortHaveBeenEdited = false;
+        this.myPortHasBeenEdited = false;
 
         labelMessages.setText("Settings saved for " + this.currentMachineChoice + "and My IP/Port.");
     }
@@ -346,15 +342,11 @@ public class Monitor extends Application {
         });
         listMachines.getSelectionModel().select(0);
 
-            // (3) Get myIp from settings file if it exists
+            // (3) Get myPort from settings file if it exists
         HashMap<String, Object> settings = OpiMachine.readSettingsFile();
         if (settings.containsKey(OpiMachine.GUI_MACHINE_NAME)) {
             @SuppressWarnings("unchecked")
             Map<String, Object> mySettings = (Map<String, Object>)settings.get(OpiMachine.GUI_MACHINE_NAME);
-            //if (mySettings.containsKey("ip")) {
-            //    this.myIpAddress = (String)mySettings.get("ip");
-            //    this.fieldMyIP.setText(this.myIpAddress);
-           // }
             if (mySettings.containsKey("port")) {
                 this.myPort = String.format("%1.0f", mySettings.get("port"));
                 this.fieldMyPort.setText(String.format("%s",this.myPort));
@@ -366,12 +358,17 @@ public class Monitor extends Application {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 myPort = newValue;
-                myIpOrPortHaveBeenEdited = true;
+                myPortHasBeenEdited = true;
             }
         });
 
-        this.myIpAddress = OpiMachine.obtainPublicAddress().toString();
+        this.myIpAddress = OpiListener.obtainPublicAddress().getHostAddress(); // set ot localhost as assumed
         this.fieldMyIP.setText(this.myIpAddress);
+
+            // (4) Set window size
+        //final Stage stage = (Stage) gridPane.getScene().getWindow();
+        //stage.setWidth(850);
+        //stage.setHeight(520);
     }
 
     /**
@@ -393,13 +390,14 @@ public class Monitor extends Application {
             // (1 & 2) create connection to OPIMachine and switch to its Scene
         labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
 
+        OpiMachine opiMachine = null;
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("resources/%s.fxml", this.currentMachineChoice)));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/org/lei/opi/core/%s.fxml", this.currentMachineChoice)));
             OpiMachine mac = null;
             try {
                 Class<?> cls = Class.forName("org.lei.opi.core." + this.currentMachineChoice);
                 Constructor<?> ctor = cls.getConstructor(Scene.class);
-                mac = (OpiMachine)ctor.newInstance(source.getScene());
+                opiMachine = (OpiMachine)ctor.newInstance(source.getScene());
             } catch (ClassNotFoundException e) {
                 System.out.println("Problem: cannot find class for " + this.currentMachineChoice);
                 return;
@@ -411,12 +409,13 @@ public class Monitor extends Application {
                 e.printStackTrace();
                 return;
             }
-            loader.setController(mac);
+            loader.setController(opiMachine);
             Parent root = loader.load();
             Scene scene = new Scene(root, 800, 515);
 
             stage.setScene(scene);
             stage.show();
+            labelMessages.setText("");
         } catch (IOException e) {
             labelMessages.setText("Cannot load FXML GUI for " + this.currentMachineChoice);
             e.printStackTrace();
@@ -432,8 +431,8 @@ public class Monitor extends Application {
             //     If opiClient already exists, then just leave it alone.
         if (this.opiClient == null) {
             labelMessages.setText("Starting listener on port " + this.myPort);
-            this.opiClient = new OpiClient(Integer.parseInt(this.myPort));
-            fieldMyIP.setText(OpiClient.obtainPublicAddress().toString());
+            this.opiClient = new OpiListener(Integer.parseInt(this.myPort), opiMachine);
+            fieldMyIP.setText(OpiListener.obtainPublicAddress().getHostAddress());
         }
     }
 

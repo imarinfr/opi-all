@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.junit.jupiter.api.Test;
 import org.lei.opi.jovp.Configuration.Machine;
 
-import org.lei.opi.core.OpiClient;
+import org.lei.opi.core.OpiListener;
 
 /**
  *
@@ -25,7 +25,7 @@ public class RToMonitorToJovpTests {
   /** The OPI monitor */
   private Core monitor;
   /** The R client */
-  private OpiClient r;
+  private OpiListener r;
 
   /** OPI_CHOOSE command */
   private String chooseJson;
@@ -55,7 +55,7 @@ public class RToMonitorToJovpTests {
     try {
       server = new JovpServer(machine, JOVP_PORT); // first setup JOVP server
       monitor = new Core(MONITOR_PORT); // then setup monitor
-      r = new OpiClient(monitor.getPort()); // finally setup R client
+      r = new OpiListener(monitor.getPort(), null); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

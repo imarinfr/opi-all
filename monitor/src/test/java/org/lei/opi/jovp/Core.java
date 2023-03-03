@@ -2,7 +2,7 @@ package org.lei.opi.jovp;
 
 import java.io.IOException;
 
-import org.lei.opi.core.OpiClient;
+import org.lei.opi.core.OpiListener;
 
 /**
    * The OPI monitor
@@ -12,7 +12,7 @@ import org.lei.opi.core.OpiClient;
   class Core {
 
   /** listener for OpiJovp */
-  private static OpiClient monitor;
+  private static OpiListener monitor;
 
   /**
    * Initialize the monitor
@@ -24,7 +24,7 @@ import org.lei.opi.core.OpiClient;
    * @since 0.0.1
    */
   Core(int port) throws IOException {
-    monitor = new OpiClient(port);
+    monitor = new OpiListener(port, null);
   }
 
   /**

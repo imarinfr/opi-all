@@ -43,35 +43,36 @@ core code using the `@Parameter` annotator.
 Both the client connection and machine connection are handled 
 using objects of type Listener which establishes socket connections
 and processes incoming JSON strings. 
-Somewhat confusingly, the machine connection is initiated by the client, and so 
-the Listener::OpiMachine is a property of the Listener::OpiClient.
-All the messages received by the OpiClient are passed straight through to the 
-OpiMachine except for the 'choose machine' message which is processed in OpiClient.
-
-<pre>
-         +------------------+ 
-         |    Listener      | 
-         +------------------+ 
-         | ServerSocket     | 
-         | process(jsonStr) | 
-         +------------------+ 
-           ^              ^
-       is a|              |is a
-   +-------------+       +------------+
-   |  OpiClient  | has a | OpiMachine |
-   +-------------+ ----> +------------+
-   | +OpiMachine |       | ...        |
-   +-------------+       +------------+
-</pre>
 
 ## Packages
 
 ### Monitor
 The main executable of interest is driven by the `monitor` package, which displays a 
-GUI for selecting and sending connecting to Machines, listening and connecting to Clients, 
-and for displaying Machine relevant information about JSON messages that pass through 
-from `OpiClient` to `OpiMachine` and back again. Specific GUI scenes for each machine
-are found in their class definitions.
+GUI written with javaFX for selecting and connecting to Machines, 
+listening to Clients, and for displaying Machine relevant information about JSON 
+messages that pass through from Client to Machine and back again. 
+Specific GUI `Scenes` for each machine
+are specified as FXML documents in the core/resources folder and
+their class definitions (subclasses of `OpiMachine`) act as 
+fx:controllers for the associated document.
+
+                                  +---------+
+                                  | Monitor |
+                   +--------------+---------+--------------+
+                   |                                       |
+                   |                      +------------+   |
+                   |  +----------+        | OPIMachine |   |
+                   |  |   GUI    |      +-+------------+-+ |
+                   |  |  fx:...  |      |                | |
+                   |  +----------+      |  +----------+  | |
+                   |                    |  |  Socket  |<-------> Machine
+                   |                    |  +----------+  | |
+                   |  +-------------+   |                | |
+         Client <---->| OpiListener |   |  fx:controller |<- - - - - - core/resources/*.fxml
+                   |  +-------------+   +----------------+ |
+                   |                                       |   
+                   +---------------------------------------+
+     
 
 ### Core
 The classes in the `core` module specify machines, the protocol and GUI for each machine, 
@@ -90,7 +91,7 @@ This repo implements the left hand box in this JOVP machine diagram.
 
 <pre>
 
-                              JOVP Machine
+                            A JOVP Machine
            +-------------------------------------------------+
            |                     Physical Device             |
            |                     (eg PicoVR, imoVifa, ...)   |
@@ -126,9 +127,6 @@ under the Apache 2.0 license. Please read the license information in the attache
 * Modularise OpiMachine.process() so Enum, Double and List are all handled consistently.
 * Add contrast, spatial frequency and defocus @Parameters to Imo.present()
 
-* Remove?? static Gson gson from OpiManager
-* Remove CSWriter and just use CSListener
-* Remove sendWriter and receiveWriter from CSListener
 * Add GUI elements somehow...
 
 * Far future: incorporate O900 and Compass into this framework

@@ -1,12 +1,18 @@
 package org.lei.opi.core;
 
+import org.lei.opi.core.OpiListener.Packet;
+
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.InetAddress;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,7 +23,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
-import org.lei.opi.core.OpiClient.Command;
+import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 import org.reflections.Reflections;
@@ -40,7 +46,7 @@ import javafx.scene.Scene;
  *
  * @since 0.0.1
  */
-public abstract class OpiMachine extends Listener {
+public abstract class OpiMachine {
 
     /** {@value BAD_COMMAND} */
     static final String BAD_COMMAND = "Cannot find command '%s' in %s.";
@@ -64,14 +70,18 @@ public abstract class OpiMachine extends Listener {
     static final String OUT_OF_RANGE = "Parameter '%s' in function '%s' of '%s' is not in range [%s, %s]. It is %s.";
     /** {@value NOT_INITIALIZED} */
     static final String NOT_INITIALIZED = "OPI machine has not yet been initialized";
+    /** {@value COULD_NOT_INITIALIZE} */
+    static final String COULD_NOT_INITIALIZE = "Could not send initialize to the Machine";
     /** {@value COULD_NOT_QUERY} */
     static final String COULD_NOT_QUERY = "Could not query the OPI machine";
     /** {@value COULD_NOT_SETUP} */
-    static final String COULD_NOT_SETUP = "Could not setup the background and fixation target on the OPI machine";
+    static final String COULD_NOT_SETUP = "Could not setup the background and fixation target on the Machine";
     /** {@value COULD_NOT_PRESENT} */
-    static final String COULD_NOT_PRESENT = "Could not present on the OPI machine";
+    static final String COULD_NOT_PRESENT = "Could not present on the Machine";
+    /** {@value COULD_NOT_PRESENT} */
+    static final String COULD_NOT_CLOSE = "Could not close the Machine";
     /** {@value COULD_NOT_DISCONNECT} */
-    static final String COULD_NOT_DISCONNECT = "Could not disconnect from OPI machine";
+    static final String COULD_NOT_DISCONNECT = "Could not disconnect from Machine";
     /** {@value OPI_SETUP_FAILED} */
     static final String OPI_SETUP_FAILED = "Failed to complete opiSetup. ";
     /** {@value OPI_PRESENT_FAILED} */
@@ -79,7 +89,7 @@ public abstract class OpiMachine extends Listener {
     /** {@value CONNECTED_TO_HOST} */
     static final String CONNECTED_TO_HOST = "\"Connected to host at %s:%s\"";
     /** {@value DISCONNECTED_FROM_HOST} */
-    static final String DISCONNECTED_FROM_HOST = "\"Disconnected from OPI machine\"";
+    static final String DISCONNECTED_FROM_HOST = "\"Disconnected from Machine\"";
   
     /** {@value SETTINGS_FILE} located in System.getProperty("user.dir") */
     static final String SETTINGS_FILE = "opi_settings.json";
@@ -89,7 +99,13 @@ public abstract class OpiMachine extends Listener {
     /** {@value GUI_MACHINE_NAME} */
     public static final String GUI_MACHINE_NAME = "this";
   
+    /** Scene to which we will return when this object is junked */
     protected Scene parentScene;  // return here when btnClose is clicked on our GUI
+
+    /** Connection to the real machine */
+    protected Socket socket;  // return here when btnClose is clicked on our GUI
+    protected BufferedReader incoming;
+    protected BufferedWriter outgoing;
   
     /** 
      * The beginnings of machine specific settings. 
@@ -103,7 +119,7 @@ public abstract class OpiMachine extends Listener {
      }
     */
     protected static class Settings {
-      public InetAddress ip;
+      public String ip;
       public int port;
     };
     public abstract Settings getSettings();
@@ -180,14 +196,13 @@ public abstract class OpiMachine extends Listener {
      */
     protected record MethodData(Method method, Parameter[] parameters) {};
   
-          /** The methods of the OpiMachine */
-      protected HashMap<String, MethodData> opiMethods;
-    /** Enum class : enum values defined in the implementing class */
+        /** The methods of the OpiMachine */
+    protected HashMap<String, MethodData> opiMethods;
+        /** Enum class : enum values defined in the implementing class */
     protected HashMap<String, List<String>> enums; 
   
     /**
      * Set the information about the 5 OPI methods in opiMethods
-     * It is assumed this is called automatically by a subclass.
      * 
      * @param parentScene the parent Scene to which the GUI will return when this machine is closed.
      *
@@ -198,9 +213,10 @@ public abstract class OpiMachine extends Listener {
      */
     public OpiMachine(Scene parentScene) {
         this.parentScene = parentScene;
+        this.socket = null;
       
         // Select the OPI commands which must also be the method names in the implementing class.
-        String[] commands = Arrays.stream(OpiClient.Command.values())
+        String[] commands = Arrays.stream(OpiListener.Command.values())
           .map(Enum::name).map(String::toLowerCase).toArray(String[]::new);
       
         Method[] methods = Arrays.stream(this.getClass().getMethods())
@@ -221,6 +237,55 @@ public abstract class OpiMachine extends Listener {
           enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast)
             .map(c -> c.name().toLowerCase()).toList());
     }
+
+    /*
+     * Establish socket connection to ip:port.
+     * @param ip String TCP/IP address
+     * @param port integer TCP/IP port number
+     * @return true if successful false otherwise
+     */
+    public boolean connect(String ip, int port) {
+        try {
+            this.socket = new Socket(ip, port);
+            this.incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF8"));
+            this.outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
+        } catch (IOException e) {
+            System.out.println(e.getStackTrace());
+            return false;
+        }
+        return true;
+    }
+      
+    /**
+     * Send JSON message to socket
+     * @param message The message to send
+     * @throws IOException If socket cannot be accessed
+     * @since 0.2.0
+     */
+    void send(String message) throws IOException {
+        outgoing.write(message);
+    }
+     
+    /**
+    * Receive \n terminated JSON message from monitor
+    * @return The message received
+    * @throws IOException If socket cannot be accessed
+    * @since 0.2.0
+    */
+    String receive() throws IOException {
+        return incoming.readLine();
+    }
+     
+    /**
+    * Close socket
+    * @throws IOException If client cannot be closed
+    * @since 0.2.0
+    */
+    void closeSocket() throws IOException {
+        incoming.close();
+        outgoing.close();
+        socket.close();
+    }
   
     /**
      * Map the 'command' to a function, check it has the right parameters, and the call it
@@ -235,9 +300,9 @@ public abstract class OpiMachine extends Listener {
             // Parse JSON to hashmap with pairs of name:values
         HashMap<String, Object> pairs;
         try {
-            pairs = Listener.jsonToPairs(jsonStr);
+            pairs = OpiListener.jsonToPairs(jsonStr);
         }  catch (JsonSyntaxException e) {
-            return error(BAD_JSON, e);
+            return OpiListener.error(OpiListener.BAD_JSON, e);
         }
         return this.processPairs(pairs);
     }
@@ -262,24 +327,24 @@ public abstract class OpiMachine extends Listener {
         String funcName = (String) pairs.get("command");
         MethodData methodData = opiMethods.get(funcName);
         if (methodData == null)
-          return OpiClient.error(String.format(BAD_COMMAND, funcName, this.getClass()));
+          return OpiListener.error(String.format(BAD_COMMAND, funcName, this.getClass()));
         // (2) Check params
         if (methodData.parameters != null)
           for (Parameter param : methodData.parameters) {
             // mandatory parameter not received
             if (!pairs.containsKey(param.name()) && !param.optional())
-              return OpiClient.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
+              return OpiListener.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
             if (!pairs.containsKey(param.name()) && param.optional()) continue;
             Object valueObj = pairs.get(param.name());
             // check lists and list of lists
             if ((param.isListList() || param.isList()) && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
-              return OpiClient.error(String.format(NOT_LIST, param.name(), funcName, this.getClass()));
+              return OpiListener.error(String.format(NOT_LIST, param.name(), funcName, this.getClass()));
             if (!(param.isListList() || param.isList()) && (valueObj instanceof ArrayList))
-              return OpiClient.error(String.format(YES_LIST, param.name(), funcName, this.getClass()));
+              return OpiListener.error(String.format(YES_LIST, param.name(), funcName, this.getClass()));
             // if list is actually made of lists, need to make them into a single list of values
             if (param.isListList() &&
                 ((ArrayList<?>) valueObj).stream().anyMatch(val -> !(val instanceof ArrayList) || ((ArrayList<?>) val).size() == 0))
-              return OpiClient.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
+              return OpiListener.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
             // recast
             List<Object> pList;
             if (param.isListList())
@@ -295,7 +360,7 @@ public abstract class OpiMachine extends Listener {
                   .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
                   .findAny();
               if (result.isPresent())
-                return OpiClient.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
+                return OpiListener.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
             } else if (param.className().getSimpleName().equals("Double")) { // validate doubles
               try {
                 double minVal = Math.round(1e10 * param.min()) / 1e10; // avoid weird rounding problems
@@ -305,14 +370,14 @@ public abstract class OpiMachine extends Listener {
                     .filter((Object v) -> ((Double) v).doubleValue() < minVal || ((Double) v).doubleValue() > maxVal)
                     .findAny();
                 if (result.isPresent())
-                  return OpiClient.error(String.format(OUT_OF_RANGE, param.name(), funcName, this.getClass(), minVal, maxVal, result.get()));
+                  return OpiListener.error(String.format(OUT_OF_RANGE, param.name(), funcName, this.getClass(), minVal, maxVal, result.get()));
               } catch (ClassCastException e) {
-                return OpiClient.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
+                return OpiListener.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
               }
             } else { // assume param is a String, then validate
               Optional<Object> result = pList.stream().filter(v -> !(v instanceof String)).findAny();
               if (result.isPresent())
-                return OpiClient.error(String.format(NOT_A_STRING, param.name(), funcName, this.getClass()));
+                return OpiListener.error(String.format(NOT_A_STRING, param.name(), funcName, this.getClass()));
             }
           }
         // (3) execute method
@@ -322,7 +387,7 @@ public abstract class OpiMachine extends Listener {
               ? (Packet) methodData.method.invoke(this)
               : (Packet) methodData.method.invoke(this, pairs);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          return OpiClient.error(String.format(INVOCATION_FAILED, funcName, this.getClass()), e);
+          return OpiListener.error(String.format(INVOCATION_FAILED, funcName, this.getClass()), e);
         }
         return result;
     };
@@ -411,5 +476,4 @@ public abstract class OpiMachine extends Listener {
     protected String toJson(Command command) {
       return new StringBuilder("{\n  \"command\": ").append(command).append("\n}").toString();
     }
-
 }

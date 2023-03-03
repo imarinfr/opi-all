@@ -1,9 +1,12 @@
 package org.lei.opi.core;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.lei.opi.core.OpiClient.Command;
+import org.lei.opi.core.OpiListener.Packet;
+import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -18,11 +21,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.event.ActionEvent;
 import javafx.stage.Stage;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.scene.chart.ScatterChart;
-import javafx.fxml.FXMLLoader;
 
 /**
  * JOVP client - will send messages to JOVP server...
@@ -57,41 +58,47 @@ public static class Settings extends OpiMachine.Settings {
         this.parentScene = parentScene;
        
         if (parentScene != null)
-            this.connect(settings.port, settings.ip);
+            if (!this.connect(settings.ip, settings.port))
+              System.out.println(String.format("Cannnot connect to %s:%s", settings.ip, settings.port));
         //listCommands = new ListView<String>(writer.messageRecord);  // GUI element
     }
 
-  /**
-   * opiInitialise: initialize OPI
-   * 
-   * @param args A map of name:value pairs for Params
-   * 
-   * @return A JSON object with machine specific initialise information
-   * 
-   * @since 0.0.1
-   */
-  public Packet initialize(HashMap<String, Object> args) {
-    this.send(initConfiguration());
-    return new Packet(this.receive());
-  };
-
-  /**
-   * opiQuery: Query device
-   * 
-   * @return settings and state machine state
-   *
-   * @since 0.0.1
-   */
-  //TODO should have @returnmsg annotator?
-  public Packet query() {
-    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
-    try {
-      this.send(toJson(Command.QUERY));
-      return new Packet(this.receive());
-    } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiClient.error(COULD_NOT_QUERY);
+    /**
+    * opiInitialise: initialize OPI
+    * 
+    * @param args A map of name:value pairs for Params
+    * 
+    * @return A JSON object with machine specific initialise information
+    * 
+    * @since 0.0.1
+    */
+    //TODO should have @returnmsg annotator?
+    public Packet initialize(HashMap<String, Object> args) {
+        try {
+            this.send(initConfiguration());
+            return new Packet(this.receive());
+        } catch (IOException e) {
+            return OpiListener.error(COULD_NOT_INITIALIZE, e);
+        }
     }
-  };
+
+    /**
+     * opiQuery: Query device
+     * 
+     * @return settings and state machine state
+     *
+     * @since 0.0.1
+     */
+    //TODO should have @returnmsg annotator?
+    public Packet query() {
+        if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+        try {
+            this.send(toJson(Command.QUERY));
+            return new Packet(this.receive());
+        } catch (ClassCastException | IllegalArgumentException | IOException e) {
+            return OpiListener.error(COULD_NOT_QUERY, e);
+        }
+    };
 
   /**
    * opiSetup: Change device background and overall settings
@@ -115,12 +122,14 @@ public static class Settings extends OpiMachine.Settings {
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
   public Packet setup(HashMap<String, Object> args) {
-    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
+    if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     try {
       this.send(Setup.create1(args).toJson());
       return new Packet(this.receive());
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiClient.error(COULD_NOT_SETUP);
+      return OpiListener.error(COULD_NOT_SETUP, e);
+    } catch (IOException e) {
+      return OpiListener.error(COULD_NOT_SETUP, e);
     }
   }
 
@@ -156,12 +165,14 @@ public static class Settings extends OpiMachine.Settings {
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
   @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
   public Packet present(HashMap<String, Object> args) {
-    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
+    if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     try {
       this.send(Present.process(args).toJson());
       return new Packet(this.receive());
     } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
-      return OpiClient.error(COULD_NOT_PRESENT, e);
+      return OpiListener.error(COULD_NOT_PRESENT, e);
+    } catch (IOException e) {
+      return OpiListener.error(COULD_NOT_PRESENT, e);
     }
   }
 
@@ -174,12 +185,16 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  public Packet close() {
-    if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
-    this.send(toJson(Command.CLOSE));
-    this.receive(); // message ignored
-    this.closeListener();
-    return OpiClient.ok(DISCONNECTED_FROM_HOST, true);
+    public Packet close() {
+        if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+        try {
+            this.send(toJson(Command.CLOSE));
+            this.receive(); // message ignored
+            this.closeSocket();
+        } catch (IOException e) {
+            return OpiListener.error(COULD_NOT_CLOSE, e);
+        }
+        return OpiListener.ok(DISCONNECTED_FROM_HOST, true);
   }
 
   /** Initialize command with */

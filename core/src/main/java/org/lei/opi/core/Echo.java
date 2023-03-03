@@ -2,17 +2,20 @@ package org.lei.opi.core;
 
 /* 
  * A simple machine that just echos commands coming in from the client.
+ * It does not establish a connection to any Machine.
+ *
  * @since 0.2.0
  */
 import java.util.HashMap;
-
+import org.lei.opi.core.OpiListener.Packet;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.event.ActionEvent;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Button;
+import javafx.stage.Stage;
+import javafx.scene.Node;
 
 public class Echo extends OpiMachine {
  
@@ -28,9 +31,6 @@ public class Echo extends OpiMachine {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
         this.parentScene = parentScene;
-
-        if (parentScene != null) 
-            this.connect(settings.port, Listener.obtainPublicAddress());
     }
   
     /**
@@ -44,7 +44,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-      return OpiClient.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return OpiListener.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
     };
   
     /**
@@ -54,7 +54,7 @@ public class Echo extends OpiMachine {
      */
     public Packet query() { 
         this.textArea.appendText("Query:\n\tNothing to report.\n");
-        return OpiClient.ok("Query: Nothing to report"); 
+        return OpiListener.ok("Query: Nothing to report"); 
     }
   
     /**
@@ -68,10 +68,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        if (!this.listening) 
-            return OpiClient.error(NOT_INITIALIZED);
-
-        return OpiClient.ok(OpiMachine.gson.toJson(args));
+        return OpiListener.ok(OpiListener.gson.toJson(args));
     }
   
     /**
@@ -85,8 +82,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        if (!this.listening) return OpiClient.error(NOT_INITIALIZED);
-        return OpiClient.ok(OpiMachine.gson.toJson(args));
+        return OpiListener.ok(OpiListener.gson.toJson(args));
     }
   
     /**
@@ -97,12 +93,10 @@ public class Echo extends OpiMachine {
      */
     public Packet close() {
         this.textArea.appendText("Close:\n");
-        this.closeListener();
-        return OpiClient.ok("Got OPI_CLOSE so closing connection.", true);
+        return OpiListener.ok("Got OPI_CLOSE so closing connection.", true);
     };
 
 // --------------- FXML after here ----------------------------------- 
-
 
     @FXML
     private Button btnReturnToMain;
@@ -114,12 +108,6 @@ public class Echo extends OpiMachine {
     private TextField fieldLocalHost;
 
     @FXML
-    private TextField fieldClientPort;
-
-    @FXML
-    private Label labelMessages;
-
-    @FXML
     private TextArea textArea;
 
     /*
@@ -127,19 +115,21 @@ public class Echo extends OpiMachine {
      */
     @FXML
     void actionBtnReturnToMain(ActionEvent event) {
-        System.out.println("Returning to Main!");
+        final Node source = (Node) event.getSource();
+        final Stage stage = (Stage) source.getScene().getWindow();
+
+        stage.setScene(this.parentScene);
+        stage.show();
     }
 
     @FXML
     void initialize() {
         assert btnReturnToMain != null : "fx:id=\"btnReturnToMain\" was not injected: check your FXML file 'Echo.fxml'.";
-        assert fieldClientPort != null : "fx:id=\"fieldClientPort\" was not injected: check your FXML file 'Echo.fxml'.";
         assert fieldEchoPort != null : "fx:id=\"fieldEchoPort\" was not injected: check your FXML file 'Echo.fxml'.";
         assert fieldLocalHost != null : "fx:id=\"fieldLocalHost\" was not injected: check your FXML file 'Echo.fxml'.";
-        assert labelMessages != null : "fx:id=\"labelMessages\" was not injected: check your FXML file 'Echo.fxml'.";
         assert textArea != null : "fx:id=\"textArea\" was not injected: check your FXML file 'Echo.fxml'.";
         
-        fieldLocalHost.setText(Listener.obtainPublicAddress().toString());
+        fieldLocalHost.setText(OpiListener.obtainPublicAddress().getHostAddress());
         fieldEchoPort.setText("" + settings.port);
         textArea.appendText("Connected and awaiting commands.");
     }

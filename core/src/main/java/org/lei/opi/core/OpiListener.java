@@ -13,31 +13,63 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 /**
  *
- * Sender and Receiver on socket with Listener thread and a MessageProcessor object to help out.
+ * An instance of this runs a ServerSocket in a separate thread that applies 
+ * this.process() to any incoming messages. It assumes that the messages are 
+ * JSON objects that at least contain a name:value pair "command":"x" where
+ * x is one of the 5 OPI commands. If the JSON string does match this pattern
+ * it is parsed into name:value pairs and these are passed onto 
+ * this.machine.processPairs().
  *
  * @since 0.2.0
  */
-public abstract class Listener extends Thread {
+public class OpiListener extends Thread {
 
+  /**
+   * Command. In JSON files they will appear as:
+   *    name:value pair where name == "command"
+   *
+   * @since 0.0.1
+   */
+    public enum Command {
+      /** Query device constants */
+      QUERY,
+      /** Setup OPI */
+      SETUP,
+      /** Initialize OPI connection */
+      INITIALIZE,
+      /** Present OPI static, kinetic, or temporal stimulus */
+      PRESENT,
+      /** Close OPI connection */
+      CLOSE
+    }
+  
+    /** For exception messages: {@value NO_COMMAND_FIELD} */
+    public static final String NO_COMMAND_FIELD = "Json message does not contain field 'command'.";
+    /** For exception messages: {@value BAD_COMMAND_FIELD} {@link Command} */
+    public static final String BAD_COMMAND_FIELD = "value of 'command' name in Json message is not one of Command'.";
+    /** For exception messages: {@value NO_OPI_MACHINE} */
+    public static final String NO_OPI_MACHINE = "null OpiMachine passed to OpiClient.";
     /** Charset is {@value CHARSET_NAME} */
     private static final String CHARSET_NAME = "UTF8";
     /** {@value LISTENER_FAILED} */
-    private static final String LISTENER_FAILED = "CSListener failed.";
+    private static final String LISTENER_FAILED = "Listener failed.";
     /** {@value CHECK_FAILED} */
     private static final String CHECK_FAILED = "Cannot check if socket is empty.";
     /** {@value RECEIVE_FAILED} */
-    private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in CSListener.";
+    private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in Listener.";
     /** {@value SEND_FAILED} */
-    private static final String SEND_FAILED = "Cannot write send() message to sendWriter in CSListener.";
+    private static final String SEND_FAILED = "Cannot write send() message to sendWriter in Listener.";
     /** {@value CLOSE_FAILED} */
     private static final String CLOSE_FAILED = "Cannot close the socket.";
     /** {@value CLOSE_FAILED} */
@@ -49,49 +81,6 @@ public abstract class Listener extends Thread {
     public static String ERROR_YES = "\"error\" : 1";
     /** name:value pair in JSON output if there is not an error */
     private static String ERROR_NO = "\"error\" : 0";
-   
-    /** Connection address */
-    private InetAddress address;
-    /** Connection port */
-    private int port;
-    /** Socket server */
-    private ServerSocket server;
-        /** Reader for incoming messages on the socket */
-    BufferedReader incoming;
-        /** Writer for outgoing messages to the socket */
-    BufferedWriter outgoing;
-    /** If not null, add the messages processed by {@link send} to {@link sendWriter} */
-    Writer sendWriter = null;
-    /** If not null, add the messages procesed by {@link receive} to {@link receiveBuffer} */
-    Writer receiveWriter = null;
-    /** Whether it is listening */
-    protected boolean listening;
-
-    /** to parse JSONs with fromJson method */
-    protected static Gson gson = new Gson();
-    /** Given a JSON string, return name:value pairs */
-    public static HashMap<String, Object> jsonToPairs(String jsonStr) throws JsonSyntaxException {
-        return gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
-    }
-
-    public Listener() { 
-        this.listening = false; 
-    }
-
-    /**
-     * Constructs a CSListener for a local port
-     * 
-     * @param port      port on which to listen
-     * @param idAddress ipAddress in which to listen
-     * 
-     * @since 0.1.0
-     */
-    public void connect(int port, InetAddress ipAddress) {
-        this.port = port;
-        this.address = ipAddress; // ();
-        this.listening = true;
-        this.start(); // kick off this thread
-    }
 
     /**
      * A class to hold string messages with attributes attached.
@@ -113,14 +102,86 @@ public abstract class Listener extends Thread {
         /** Simple constructor 3 */
         public Packet(boolean error, boolean close, String msg) { this.close = close ; this.msg = msg; this.error = error;}
     }
+   
+    /** to parse JSONs with fromJson method */
+    public static Gson gson = new Gson();
+    /** Given a JSON string, return name:value pairs */
+    public static HashMap<String, Object> jsonToPairs(String jsonStr) throws JsonSyntaxException {
+        return gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
+    }
 
-    /** 
-    * Process incoming strings from the socket.
-    * 
-    * @param incomingString
-    * @return String reply to send back on socket, or null to close socket.
-    */
-    public abstract Packet process(String incomingString);
+    /** Connection address */
+    private InetAddress address;
+    /** Connection port */
+    protected int port;
+    /** Socket server */
+    private ServerSocket server;
+        /** Reader for incoming messages on the socket */
+    BufferedReader incoming;
+        /** Writer for outgoing messages to the socket */
+    BufferedWriter outgoing;
+    /** If not null, add the messages processed by {@link send} to {@link sendWriter} */
+    Writer sendWriter = null;
+    /** If not null, add the messages procesed by {@link receive} to {@link receiveBuffer} */
+    Writer receiveWriter = null;
+    /** Whether it is listening */
+    protected boolean listening;
+    /** The OpiMachine object that commands will be passed to */
+    private OpiMachine machine;
+
+    /**
+     * Start the OPI manager with an opiMachine that is already chosen/constructed
+     *
+     * @since 0.2.0
+     */
+    public OpiListener(int port, OpiMachine machine) {
+        this.machine = machine; 
+        this.port = port; 
+        this.address = obtainPublicAddress(); // run on localhost
+        this.listening = true;
+        this.start(); // kick off this thread
+    }
+  
+    /**
+     * Process incoming Json commands. If it is a 'choose' command, then
+     * set the private field machine to a new instance of that machine.
+     * If it is another command, then process it using the machine object.
+     *
+     * @param jsonStr A JSON object that at least contains the name 'command'.
+     * 
+     * @return JSON-formatted message with feedback
+     * 
+     * @since 0.1.0
+     */
+      public Packet process(String jsonStr) {
+              // Parse JSON to hashmap with pairs of name:values
+          HashMap<String, Object> pairs;
+          try {
+              pairs = jsonToPairs(jsonStr);
+          }  catch (JsonSyntaxException e) {
+              return error(BAD_JSON, e);
+          }
+   
+              // Get command
+          if (!pairs.containsKey("command")) // needs a command
+              return error(NO_COMMAND_FIELD);
+          String cmd;
+          try {
+              cmd = (String) pairs.get("command");
+          } catch (ClassCastException e) {
+              return error(BAD_COMMAND_FIELD);
+          }
+   
+              // Check it is a valid command
+          if (!Stream.of(Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
+              return error(BAD_COMMAND_FIELD);
+   
+          if (machine != null)
+              return this.machine.processPairs(pairs);
+          else
+              return error(NO_OPI_MACHINE);
+      }
+
 
     /** 
      * Run a socket server that applies process() to every incoming message, 
@@ -133,7 +194,7 @@ public abstract class Listener extends Thread {
     public void run() {
       Socket socket;
       try {
-          server = new ServerSocket(port, 0, address);
+          server = new ServerSocket(this.port, 0, this.address);
           server.setSoTimeout(100);
           while (this.listening) {
             try {
@@ -151,6 +212,7 @@ public abstract class Listener extends Thread {
             } catch (SocketTimeoutException ignored) {}
           }
           server.close();
+          this.listening = false;
       } catch (IOException e) {
           throw new RuntimeException(LISTENER_FAILED, e);
       }
@@ -222,6 +284,9 @@ public abstract class Listener extends Thread {
      * @since 0.0.1
      */
     public void closeListener() {
+      if (!this.listening)
+        return;
+
       this.listening = false;
       synchronized (this) {
         try {

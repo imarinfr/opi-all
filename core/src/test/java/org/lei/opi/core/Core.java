@@ -10,7 +10,7 @@ import java.io.IOException;
   class Core {
 
   /** listener for OpiJovp */
-  private static Listener monitor;
+  private static OpiListener monitor;
 
   /**
    * Initialize the monitor
@@ -22,7 +22,7 @@ import java.io.IOException;
    * @since 0.0.1
    */
   Core(int port) throws IOException {
-    monitor = new OpiClient(port);
+    monitor = new OpiListener(port, null);
   }
 
   /**

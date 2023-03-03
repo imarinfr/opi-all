@@ -23,11 +23,9 @@ public class JovpServerConnectionTests {
    */
   @Test
   public void getIDAndPort() {
-    Jovp server = new Jovp(null);
-
-    server.connect(50002, Jovp.obtainPublicAddress());
+    OpiJovp server = new OpiJovp(50002);
     System.out.println("[getIDAndPort] " + server);
-     server.close();
+    server.closeListener();
   }
 
   /**
@@ -38,14 +36,12 @@ public class JovpServerConnectionTests {
    */
   @Test
   public void changeLocalPort() {
-    Jovp monitor = new Jovp(null);
-    monitor.connect(50003, Jovp.obtainPublicAddress());
-    System.out.println("[changeLocalPort] Address was at " + monitor);
-    monitor.close();
-    monitor = new Jovp(null);
-    monitor.connect(50008, Jovp.obtainPublicAddress());
-    System.out.println("[changeLocalPort] Address is at " + monitor);
-    monitor.close();
+    OpiJovp server = new OpiJovp(50003);
+    System.out.println("[changeLocalPort] Address was at " + server);
+    server.closeListener();
+    server = new OpiJovp(50008);
+    System.out.println("[changeLocalPort] Address is at " + server);
+    server.closeListener();
   }
 
   /**
@@ -58,5 +54,4 @@ public class JovpServerConnectionTests {
   public void listUsbControllers() {
     System.out.println(Arrays.toString(Controller.getSuitableControllers()));
   }
-
 }

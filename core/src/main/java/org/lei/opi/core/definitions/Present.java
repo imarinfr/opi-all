@@ -9,7 +9,7 @@ import static org.lei.opi.core.definitions.JsonProcessor.colorValues;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.lei.opi.core.OpiClient.Command;
+import org.lei.opi.core.OpiListener.Command;
 
 import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.ModelType;

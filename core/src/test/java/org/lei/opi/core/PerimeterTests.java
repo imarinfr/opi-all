@@ -159,7 +159,6 @@ public class PerimeterTests {
   private void sendAndReceive(String message) throws IOException {
     System.out.println("R SENDS\n" + message);
     r.send(message);
-    while (r.empty()) Thread.onSpinWait();
     System.out.println("R RECEIVES\n" + r.receive());
   }
 

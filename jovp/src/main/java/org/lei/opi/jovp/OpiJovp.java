@@ -4,8 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
-import org.lei.opi.core.Listener;
-import org.lei.opi.core.OpiClient;
+import org.lei.opi.core.OpiListener;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.Query;
 import org.lei.opi.core.definitions.Response;
@@ -20,10 +19,12 @@ import es.optocom.jovp.definitions.ViewMode;
 
 /**
  * The OPI JOVP server.
+ * Makes use of the OpiListener to get a SocketServer thread, but does not give it an OpiMachine, 
+ * instead overriding the process() method here to not make use of an OpiMachine.
  *
  * @since 0.0.1
  */
-public class OpiJovp extends Listener {
+public class OpiJovp extends OpiListener {
 
   /** Machine state */
   protected enum State {INIT, SETUP, PRESENT, CLOSE};
@@ -55,6 +56,10 @@ public class OpiJovp extends Listener {
   protected Response response = null;
   /** Whether opiInitialized has been invoked and not closed later on by opiClose */
   protected State state;
+
+  public OpiJovp(int port) { 
+    super(port, null);   // do not give a machine to the OpiListner as we overide the process() method here and the machine is not needed.
+  } 
 
     /**
      * Run the psychoEngine. Needs to be started from the main thread
@@ -103,23 +108,24 @@ public class OpiJovp extends Listener {
    * 
    * @since 0.1.0
    */
+    @Override
     public Packet process(String jsonStr) {
         HashMap<String, Object> pairs;
         try {
-            pairs = Listener.jsonToPairs(jsonStr);
+            pairs = OpiListener.jsonToPairs(jsonStr);
         } catch (JsonSyntaxException e) {
             return error(prefix + BAD_JSON, e);
         }
 
         if (!pairs.containsKey("command")) // needs a command
-            return error(prefix + OpiClient.NO_COMMAND_FIELD);
+            return error(prefix + OpiListener.NO_COMMAND_FIELD);
         String cmd = pairs.get("command").toString();
 
         // check it is a valid command from Command.*
-        if (!Stream.of(OpiClient.Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
-            return error(prefix + OpiClient.BAD_COMMAND_FIELD);
+        if (!Stream.of(OpiListener.Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
+            return error(prefix + OpiListener.BAD_COMMAND_FIELD);
 
-        return switch (OpiClient.Command.valueOf(cmd.toUpperCase())) {
+        return switch (OpiListener.Command.valueOf(cmd.toUpperCase())) {
             case INITIALIZE -> initialize(pairs);
             case QUERY -> query();
             case SETUP -> setup(pairs);
@@ -216,8 +222,7 @@ public class OpiJovp extends Listener {
     // args[0] = port number
     public static void main(String args[]) {
         try {
-            OpiJovp opiJovp = new OpiJovp();
-            opiJovp.connect(Integer.parseInt(args[0]), Listener.obtainPublicAddress());  // start on localhost
+            OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]) );
             System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
            
             opiJovp.startPsychoEngine(); // TODO I suspect that this will take over and no messages will be processed, but let's see

@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.jovp.Configuration.Machine;
-import org.lei.opi.core.OpiClient;
+import org.lei.opi.core.OpiListener;
 
 /**
  *
@@ -20,7 +20,7 @@ public class RToMonitorToOutsideMachine {
   /** The OPI monitor */
   private Core monitor;
   /** The R client */
-  private OpiClient r;
+  private OpiListener r;
 
   /** OPI_CHOOSE command */
   private String chooseJson;
@@ -48,7 +48,7 @@ public class RToMonitorToOutsideMachine {
   private void setupConnections(Machine machine) {
     try {
       monitor = new Core(MONITOR_PORT); // then setup monitor
-      r = new OpiClient(monitor.getPort()); // finally setup R client
+      r = new OpiListener(monitor.getPort(), null); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
