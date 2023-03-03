@@ -27,13 +27,13 @@ if (exists(".opi_env") && !exists("PhoneHMD", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param ip IP Address of the OPI machine.
-#' @param port TCP port of the OPI machine.
+#' @param ip IP Address of the OPI Monitor.
+#' @param port TCP port of the OPI Monitor.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error Error code '0' if all good, '1' something wrong.
+#'    - res$error Error code '0' if all good, something else otherwise.
 #'    - res$msg The success or error message.
 #'
 #' @examples
@@ -43,13 +43,10 @@ if (exists(".opi_env") && !exists("PhoneHMD", where = .opi_env))
 #' @seealso [opiInitialise()]
 #'
 opiInitialise_for_PhoneHMD <- function(ip = NULL, port = NULL) {
-    assign("socket", open_socket(ip, port), .opi_env$PhoneHMD)
-
-    msg <- list(command = "choose", machine = "PhoneHMD")
-    msg <- rjson::toJSON(msg)
-    writeLines(msg, .opi_env$Jovp$socket)
-    res <- readLines(.opi_env$Jovp$socket, n = 1)
-    res <- rjson::fromJSON(res)
+    if (!exists("socket", where = .opi_env$PhoneHMD))
+        assign("socket", open_socket(ip, port), .opi_env$PhoneHMD)
+    else
+        return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
     msg <- list(ip = ip, port = port)
     msg <- c(list(command = "initialize"), msg)
@@ -74,7 +71,7 @@ opiInitialise_for_PhoneHMD <- function(ip = NULL, port = NULL) {
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, '1' if error.
+#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or a structure with the following data.
 #'
 #' @examples
@@ -84,8 +81,8 @@ opiInitialise_for_PhoneHMD <- function(ip = NULL, port = NULL) {
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_PhoneHMD <- function() {
-if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
+        return(list(error = 2, msg = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
 
     msg <- list()
     msg <- c(list(command = "query"), msg)
@@ -137,7 +134,7 @@ if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %i
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, '1' if error.
+#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or a structure with the result of QUERY OPI
 #'                 command.
 #'
@@ -153,8 +150,8 @@ if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %i
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_PhoneHMD <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixLum = NULL, fixCol = NULL, fixCx = NULL, fixCy = NULL, fixSx = NULL, fixSy = NULL, fixRotation = NULL, tracking = NULL, eye = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixLum = NULL, fixCol = NULL, fixCx = NULL, fixCy = NULL, fixSx = NULL, fixSy = NULL, fixRotation = NULL, tracking = NULL)) {
-if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
+        return(list(error = 2, msg = "Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?."))
 
     msg <- list(eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCol = settings$fixCol, fixCx = settings$fixCx, fixCy = settings$fixCy, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, tracking = settings$tracking, eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCol = settings$fixCol, fixCx = settings$fixCx, fixCy = settings$fixCy, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, tracking = settings$tracking)
     msg <- c(list(command = "setup"), msg)
@@ -228,7 +225,7 @@ if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %i
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, '1' if error.
+#'    - res$error '0' if success, something else if error.
 #'    - res$msg Error message or a structure with the following fields.
 #'    - res$msg$seen '1' if seen, '0' if not.
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
@@ -252,8 +249,8 @@ if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %i
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_PhoneHMD <- function(stim = list(eye = NULL, shape = NULL, type = NULL, x = NULL, y = NULL, sx = NULL, sy = NULL, lum = NULL, color1 = NULL, color2 = NULL, rotation = NULL, contrast = NULL, phase = NULL, frequency = NULL, defocus = NULL, textRotation = NULL, t = NULL, w = NULL, eye = NULL, shape = NULL, type = NULL, x = NULL, y = NULL, sx = NULL, sy = NULL, lum = NULL, color1 = NULL, color2 = NULL, rotation = NULL, contrast = NULL, phase = NULL, frequency = NULL, defocus = NULL, textRotation = NULL, t = NULL, w = NULL)) {
-if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
-    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
+        return(list(error = 2, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
 
     msg <- list(eye = stim$eye, shape = stim$shape, type = stim$type, x = stim$x, y = stim$y, sx = stim$sx, sy = stim$sy, lum = stim$lum, color1 = stim$color1, color2 = stim$color2, rotation = stim$rotation, contrast = stim$contrast, phase = stim$phase, frequency = stim$frequency, defocus = stim$defocus, textRotation = stim$textRotation, t = stim$t, w = stim$w, eye = stim$eye, shape = stim$shape, type = stim$type, x = stim$x, y = stim$y, sx = stim$sx, sy = stim$sy, lum = stim$lum, color1 = stim$color1, color2 = stim$color2, rotation = stim$rotation, contrast = stim$contrast, phase = stim$phase, frequency = stim$frequency, defocus = stim$defocus, textRotation = stim$textRotation, t = stim$t, w = stim$w)
     msg <- c(list(command = "present"), msg)
@@ -278,7 +275,7 @@ if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %i
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, '1' if error.
+#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'
 #' @examples
@@ -288,8 +285,8 @@ if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %i
 #' @seealso [opiClose()]
 #'
 opiClose_for_PhoneHMD <- function() {
-if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
-    stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
+        return(list(error = 2, msg = "Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?."))
 
     msg <- list()
     msg <- c(list(command = "close"), msg)

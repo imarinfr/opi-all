@@ -48,10 +48,10 @@ public class OpiFunction {
     /**
     * @param machine Name of OPI machine.
     * @param opiName Name used in OPI standard and R code 
-    * @param opiCoreName Name used in this java pacakge (opi-core) 
+    * @param opiCoreName Name used in this java package (opi-core) 
     * @param opiInputFieldName Essential input field name in OPI Standard. Can be empty for no param in the OPI standard.
     * @param opiReturnTemplate A format string that is valid R with %s for places where return values should be plugged in. eg "list(err=%s")" 
-    * @param createSocket If true, look for Paramters ipOPI... and portOPI and create a socket for other functions to use.
+    * @param createSocket If true, look for Parameters ipOPI... and portOPI and create a socket for other functions to use.
     */
     public OpiFunction(OpiMachine machine, String opiName, String opiCoreName, String opiInputFieldName,
             String opiReturnTemplate, boolean createSocket) {
@@ -127,11 +127,13 @@ public class OpiFunction {
         return result;
     }
 
+    // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
         String prefix =  String.format("#' @param %s ",p.name());
         return prefix + wrapR(p.desc(), prefix.length(), false);
     };
 
+    // generate roxygen2 string for return value r
     private static Function<ReturnMsg, String> prettyReturn = (ReturnMsg r) -> {
         String prefix = r.name().contains(".") ?
             String.format("#'    - %s ",r.name().replaceAll("\\.", "\\$")) :
@@ -146,7 +148,6 @@ public class OpiFunction {
         String params = Stream.of(methodData.parameters)
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
-        System.out.println(params);
         String rets = "#' @return a list contianing:\n" + 
             Stream.of(methodData.returnMsgs)
             .map(prettyReturn)
@@ -253,25 +254,24 @@ public class OpiFunction {
             //     - sends the json on the socket
         String socketCode = "";
         if (createSocket) {
-            socketCode = String.format("    assign(\"socket\", open_socket(%s, %s), %s$%s)", parameterForIp, parameterForPort, opiEnvName, this.machineName);
-            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
-                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
-            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
-                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
-
             socketCode = String.format("""
-        %s
+                        if (!exists(\"socket\", where = %s$%s))
+                            assign(\"socket\", open_socket(%s, %s), %s$%s) 
+                        else
+                            return(list(error = 4, msg = \"Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R.\"))
+                    """,
+                    opiEnvName, this.machineName,                                  // if exists
+                    parameterForIp, parameterForPort, opiEnvName, this.machineName // assign
+                    );
 
-            msg <- list(command = "choose", machine = "%s")
-            msg <- rjson::toJSON(msg)
-            writeLines(msg, .opi_env$Jovp$socket)
-            res <- readLines(.opi_env$Jovp$socket, n = 1)
-            res <- rjson::fromJSON(res)
-                    """, socketCode, this.machineName);
+            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
+                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without parameter %s.", this.opiName, parameterForIp));
+            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
+                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without parameter %s.", this.opiName, parameterForPort));
         } else {
             socketCode = String.format("""
-                if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
-                    stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
+                    if(!exists("%s") || !exists("%s", envir = %s) || !(\"socket\" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
+                        return(list(error = 2, msg = \"Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.\"))
                 """, opiEnvName, 
                 this.machineName, opiEnvName,
                 opiEnvName, this.machineName, 

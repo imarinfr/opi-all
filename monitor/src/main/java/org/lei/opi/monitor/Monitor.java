@@ -87,7 +87,7 @@ public class Monitor extends Application {
         // IP and port of the monitor (myself) - this will be the address for the client to send commands.
     private String myIpAddress;
     private String myPort;
-    private OpiListener opiClient;
+    private OpiListener opiListener;
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private boolean myPortHasBeenEdited; // true if myIp or myPort have been edited since last change. 
@@ -271,7 +271,7 @@ public class Monitor extends Application {
         this.settingsHaveBeenEdited = false;
         this.myPortHasBeenEdited = false;
 
-        labelMessages.setText("Settings saved for " + this.currentMachineChoice + "and My IP/Port.");
+        labelMessages.setText("Settings saved for " + this.currentMachineChoice + " and My IP/Port.");
     }
 
     /**
@@ -369,6 +369,8 @@ public class Monitor extends Application {
         //final Stage stage = (Stage) gridPane.getScene().getWindow();
         //stage.setWidth(850);
         //stage.setHeight(520);
+
+        this.opiListener = null;
     }
 
     /**
@@ -376,7 +378,7 @@ public class Monitor extends Application {
      *
      * (1) Open an OpiMachine for the machine selected in {@link listMachines} to pass on commands 
      * (2) If successful, switch to the Scene of the {@link OpiMachine} we have switched to.
-     * (3) Open an OpiClient for myself to get commands from (eg) R
+     * (3) Open an OpiListener for myself to get commands from (eg) R
      *
      * @param event
      */
@@ -427,13 +429,13 @@ public class Monitor extends Application {
         }
 
             // (3) Open my own connection to get commands from (eg) R
-            //     Put my IP address in the box so it is known (Assumes IP Address is localhost)
-            //     If opiClient already exists, then just leave it alone.
-        if (this.opiClient == null) {
-            labelMessages.setText("Starting listener on port " + this.myPort);
-            this.opiClient = new OpiListener(Integer.parseInt(this.myPort), opiMachine);
-            fieldMyIP.setText(OpiListener.obtainPublicAddress().getHostAddress());
-        }
+            //     Put my IP address in the box so it is known for Client.
+            //     If opiListener already exists, close it first.
+        labelMessages.setText("Starting listener on port " + this.myPort);
+        this.opiListener = new OpiListener(Integer.parseInt(this.myPort));
+        fieldMyIP.setText(this.myIpAddress);
+
+        this.opiListener.setMachine(opiMachine);
     }
 
     /**
@@ -457,6 +459,8 @@ public class Monitor extends Application {
     @Override
     public void stop() throws Exception {
         this.checkSave();
+        if (this.opiListener != null)
+            opiListener.closeListener();
 
         System.out.println("Stopping");
         System.exit(0);

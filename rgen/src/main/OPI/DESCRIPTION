@@ -19,6 +19,6 @@ Imports: rjson
 Depends: methods
 LazyData: true
 Encoding: UTF-8
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.2
 Roxygen: list(markdown = TRUE)
 Collate: opi.r Display.r Jovp.r Maia.r Compass.r O900.r PicoVR.r PhoneHMD.r ImoVifa.r dbTocd.r data-RtDbUnits.r data-RtSigmaUnits.r SimYes.r SimNo.r SimHenson.r SimGaussian.r

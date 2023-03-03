@@ -421,8 +421,8 @@ public abstract class OpiMachine {
      * 
      * @since 0.0.1
      */
-    @Parameter(name = "ip", desc = "IP Address of the OPI machine.", defaultValue = "localhost")
-    @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI machine.", min = 0, max = 65535, defaultValue = "50001")
+    @Parameter(name = "ip", desc = "IP Address of the OPI Monitor.", defaultValue = "localhost")
+    @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI Monitor.", min = 0, max = 65535, defaultValue = "50001")
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, something else otherwise.")
     @ReturnMsg(name = "res.msg", desc = "The success or error message.")

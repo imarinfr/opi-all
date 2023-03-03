@@ -48,7 +48,7 @@ public class RToMonitorToOutsideMachine {
   private void setupConnections(Machine machine) {
     try {
       monitor = new Core(MONITOR_PORT); // then setup monitor
-      r = new OpiListener(monitor.getPort(), null); // finally setup R client
+      r = new OpiListener(monitor.getPort()); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -148,9 +148,8 @@ public class RToMonitorToOutsideMachine {
   /** R sends to and receives from monitor */
   private void sendAndReceive(String message) throws IOException {
     System.out.println("R SENDS\n" + message);
-    r.send(message);
-    while (r.empty()) Thread.onSpinWait();
-    System.out.println("R RECEIVES\n" + r.receive());
+    //r.send(message);
+    //System.out.println("R RECEIVES\n" + r.receive());
   }
 
 }

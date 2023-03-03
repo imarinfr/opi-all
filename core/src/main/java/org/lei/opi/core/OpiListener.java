@@ -63,14 +63,10 @@ public class OpiListener extends Thread {
     private static final String CHARSET_NAME = "UTF8";
     /** {@value LISTENER_FAILED} */
     private static final String LISTENER_FAILED = "Listener failed.";
-    /** {@value CHECK_FAILED} */
-    private static final String CHECK_FAILED = "Cannot check if socket is empty.";
     /** {@value RECEIVE_FAILED} */
     private static final String RECEIVE_FAILED = "Cannot receive() message in OpiListener.";
     /** {@value SEND_FAILED} */
     private static final String SEND_FAILED = "Cannot send() message in OpiListener.";
-    /** {@value CLOSE_FAILED} */
-    private static final String CLOSE_FAILED = "Cannot close the socket.";
     /** {@value CLOSE_FAILED} */
     private static final String CANNOT_OBTAIN_ADDRESS = "Cannot obtain public address.";
 
@@ -115,10 +111,6 @@ public class OpiListener extends Thread {
     protected int port;
     /** Socket server */
     private ServerSocket server;
-        /** Reader for incoming messages on the socket */
-    BufferedReader incoming;
-        /** Writer for outgoing messages to the socket */
-    BufferedWriter outgoing;
     /** true while the server is running and waiting for a new connection, false when not running or already has a client */
     protected boolean listening;
     /** The OpiMachine object that commands will be passed to */
@@ -206,70 +198,73 @@ public class OpiListener extends Thread {
         }
     }
   
-    class ClientThread implements Runnable {
+    public class ClientThread implements Runnable {
         protected Socket socket;
+        /** Reader for incoming messages on the socket */
+        BufferedReader incoming;
+        /** Writer for outgoing messages to the socket */
+        BufferedWriter outgoing;
+
         public ClientThread (Socket clientSocket) {
-          this.socket = clientSocket;
+            this.socket = clientSocket;
         }
 
         public void run() {
-          try {
-            incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
-            outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
-            while (true) {
-                if (incoming.ready()) {
-                   Packet pack = process(receive());
-                   send(pack.msg);
-                   if (pack.close) {
-                      break; 
-                   }
-               }
+            try {
+                incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
+                outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
+                while (true) {
+                    if (incoming.ready()) {
+                        Packet pack = process(receive());
+                        send(pack.msg);
+                        if (pack.close) {
+                            break; 
+                        }
+                    }
+                }
+                closeListener(); // kill off the server and this connection when/if we get at least one opiClose()
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            closeListener(); // kill off the server and this connection when/if we get at least one opiClose()
-          } catch (IOException e) {
-            e.printStackTrace();
-          }
         }
-    }
 
-    /**
-     *
-     * Receive message
-     *
-     * @return Message received
-     *
-     * @since 0.0.1
-     */
-    public String receive() {
-        StringBuilder message = new StringBuilder();
-        try {
-            while (incoming.ready()) {
-                String line = incoming.readLine();
-                message.append(line + (incoming.ready() ? "\n" : ""));
+        /**
+        * Receive message
+        *
+        * @return Message received
+        *
+        * @since 0.0.1
+        */
+        public String receive() {
+            StringBuilder message = new StringBuilder();
+            try {
+                while (incoming.ready()) {
+                    String line = incoming.readLine();
+                    message.append(line + (incoming.ready() ? "\n" : ""));
+                }
+            } catch (IOException e) {
+                System.err.println(RECEIVE_FAILED);
+                throw new RuntimeException(RECEIVE_FAILED, e);
             }
-        } catch (IOException e) {
-            System.err.println(RECEIVE_FAILED);
-            throw new RuntimeException(RECEIVE_FAILED, e);
+            return message.toString();
         }
-        return message.toString();
-    }
-  
-    /**
-     *
-     * Send message
-     *
-     * @param message  The message to deliver
-     *
-     * @since 0.0.1
-     */
-    public void send(String message) {
-        try {
-            outgoing.write(message.replace("\n", ""));
-            outgoing.newLine();
-            outgoing.flush();
-        } catch (IOException e) {
-            System.err.println(SEND_FAILED);
-            throw new RuntimeException(SEND_FAILED, e);
+       
+        /**
+         * Send message
+         *
+         * @param message  The message to deliver
+         *
+         * @since 0.0.1
+         */
+        public void send(String message) {
+            try {
+                outgoing.write(message.replace("\n", ""));
+                outgoing.newLine();
+                outgoing.flush();
+            } catch (IOException e) {
+                System.err.println(SEND_FAILED);
+                throw new RuntimeException(SEND_FAILED, e);
+            }
         }
     }
   

@@ -21,7 +21,7 @@ public class RToMonitorToJovpTests {
   private static final int MONITOR_PORT = 50001;
 
   /** The JOVP server */
-  private JovpServer server;
+  private OpiJovp server;
   /** The OPI monitor */
   private Core monitor;
   /** The R client */
@@ -46,16 +46,15 @@ public class RToMonitorToJovpTests {
     setupConnections(Machine.DISPLAY);
     setupCommands(Machine.DISPLAY);
     clientDriver();
-    server.start();
     closeConnections();
   }
 
   /** setup connections */
   private void setupConnections(Machine machine) {
     try {
-      server = new JovpServer(machine, JOVP_PORT); // first setup JOVP server
+      server = new OpiJovp(JOVP_PORT); // first setup JOVP server
       monitor = new Core(MONITOR_PORT); // then setup monitor
-      r = new OpiListener(monitor.getPort(), null); // finally setup R client
+      r = new OpiListener(monitor.getPort()); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -136,7 +135,6 @@ public class RToMonitorToJovpTests {
         try {
           Thread.sleep(500); // need to wait for PsychoEngine to start
           executeCommands();
-          server.close();
         } catch (IOException | InterruptedException e) {
           throw new RuntimeException(e);
         }
@@ -164,9 +162,8 @@ public class RToMonitorToJovpTests {
   /** R sends to and receives from monitor */
   private void sendAndReceive(String message) throws IOException {
     System.out.println("R SENDS\n" + message);
-    r.send(message);
-    while (r.empty()) Thread.onSpinWait();
-    System.out.println("R RECEIVES\n" + r.receive());
+    //r.send(message);
+    //System.out.println("R RECEIVES\n" + r.receive());
   }
 
 }

@@ -25,7 +25,6 @@ public class JovpServerConnectionTests {
   public void getIDAndPort() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[getIDAndPort] " + server);
-    server.closeListener();
   }
 
   /**
@@ -38,10 +37,8 @@ public class JovpServerConnectionTests {
   public void changeLocalPort() {
     OpiJovp server = new OpiJovp(50003);
     System.out.println("[changeLocalPort] Address was at " + server);
-    server.closeListener();
     server = new OpiJovp(50008);
     System.out.println("[changeLocalPort] Address is at " + server);
-    server.closeListener();
   }
 
   /**

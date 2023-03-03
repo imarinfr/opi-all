@@ -8,7 +8,7 @@ public class OpenClient {
 
     @Test
     public void constructOpiClient() {
-        OpiListener opiClient = new OpiListener(50002, null);
+        OpiListener opiClient = new OpiListener(50002);
         System.out.println("Constructred opiClient...sleeping 5 seconds");
         try { Thread.sleep(5000); } catch (InterruptedException e) { ; }
         opiClient.closeListener();
