@@ -55,6 +55,8 @@ opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -81,8 +83,8 @@ opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_O900 <- function() {
-    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-        return(list(error = 2, msg = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
     msg <- c(list(command = "query"), msg)
@@ -91,6 +93,8 @@ opiQueryDevice_for_O900 <- function() {
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -127,8 +131,8 @@ opiQueryDevice_for_O900 <- function() {
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_O900 <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixIntensity = NULL, pres = NULL, resp = NULL)) {
-    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-        return(list(error = 2, msg = "Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixIntensity = settings$fixIntensity, pres = settings$pres, resp = settings$resp)
     msg <- c(list(command = "setup"), msg)
@@ -137,6 +141,8 @@ opiSetup_for_O900 <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = 
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -180,8 +186,8 @@ opiSetup_for_O900 <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = 
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_O900 <- function(stim = list(type = NULL, x = NULL, y = NULL, lum = NULL, size = NULL, color = NULL, t = NULL, w = NULL)) {
-    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-        return(list(error = 2, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(type = stim$type, x = stim$x, y = stim$y, lum = stim$lum, size = stim$size, color = stim$color, t = stim$t, w = stim$w)
     msg <- c(list(command = "present"), msg)
@@ -190,6 +196,8 @@ opiPresent_for_O900 <- function(stim = list(type = NULL, x = NULL, y = NULL, lum
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -216,8 +224,8 @@ opiPresent_for_O900 <- function(stim = list(type = NULL, x = NULL, y = NULL, lum
 #' @seealso [opiClose()]
 #'
 opiClose_for_O900 <- function() {
-    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-        return(list(error = 2, msg = "Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+    stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
     msg <- c(list(command = "close"), msg)
@@ -226,6 +234,8 @@ opiClose_for_O900 <- function() {
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }

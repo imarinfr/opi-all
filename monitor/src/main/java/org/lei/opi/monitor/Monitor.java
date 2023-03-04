@@ -87,7 +87,7 @@ public class Monitor extends Application {
         // IP and port of the monitor (myself) - this will be the address for the client to send commands.
     private String myIpAddress;
     private String myPort;
-    private OpiListener opiListener;
+    private static OpiListener opiClientListener;  // a bit gruby, but there is only ever one of these...
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private boolean myPortHasBeenEdited; // true if myIp or myPort have been edited since last change. 
@@ -271,7 +271,7 @@ public class Monitor extends Application {
         this.settingsHaveBeenEdited = false;
         this.myPortHasBeenEdited = false;
 
-        labelMessages.setText("Settings saved for " + this.currentMachineChoice + " and My IP/Port.");
+        labelMessages.setText("Settings saved for " + this.currentMachineChoice + " and My Port.");
     }
 
     /**
@@ -369,8 +369,6 @@ public class Monitor extends Application {
         //final Stage stage = (Stage) gridPane.getScene().getWindow();
         //stage.setWidth(850);
         //stage.setHeight(520);
-
-        this.opiListener = null;
     }
 
     /**
@@ -378,7 +376,7 @@ public class Monitor extends Application {
      *
      * (1) Open an OpiMachine for the machine selected in {@link listMachines} to pass on commands 
      * (2) If successful, switch to the Scene of the {@link OpiMachine} we have switched to.
-     * (3) Open an OpiListener for myself to get commands from (eg) R
+     * (3) Open an OpiClient for myself to get commands from (eg) R
      *
      * @param event
      */
@@ -417,7 +415,6 @@ public class Monitor extends Application {
 
             stage.setScene(scene);
             stage.show();
-            labelMessages.setText("");
         } catch (IOException e) {
             labelMessages.setText("Cannot load FXML GUI for " + this.currentMachineChoice);
             e.printStackTrace();
@@ -429,13 +426,11 @@ public class Monitor extends Application {
         }
 
             // (3) Open my own connection to get commands from (eg) R
-            //     Put my IP address in the box so it is known for Client.
-            //     If opiListener already exists, close it first.
-        labelMessages.setText("Starting listener on port " + this.myPort);
-        this.opiListener = new OpiListener(Integer.parseInt(this.myPort));
-        fieldMyIP.setText(this.myIpAddress);
-
-        this.opiListener.setMachine(opiMachine);
+            //     Put my IP address in the box so it is known (Assumes IP Address is localhost)
+            //     If opiClient already exists, then just leave it alone.
+        labelMessages.setText("");
+        Monitor.opiClientListener = new OpiListener(Integer.parseInt(this.myPort), opiMachine);
+        fieldMyIP.setText(OpiListener.obtainPublicAddress().getHostAddress());
     }
 
     /**
@@ -446,9 +441,19 @@ public class Monitor extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("resources/Monitor.fxml"));
     
         Scene scene = new Scene(root, 800, 515);
-    
+
         stage.setTitle("OPI Monitor (v3.0 2022)");
         stage.setScene(scene);
+
+            // whenever we return to the home scene
+            // (1) Kill the opiClientListener 
+            // (2) Set labelMessage to ""
+        stage.sceneProperty().addListener((observable, oldScene, newScene) -> {
+            if (newScene == scene && Monitor.opiClientListener != null) {
+                Monitor.opiClientListener.closeListener();
+                Monitor.opiClientListener = null;
+            }
+        });
 
         stage.show();
     }
@@ -459,8 +464,6 @@ public class Monitor extends Application {
     @Override
     public void stop() throws Exception {
         this.checkSave();
-        if (this.opiListener != null)
-            opiListener.closeListener();
 
         System.out.println("Stopping");
         System.exit(0);

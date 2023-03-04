@@ -55,6 +55,8 @@ opiInitialise_for_Compass <- function(ip = NULL, port = NULL) {
     writeLines(msg, .opi_env$Compass$socket)
 
     res <- readLines(.opi_env$Compass$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -81,8 +83,8 @@ opiInitialise_for_Compass <- function(ip = NULL, port = NULL) {
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Compass <- function() {
-    if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
-        return(list(error = 2, msg = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
+    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
     msg <- c(list(command = "query"), msg)
@@ -91,6 +93,8 @@ opiQueryDevice_for_Compass <- function() {
     writeLines(msg, .opi_env$Compass$socket)
 
     res <- readLines(.opi_env$Compass$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -128,8 +132,8 @@ opiQueryDevice_for_Compass <- function() {
 #' @seealso [opiSetup()]
 #'
 opiSetup_for_Compass <- function(settings = list(fixShape = NULL, fixCx = NULL, tracking = NULL, fixShape = NULL, fixCx = NULL, tracking = NULL)) {
-    if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
-        return(list(error = 2, msg = "Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
+    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking, fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking)
     msg <- c(list(command = "setup"), msg)
@@ -138,6 +142,8 @@ opiSetup_for_Compass <- function(settings = list(fixShape = NULL, fixCx = NULL, 
     writeLines(msg, .opi_env$Compass$socket)
 
     res <- readLines(.opi_env$Compass$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -204,8 +210,8 @@ opiSetup_for_Compass <- function(settings = list(fixShape = NULL, fixCx = NULL, 
 #' @seealso [opiPresent()]
 #'
 opiPresent_for_Compass <- function(stim = list(x = NULL, y = NULL, lum = NULL, t = NULL, w = NULL, x = NULL, y = NULL, lum = NULL, t = NULL, w = NULL)) {
-    if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
-        return(list(error = 2, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
+    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list(x = stim$x, y = stim$y, lum = stim$lum, t = stim$t, w = stim$w, x = stim$x, y = stim$y, lum = stim$lum, t = stim$t, w = stim$w)
     msg <- c(list(command = "present"), msg)
@@ -214,6 +220,8 @@ opiPresent_for_Compass <- function(stim = list(x = NULL, y = NULL, lum = NULL, t
     writeLines(msg, .opi_env$Compass$socket)
 
     res <- readLines(.opi_env$Compass$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }
@@ -246,8 +254,8 @@ opiPresent_for_Compass <- function(stim = list(x = NULL, y = NULL, lum = NULL, t
 #' @seealso [opiClose()]
 #'
 opiClose_for_Compass <- function() {
-    if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
-        return(list(error = 2, msg = "Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?."))
+if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
+    stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
     msg <- list()
     msg <- c(list(command = "close"), msg)
@@ -256,6 +264,8 @@ opiClose_for_Compass <- function() {
     writeLines(msg, .opi_env$Compass$socket)
 
     res <- readLines(.opi_env$Compass$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     return(res)
 }

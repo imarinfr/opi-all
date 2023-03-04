@@ -54,7 +54,7 @@ public class RToMonitorToJovpTests {
     try {
       server = new OpiJovp(JOVP_PORT); // first setup JOVP server
       monitor = new Core(MONITOR_PORT); // then setup monitor
-      r = new OpiListener(monitor.getPort()); // finally setup R client
+      r = new OpiListener(monitor.getPort(), null); // finally setup R client
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

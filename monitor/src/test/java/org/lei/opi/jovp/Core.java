@@ -24,7 +24,7 @@ import org.lei.opi.core.OpiListener;
    * @since 0.0.1
    */
   Core(int port) throws IOException {
-    monitor = new OpiListener(port);
+    monitor = new OpiListener(port, null);
   }
 
   /**

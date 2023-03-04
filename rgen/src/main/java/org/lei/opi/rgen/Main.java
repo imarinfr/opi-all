@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
-import java.util.Arrays;
-
 import javafx.scene.Scene;
+
+import java.util.Arrays;
 
 import org.lei.opi.core.OpiMachine;
 

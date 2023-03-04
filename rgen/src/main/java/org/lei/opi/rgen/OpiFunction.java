@@ -22,7 +22,7 @@ public class OpiFunction {
     static final String parameterForIp = "ip";
         /** This is the parameter name for the port on which OPI R should create socket */
     static final String parameterForPort = "port";
-        /** This is the name of the OPI environemnt for storing variables, settings, etc */
+        /** This is the name of the OPI environment for storing variables, settings, etc */
     static final String opiEnvName = ".opi_env";
 
     public record MethodData(Parameter[] parameters, ReturnMsg[] returnMsgs) {
@@ -127,13 +127,13 @@ public class OpiFunction {
         return result;
     }
 
-    // generate roxygen2 string for parameter p
+      // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
         String prefix =  String.format("#' @param %s ",p.name());
         return prefix + wrapR(p.desc(), prefix.length(), false);
     };
 
-    // generate roxygen2 string for return value r
+      // generate roxygen2 string for return value r
     private static Function<ReturnMsg, String> prettyReturn = (ReturnMsg r) -> {
         String prefix = r.name().contains(".") ?
             String.format("#'    - %s ",r.name().replaceAll("\\.", "\\$")) :
@@ -213,6 +213,8 @@ public class OpiFunction {
     private String makeReturnCode() {
         return String.format("""
         res <- readLines(%s$%s$socket, n = 1)
+        if (length(res) == 0)
+            return(list(error = 5, msg = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
         res <- rjson::fromJSON(res)
         return(res)
     """, 
@@ -254,6 +256,11 @@ public class OpiFunction {
             //     - sends the json on the socket
         String socketCode = "";
         if (createSocket) {
+            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
+                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
+            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
+                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
+
             socketCode = String.format("""
                         if (!exists(\"socket\", where = %s$%s))
                             assign(\"socket\", open_socket(%s, %s), %s$%s) 
@@ -263,15 +270,10 @@ public class OpiFunction {
                     opiEnvName, this.machineName,                                  // if exists
                     parameterForIp, parameterForPort, opiEnvName, this.machineName // assign
                     );
-
-            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
-                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without parameter %s.", this.opiName, parameterForIp));
-            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
-                System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without parameter %s.", this.opiName, parameterForPort));
         } else {
             socketCode = String.format("""
-                    if(!exists("%s") || !exists("%s", envir = %s) || !(\"socket\" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
-                        return(list(error = 2, msg = \"Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.\"))
+                if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
+                    stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
                 """, opiEnvName, 
                 this.machineName, opiEnvName,
                 opiEnvName, this.machineName, 

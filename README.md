@@ -12,8 +12,8 @@ Created by Iv&aacute;n Mar&iacute;n-Franch and Andrew Turpin commencing October 
 
 ## Description
 
-This is a complete re-write of the <a href="https://perimetry.org/opi">Open Perimetry Interface</a> middleware (or "OPI server") 
-and some associated changes
+This is a complete re-write of the <a href="https://perimetry.org/opi">Open Perimetry Interface</a> 
+middleware (or "OPI server") and some associated changes
 to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a> 
 to allow for use on screen-based devices such as phones, 
 VR headsets, and monitors. In attempt to be device independent, it makes use of the 
@@ -33,16 +33,15 @@ Messages are sent in JSON format according to the protocol specified as part of 
 core code using the `@Parameter` annotator.
 
 <pre>
-+--------------------+        +------------+        +-----------------+
-| Controlling Client |  JSON  |    OPI     |  JSON  |     Machine     |
-| (eg OPI R package) |<------>|   SERVER   |<------>| (Display Device |
-|                    | TCP/IP |     II     | TCP/IP |  or Perimeter)  |
-+--------------------+        +------------+        +-----------------+
++--------------------+        +-----------+        +-----------------+
+| Controlling Client |  JSON  |           |  JSON  |     Machine     |
+| (eg OPI R package) |<------>|  Monitor  |<------>| (Display Device |
+|                    | TCP/IP |           | TCP/IP |  or Perimeter)  |
++--------------------+        +-----------+        +-----------------+
 </pre>
 
 Both the client connection and machine connection are handled 
-using objects of type Listener which establishes socket connections
-and processes incoming JSON strings. 
+using socket connections that use JSON strings for messages. 
 
 ## Packages
 
@@ -110,8 +109,8 @@ This repo implements the left hand box in this JOVP machine diagram.
 In an attempt to reduce mismatches in the protocol between the Client and Server and the 
 protocol between the Server and Machine, the R code for sending messages is automatically
 generated to match that expected by the relevant Machine. 
-This happens in the `rgen` package. In essence, each `@Parameter` annotator of
-the five opi functions in the `core::OpiMachine` subclasses are used to 
+This happens in the `rgen` package. In essence, wthe `@Parameter` and `@ReturnMsg` 
+annotators of the five opi functions in the `core::OpiMachine` subclasses are used to 
 create the relevant R code.
 This module is not for general use, but rather to be run to update the OPI 
 R package whenever a new machine is added, or an interface to an existing machine changes.
