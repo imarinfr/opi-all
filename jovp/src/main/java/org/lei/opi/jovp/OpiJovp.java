@@ -22,53 +22,97 @@ import es.optocom.jovp.definitions.ViewMode;
  * Makes use of the OpiListener to get a SocketServer thread, but does not give it an OpiMachine, 
  * instead overriding the process() method here to not make use of an OpiMachine.
  *
+ * As the psychoEngine has to be kicked off in the main thread, we need to have 
+ * this application 'busy-waiting' on the main thread. Actions are triggered by
+ * changing the `action` variable to values of `Action`.
+ * 
+                OpiListener Thread                      |               Main thread
+                    (this class)                        |              (OpiLogic class)
+                                                        |
+Receive initialise --> action = SHOW                    |  SHOW----->  Create psychoEngine with OpiLogic
+                                                        |
+Receive query -------> if configuration & psychoengine  |  SETUP ----> Set backgrounds & fixations
+                       exist, return data, else return  |
+                       Jovp engine not ready            |  PRESENT --> Begin a stimulus presentation
+                       Have you called initialise?      |
+                                                        |  CLOSE ----> Shut down everything
+Receive setup -------> Set some things                  |
+                       action = SETUP                   |   null       Check if we are presenting or
+                                                        |              waiting for a response.
+Receive present------> action = PRESENT                 |              If we have a response, pass back
+                       busy-wait until response is set  |              to the driver (OpiJovp).
+
+  
  * @since 0.0.1
  */
 public class OpiJovp extends OpiListener {
 
-  /** Machine state */
-  protected enum State {INIT, SETUP, PRESENT, CLOSE};
+    /** {@value BAD_COMMAND} */
+    private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
+    /** {@value INITIALIZED} */
+    private static final String INITIALIZED = "INITIALIZE successful";
+    /** {@value INITIALIZE_FAILED =} */
+    private static final String INITIALIZE_FAILED = "INITIALIZE failed";
+    /** {@value SETUP_FAILED} */
+    private static final String SETUP_FAILED = "SETUP failed";
+    /** {@value PRESENT_FAILED} */
+    protected static final String PRESENT_FAILED = "An error occurred during PRESENT command";
+    /** {@value CLOSED} */
+    private static final String CLOSED = "CLOSE successful";
+   
+    /** Prefix for all success messages */
+    protected String prefix;
+    /** A background record to communicate with OpiLogic */
+    protected Configuration configuration = null;
+    /** The psychoEngine */
+    protected PsychoEngine psychoEngine;
+    /** A background record to communicate with OpiLogic */
+    protected Setup[] backgrounds;
+    /** A stimulus record to communicate with OpiLogic */
+    protected Present stimulus;
+    /** A record to record the results after a stimulus presentation */
+    protected Response response = null;
 
-  /** {@value BAD_COMMAND} */
-  private static final String BAD_COMMAND = "Wrong OPI command, you silly goose. OPI command received was: ";
-  /** {@value INITIALIZED} */
-  private static final String INITIALIZED = "INITIALIZE successful";
-  /** {@value INITIALIZE_FAILED =} */
-  private static final String INITIALIZE_FAILED = "INITIALIZE failed. ";
-  /** {@value SETUP_FAILED} */
-  private static final String SETUP_FAILED = "SETUP failed";
-  /** {@value PRESENT_FAILED} */
-  protected static final String PRESENT_FAILED = "An error occurred during PRESENT command";
-  /** {@value CLOSED} */
-  private static final String CLOSED = "CLOSE successful";
+    /** Machine actions to trigger actions on the main thread. */
+    protected enum Action {
+        SHOW,    // initialise obtained, configuration done, create psychoengine
+        SETUP,   // psychoengine is up and running, execute setup 
+        PRESENT, // begin a presentation
+        CLOSE};  // all done
 
-  /** Prefix for all success messages */
-  protected String prefix;
-  /** A background record to communicate with OpiLogic */
-  protected Configuration configuration = null;
-  /** The psychoEngine */
-  private PsychoEngine psychoEngine;
-  /** A background record to communicate with OpiLogic */
-  protected Setup[] backgrounds;
-  /** A stimulus record to communicate with OpiLogic */
-  protected Present stimulus;
-  /** A record to record the results after a stimulus prsentation */
-  protected Response response = null;
-  /** Whether opiInitialized has been invoked and not closed later on by opiClose */
-  protected State state;
+    protected Action action;  // set by calls from the server OpiListner thread and acted upon on main thread
 
-  public OpiJovp(int port) { 
-    super(port, null);   // do not give a machine to the OpiListner as we overide the process() method here and the machine is not needed.
-  } 
+      // Don't interrupt another action. Wait until it is finished (ie action == null)
+    private void setAction(Action a) {
+      while (this.action != null) {
+        try { Thread.sleep(10); } catch (InterruptedException ignored) {; }
+      }
+      this.action = a;
+    }
+   
+    public OpiJovp(int port) { 
+        super(port, null);   // do not give a machine to the OpiListner as we override the process() method here and the machine is not needed.
+        this.action = null;
+    } 
 
     /**
      * Run the psychoEngine. Needs to be started from the main thread
+     * Connects in OpiLogic
      *
      * @since 0.1.0
      */
     public void startPsychoEngine() {
-        // not great, but necessary: wait until INITIALIZE command has been triggered
-        while (configuration == null) Thread.onSpinWait();
+        // Have to start PsychoEngine on the main thread (as it uses GLFW)
+        // so we cannot trigger it from the server OpiListener thread.
+        // So we will just spin here on the main thread until we can progress in state == INIT
+        while (this.action != Action.SHOW) {
+          try { Thread.sleep(500);} catch(InterruptedException ignored) { ; }
+        }
+
+        if (configuration == null) {
+            System.out.println("Cannot start the psychoengine with a null configuration");
+            return;
+        }
 
         psychoEngine = new PsychoEngine(new OpiLogic(this), configuration.distance(), Configuration.VALIDATION_LAYERS, Configuration.API_DUMP);
 
@@ -80,34 +124,23 @@ public class OpiJovp extends OpiListener {
 
         if (configuration.fullScreen()) psychoEngine.setFullScreen();
 
-        state = State.INIT;
+        this.action = null; 
         psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
 
-        psychoEngine.cleanup();
-
-        configuration = null;
+        this.psychoEngine.cleanup();
     }
 
-   /**
-    * Signal the psychoEngine to finish
+    /**
+    * Process incoming Json commands. If it is a 'choose' command, then
+    * set the private field machine to a new instance of that machine.
+    * If it is another command, then process it using the machine object.
     *
+    * @param jsonStr A JSON object that at least contains the name 'command'.
+    * 
+    * @return JSON-formatted message with feedback
+    * 
     * @since 0.1.0
     */
-   public void finish() {
-        psychoEngine.finish();
-   }
-
-   /**
-   * Process incoming Json commands. If it is a 'choose' command, then
-   * set the private field machine to a new instance of that machine.
-   * If it is another command, then process it using the machine object.
-   *
-   * @param jsonStr A JSON object that at least contains the name 'command'.
-   * 
-   * @return JSON-formatted message with feedback
-   * 
-   * @since 0.1.0
-   */
     @Override
     public Packet process(String jsonStr) {
         HashMap<String, Object> pairs;
@@ -135,25 +168,26 @@ public class OpiJovp extends OpiListener {
         };
     }
 
-  /**
-   * Start the psychoEngine
-   *
-   * @since 0.1.0
-   */
-  private Packet initialize(HashMap<String, Object> args) {
-    try {
-      // get congiguration
-      configuration = Configuration.set(args);
-      this.prefix = "OPI JOVP " + configuration.machine() + ": ";
-      switch (configuration.viewMode()) {
-        case MONO -> backgrounds = new Setup[] {null};
-        case STEREO -> backgrounds = new Setup[] {null, null};
-      }
-      return ok(INITIALIZED);
-    } catch (IllegalArgumentException | ClassCastException | IOException e) {
-      return error(INITIALIZE_FAILED, e);
+    /**
+     * Start the psychoEngine with the SHOW action
+     *
+     * @since 0.1.0
+     */
+    private Packet initialize(HashMap<String, Object> args) {
+        try {
+            // get configuration
+            configuration = Configuration.set(args);
+            this.prefix = "OPI JOVP " + configuration.machine() + ": ";
+            switch (configuration.viewMode()) {
+              case MONO -> backgrounds = new Setup[] {null};
+              case STEREO -> backgrounds = new Setup[] {null, null};
+            }
+            setAction(Action.SHOW);
+            return new Packet(INITIALIZED);
+        } catch (IllegalArgumentException | ClassCastException | IOException | NullPointerException e) {
+            return error(INITIALIZE_FAILED, e);
+        }
     }
-  }
 
   /**
    * Return results of query
@@ -161,13 +195,18 @@ public class OpiJovp extends OpiListener {
    * @since 0.1.0
    */
   private Packet query() {
-    return ok((new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
+    if (configuration == null || psychoEngine == null)
+        return OpiListener.error("JOVP is not ready yet. Try again or call initialise()");
+
+    Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
-      configuration.calibration().maxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor())).toJson());
+      configuration.calibration().maxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor());
+    return new Packet(q.toJson());
   }
 
   /**
    * Change settings of background and fixation target
+   * trigger the SETUP action
    * 
    * @param args A map of name:value pairs for parameters
    *
@@ -181,7 +220,7 @@ public class OpiJovp extends OpiListener {
         backgrounds[0] = Setup.create2(args);
       if(configuration.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
         backgrounds[1] = Setup.create2(args);
-      state = State.SETUP;
+      setAction(Action.SETUP);
       return query();
     } catch (ClassCastException | IllegalArgumentException e) {
       return error(prefix + SETUP_FAILED, e);
@@ -190,6 +229,7 @@ public class OpiJovp extends OpiListener {
 
   /**
    * Present a stimulus
+   * Trigger the PRESENT action and spin waiting for a response.
    *
    * @param args A map of name:value pairs for parameters
    *
@@ -198,38 +238,37 @@ public class OpiJovp extends OpiListener {
   private Packet present(HashMap<String, Object> args) {
     try {
       stimulus = Present.set(args);
-      state = State.PRESENT;
-      while (response == null) Thread.onSpinWait(); // wait for response
+      setAction(Action.PRESENT);
+      while (response == null) {
+        Thread.sleep(100);  // wait for response
+      }
       String jsonStr = response.toJson(configuration.tracking());
       response = null;
-      return ok(jsonStr);
+      return new Packet(jsonStr);
     } catch (Exception e) {
       return error(prefix + PRESENT_FAILED, e);
     }
   }
 
   /**
-   * Stop the psychoEngine
+   * Stop the psychoEngine and the socket server. (ie totally kill the JOVP with CLOSE action)
    *
    * @since 0.1.0
    */
   private Packet close() {
-    state = State.CLOSE;
-    this.closeListener();    // TODO revisit
-    return ok(CLOSED);
+    setAction(Action.CLOSE);
+    this.closeListener();   // this kills the server thread, so set action first.
+    return new Packet(true, CLOSED);
   }
 
     // args[0] = port number
-    public static void main(String args[]) {
-        try {
-            OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]) );
-            System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
-           
-            opiJovp.startPsychoEngine(); // TODO I suspect that this will take over and no messages will be processed, but let's see
-           
-            //while (true) Thread.onSpinWait();  // not sure why, but there you go.
-        } catch (NumberFormatException e) {
-            e.printStackTrace();
-        }
+  public static void main(String args[]) {
+    try {
+      OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]) );
+      System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
+      opiJovp.startPsychoEngine();
+    } catch (NumberFormatException e) {
+      e.printStackTrace();
     }
+  }
 }

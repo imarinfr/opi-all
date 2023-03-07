@@ -42,7 +42,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-      return OpiListener.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return new OpiListener.Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
     };
   
     /**
@@ -52,7 +52,7 @@ public class Echo extends OpiMachine {
      */
     public Packet query() { 
         this.textArea.appendText("Query:\n\tNothing to report.\n");
-        return OpiListener.ok("Query: Nothing to report"); 
+        return new OpiListener.Packet("Query: Nothing to report"); 
     }
   
     /**
@@ -66,7 +66,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        return OpiListener.ok(OpiListener.gson.toJson(args));
+        return new OpiListener.Packet(OpiListener.gson.toJson(args));
     }
   
     /**
@@ -80,7 +80,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        return OpiListener.ok(OpiListener.gson.toJson(args));
+        return new OpiListener.Packet(OpiListener.gson.toJson(args));
     }
   
     /**
@@ -92,7 +92,7 @@ public class Echo extends OpiMachine {
     public Packet close() {
         this.textArea.appendText("Close:\n");
         returnToParentScene((Node)textArea);
-        return OpiListener.ok("Got OPI_CLOSE so closing connection.", true);
+        return new OpiListener.Packet(true, "Got OPI_CLOSE so closing connection.");
     };
 
 // --------------- FXML after here ----------------------------------- 

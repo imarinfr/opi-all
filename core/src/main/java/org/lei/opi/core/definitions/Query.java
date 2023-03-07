@@ -24,9 +24,9 @@ public record Query(int distance, double[] fov, ViewMode viewMode, String input,
                     boolean fullScreen, boolean tracking, double[] maxLum, String gammaFile, Monitor monitor) {
 
   /**
-   * Convert to string to return back to R OPI
+   * Convert to Json object to return back to R OPI
    * 
-   * @return a JSON with the results of OPI QUERY
+   * @return a JSON object with the results of OPI QUERY - should just be { name:value } like a hashmap<String, Object>
    *
    * @since 0.0.1
    */

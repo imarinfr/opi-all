@@ -70,7 +70,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
    *
    * @since 0.0.1
    */
-  public static Configuration set(HashMap<String, Object> args) throws IllegalArgumentException, ClassCastException, IOException {
+  public static Configuration set(HashMap<String, Object> args) throws IllegalArgumentException, ClassCastException, IOException, NullPointerException {
     Machine machine = Machine.valueOf(args.get("machine").toString().toUpperCase());
     int screen = ((Double) args.get("screen")).intValue();
     if(screen < 0)

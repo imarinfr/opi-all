@@ -83,7 +83,7 @@ public class OpiLogic implements PsychoLogic {
    */
   @Override
   public void init(PsychoEngine psychoEngine) {
-    // set size of the backgroud to be the field of view
+    // set size of the background to be the field of view
     double[] fov = psychoEngine.getFieldOfView();
     // add perimetry items: background, fixation, and stimulus.
     for (int i = 0; i < backgrounds.length; i++) {
@@ -95,7 +95,7 @@ public class OpiLogic implements PsychoLogic {
     }
     stimulus.position(0, 0, 99);
     items.add(stimulus);
-    driver.state = null; // State to idle and wait for instructions
+    driver.action = null; // Action is over
   }
 
   /**
@@ -127,28 +127,28 @@ public class OpiLogic implements PsychoLogic {
     double[] fov = psychoEngine.getFieldOfView();
     for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0], fov[1]);
     // Instructions are always given by the OpiDriver.
-    // OpiLogic sets state back to IDLE once instruction is carried out,
+    // OpiLogic sets action back to null once instruction is carried out,
     // except when presenting, where the OpiDriver waits for a response.
-    if (driver.state != null) System.out.println(driver.state);
-    if (driver.state == null) checkState();
-    else switch(driver.state) {
-        case INIT -> show(psychoEngine);
+    //if (driver.action != null) System.out.println(driver.action);
+    if (driver.action == null) checkAction();
+    else switch(driver.action) {
+        case SHOW -> show(psychoEngine);
         case SETUP -> setup();
         case PRESENT -> present();
-        case CLOSE -> hide(psychoEngine);
+        case CLOSE -> psychoEngine.finish();
       }
   }
 
   /** Show psychoEngine */
   private void show(PsychoEngine psychoEngine) {
     psychoEngine.show();
-    driver.state = null;
+    driver.action = null;
   }
 
-  /** Show psychoEngine */
+  /** hide psychoEngine */
   private void hide(PsychoEngine psychoEngine) {
     psychoEngine.hide();
-    driver.state = null;
+    driver.action = null;
   }
 
   /** Change background */
@@ -161,7 +161,7 @@ public class OpiLogic implements PsychoLogic {
       fixations[i].rotation(driver.backgrounds[i].fixRotation());
       fixations[i].setColor(gammaCorrection(driver.backgrounds[i].fixCol()));
     }
-    driver.state = null;
+    driver.action = null;
   }
 
   /** Present stimulus upon request */
@@ -171,11 +171,11 @@ public class OpiLogic implements PsychoLogic {
     stimulus.show(true);
     timer.start();
     presentationType = 0;
-    driver.state = null;
+    driver.action = null;
   }
 
   /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
-  private void checkState() {
+  private void checkAction() {
     if (timer.getElapsedTime() > 0)// if not presenting do nothing
       if (stimulus.show() && timer.getElapsedTime() > presentationType + driver.stimulus.t()[index]) {
         presentationType += driver.stimulus.t()[index];

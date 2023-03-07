@@ -85,7 +85,7 @@ public class Icare extends OpiMachine {
      * @since 0.0.1
      */
     public Packet initialize(HashMap<String, Object> args) {
-      return OpiListener.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return new OpiListener.Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
     };
   
     /**
@@ -96,7 +96,7 @@ public class Icare extends OpiMachine {
      * @since 0.0.1
      */
     public Packet query() {
-      return OpiListener.ok(queryResults());
+      return new OpiListener.Packet(queryResults());
     };
   
     /**
@@ -133,18 +133,20 @@ public class Icare extends OpiMachine {
         String jsonStr = null;
         try {
           this.send(OPI_OPEN);
-          jsonStr = parseOpiOpen(this.receive());
+          jsonStr = this.receive().toJson(); // parseOpiOpen TODO
           if (jsonStr.equals(BAD_OPEN)) return OpiListener.error(OPI_OPEN_FAILED);
           this.send(OPI_SET_FIXATION + fixCx + " 0 " + fixShape);
-          if (!this.receive().split(" ")[0].equals("0"))
+          /* TODO 
+          if (this.receive().isError())
             return OpiListener.error(OPI_SET_FIXATION_FAILED);
           this.send(OPI_SET_TRACKING + tracking);
-          if (!this.receive().split(" ")[0].equals("0"))
+          if (this.receive().isError()) // split(" ")[0].equals("0"))
             return OpiListener.error(OPI_SET_TRACKING_FAILED);
+            */
         } catch (IOException e) {
           return OpiListener.error(OPI_SETUP_FAILED, e);
         }
-        return OpiListener.ok(jsonStr);
+        return new OpiListener.Packet(jsonStr);
       } catch (ClassCastException | IllegalArgumentException e) {
         return OpiListener.error(OPI_SETUP_FAILED, e);
       }
@@ -185,7 +187,7 @@ public class Icare extends OpiMachine {
           .append((int) ((double) args.get("w")));
           try {
             this.send(opiMessage.toString());
-            return OpiListener.ok(parseResult(this.receive()));
+            return new OpiListener.Packet("TODO"); // parseResult(this.receive())); TODO
           } catch (IOException e) {
             return OpiListener.error(OPI_PRESENT_FAILED, e);
           }
@@ -209,9 +211,9 @@ public class Icare extends OpiMachine {
     public Packet close() {
       try {
         this.send(OPI_CLOSE);
-        String message = parseOpiClose(this.receive());
+        String message = "TODO"; // parseOpiClose(this.receive()); TODO
         this.closeSocket();
-        return OpiListener.ok(message, true);
+        return new OpiListener.Packet(true, message);
       } catch (ClassCastException | IllegalArgumentException | IOException e) {
         return OpiListener.error(COULD_NOT_DISCONNECT, e);
       }

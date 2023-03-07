@@ -3,6 +3,7 @@ package org.lei.opi.core;
 import org.lei.opi.core.OpiListener.Packet;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
@@ -106,9 +108,9 @@ public abstract class OpiMachine {
     protected Scene parentScene;  // return here when btnClose is clicked on our GUI
 
     /** Connection to the real machine */
-    protected Socket socket;  // return here when btnClose is clicked on our GUI
+    protected Socket socket;
     protected BufferedReader incoming;
-    protected BufferedWriter outgoing;
+    protected PrintWriter outgoing;
   
     /** 
      * The beginnings of machine specific settings. 
@@ -132,7 +134,7 @@ public abstract class OpiMachine {
    *
    * @return HashMap keyed by machine name with Settings Objects as values.
    */
-    public static HashMap<String, Object> readSettingsFile() {
+    public static HashMap<String, Object> readSettingsFile() throws FileNotFoundException {
         Gson gson = new Gson();
         String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
         try {
@@ -141,8 +143,7 @@ public abstract class OpiMachine {
             return gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
               new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (IOException | AssertionError e) {
-            System.out.println("Could not read settings file.");
-            e.printStackTrace();
+            System.out.println("Could not read settings file " + fp);
         }
         return new HashMap<String, Object>();  // empty HashMap on error
     }
@@ -174,7 +175,13 @@ public abstract class OpiMachine {
       Class<? extends Settings> cls) {
      */
     public static Object fillSettings(String machineName) {
-        HashMap<String, Object> settingsMap = OpiMachine.readSettingsFile();
+        HashMap<String, Object> settingsMap = null;
+        try {
+          settingsMap = OpiMachine.readSettingsFile();
+        } catch (FileNotFoundException e) {
+          System.out.println("Cannot open settings file");
+          return null;
+        }
         if (settingsMap.containsKey(machineName)) {
             Gson gson = new Gson();
             String j = gson.toJson(settingsMap.get(machineName));
@@ -251,7 +258,7 @@ public abstract class OpiMachine {
         try {
             this.socket = new Socket(ip, port);
             this.incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF8"));
-            this.outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF8"));
+            this.outgoing = new PrintWriter(socket.getOutputStream());
         } catch (IOException e) {
             System.out.println(e.getStackTrace());
             return false;
@@ -261,22 +268,27 @@ public abstract class OpiMachine {
       
     /**
      * Send JSON message to socket
+     * Strip any internal \n in the string as a \n terminates the message.
+     *
      * @param message The message to send
      * @throws IOException If socket cannot be accessed
      * @since 0.2.0
      */
     void send(String message) throws IOException {
-        outgoing.write(message);
+        String m = message.replace("\n", "") + "\n";
+        outgoing.write(m);
+        outgoing.flush();
     }
      
     /**
-    * Receive \n terminated JSON message from monitor
-    * @return The message received
+    * Receive Packet as a \n terminated JSON string from server
+    * @return The message received in a Packet
     * @throws IOException If socket cannot be accessed
     * @since 0.2.0
     */
-    String receive() throws IOException {
-        return incoming.readLine();
+    Packet receive() throws IOException {
+        String rec = incoming.readLine();
+        return OpiListener.gson.fromJson(rec, Packet.class);
     }
      
     /**
@@ -413,7 +425,9 @@ public abstract class OpiMachine {
     };
   
     /**
-     * opiInitialise: initialize OPI
+     * opiInitialise: initialize OPI.
+     * All machines will need "ip" and "port" (these are referenced in rgen, so perhaps dont change them)
+     * as the address of the Monitor to which the R client will connect.
      * 
      * @param args A map of name:value pairs for Params
      * 
@@ -471,7 +485,7 @@ public abstract class OpiMachine {
     public abstract Packet present(HashMap<String, Object> args);
   
     /**
-     * opiClose: Close OPI connection
+     * opiClose: Send "close" to the real machine and then close the connection to the real machine.
      * 
      * @param args pairs of argument name and value
      *

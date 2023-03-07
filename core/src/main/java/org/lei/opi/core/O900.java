@@ -201,7 +201,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet initialize(HashMap<String, Object> args) {
-      return OpiListener.ok(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return new OpiListener.Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
   };
 
   /**
@@ -212,7 +212,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet query() {
-    return OpiListener.ok(queryResults());
+    return new OpiListener.Packet(queryResults());
   };
 
   /**
@@ -234,7 +234,7 @@ public class O900 extends OpiMachine {
   public Packet setup(HashMap<String, Object> args) {
     if (this.socket.isClosed()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     StringBuilder message;
-    String result;
+    Packet result;
     try {
       // Prepare OPI_INITIALIZE instruction
       message = new StringBuilder(OPI_INITIALIZE).append(" ")
@@ -251,7 +251,8 @@ public class O900 extends OpiMachine {
       } catch (IOException e) {
         return OpiListener.error(OPI_INITIALIZE_FAILED, e);
       }
-      if (!result.equals("0")) return OpiListener.error(OPI_INITIALIZE_FAILED + result);
+      if (result.getError()) return OpiListener.error(OPI_INITIALIZE_FAILED + result);
+
       // Prepare OPI_SET_BACKGROUND instruction
       int bgCol = switch (BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
         case WHITE -> BG_WHITE;
@@ -280,8 +281,9 @@ public class O900 extends OpiMachine {
       } catch (IOException e) {
         return OpiListener.error(OPI_SET_BACKGROUND_FAILED, e);
       }
-      if (!result.equals("0")) return OpiListener.error(OPI_SET_BACKGROUND_FAILED + result);
-      return OpiListener.ok(queryResults());
+      if (result.getError()) return OpiListener.error(OPI_SET_BACKGROUND_FAILED + result);
+
+      return new OpiListener.Packet(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
       return OpiListener.error(OPI_SETUP_FAILED, e);
     }
@@ -333,9 +335,10 @@ public class O900 extends OpiMachine {
         case STATIC -> presentStatic(x, y, lum, size, color, t, (int) (double) args.get("w"));
         case KINETIC -> presentKinetic(x, y, lum, size, color, t);
       };
+
       try {
         this.send(message.toString());
-        return OpiListener.ok(parseResult(type, this.receive()));
+        return new OpiListener.Packet("\"To be constructed\"");  // parseResult(type, this.receive())); TODO
       } catch (IOException e) {
         return OpiListener.error(OPI_PRESENT_FAILED, e);
       }
@@ -345,7 +348,7 @@ public class O900 extends OpiMachine {
   }
 
   /**
-   * opiClose: Close OPI connection
+   * opiClose: Send "close" to real machine and then close the connection to the real machine.
    * 
    * @param args pairs of argument name and value
    *
@@ -360,7 +363,7 @@ public class O900 extends OpiMachine {
     } catch (IOException e) {
       return OpiListener.error(OPI_CLOSE, e);
     }
-    return OpiListener.ok(DISCONNECTED_FROM_HOST, true);
+    return new OpiListener.Packet(true, DISCONNECTED_FROM_HOST);
   };
 
   /**
@@ -371,7 +374,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   private String queryResults() {
-    return new StringBuilder("\n  {\n")
+    return new StringBuilder("\n \"{\n")
     .append("    \"EYE_RIGHT\": " + EYE_RIGHT + ",\n")
     .append("    \"EYE_LEFT\": " + EYE_LEFT + ",\n")
     .append("    \"EYE_BOTH\": " + EYE_BOTH + ",\n")
@@ -406,7 +409,7 @@ public class O900 extends OpiMachine {
     .append("    \"MET_COL_BLUE_WHITE\": " + MET_COL_BLUE_WHITE + ",\n")
     .append("    \"MET_COL_RED_YELLOW\": " + MET_COL_RED_YELLOW + ",\n")
     .append("    \"MET_COL_WHITE_YELLOW\": " + MET_COL_WHITE_YELLOW)
-    .append("\n  }").toString();
+    .append("\n  }\"").toString();
   };
 
   /**

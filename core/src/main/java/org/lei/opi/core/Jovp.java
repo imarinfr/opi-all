@@ -17,9 +17,8 @@ import es.optocom.jovp.definitions.TextureType;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
 import javafx.event.ActionEvent;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.scene.chart.ScatterChart;
@@ -71,11 +70,13 @@ public static class Settings extends OpiMachine.Settings {
     * 
     * @since 0.0.1
     */
-    //TODO should have @returnmsg annotator?
     public Packet initialize(HashMap<String, Object> args) {
+        if (textAreaCommands != null) // allows testing without GUI
+          textAreaCommands.appendText("Initialize received.\n");
         try {
             this.send(initConfiguration());
-            return new Packet(this.receive());
+            Packet p = this.receive();
+            return p;
         } catch (IOException e) {
             return OpiListener.error(COULD_NOT_INITIALIZE, e);
         }
@@ -88,12 +89,14 @@ public static class Settings extends OpiMachine.Settings {
      *
      * @since 0.0.1
      */
-    //TODO should have @returnmsg annotator?
     public Packet query() {
+        if (textAreaCommands != null) // allows testing without GUI
+          textAreaCommands.appendText("Query received.\n");
         if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
         try {
             this.send(toJson(Command.QUERY));
-            return new Packet(this.receive());
+            Packet rec = this.receive();
+            return rec;
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
             return OpiListener.error(COULD_NOT_QUERY, e);
         }
@@ -121,10 +124,12 @@ public static class Settings extends OpiMachine.Settings {
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
   @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
   public Packet setup(HashMap<String, Object> args) {
+    if (textAreaCommands != null) // allows testing without GUI
+      textAreaCommands.appendText("Setup received.\n");
     if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     try {
       this.send(Setup.create1(args).toJson());
-      return new Packet(this.receive());
+      return this.receive();
     } catch (ClassCastException | IllegalArgumentException e) {
       return OpiListener.error(COULD_NOT_SETUP, e);
     } catch (IOException e) {
@@ -164,10 +169,12 @@ public static class Settings extends OpiMachine.Settings {
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
   @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
   public Packet present(HashMap<String, Object> args) {
+    if (textAreaCommands != null) // allows testing without GUI
+      textAreaCommands.appendText("Present received.\n");
     if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
     try {
       this.send(Present.process(args).toJson());
-      return new Packet(this.receive());
+      return this.receive();
     } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
       return OpiListener.error(COULD_NOT_PRESENT, e);
     } catch (IOException e) {
@@ -176,7 +183,7 @@ public static class Settings extends OpiMachine.Settings {
   }
 
   /**
-   * opiClose: Close OPI connection
+   * opiClose: Send close to Jovp and close my socket to it.
    * 
    * @param args pairs of argument name and value
    *
@@ -185,15 +192,16 @@ public static class Settings extends OpiMachine.Settings {
    * @since 0.0.1
    */
     public Packet close() {
-        if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
-        try {
-            this.send(toJson(Command.CLOSE));
-            this.receive(); // message ignored
-            this.closeSocket();
-        } catch (IOException e) {
-            return OpiListener.error(COULD_NOT_CLOSE, e);
-        }
-        return OpiListener.ok(DISCONNECTED_FROM_HOST, true);
+      if (textAreaCommands != null) // allows testing without GUI
+        textAreaCommands.appendText("Close received.\n");
+      if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+      try {
+          this.send(toJson(Command.CLOSE));   // this will close the server, so no messages coming back
+          this.closeSocket();
+      } catch (IOException e) {
+          return OpiListener.error(COULD_NOT_CLOSE, e);
+      }
+      return new OpiListener.Packet(true, DISCONNECTED_FROM_HOST);
   }
 
   /** Initialize command with */
@@ -221,15 +229,11 @@ public static class Settings extends OpiMachine.Settings {
     private ScatterChart<?, ?> scatterChartVF;
 
     @FXML
-    private ListView<String> listCommands;
+    private TextArea textAreaCommands;
 
     @FXML
     void actionBtnClose(ActionEvent event) {
-        System.out.println("Closed Display");
-
-        final Node source = (Node) event.getSource();
-        final Stage stage = (Stage) source.getScene().getWindow();
-        stage.setScene(this.parentScene);
+        returnToParentScene((Node)event.getSource());
     }
 
 }

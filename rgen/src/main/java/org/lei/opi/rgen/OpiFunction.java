@@ -185,7 +185,6 @@ public class OpiFunction {
 
     /**
      * R code to generate a JSON msg of list of params and values
-     * @param params List of params to send to machine
      */
     private final String sendMessage() {
         //msg <- c(list(command = "present"), lapply(stim, function(p) ifelse(is.null(p), NULL, p)))
@@ -252,8 +251,6 @@ public class OpiFunction {
 
             // (2) Make the first part of function body which 
             //     - either opens socket or uses existing socket
-            //     - creates JSON msg from params
-            //     - sends the json on the socket
         String socketCode = "";
         if (createSocket) {
             if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
@@ -283,6 +280,7 @@ public class OpiFunction {
         }
 
             // (3) make the second part of function body which 
+            //    - sends the json on the socket
             //    - gets back JSON msg from socket
             //    - returns it as returnMsg format
         // something here about returnmsg???

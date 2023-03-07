@@ -58,10 +58,10 @@ chooseOPI <- function(machine = NULL) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
         print(unlist(.opi_env$machine_list))
     } else {
-        if (machine == "PicoVR") machine <- "Jovp"
-        if (machine == "Display") machine <- "Jovp"
-        if (machine == "PhoneHMD") machine <- "Jovp"
-        if (machine == "ImoVifa") machine <- "Jovp"
+        #if (machine == "PicoVR") machine <- "Jovp"
+        #if (machine == "Display") machine <- "Jovp"
+        #if (machine == "PhoneHMD") machine <- "Jovp"
+        #if (machine == "ImoVifa") machine <- "Jovp"
         assign("chosen_machine", machine, .opi_env)
     }
     return(NULL)

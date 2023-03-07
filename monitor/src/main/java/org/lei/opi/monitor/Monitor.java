@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.Optional;
 
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Constructor;
@@ -139,20 +140,24 @@ public class Monitor extends Application {
 
         boolean gotThem = false;
         if (getFromFile) {
-            HashMap<String, Object> map = OpiMachine.readSettingsFile();
-            if (map.containsKey(machineName)) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> params = (Map<String, Object>)map.get(machineName);
-                for (String p  : params.keySet()) {
-                    List<StringProperty> line = new ArrayList<StringProperty>();
-                    line.add(new SimpleStringProperty(p));
-                    line.add(new SimpleStringProperty(params.get(p).toString()));
-                    this.settingsList.add(line);
+            try {
+                HashMap<String, Object> map = OpiMachine.readSettingsFile();
+                if (map.containsKey(machineName)) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> params = (Map<String, Object>)map.get(machineName);
+                    for (String p  : params.keySet()) {
+                        List<StringProperty> line = new ArrayList<StringProperty>();
+                        line.add(new SimpleStringProperty(p));
+                        line.add(new SimpleStringProperty(params.get(p).toString()));
+                        this.settingsList.add(line);
+                    }
+                    gotThem = true;
+                    this.settingsHaveBeenEdited = false;
+                } else {
+                    System.out.println("Could not find " + machineName + " in settings file, resetting to defauts.");
                 }
-                gotThem = true;
-                this.settingsHaveBeenEdited = false;
-            } else {
-                System.out.println("Could not find " + machineName + " in settings file, resetting to defauts.");
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not find settings file, resetting to defauts.");
             }
         }
         
@@ -236,7 +241,15 @@ public class Monitor extends Application {
     private void saveCurrentSettings() {
         labelMessages.setText("Saving settings for " + this.currentMachineChoice + "...");
 
-        HashMap<String, Object> map = OpiMachine.readSettingsFile();
+        HashMap<String, Object> map;
+        try {
+            map = OpiMachine.readSettingsFile();
+        } catch (FileNotFoundException e) {
+            System.out.println("Well, I dunno what to do. I am being asked to save settings for " + this.currentMachineChoice + " but I cannot find the settings file with all the others in.");
+            System.out.println("I guess I will create a new file with just this machine in it...");
+            System.out.println("But be warned, this is probably not what you want!");
+            map = new HashMap<String, Object>();
+        }
 
         List<Field> allFields = Monitor.getAllFields(new ArrayList<Field>(), this.currentSettingsObject.getClass());
 
@@ -343,7 +356,15 @@ public class Monitor extends Application {
         listMachines.getSelectionModel().select(0);
 
             // (3) Get myPort from settings file if it exists
-        HashMap<String, Object> settings = OpiMachine.readSettingsFile();
+        HashMap<String, Object> settings;
+        try {
+            settings = OpiMachine.readSettingsFile();
+        } catch (FileNotFoundException e) {
+            System.out.println("I could not find the settings file...");
+            System.out.println("Blazing ahead with empty settings.");
+            settings = new HashMap<String, Object>();
+        }
+
         if (settings.containsKey(OpiMachine.GUI_MACHINE_NAME)) {
             @SuppressWarnings("unchecked")
             Map<String, Object> mySettings = (Map<String, Object>)settings.get(OpiMachine.GUI_MACHINE_NAME);

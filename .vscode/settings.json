@@ -10,5 +10,6 @@
       "--module-path=${env:M2_HOME}/repository/org/openjfx",
       "--add-modules=ALL-MODULE-PATH"
     ]
-  }
+  },
+  "java.debug.settings.onBuildFailureProceed": true
 }

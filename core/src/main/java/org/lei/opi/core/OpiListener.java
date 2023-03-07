@@ -1,11 +1,9 @@
 package org.lei.opi.core;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.PrintWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -24,9 +22,9 @@ import com.google.gson.reflect.TypeToken;
  *
  * An instance of this runs a ServerSocket in a separate thread that applies 
  * this.process() to any incoming messages. It assumes that the messages are 
- * JSON objects that at least contain a name:value pair "command":"x" where
- * x is one of the 5 OPI commands. If the JSON string does match this pattern
- * it is parsed into name:value pairs and these are passed onto 
+ * JSON objects termintated with a \n that at least contain a name:value pair 
+ * "command":"x" where  x is one of the 5 OPI commands. If the JSON string 
+ * does match this pattern it is parsed into name:value pairs and these are passed onto 
  * this.machine.processPairs().
  *
  * @since 0.2.0
@@ -62,14 +60,15 @@ public class OpiListener extends Thread {
     private static final String CHARSET_NAME = "UTF8";
     /** {@value LISTENER_FAILED} */
     private static final String LISTENER_FAILED = "Listener failed.";
-    /** {@value RECEIVE_FAILED} */
-    private static final String RECEIVE_FAILED = "Cannot write receive() message to receiveWriter in Listener.";
-    /** {@value SEND_FAILED} */
-    private static final String SEND_FAILED = "Cannot write send() message to sendWriter in Listener.";
     /** {@value CLOSE_FAILED} */
     private static final String CLOSE_FAILED = "Cannot close the socket.";
     /** {@value CLOSE_FAILED} */
     private static final String CANNOT_OBTAIN_ADDRESS = "Cannot obtain public address.";
+
+    /** {@value JSON_TRUE} */
+    private static final String JSON_TRUE = "\"true\"";
+    /** {@value JSON_FALSE} */
+    private static final String JSON_FALSE = "\"false\"";
 
     /** Constant for exception messages: {@value BAD_JSON} */
     public static final String BAD_JSON = "String is not a valid Json object.";
@@ -86,17 +85,31 @@ public class OpiListener extends Thread {
         public boolean close;
         /** true if this message packet contains an error msg */
         public boolean error;
-        /** Some sort of message - probably Json, but maybe not. */
-        public String msg;
+        /** Either a String or a JSON Object */
+        public Object msg;
+        /** The type of the msg which might be needed if want to fromJson to this*/
+        Class<?> type;
 
-        /** Simple constructor 0 */
-        public Packet() { this.close = false ; this.msg = ""; this.error = false; }
-        /** Simple constructor 1 */
-        public Packet(String msg) { this.close = false ; this.msg = msg; this.error = false; }
-        /** Simple constructor 2 */
-        public Packet(boolean close, String msg) { this.close = close ; this.msg = msg; this.error = false;}
-        /** Simple constructor 3 */
-        public Packet(boolean error, boolean close, String msg) { this.close = close ; this.msg = msg; this.error = error;}
+        public Packet(boolean error, boolean close, Object msg, Class<?> type) { this.close = close ; this.msg = msg; this.error = error; this.type = type;}
+
+        public Packet() { this(false, false, "", String.class);}
+        public Packet(String s) { this(false, false, (Object)s, String.class);}
+        public Packet(Packet p) { this(false, false, (Object)p, Packet.class);}
+        public Packet(boolean close, String str) { this(false, close, (Object)str, String.class);}
+        public Packet(boolean error, boolean close, String str) {this(error, close, (Object)str, String.class);} 
+
+        public boolean  getClose() { return this.close; }
+        public boolean  getError() { return this.error; }
+        public Class<?> getType()  { return this.type; }
+
+        public Object getMsg() throws ClassCastException { 
+            return this.type.cast(this.msg);
+        }
+
+        public String toString() { return String.format("Packet\n\tError: %s\n\tClose: %s\n\tMsg: %s\n", error, close, getMsg()); }
+        public String toJson() { 
+            return String.format("{\"error\":%s,\"close\":%s,\"msg\":%s}", this.error ? JSON_TRUE : JSON_FALSE, this.close ? JSON_TRUE : JSON_FALSE, OpiListener.gson.toJson(this.msg)); 
+        }
     }
    
     /** to parse JSONs with fromJson method */
@@ -115,11 +128,7 @@ public class OpiListener extends Thread {
         /** Reader for incoming messages on the socket */
     BufferedReader incoming;
         /** Writer for outgoing messages to the socket */
-    BufferedWriter outgoing;
-    /** If not null, add the messages processed by {@link send} to {@link sendWriter} */
-    Writer sendWriter = null;
-    /** If not null, add the messages procesed by {@link receive} to {@link receiveBuffer} */
-    Writer receiveWriter = null;
+    PrintWriter outgoing;
     /** Whether it is connected to a client */
     protected boolean connected;
     /** The OpiMachine object that commands will be passed to */
@@ -194,13 +203,12 @@ public class OpiListener extends Thread {
             socket = server.accept();
             this.connected = true;
             incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
-            outgoing = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), CHARSET_NAME));
-            while (this.connected) {
-                if (incoming.ready()) {
-                    Packet pack = process(receive());
-                    send(pack.msg);
+            outgoing = new PrintWriter(socket.getOutputStream());
+            String inputLine;
+            while (this.connected && (inputLine = incoming.readLine()) != null) {
+                    Packet pack = process(inputLine);
+                    send(pack.toJson());
                     if (pack.close) break; // if close requested, break loop
-                }
             }
             server.close();
         } catch (SocketException ignored) {
@@ -212,45 +220,16 @@ public class OpiListener extends Thread {
   
     /**
      *
-     * Receive message
-     *
-     * @return Message received
-     *
-     * @since 0.0.1
-     */
-    public String receive() {
-        StringBuilder message = new StringBuilder();
-        try {
-            while (incoming.ready()) {
-                String line = incoming.readLine();
-                message.append(line + (incoming.ready() ? "\n" : ""));
-            }
-            if (receiveWriter != null) receiveWriter.write(message.toString());
-        } catch (IOException e) {
-            System.err.println(RECEIVE_FAILED);
-            throw new RuntimeException(RECEIVE_FAILED, e);
-        }
-        return message.toString();
-    }
-  
-    /**
-     *
-     * Send message
+     * Send message.
+     * Strip any internal newlines as \n terminates a message.
      *
      * @param message  The message to deliver
      *
      * @since 0.0.1
      */
     public void send(String message) {
-        try {
-            outgoing.write(message.replace("\n", ""));
-            outgoing.newLine();
-            outgoing.flush();
-            if (sendWriter != null) sendWriter.write(message);
-        } catch (IOException e) {
-            System.err.println(SEND_FAILED);
-            throw new RuntimeException(SEND_FAILED, e);
-        }
+      outgoing.write(message.replace("\n", "") + "\n");
+      outgoing.flush();
     }
   
     /**
@@ -278,7 +257,7 @@ public class OpiListener extends Thread {
     }
   
     public String toString() {
-      return "Local socket connection at " + getIP() + ":" + getPort();
+      return "OpiListener server listening at " + getIP() + ":" + getPort();
     }
   
     /**
@@ -328,61 +307,29 @@ public class OpiListener extends Thread {
   
     //------------------------ Utilities for Creating Packets -------------------------
     /**
-     * Create an OK message in JSON format with attached results
+     * Create a Packet with error=true
      * 
-     * @param message Json object that is feedback from the OPI command or null
+     * @param description String error description (no extra quotes)
      * 
-     * @return JSON-formatted ok message
+     * @return Packet 
      * 
-     * @since 0.1.0
+     * @since 0.2.0
      */
-    public static Packet ok(String message) {
-      return ok(message, false);
-    }
+    public static Packet error(String description) { return new Packet(true, false, description); }
    
     /**
-     * Create an OK message in JSON format with attached results
-     * 
-     * @param message Json object that is feedback from the OPI command or null
-     * @param close Whether to close or not
-     * 
-     * @return JSON-formatted ok message
-     * 
-     * @since 0.1.0
-     */
-    public static Packet ok(String message, boolean close) {
-      return new Packet(false, close, String.format("{\n  %s, \n  \"msg\": \"%s\"\n}", ERROR_NO, message));
-    }
-   
-    /**
-     * Create an error message in JSON format to send to R OPI
-     * 
-     * @param description String error description (no quotes)
-     * 
-     * @return JSON-formatted error message
-     * 
-     * @since 0.1.0
-     */
-    public static Packet error(String description) {
-      return new Packet(
-          String.format("{\n  %s, \n  \"msg\": \"%s\"\n}", ERROR_YES, description));
-    }
-   
-    /**
-     * Create an error message in JSON format to send to R OPI
+     * Create a Packet with error=true that includes both a description and an exception.
      * 
      * @param description String error description (no quotes) to add to Json return name 'description'
      * @param exception An exception to print to stderr and add to Json return object name 'exception'
      * 
-     * @return JSON-formatted error message
+     * @return Packet
      * 
      * @since 0.1.0
      */
+    public record ExErr(String d, Exception e) { ; }
     public static Packet error(String description, Exception exception) {
-      exception.printStackTrace();
-      String eStr = exception.toString().replace("\"", "\\\"");
-      eStr = eStr.replace("\0", "0");
-      return new Packet(
-          String.format("{\n  %s, \n  \"msg\": \"%s\", \"exception\": \"%s\"\n}", ERROR_YES, description, eStr));
+      ExErr t = new ExErr(description, exception);
+      return new Packet(true, false, t, ExErr.class);
     }
 }

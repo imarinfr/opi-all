@@ -83,7 +83,7 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
   }
 
   /**
-   * Present to JSON
+   * Setup to JSON
    * 
    * @return The Present record as JSON
    * 
