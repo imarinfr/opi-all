@@ -4,18 +4,18 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 
 import java.lang.reflect.Method;
-import java.util.stream.Stream;
+
 import java.util.stream.Collectors;
 import java.util.function.Function;
+import java.util.HashMap;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
 /**
  * Class to hold information about the mapping from opi functions 
- * to functions in Imo.java and also to generate the R code.
+ * to functions in core::OPiMachine and also to generate the R code.
 */
 public class OpiFunction {
         /** This is the parameter name for the ip on which OPI R should create socket */
@@ -25,14 +25,16 @@ public class OpiFunction {
         /** This is the name of the OPI environment for storing variables, settings, etc */
     static final String opiEnvName = ".opi_env";
 
-    public record MethodData(Parameter[] parameters, ReturnMsg[] returnMsgs) {
-        static MethodData append(MethodData m1, MethodData m2) {
-            if (m1 == null) return m2;
-            if (m2 == null) return m1;
-            return new MethodData(
-                ArrayUtils.addAll(m1.parameters, m2.parameters),
-                ArrayUtils.addAll(m1.returnMsgs, m2.returnMsgs)
-            );
+    public record MethodData(HashMap<String, Parameter> parameters, HashMap<String, ReturnMsg> returnMsgs) {
+        void addU(Parameter[] ps) {
+            for (Parameter p : ps)
+                if (!this.parameters.containsKey(p.name()))
+                    this.parameters.put(p.name(), p);
+        }
+        void addU(ReturnMsg[] rs) {
+            for (ReturnMsg r : rs)
+                if (!this.returnMsgs.containsKey(r.name()))
+                    this.returnMsgs.put(r.name(), r);
         }
     };
     
@@ -62,21 +64,19 @@ public class OpiFunction {
         this.createSocket = createSocket;
         this.machineName = machine.getClass().getSimpleName();
 
-                // get @Parameter and @ReturnMsg annotations for this function 
-                // in the base class and any parent classes
-        this.methodData = new MethodData(null, null);
+            // get @Parameter and @ReturnMsg annotations for this function (ie name == this.opiCoreName)
+            // Get any annotations from super classes if they don't conflict
+        this.methodData = new MethodData(new HashMap<String, Parameter>(), new HashMap<String, ReturnMsg>());
         Class<?> c = machine.getClass();
         while (c != null) {
-            this.methodData = MethodData.append(Stream.of(c.getMethods())
-                .filter((Method m) -> m.getName() == this.opiCoreName)
-                .findAny()
-                .map((Method m) -> new MethodData(
-                    m.getAnnotationsByType(Parameter.class), 
-                    m.getAnnotationsByType(ReturnMsg.class)))
-                .orElse(null), 
-                this.methodData
-            );
-            c = c.getSuperclass();
+            for (Method m : c.getMethods()) {
+                if (m.getName() == this.opiCoreName) {
+                    this.methodData.addU(m.getAnnotationsByType(Parameter.class));
+                    this.methodData.addU(m.getAnnotationsByType(ReturnMsg.class));
+                }
+            }
+
+            c = c.getSuperclass();  // go up to parent
         }
 
         if (this.methodData == null) {
@@ -85,10 +85,10 @@ public class OpiFunction {
         } 
 
             // TODO isListList
-        String s = Stream.of(this.methodData.parameters())
+        String s = this.methodData.parameters().values().stream()
                    .filter((Parameter p) -> !p.optional())
                    .map((Parameter p) -> 
-                       p.className().getSimpleName().equals("Double") || p.isList() ?
+                       p.className().getSimpleName().equals("Double") || p.isList() || p.isListList() ?
                            String.format("%s = %s", p.name(), p.defaultValue()) :
                            String.format("%s = \"%s\"", p.name(), p.defaultValue()))
                    .collect(Collectors.joining(", "));
@@ -130,7 +130,7 @@ public class OpiFunction {
       // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
         String prefix =  String.format("#' @param %s ",p.name());
-        return prefix + wrapR(p.desc(), prefix.length(), false);
+        return prefix + wrapR(p.desc() + (p.optional() ? "(Optional)" : ""), prefix.length(), false);
     };
 
       // generate roxygen2 string for return value r
@@ -145,11 +145,11 @@ public class OpiFunction {
      * Roxygen2 comments at the header of the function.
      */
     private String makeDocumentation() {
-        String params = Stream.of(methodData.parameters)
+        String params = methodData.parameters.values().stream()
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
         String rets = "#' @return a list contianing:\n" + 
-            Stream.of(methodData.returnMsgs)
+            methodData.returnMsgs.values().stream()
             .map(prettyReturn)
             .collect(Collectors.joining("\n"));
 
@@ -195,7 +195,7 @@ public class OpiFunction {
         msg <- rjson::toJSON(msg)
         writeLines(msg, %s$%s$socket)
     """, 
-        Stream.of(methodData.parameters())
+        methodData.parameters().values().stream()
             .map((Parameter p) -> String.format("%s = %s%s", 
                 p.name(), 
                 this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "",
@@ -237,11 +237,16 @@ public class OpiFunction {
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 
             // (2) make the function header
-        String params = Stream.of(this.methodData.parameters()).map((Parameter p) -> String.format("%s = NULL",p.name()))
+        String params = this.methodData.parameters().values().stream()
+            .map((Parameter p) -> String.format("%s = NULL",p.name()))
             .collect(Collectors.joining(", "));
 
         if (opiInputFieldName.length() == 0) {
-            if (Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().contains(".")).findAny().isPresent())
+            if (this.methodData.parameters().values().stream()
+                .filter((Parameter p) -> p.name()
+                .contains("."))
+                .findAny()
+                .isPresent())
                 System.err.println("PANIC: I don't know what to do with a Paramter.name() with a '.' in it.");
         } else {
             params = String.format("%s = list(%s)", opiInputFieldName, params);
@@ -253,9 +258,9 @@ public class OpiFunction {
             //     - either opens socket or uses existing socket
         String socketCode = "";
         if (createSocket) {
-            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
+            if (!this.methodData.parameters().values().stream().filter((Parameter p) -> p.name().equals(parameterForIp)).findAny().isPresent())
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForIp));
-            if (!Stream.of(this.methodData.parameters()).filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
+            if (!this.methodData.parameters().values().stream().filter((Parameter p) -> p.name().equals(parameterForPort)).findAny().isPresent())
                 System.err.println(String.format("PANIC: asking to create R function %s to call open_socket without paramter %s.", this.opiName, parameterForPort));
 
             socketCode = String.format("""

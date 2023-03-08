@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import org.lei.opi.core.OpiListener.Packet;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.Present;
@@ -46,25 +45,26 @@ public static class Settings extends OpiMachine.Settings {
   private Settings settings;
   public Settings getSettings() { return this.settings; }
 
-    /*
+    /**
      * @param parentScene The Scene to return to when this object is closed.
      *                    If null, then do not create a connection. (Used for GUI to probe class.)
+     * @throws InstantiationException
      */
-    public Jovp(Scene parentScene) throws RuntimeException {
+    public Jovp(Scene parentScene) throws InstantiationException {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
         this.parentScene = parentScene;
        
         if (parentScene != null)
-            if (!this.connect(settings.ip, settings.port))
-              System.out.println(String.format("Cannnot connect to %s:%s", settings.ip, settings.port));
-        //listCommands = new ListView<String>(writer.messageRecord);  // GUI element
+            if (!this.connect(settings.ip, settings.port)) {
+              throw new InstantiationException(String.format("Cannot connect to %s:%s", settings.ip, settings.port));
+            }
     }
 
     /**
     * opiInitialise: initialize OPI
     * 
-    * @param args A map of name:value pairs for Params
+    * @param args A map of name:value pairs for Params - ignored here.
     * 
     * @return A JSON object with machine specific initialise information
     * 
@@ -76,9 +76,10 @@ public static class Settings extends OpiMachine.Settings {
         try {
             this.send(initConfiguration());
             Packet p = this.receive();
+System.out.println(p);
             return p;
         } catch (IOException e) {
-            return OpiListener.error(COULD_NOT_INITIALIZE, e);
+            return Packet.error(COULD_NOT_INITIALIZE, e);
         }
     }
 
@@ -92,13 +93,13 @@ public static class Settings extends OpiMachine.Settings {
     public Packet query() {
         if (textAreaCommands != null) // allows testing without GUI
           textAreaCommands.appendText("Query received.\n");
-        if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+        if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
             this.send(toJson(Command.QUERY));
             Packet rec = this.receive();
             return rec;
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
-            return OpiListener.error(COULD_NOT_QUERY, e);
+            return Packet.error(COULD_NOT_QUERY, e);
         }
     };
 
@@ -111,12 +112,12 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "list('left')")
+  @Parameter(name = "eye", className = Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "[\"left\"]")
   @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, defaultValue = "10")
-  @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye.", isList = true, min = 0, max = 1, defaultValue = "list(1, 1, 1)")
+  @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye.", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
   @Parameter(name = "fixShape", className = ModelType.class, desc = "Fixation target type for eye.", defaultValue = "maltese")
   @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, defaultValue = "20")
-  @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, min = 0, max = 1, defaultValue = "list(0, 1, 0)")
+  @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, min = 0, max = 1, defaultValue = "[0,1,0]")
   @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees).", min = -90, max = 90, defaultValue = "0")
   @Parameter(name = "fixCy", className = Double.class, desc = "y-coordinate of fixation target (degrees).", min = -90, max = 90, defaultValue = "0")
   @Parameter(name = "fixSx", className = Double.class, desc = "diameter along major axis of ellipse (degrees).", min = 0, defaultValue = "1")
@@ -126,14 +127,14 @@ public static class Settings extends OpiMachine.Settings {
   public Packet setup(HashMap<String, Object> args) {
     if (textAreaCommands != null) // allows testing without GUI
       textAreaCommands.appendText("Setup received.\n");
-    if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+    if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
       this.send(Setup.create1(args).toJson());
       return this.receive();
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiListener.error(COULD_NOT_SETUP, e);
+      return Packet.error(COULD_NOT_SETUP, e);
     } catch (IOException e) {
-      return OpiListener.error(COULD_NOT_SETUP, e);
+      return Packet.error(COULD_NOT_SETUP, e);
     }
   }
 
@@ -146,24 +147,24 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = Eye.class, desc = "Eye to test.", isList = true, defaultValue = "list('left')")
-  @Parameter(name = "shape", className = ModelType.class, desc = "Stimulus shape.", isList = true, optional = true, defaultValue = "list('circle')")
-  @Parameter(name = "type", className = TextureType.class, desc = "Stimulus type.", isList = true, optional = true, defaultValue = "list('flat')")
-  @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
-  @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
-  @Parameter(name = "sx", className = Double.class, desc = "List of diameters along major axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "list(1.72)")
-  @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "list(1.72)")
-  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "list(20)")
-  @Parameter(name = "color1", className = Double.class, desc = "List of stimulus colors 1.", isListList = true, min = 0, max = 1, defaultValue = "list(list(1, 1, 1))")
-  @Parameter(name = "color2", className = Double.class, desc = "List of stimulus colors 2. Only useful if stimulus type != FLAT", isListList = true, optional = true, min = 0, max = 1, defaultValue = "list(list(0, 1, 0))")
-  @Parameter(name = "rotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if sx != sy specified.", isList = true, optional = true, min = 0, max = 360, defaultValue = "list(0)")
-  @Parameter(name = "contrast", className = Double.class, desc = "List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.", isList = true, optional = true, min = 0, max = 1, defaultValue = "list(1)")
-  @Parameter(name = "phase", className = Double.class, desc = "List of phases (in degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, defaultValue = "list(0)")
-  @Parameter(name = "frequency", className = Double.class, desc = "List of frequencies (in cycles per degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 300, defaultValue = "list(0)")
-  @Parameter(name = "defocus", className = Double.class, desc = "List of defocus values in Diopters for stimulus post-processing.", isList = true, optional = true, min = 0, defaultValue = "list(0)")
-  @Parameter(name = "textRotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 360, defaultValue = "list(0)")
-  @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "list(200)")
-  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms).", isList = true, min = 0, defaultValue = "list(1500)")
+  @Parameter(name = "eye", className = Eye.class, desc = "Eye to test.", isList = true, defaultValue = "[\"left\"]")
+  @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
+  @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
+  @Parameter(name = "sx", className = Double.class, desc = "List of diameters along major axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "[1.72]")
+  @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "[1.72]")
+  @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "[200]")
+  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms).", isList = true, min = 0, defaultValue = "[1500]")
+  @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "[20]")
+  @Parameter(name = "color1", className = Double.class, desc = "List of stimulus colors 1.", isListList = true, min = 0, max = 1, defaultValue = "[[1,1,1]]")
+  @Parameter(name = "color2", className = Double.class, desc = "List of stimulus colors 2. Only useful if stimulus type != FLAT", isListList = true, optional = true, min = 0, max = 1, defaultValue = "[[0,1,0]]")
+  @Parameter(name = "rotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if sx != sy specified.", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
+  @Parameter(name = "contrast", className = Double.class, desc = "List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.", isList = true, optional = true, min = 0, max = 1, defaultValue = "[1]")
+  @Parameter(name = "phase", className = Double.class, desc = "List of phases (in degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, defaultValue = "[0]")
+  @Parameter(name = "frequency", className = Double.class, desc = "List of frequencies (in cycles per degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 300, defaultValue = "[0]")
+  @Parameter(name = "defocus", className = Double.class, desc = "List of defocus values in Diopters for stimulus post-processing.", isList = true, optional = true, min = 0, defaultValue = "[0]")
+  @Parameter(name = "textRotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
+  @Parameter(name = "shape", className = ModelType.class, desc = "Stimulus shape.", isList = true, optional = true, defaultValue = "[\"circle\"]")
+  @Parameter(name = "type", className = TextureType.class, desc = "Stimulus type.", isList = true, optional = true, defaultValue = "[\"flat\"]")
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
@@ -171,14 +172,14 @@ public static class Settings extends OpiMachine.Settings {
   public Packet present(HashMap<String, Object> args) {
     if (textAreaCommands != null) // allows testing without GUI
       textAreaCommands.appendText("Present received.\n");
-    if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+    if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
       this.send(Present.process(args).toJson());
       return this.receive();
     } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
-      return OpiListener.error(COULD_NOT_PRESENT, e);
+      return Packet.error(COULD_NOT_PRESENT, e);
     } catch (IOException e) {
-      return OpiListener.error(COULD_NOT_PRESENT, e);
+      return Packet.error(COULD_NOT_PRESENT, e);
     }
   }
 
@@ -192,19 +193,21 @@ public static class Settings extends OpiMachine.Settings {
    * @since 0.0.1
    */
     public Packet close() {
-      if (textAreaCommands != null) // allows testing without GUI
+      if (textAreaCommands != null) { // allows testing without GUI
         textAreaCommands.appendText("Close received.\n");
-      if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+        returnToParentScene((Node)textAreaCommands);
+      }
+      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
       try {
           this.send(toJson(Command.CLOSE));   // this will close the server, so no messages coming back
           this.closeSocket();
       } catch (IOException e) {
-          return OpiListener.error(COULD_NOT_CLOSE, e);
+          return Packet.error(COULD_NOT_CLOSE, e);
       }
-      return new OpiListener.Packet(true, DISCONNECTED_FROM_HOST);
+      return new Packet(true, DISCONNECTED_FROM_HOST);
   }
 
-  /** Initialize command with */
+  /** This is what the JOVP Server/Machine is expecting for the Initialize Command */
   private String initConfiguration() {
     return new StringBuilder("{\n  \"command\": " + Command.INITIALIZE + ",\n")
     .append("  \"machine\": " + this.getClass().getSimpleName() + ",\n")

@@ -27,28 +27,28 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param ip IP Address of the OPI Monitor.
 #' @param port TCP port of the OPI Monitor.
+#' @param ip IP Address of the OPI Monitor.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error Error code '0' if all good, something else otherwise.
 #'    - res$msg The success or error message.
+#'    - res$error Error code '0' if all good, something else otherwise.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiInitialise(ip = "localhost", port = 50001)
+#' result <- opiInitialise(port = 50001, ip = "localhost")
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
+opiInitialise_for_O900 <- function(port = NULL, ip = NULL) {
     if (!exists("socket", where = .opi_env$O900))
         assign("socket", open_socket(ip, port), .opi_env$O900)
     else
         return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
-    msg <- list(ip = ip, port = port)
+    msg <- list(port = port, ip = ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -73,8 +73,8 @@ opiInitialise_for_O900 <- function(ip = NULL, port = NULL) {
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or a structure with the following data.
+#'    - res$error '0' if success, something else if error.
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -107,34 +107,34 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @usage NULL
 #'
 #' @param eye Eye to set.
-#' @param bgLum Background luminance for eye.
-#' @param bgCol Background color for eye.
 #' @param fixShape Fixation target.
-#' @param fixIntensity Fixation intensity(from 0% to 100%).
 #' @param pres Volume for auditory feedback when a stimulus is presented: 0
 #'                means no buzzer.
 #' @param resp Volume for auditory feedback when observer presses the clicker: 0
 #'                means no buzzer.
+#' @param fixIntensity Fixation intensity(from 0% to 100%).
+#' @param bgLum Background luminance for eye.
+#' @param bgCol Background color for eye.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or a structure with the result of QUERY OPI
 #'                 command.
+#'    - res$error '0' if success, something else if error.
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiSetup(settings = list(eye = "left", bgLum = "10", bgCol = "white",
-#'                    fixShape = "center", fixIntensity = 50, pres = 0, resp = 0))
+#' result <- opiSetup(settings = list(eye = "left", fixShape = "center", pres = 0, resp = 0,
+#'                    fixIntensity = 50, bgLum = "10", bgCol = "white"))
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_O900 <- function(settings = list(eye = NULL, bgLum = NULL, bgCol = NULL, fixShape = NULL, fixIntensity = NULL, pres = NULL, resp = NULL)) {
+opiSetup_for_O900 <- function(settings = list(eye = NULL, fixShape = NULL, pres = NULL, resp = NULL, fixIntensity = NULL, bgLum = NULL, bgCol = NULL)) {
 if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(eye = settings$eye, bgLum = settings$bgLum, bgCol = settings$bgCol, fixShape = settings$fixShape, fixIntensity = settings$fixIntensity, pres = settings$pres, resp = settings$resp)
+    msg <- list(eye = settings$eye, fixShape = settings$fixShape, pres = settings$pres, resp = settings$resp, fixIntensity = settings$fixIntensity, bgLum = settings$bgLum, bgCol = settings$bgCol)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -154,42 +154,42 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @usage NULL
 #'
-#' @param type Stimulus type: STATIC or KINETIC.
-#' @param x List of x co-ordinates of stimuli (degrees).
-#' @param y List of y co-ordinates of stimuli (degrees).
-#' @param lum List of stimuli luminances (cd/m^2).
 #' @param size Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
 #'                device has a big wheel)
 #' @param color Stimulus color (degrees).
 #' @param t List of Stimulus presentation times (ms). For STATIC, list must be
 #'             of length 1. For KINETIC, it must the same length and 'x' and 'y'
 #'             co-ordinates minus 1
+#' @param lum List of stimuli luminances (cd/m^2).
 #' @param w [STATIC] Response window (ms).
+#' @param x List of x co-ordinates of stimuli (degrees).
+#' @param y List of y co-ordinates of stimuli (degrees).
+#' @param type Stimulus type: STATIC or KINETIC.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$msg$seen '1' if seen, '0' if not.
-#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
-#'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
+#'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
+#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
+#'    - res$msg Error message or a structure with the following fields.
+#'    - res$error '0' if success, something else if error.
+#'    - res$msg$seen '1' if seen, '0' if not.
 #'    - res$msg$x [KINETIC] x co-ordinate when oberver responded (degrees).
 #'    - res$msg$y [KINETIC] y co-ordinate when oberver responded (degrees).
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiPresent(stim = list(type = "static", x = list(0), y = list(0), lum = 3183.099,
-#'                      size = "list('GV')", color = "white"))
+#' result <- opiPresent(stim = list(size = "list('GV')", color = "white", lum = 3183.099,
+#'                      x = list(0), y = list(0), type = "static"))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_O900 <- function(stim = list(type = NULL, x = NULL, y = NULL, lum = NULL, size = NULL, color = NULL, t = NULL, w = NULL)) {
+opiPresent_for_O900 <- function(stim = list(size = NULL, color = NULL, t = NULL, lum = NULL, w = NULL, x = NULL, y = NULL, type = NULL)) {
 if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(type = stim$type, x = stim$x, y = stim$y, lum = stim$lum, size = stim$size, color = stim$color, t = stim$t, w = stim$w)
+    msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -214,8 +214,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or additional results from the CLOSE command
+#'    - res$error '0' if success, something else if error.
 #'
 #' @examples
 #' chooseOpi("O900")

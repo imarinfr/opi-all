@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 import org.lei.opi.core.Display;
 import org.lei.opi.core.OpiListener;
-import org.lei.opi.core.OpiListener.Packet;
+import org.lei.opi.core.Packet;
 
 import org.junit.jupiter.api.Test;
 
@@ -75,21 +75,28 @@ public class JovpServerConnectionTests {
       public void run() {
         System.out.println("[testInitialise] Waiting 2 seconds...");
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-        Display machine = new Display(null);
-        System.out.println("[testInitialise] " + machine);
 
-        if (machine != null && !machine.connect(server.getIP(), server.getPort()))
-          System.out.println(String.format("[testInitialise] Cannot connect to %s:%s", server.getIP(), server.getPort()));
-        else
-          System.out.println(String.format("[testInitialise] Connected to %s:%s", server.getIP(), server.getPort()));
+        try {
+          Display machine = new Display(null);
+          System.out.println("[testInitialise] " + machine);
 
-        Packet result = machine.initialize(null);
-        System.out.println(String.format("[testInitialise] %s", result));
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testInitialise] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testInitialise] Connected to %s:%s", server.getIP(), server.getPort()));
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[testInitialise] %s", result));
 
-        result = machine.close(); 
-        System.out.println(String.format("[testInitialise] %s", result));
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialise] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
+
       }
     });
 
@@ -114,26 +121,31 @@ public class JovpServerConnectionTests {
       public void run() {
         System.out.println("[testInitialiseQuery] Waiting 2 seconds...");
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-        Display machine = new Display(null);
-        System.out.println("[testInitialiseQuery] " + machine);
+        try {
+          Display machine = new Display(null);
+          System.out.println("[testInitialiseQuery] " + machine);
 
-        if (machine != null && !machine.connect(server.getIP(), server.getPort()))
-          System.out.println(String.format("[testInitialiseQuery] Cannot connect to %s:%s", server.getIP(), server.getPort()));
-        else
-          System.out.println(String.format("[testInitialiseQuery] Connected to %s:%s", server.getIP(), server.getPort()));
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testInitialiseQuery] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testInitialiseQuery] Connected to %s:%s", server.getIP(), server.getPort()));
 
-        Packet result = machine.initialize(null);
-        System.out.println(String.format("[testInitialiseQuery] %s", result));
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[testInitialiseQuery] %s", result));
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-        result = machine.query();
-        System.out.println(String.format("[testInitialiseQuery] %s", result));
+          result = machine.query();
+          System.out.println(String.format("[testInitialiseQuery] %s", result));
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-        result = machine.close(); 
-        System.out.println(String.format("[testInitialiseQuery] %s", result));
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialiseQuery] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
       }
     });
 
@@ -158,40 +170,46 @@ public class JovpServerConnectionTests {
       public void run() {
         System.out.println("[testInitialiseSetup] Waiting 2 seconds...");
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-        Display machine = new Display(null);
-        System.out.println("[testInitialiseSetup] " + machine);
 
-        if (machine != null && !machine.connect(server.getIP(), server.getPort()))
-          System.out.println(String.format("[testInitialiseSetup] Cannot connect to %s:%s", server.getIP(), server.getPort()));
-        else
-          System.out.println(String.format("[testInitialiseSetup] Connected to %s:%s", server.getIP(), server.getPort()));
+        try {
+          Display machine = new Display(null);
+          System.out.println("[testInitialiseSetup] " + machine);
 
-        Packet result = machine.initialize(null);
-        System.out.println(String.format("[testInitialiseSetup] %s", result));
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testInitialiseSetup] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testInitialiseSetup] Connected to %s:%s", server.getIP(), server.getPort()));
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[testInitialiseSetup] %s", result));
 
-        Packet qResult = machine.query();
-        HashMap<String, Object> hmap = OpiListener.gson.fromJson((String)qResult.getMsg(), HashMap.class);
-        hmap.put("eye", "BOTH");
-        hmap.put("bgLum", 10.0);
-        hmap.put("bgCol", new ArrayList<Double>() {{add(0.5);add(0.5);add(0.5);}});
-        hmap.put("fixShape", "CROSS");
-        hmap.put("fixLum", 50.0);
-        hmap.put("fixCol", new ArrayList<Double>() {{add(0.0);add(1.0);add(0.5);}});
-        hmap.put("fixCx", 0.0);
-        hmap.put("fixCy", 0.0);
-        hmap.put("fixSx", 1.0);
-        hmap.put("fixSy", 1.0);
-        hmap.put("fixRotation", 0.0);
-        hmap.put("tracking", 0.0);
-        result = machine.setup(hmap);
-        System.out.println(String.format("[testInitialiseSetup] %s", result));
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          Packet qResult = machine.query();
+          HashMap<String, Object> hmap = OpiListener.gson.fromJson((String)qResult.getMsg(), HashMap.class);
+          hmap.put("eye", "BOTH");
+          hmap.put("bgLum", 10.0);
+          hmap.put("bgCol", new ArrayList<Double>() {{add(0.5);add(0.5);add(0.5);}});
+          hmap.put("fixShape", "CROSS");
+          hmap.put("fixLum", 50.0);
+          hmap.put("fixCol", new ArrayList<Double>() {{add(0.0);add(1.0);add(0.5);}});
+          hmap.put("fixCx", 0.0);
+          hmap.put("fixCy", 0.0);
+          hmap.put("fixSx", 1.0);
+          hmap.put("fixSy", 1.0);
+          hmap.put("fixRotation", 0.0);
+          hmap.put("tracking", 0.0);
+          result = machine.setup(hmap);
+          System.out.println(String.format("[testInitialiseSetup] %s", result));
 
-        result = machine.close(); 
-        System.out.println(String.format("[testInitialiseSetup] %s", result));
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialiseSetup] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
       }
     });
 
@@ -216,44 +234,50 @@ public class JovpServerConnectionTests {
       public void run() {
         System.out.println("[testInitialiseSetupPresent] Waiting 2 seconds...");
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-        Display machine = new Display(null);
-        System.out.println("[testInitialiseSetupPresent] " + machine);
+          
+        try {
+          Display machine = new Display(null);
+          System.out.println("[testInitialiseSetupPresent] " + machine);
 
-        if (machine != null && !machine.connect(server.getIP(), server.getPort()))
-          System.out.println(String.format("[testInitialiseSetupPresent] Cannot connect to %s:%s", server.getIP(), server.getPort()));
-        else
-          System.out.println(String.format("[testInitialiseSetupPresent] Connected to %s:%s", server.getIP(), server.getPort()));
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testInitialiseSetupPresent] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testInitialiseSetupPresent] Connected to %s:%s", server.getIP(), server.getPort()));
 
-        Packet result = machine.initialize(null);
-        System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-        Packet qResult = machine.query();
-        HashMap<String, Object> hmap = OpiListener.gson.fromJson((String)qResult.getMsg(), HashMap.class);
-        hmap.put("eye", "BOTH");
-        hmap.put("bgLum", 10.0);
-        hmap.put("bgCol", new ArrayList<Double>() {{add(0.5);add(0.5);add(0.5);}});
-        hmap.put("fixShape", "CROSS");
-        hmap.put("fixLum", 50.0);
-        hmap.put("fixCol", new ArrayList<Double>() {{add(0.0);add(1.0);add(0.5);}});
-        hmap.put("fixCx", 0.0);
-        hmap.put("fixCy", 0.0);
-        hmap.put("fixSx", 1.0);
-        hmap.put("fixSy", 1.0);
-        hmap.put("fixRotation", 0.0);
-        hmap.put("tracking", 0.0);
-        result = machine.setup(hmap);
-        System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          Packet qResult = machine.query();
+          HashMap<String, Object> hmap = OpiListener.gson.fromJson((String)qResult.getMsg(), HashMap.class);
+          hmap.put("eye", "BOTH");
+          hmap.put("bgLum", 10.0);
+          hmap.put("bgCol", new ArrayList<Double>() {{add(0.5);add(0.5);add(0.5);}});
+          hmap.put("fixShape", "CROSS");
+          hmap.put("fixLum", 50.0);
+          hmap.put("fixCol", new ArrayList<Double>() {{add(0.0);add(1.0);add(0.5);}});
+          hmap.put("fixCx", 0.0);
+          hmap.put("fixCy", 0.0);
+          hmap.put("fixSx", 1.0);
+          hmap.put("fixSy", 1.0);
+          hmap.put("fixRotation", 0.0);
+          hmap.put("tracking", 0.0);
+          result = machine.setup(hmap);
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
 
-        HashMap stim = makeStimulus();
-        result = machine.present(stim);
-        System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          HashMap stim = makeStimulus();
+          result = machine.present(stim);
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
 
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-        result = machine.close(); 
-        System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
       }
     });
 

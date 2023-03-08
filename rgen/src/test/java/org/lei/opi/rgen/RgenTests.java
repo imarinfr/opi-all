@@ -1,7 +1,15 @@
 package org.lei.opi.rgen;
 
 import org.junit.jupiter.api.Test;
-import org.lei.opi.core.Jovp;
+import org.lei.opi.core.Display;
+
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.ArrayList;
+
+import org.lei.opi.core.definitions.Parameter;
 
 /**
  *
@@ -19,19 +27,71 @@ public class RgenTests {
    */
   @Test
   public void mainTest() {
-    Main.makeR(new Jovp(null), System.out);
+    try {
+      Main.makeR(new Display(null), System.out);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    }
   }
 
   @Test
   public void opiFunctionTest1() {
-    OpiFunction f = new OpiFunction(new Jovp(null), "opiInitialise", "initialize", "", "list(err = %s)", true);
-    f.generateR(System.out);
+    try {
+      OpiFunction f = new OpiFunction(new Display(null), "opiInitialise", "initialize", "", "list(err = %s)", true);
+      f.generateR(System.out);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    }
   }
 
   @Test
   public void opiFunctionTest2() {
-    OpiFunction f = new OpiFunction(new Jovp(null), "opiInitializzze", "initialize", "", "list(err = %s)", true);
-    f.generateR(System.out);
+    try {
+      OpiFunction f = new OpiFunction(new Display(null), "opiInitializzze", "initialize", "", "list(err = %s)", true);
+      f.generateR(System.out);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    }
   }
+
+  @Test
+  public void opiFunctionTest3() {
+    try {
+      OpiFunction f = new OpiFunction(new Display(null), "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false);
+      f.generateR(System.out);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void annotations() {
+    try {
+        Class<?> c = Class.forName("org.lei.opi.core.Display");
+        while (c != null) {
+            System.out.println(c);
+            for (Method m : c.getMethods()) {
+                System.out.println("\t" + m.getName());
+                for (Parameter a : m.getAnnotationsByType(Parameter.class))
+                    System.out.println("\t\t" + a.name());
+            }
+
+            c = c.getSuperclass();  // go up to parent
+        }
+    } catch (ClassNotFoundException e) { 
+        e.printStackTrace(); 
+    }
+
+    String a[] = new String[] {"a", "b"};
+    System.out.println("[" + 
+      Stream.of(a)
+      .map((Object o) -> "\"" + o.toString() + "\"")
+      .collect(Collectors.joining(","))
+     + "]");
+
+     ArrayList<String> b = new ArrayList<String>();
+     Object c = new ArrayList<String>();
+     //Class <?> d = Class.forName("ArrayList<String>");
+}
 
 }

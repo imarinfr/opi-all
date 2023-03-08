@@ -89,8 +89,6 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
     Eye[] eye = toObjectStream(args.get("eye"), Eye.class).toArray(Eye[]::new);
     int length = eye.length;
     if (length == 0) throw new IllegalArgumentException(EMPTY_MANDATORY_FIELDS);
-    ModelType[] shape = toObjectStream(args.get("shape"), ModelType.class).toArray(ModelType[]::new);
-    TextureType[] type = toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new);
     double[] x = toDoubleArray(args.get("x"));
     double[] y = toDoubleArray(args.get("y"));
     double[] sx = toDoubleArray(args.get("sx"));
@@ -99,11 +97,15 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
     double[][] color1 = toColorArray(args.get("color1"));
     double[][] color2 = args.get("color2") == null ? color1 : toColorArray(args.get("color2"));
     int[] t = toIntArray(args.get("t"));
+    ModelType[] shape = toObjectStream(args.get("shape"), ModelType.class).toArray(ModelType[]::new);
+    TextureType[] type = toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new);
+System.out.println("got to here");
     // Check size consistency
     if (shape.length != length || type.length != length || x.length != length || y.length != length ||
         sx.length != length || sy.length != length || lum.length != length ||
         color1.length != length || color2.length != length || t.length != length)
       throw new IllegalArgumentException(INCONSISTENT_ARRAY_LENGTH);
+System.out.println("and now here");
     // Fill optional fields if necessary
     double[] rotation = args.get("rotation") == null ? optionalField(DEFAULT_ROTATION, length) : toDoubleArray(args.get("rotation"));
     double[] contrast = args.get("contrast") == null ? optionalField(DEFAULT_CONTRAST, length) : toDoubleArray(args.get("contrast"));
@@ -111,6 +113,7 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
     double[] frequency = args.get("frequency") == null ? optionalField(DEFAULT_FREQUENCY, length) : toDoubleArray(args.get("frequency"));
     double[] defocus = args.get("defocus") == null ? optionalField(DEFAULT_DEFOCUS, length) : toDoubleArray(args.get("defocus"));
     double[] texRotation = args.get("texRotation") == null ? optionalField(DEFAULT_TEXTURE_ROTATION, length) : toDoubleArray(args.get("texRotation"));
+System.out.println("closer here");
     int[] w = toIntArray(args.get("w"));
     if (w.length != 1)
       throw new IllegalArgumentException(BAD_RESPONSE_WINDOW + w.length);

@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.net.ConnectException;
 import java.lang.reflect.Constructor;
 
 import javafx.application.Application;
@@ -413,23 +414,29 @@ public class Monitor extends Application {
 
         OpiMachine opiMachine = null;
         try {
+            Class<?> cls = Class.forName("org.lei.opi.core." + this.currentMachineChoice);
+            Constructor<?> ctor = cls.getConstructor(Scene.class);
+            opiMachine = (OpiMachine)ctor.newInstance(source.getScene());
+        } catch (ClassNotFoundException e) {
+            String msg = "Problem: cannot find class for " + this.currentMachineChoice;
+            System.out.println(msg);
+            labelMessages.setText(msg);
+            return;
+        } catch (NoSuchMethodException e) {
+            String msg = "Problem: cannot run constructor for " + this.currentMachineChoice;
+            System.out.println(msg);
+            labelMessages.setText(msg);
+            return;
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            String msg = "Problem: cannot create an instance of " + this.currentMachineChoice + " with current settings.";
+            System.out.println(msg);
+            labelMessages.setText(msg);
+            e.printStackTrace();
+            return;
+        }
+
+        try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/org/lei/opi/core/%s.fxml", this.currentMachineChoice)));
-            OpiMachine mac = null;
-            try {
-                Class<?> cls = Class.forName("org.lei.opi.core." + this.currentMachineChoice);
-                Constructor<?> ctor = cls.getConstructor(Scene.class);
-                opiMachine = (OpiMachine)ctor.newInstance(source.getScene());
-            } catch (ClassNotFoundException e) {
-                System.out.println("Problem: cannot find class for " + this.currentMachineChoice);
-                return;
-            } catch (NoSuchMethodException e) {
-                System.out.println("Problem: cannot run constructor for " + this.currentMachineChoice);
-                return;
-            } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
-                System.out.println("Problem: cannot create an instance of " + this.currentMachineChoice);
-                e.printStackTrace();
-                return;
-            }
             loader.setController(opiMachine);
             Parent root = loader.load();
             Scene scene = new Scene(root, 800, 515);

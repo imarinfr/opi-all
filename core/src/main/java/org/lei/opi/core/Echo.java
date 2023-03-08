@@ -7,7 +7,9 @@ package org.lei.opi.core;
  * @since 0.2.0
  */
 import java.util.HashMap;
-import org.lei.opi.core.OpiListener.Packet;
+
+import org.lei.opi.core.definitions.Parameter;
+
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.event.ActionEvent;
@@ -31,6 +33,13 @@ public class Echo extends OpiMachine {
         this.parentScene = parentScene;
     }
   
+    void myPrint(String s) {
+        if (textArea != null)
+            this.textArea.appendText(s);
+        else
+            System.out.println("Echo: " + s);
+    }
+
     /**
      * opiInitialise: initialize OPI
      * @param args A map of name:value pairs for Params
@@ -38,11 +47,11 @@ public class Echo extends OpiMachine {
      * @since 0.2.0
      */
     public Packet initialize(HashMap<String, Object> args) {
-        this.textArea.appendText("Initialise:\n");
+        myPrint("Initialise:\n");
         for (String k : args.keySet())
-            this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
+            myPrint(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-      return new OpiListener.Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return new Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
     };
   
     /**
@@ -51,8 +60,8 @@ public class Echo extends OpiMachine {
      * @since 0.2.0
      */
     public Packet query() { 
-        this.textArea.appendText("Query:\n\tNothing to report.\n");
-        return new OpiListener.Packet("Query: Nothing to report"); 
+        myPrint("Query:\n\tNothing to report.\n");
+        return new Packet("Query: Nothing to report"); 
     }
   
     /**
@@ -61,12 +70,13 @@ public class Echo extends OpiMachine {
      * @return A JSON object with return messages
      * @since 0.2.0
      */
+    @Parameter(name = "ignored", desc = "This is here just so Echo setup() has at least one parameter.", defaultValue = "irrelevant", optional = true)
     public Packet setup(HashMap<String, Object> args) {
-        this.textArea.appendText("Setup:\n");
-        for (String k : args.keySet())
-            this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
+       this.textArea.appendText("Setup:\n");
+       for (String k : args.keySet())
+            myPrint(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        return new OpiListener.Packet(OpiListener.gson.toJson(args));
+        return new Packet(OpiListener.gson.toJson(args));
     }
   
     /**
@@ -75,12 +85,13 @@ public class Echo extends OpiMachine {
      * @return A JSON object with return messages
      * @since 0.2.0
      */
+    @Parameter(name = "ignored", desc = "This is here just so Echo present() has at least one parameter.", defaultValue = "irrelevant", optional = true)
     public Packet present(HashMap<String, Object> args) {
-        this.textArea.appendText("Present:\n");
+        myPrint("Present:\n");
         for (String k : args.keySet())
-            this.textArea.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
+            myPrint(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        return new OpiListener.Packet(OpiListener.gson.toJson(args));
+        return new Packet(OpiListener.gson.toJson(args));
     }
   
     /**
@@ -90,9 +101,10 @@ public class Echo extends OpiMachine {
      * @since 0.2.0
      */
     public Packet close() {
-        this.textArea.appendText("Close:\n");
-        returnToParentScene((Node)textArea);
-        return new OpiListener.Packet(true, "Got OPI_CLOSE so closing connection.");
+        myPrint("Close:\n");
+        if (textArea != null)
+            returnToParentScene((Node)textArea);
+        return new Packet(true, "Got OPI_CLOSE so closing connection.");
     };
 
 // --------------- FXML after here ----------------------------------- 

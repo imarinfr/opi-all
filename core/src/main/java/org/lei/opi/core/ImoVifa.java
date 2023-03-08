@@ -8,5 +8,7 @@ import javafx.scene.Scene;
 public class ImoVifa extends Jovp {
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
     
-    public ImoVifa(Scene parentScene) { super(parentScene); }
+    public ImoVifa(Scene parentScene) throws InstantiationException { 
+        super(parentScene); 
+    }
 }

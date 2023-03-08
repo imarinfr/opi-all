@@ -16,7 +16,8 @@ This is a complete re-write of the <a href="https://perimetry.org/opi">Open Peri
 middleware (or "OPI server") and some associated changes
 to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a> 
 to allow for use on screen-based devices such as phones, 
-VR headsets, and monitors. In attempt to be device independent, it makes use of the 
+VR headsets, and monitors. In attempt to be device independent for screen-based perimeters, it 
+makes use of the 
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> written by Iv&aacute;n Mar&iacute;n-Franch which in turn
 is built upon the Vulkan platform.
 
@@ -46,7 +47,7 @@ using socket connections that use JSON strings for messages.
 ## Packages
 
 ### Monitor
-The main executable of interest is driven by the `monitor` package, which displays a 
+The "middle" executable is driven by the `monitor` package, which displays a 
 GUI written with javaFX for selecting and connecting to Machines, 
 listening to Clients, and for displaying Machine relevant information about JSON 
 messages that pass through from Client to Machine and back again. 
@@ -67,7 +68,7 @@ fx:controllers for the associated document.
                    |                    |  |  Socket  |<-------> Machine
                    |                    |  +----------+  | |
                    |  +-------------+   |                | |
-         Client <---->| OpiListener |   |  fx:controller |<- - - - - - core/resources/*.fxml
+         Client <---->| OpiListener |<->|  fx:controller |<- - - - - - core/resources/*.fxml
                    |  +-------------+   +----------------+ |
                    |                                       |   
                    +---------------------------------------+
@@ -76,14 +77,17 @@ fx:controllers for the associated document.
 ### Core
 The classes in the `core` module specify machines, the protocol and GUI for each machine, 
 and basic utilities for socket communication and JSON processing. Reflection is used heavily 
-in this system, so it is not for the Java novice.
+in this system, protocol so it is not for the Java novice.
 The (abstract) super class for all devices is `OpiMachine` which defines the protocol and behaviour 
 for the 5 functions defined in the OPI Standard: `opiInitialise`, `opiQueryDevice`, `opiSetup`,
 `opiPresent`, and `opiClose`.
+Machine specific parameters that make up the format of JSON messages that machine expects (ie 
+the protocol) are defined by `@Parameter` and `@ReturnMsg` annotations on each of the 5 methods in the 
+machine's subclass of `OpiMachine`.
 
 ### jovp 
 
-This package implements the Jovp Machine that in turn calls the 
+This executable package implements the Jovp Machine that in turn calls the 
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> library written by Iv&aacute;n Mar&iacute;n-Franch.
 This library allows display of psychophysical stimuli on display devices.
 This repo implements the left hand box in this JOVP machine diagram.
@@ -106,10 +110,10 @@ This repo implements the left hand box in this JOVP machine diagram.
 
 </pre>
 ### R Generation
-In an attempt to reduce mismatches in the protocol between the Client and Server and the 
-protocol between the Server and Machine, the R code for sending messages is automatically
+In an attempt to reduce mismatches in the protocol between the Client and Machine, 
+the R code for sending messages is automatically
 generated to match that expected by the relevant Machine. 
-This happens in the `rgen` package. In essence, wthe `@Parameter` and `@ReturnMsg` 
+This happens in the `rgen` package. In essence, the `@Parameter` and `@ReturnMsg` 
 annotators of the five opi functions in the `core::OpiMachine` subclasses are used to 
 create the relevant R code.
 This module is not for general use, but rather to be run to update the OPI 

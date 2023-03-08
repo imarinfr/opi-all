@@ -1,16 +1,12 @@
 package org.lei.opi.core;
 
-import org.lei.opi.core.OpiListener.Packet;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -22,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -57,6 +54,12 @@ public abstract class OpiMachine {
     static final String BAD_COMMAND = "Cannot find command '%s' in %s.";
     /** {@value MISSING_PARAMETER} */
     static final String MISSING_PARAMETER = "Parameter '%s' is missing for function '%s' in %s.";
+    /** {@value BAD_DEFAULT} */
+    static final String BAD_DEFAULT = "Default value for '%s' in %s is not valid JSON for the parameter type.";
+    /** {@value BAD_TYPE} */
+    static final String BAD_TYPE = "Type for parameter '%s' is %s in method %s of class %s which is not a class I can find.";
+    /** {@value BAD_TYPE2} */
+    static final String BAD_TYPE2 = "I cannot convert the value for parameter '%s' in %s to the class %s in %s.";
     /** {@value NOT_LIST} */
     static final String NOT_LIST = "Parameter '%s' should be a non-empty list but it is not for function '%s' in %s.";
     /** {@value NOT_LISTLIST} */
@@ -322,26 +325,6 @@ public abstract class OpiMachine {
     /**
      * Map the 'command' to a function, check it has the right parameters, and the call it
      *
-     * @param jsonStr A JSON string of name:value pairs with at least the name "command"
-     * 
-     * @return Json object like OpiMachine.ok() or OpiMachine.error()
-     * 
-     * @since 0.2.0
-     */
-    public Packet process(String jsonStr) {
-            // Parse JSON to hashmap with pairs of name:values
-        HashMap<String, Object> pairs;
-        try {
-            pairs = OpiListener.jsonToPairs(jsonStr);
-        }  catch (JsonSyntaxException e) {
-            return OpiListener.error(OpiListener.BAD_JSON, e);
-        }
-        return this.processPairs(pairs);
-    }
-
-    /**
-     * Map the 'command' to a function, check it has the right parameters, and the call it
-     *
      * @param pairs A list of name:value pairs with at least the name "command"
      * 
      * @return Json object like OpiManger.ok() or OpiManager.error()
@@ -355,74 +338,194 @@ public abstract class OpiMachine {
          *    (2) Check that the params for the function are in the JSON (via the @Parameter Annotation)
          *    (3) Then execute corresponding method
          */
-        // (1) find the function
+
+        // (1) find the command function
         String funcName = (String) pairs.get("command");
         MethodData methodData = opiMethods.get(funcName);
         if (methodData == null)
-          return OpiListener.error(String.format(BAD_COMMAND, funcName, this.getClass()));
-        // (2) Check params
-        if (methodData.parameters != null)
-          for (Parameter param : methodData.parameters) {
-            // mandatory parameter not received
+            return Packet.error(String.format(BAD_COMMAND, funcName, this.getClass()));
+
+        // (2) Check and add optional-default params
+        if (methodData.parameters != null) {
+            Packet p = validateArgs(pairs, methodData.parameters, funcName);
+            if (!p.getError())
+                pairs = (HashMap<String, Object>)p.getMsg();
+            else    
+                return(p);
+        }
+
+        // (3) execute method
+        try {
+            Packet result = methodData.parameters.length == 0
+              ? (Packet) methodData.method.invoke(this)
+              : (Packet) methodData.method.invoke(this, pairs);
+            return result;
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            return Packet.error(String.format(INVOCATION_FAILED, funcName, this.getClass()), e);
+        }
+    }
+    
+    /**
+    * A helper method to get the entire class for a parameter (eg list<T> or list<list<T>> or T)
+    * @param param Parameter for which to get type (mangled grammar!?)
+    */
+    public static Class <?> getTotalClass(Parameter param) throws ClassNotFoundException {
+        Class<?> cls = param.className();
+        if (param.isList()) 
+            cls = Class.forName(String.format("ArrayList<%s>", param.className().getName()));
+        else if (param.isListList()) 
+           cls = Class.forName(String.format("ArrayList<ArrayList<%s>>", param.className().getName()));
+
+        return cls;
+    }
+
+    /** 
+    * For each parameter p in parameters
+    *  (1) If p is !optional and missing, report an error
+    *  (2) If p is optional and absent, add the default value to pairs
+    *  (3) Otherwise
+    *      (3.1) Check p is of the right type (return error if not)
+    *      (3.2) Check p is in range (return error if not)
+    *
+    * @param pairs Hashmap with parameter names as keys and values as Objects. 
+    * @param params @Parameter annotations for the method that is using pairs
+    * @param funcName Function name for errors
+    *
+    * @return Either a packet with error=false, msg=updated pairs object, or an error packet
+    *
+    * @since 0.2.0
+    */
+    protected Packet validateArgs(HashMap<String, Object> pairs, Parameter[] parameters, String funcName) {
+        for (Parameter param : parameters) {
+                // mandatory parameter not received
             if (!pairs.containsKey(param.name()) && !param.optional())
-              return OpiListener.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
-            if (!pairs.containsKey(param.name()) && param.optional()) continue;
+              return Packet.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
+
+                // optional parameter not here, add it in and go to next param
+            if (!pairs.containsKey(param.name()) && param.optional()) {
+                Object defaultVal;
+                try {
+                    defaultVal = OpiListener.gson.fromJson(param.defaultValue(), param.className());
+                    Class<?> cls = getTotalClass(param);
+                    pairs.put(param.name(), cls.cast(defaultVal));
+                } catch (JsonSyntaxException e){
+                    return Packet.error(String.format(BAD_DEFAULT, param.name(), funcName, this.getClass()));
+                } catch (ClassNotFoundException e) {
+                    return Packet.error(String.format(BAD_TYPE, param.name(), funcName, this.getClass()));
+                }
+                continue;
+            }
+
+                // Ok, it's a mandatory parameter, so let's validate it
             Object valueObj = pairs.get(param.name());
-            // check lists and list of lists
+
+                // first can we find the type and is valueObj of it?
+            Class<?> cls = String.class;
+            try {
+                cls = getTotalClass(param);
+                if (cls == Double.class && valueObj.getClass() == Integer.class)
+                    valueObj = Double.parseDouble(valueObj.toString());
+                valueObj = cls.cast(valueObj);
+            } catch (ClassNotFoundException e) {
+                return Packet.error(String.format(BAD_TYPE, param.name(), param.className().getName(), funcName, this.getClass()));
+            } catch (ClassCastException e) {
+                return Packet.error(String.format(BAD_TYPE2, param.name(), funcName, cls.getName(), this.getClass()));
+            }
+
+                // things are lists when they should be (is this covered above?) check length of lists and list of lists
             if ((param.isListList() || param.isList()) && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
-              return OpiListener.error(String.format(NOT_LIST, param.name(), funcName, this.getClass()));
+                return Packet.error(String.format(NOT_LIST, param.name(), funcName, this.getClass()));
             if (!(param.isListList() || param.isList()) && (valueObj instanceof ArrayList))
-              return OpiListener.error(String.format(YES_LIST, param.name(), funcName, this.getClass()));
-            // if list is actually made of lists, need to make them into a single list of values
+                return Packet.error(String.format(YES_LIST, param.name(), funcName, this.getClass()));
             if (param.isListList() &&
                 ((ArrayList<?>) valueObj).stream().anyMatch(val -> !(val instanceof ArrayList) || ((ArrayList<?>) val).size() == 0))
-              return OpiListener.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
-            // recast
+                    return Packet.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
+
+            // for convenience, let's stick all types (list, listlist, not) in to a simple list.
             List<Object> pList;
             if (param.isListList())
-              pList = (((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList()).stream()
-                .map(vector -> (ArrayList<?>) vector).flatMap(List::stream).map(Object.class::cast).toList();
+                pList = (((ArrayList<?>) valueObj).stream().map(Object.class::cast)
+                                                           .toList()).stream()
+                                                                .map(vector -> (ArrayList<?>) vector)
+                                                                .flatMap(List::stream)
+                                                                .map(Object.class::cast)
+                                                                .toList();
             else if (param.isList()) 
-              pList = ((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList();
+                pList = ((ArrayList<?>) valueObj).stream().map(Object.class::cast).toList();
             else
-              pList = Arrays.asList(valueObj);
+                pList = Arrays.asList(valueObj);
+
+                // if param is an enum type, check all are valid
             if (enums.containsKey(param.className().getName())) { // validate enums
-              List<String> enumVals = enums.get(param.className().getName());
-              Optional<Object> result = pList.stream()
-                  .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
-                  .findAny();
-              if (result.isPresent())
-                return OpiListener.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
-            } else if (param.className().getSimpleName().equals("Double")) { // validate doubles
-              try {
-                double minVal = Math.round(1e10 * param.min()) / 1e10; // avoid weird rounding problems
-                double maxVal = Math.round(1e10 * param.max()) / 1e10;
-                Optional<Double> result = pList.stream()
-                    .map((Object o) -> (Double) o)
-                    .filter((Object v) -> ((Double) v).doubleValue() < minVal || ((Double) v).doubleValue() > maxVal)
-                    .findAny();
+                List<String> enumVals = enums.get(param.className().getName());
+                Optional<Object> result = pList.stream()
+                                               .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
+                                               .findAny();
                 if (result.isPresent())
-                  return OpiListener.error(String.format(OUT_OF_RANGE, param.name(), funcName, this.getClass(), minVal, maxVal, result.get()));
-              } catch (ClassCastException e) {
-                return OpiListener.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
-              }
+                    return Packet.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
+            } else if (param.className().getSimpleName().equals("Double")) { // validate doubles
+                try {
+                    double minVal = Math.round(1e10 * param.min()) / 1e10; // avoid weird rounding problems
+                    double maxVal = Math.round(1e10 * param.max()) / 1e10;
+                    Optional<Double> result = pList.stream()
+                        .map((Object o) -> (Double) o)
+                        .filter((Object v) -> ((Double) v).doubleValue() < minVal || ((Double) v).doubleValue() > maxVal)
+                        .findAny();
+                    if (result.isPresent())
+                        return Packet.error(String.format(OUT_OF_RANGE, param.name(), funcName, this.getClass(), minVal, maxVal, result.get()));
+                } catch (ClassCastException e) {
+                    return Packet.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
+                }
             } else { // assume param is a String, then validate
               Optional<Object> result = pList.stream().filter(v -> !(v instanceof String)).findAny();
               if (result.isPresent())
-                return OpiListener.error(String.format(NOT_A_STRING, param.name(), funcName, this.getClass()));
+                return Packet.error(String.format(NOT_A_STRING, param.name(), funcName, this.getClass()));
             }
           }
-        // (3) execute method
-        Packet result;
-        try {
-          result = methodData.parameters.length == 0
-              ? (Packet) methodData.method.invoke(this)
-              : (Packet) methodData.method.invoke(this, pairs);
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-          return OpiListener.error(String.format(INVOCATION_FAILED, funcName, this.getClass()), e);
+          return new Packet(pairs);
         }
-        return result;
-    };
+    
+          /* 
+    public String convertToJson(HashMap<String, Object> args, Parameter[] params) {
+        StringBuilder s = new StringBuilder();
+        class JB { // json Builder
+            final static String Q = "\"";
+
+            final static String baseJ(Object o) { 
+                if (o instanceof String) 
+                    return Q + (String)o + Q;
+                return o.toString();
+            }
+                    
+            final static String makeList(Class<?> cls, ArrayList<Object> value) { return "[" + Stream.of(value).map((Object o) -> baseJ(cls.cast(o))) .collect(Collectors.joining(",")) + "]"; }
+
+            final static String nameValue(String n, String v) { return baseJ(n) + ":" + baseJ(v); }
+
+            final static String nameValue(String n, Parameter p, Object value) { 
+                if (p.isList())
+                    return nameValue(n, makeList(p.className(), value));
+            }
+        }
+
+        for (Parameter p : params) {
+            if (args.containsKey(p.name())) {
+                // validate it and add to s
+            } else {
+                if (p.optional()) { // add the default to s
+                    if (p.defaultValue() == null)
+                        throw new IllegalArgumentException("Optional parameter " + p.name() + " must have a default value in its @Parameter annotation." );
+                    s.append(JB.qName(p.name())  ":" + p.type() )
+                } else {
+                        // error - missing p in args
+                    throw new IllegalArgumentException("Missing " + p.name() + " from arguments." );
+                }
+            }
+        }
+    
+        return "";
+    }
+    */
+
   
     /**
      * opiInitialise: initialize OPI.

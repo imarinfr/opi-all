@@ -9,5 +9,7 @@ public class PicoVR extends Jovp {
     
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
 
-    public PicoVR(Scene parentScene) { super(parentScene); }
+    public PicoVR(Scene parentScene) throws InstantiationException { 
+        super(parentScene); 
+    }
 }

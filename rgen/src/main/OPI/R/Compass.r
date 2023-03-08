@@ -27,28 +27,28 @@ if (exists(".opi_env") && !exists("Compass", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param ip IP Address of the OPI Monitor.
 #' @param port TCP port of the OPI Monitor.
+#' @param ip IP Address of the OPI Monitor.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error Error code '0' if all good, something else otherwise.
 #'    - res$msg The success or error message.
+#'    - res$error Error code '0' if all good, something else otherwise.
 #'
 #' @examples
 #' chooseOpi("Compass")
-#' result <- opiInitialise(ip = "localhost", port = 50001)
+#' result <- opiInitialise(port = 50001, ip = "localhost")
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_Compass <- function(ip = NULL, port = NULL) {
+opiInitialise_for_Compass <- function(port = NULL, ip = NULL) {
     if (!exists("socket", where = .opi_env$Compass))
         assign("socket", open_socket(ip, port), .opi_env$Compass)
     else
         return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
-    msg <- list(ip = ip, port = port)
+    msg <- list(port = port, ip = ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -73,8 +73,8 @@ opiInitialise_for_Compass <- function(ip = NULL, port = NULL) {
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or a structure with the following data.
+#'    - res$error '0' if success, something else if error.
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -111,31 +111,25 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #'                 -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3
 #'                 for fixation type 'square'.
 #' @param tracking Whether to correct stimulus location based on eye position.
-#' @param fixShape Fixation target type for eye.
-#' @param fixCx x-coordinate of fixation target (degrees): Only valid values are
-#'                 -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3
-#'                 for fixation type 'square'.
-#' @param tracking Whether to correct stimulus location based on eye position.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or a structure with the result of QUERY OPI
 #'                 command.
+#'    - res$error '0' if success, something else if error.
 #'
 #' @examples
 #' chooseOpi("Compass")
-#' result <- opiSetup(settings = list(fixShape = "spot", fixCx = 0, tracking = 0, fixShape = "spot",
-#'                    fixCx = 0, tracking = 0))
+#' result <- opiSetup(settings = list(fixShape = "spot", fixCx = 0, tracking = 0))
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_Compass <- function(settings = list(fixShape = NULL, fixCx = NULL, tracking = NULL, fixShape = NULL, fixCx = NULL, tracking = NULL)) {
+opiSetup_for_Compass <- function(settings = list(fixShape = NULL, fixCx = NULL, tracking = NULL)) {
 if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
     stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking, fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking)
+    msg <- list(fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -155,65 +149,43 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #'
 #' @usage NULL
 #'
-#' @param x x co-ordinates of stimulus (degrees).
-#' @param y y co-ordinates of stimulus (degrees).
-#' @param lum Stimuli luminance (cd/m^2).
 #' @param t Presentation time (ms).
+#' @param lum Stimuli luminance (cd/m^2).
 #' @param w Response window (ms).
 #' @param x x co-ordinates of stimulus (degrees).
 #' @param y y co-ordinates of stimulus (degrees).
-#' @param lum Stimuli luminance (cd/m^2).
-#' @param t Presentation time (ms).
-#' @param w Response window (ms).
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
-#'    - res$error '0' if success, something else if error.
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$msg$seen '1' if seen, '0' if not.
+#'  * res JSON Object with all of the other fields described in @ReturnMsg
+#'           except 'error'.
+#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
+#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
+#'    - res$num_track_events Number of tracking events that occurred during
+#'                              presentation.
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
 #'    - res$eyed Diameter of pupil at times eyet (mm).
-#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'    - res$time_rec Time since 'epoch' when command was received at Compass or
-#'                      Maia (ms).
 #'    - res$time_resp Time since 'epoch' when stimulus response is received, or
 #'                       response window expired (ms).
-#'    - res$num_track_events Number of tracking events that occurred during
-#'                              presentation.
+#'    - res$msg Error message or a structure with the following fields.
+#'    - res$error '0' if success, something else if error.
+#'    - res$msg$seen '1' if seen, '0' if not.
 #'    - res$num_motor_fails Number of times motor could not follow fixation
 #'                             movement during presentation.
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
-#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyed Diameter of pupil at times eyet (mm).
-#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
 #'    - res$time_rec Time since 'epoch' when command was received at Compass or
 #'                      Maia (ms).
-#'    - res$time_resp Time since 'epoch' when stimulus response is received, or
-#'                       response window expired (ms).
-#'    - res$num_track_events Number of tracking events that occurred during
-#'                              presentation.
-#'    - res$num_motor_fails Number of times motor could not follow fixation
-#'                             movement during presentation.
 #'
 #' @examples
 #' chooseOpi("Compass")
-#' result <- opiPresent(stim = list(x = 0, y = 0, lum = 100, t = 200, w = 1500, x = 0, y = 0,
-#'                      lum = 100, t = 200, w = 1500))
+#' result <- opiPresent(stim = list(t = 200, lum = 100, w = 1500, x = 0, y = 0))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_Compass <- function(stim = list(x = NULL, y = NULL, lum = NULL, t = NULL, w = NULL, x = NULL, y = NULL, lum = NULL, t = NULL, w = NULL)) {
+opiPresent_for_Compass <- function(stim = list(t = NULL, lum = NULL, w = NULL, x = NULL, y = NULL)) {
 if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in% names(.opi_env$Compass)) || is.null(.opi_env$Compass$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(x = stim$x, y = stim$y, lum = stim$lum, t = stim$t, w = stim$w, x = stim$x, y = stim$y, lum = stim$lum, t = stim$t, w = stim$w)
+    msg <- list(t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -238,11 +210,8 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except
 #'           'error'.
-#'    - res$error '0' if success, something else if error.
 #'    - res$msg The error message or additional results from the CLOSE command
-#'    - res$time The time stamp for fixation data
-#'    - res$x The time stamp for fixation data
-#'    - res$y The time stamp for fixation data
+#'    - res$error '0' if success, something else if error.
 #'    - res$time The time stamp for fixation data
 #'    - res$x The time stamp for fixation data
 #'    - res$y The time stamp for fixation data

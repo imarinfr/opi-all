@@ -12,8 +12,6 @@ import org.lei.opi.core.definitions.ReturnMsg;
 
 import javafx.scene.Scene;
 
-import org.lei.opi.core.OpiListener.Packet;
-
 /**
  * Octopus O900 client
  *
@@ -201,7 +199,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet initialize(HashMap<String, Object> args) {
-      return new OpiListener.Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return new Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
   };
 
   /**
@@ -212,7 +210,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet query() {
-    return new OpiListener.Packet(queryResults());
+    return new Packet(queryResults());
   };
 
   /**
@@ -232,7 +230,7 @@ public class O900 extends OpiMachine {
   @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
   @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
   public Packet setup(HashMap<String, Object> args) {
-    if (this.socket.isClosed()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+    if (this.socket.isClosed()) return Packet.error(DISCONNECTED_FROM_HOST);
     StringBuilder message;
     Packet result;
     try {
@@ -249,9 +247,9 @@ public class O900 extends OpiMachine {
         this.send(message.toString());
         result = this.receive();
       } catch (IOException e) {
-        return OpiListener.error(OPI_INITIALIZE_FAILED, e);
+        return Packet.error(OPI_INITIALIZE_FAILED, e);
       }
-      if (result.getError()) return OpiListener.error(OPI_INITIALIZE_FAILED + result);
+      if (result.getError()) return Packet.error(OPI_INITIALIZE_FAILED + result);
 
       // Prepare OPI_SET_BACKGROUND instruction
       int bgCol = switch (BackgroundColor.valueOf(((String) args.get("bgCol")).toUpperCase())) {
@@ -279,13 +277,13 @@ public class O900 extends OpiMachine {
         this.send(message.toString());
         result = this.receive();
       } catch (IOException e) {
-        return OpiListener.error(OPI_SET_BACKGROUND_FAILED, e);
+        return Packet.error(OPI_SET_BACKGROUND_FAILED, e);
       }
-      if (result.getError()) return OpiListener.error(OPI_SET_BACKGROUND_FAILED + result);
+      if (result.getError()) return Packet.error(OPI_SET_BACKGROUND_FAILED + result);
 
-      return new OpiListener.Packet(queryResults());
+      return new Packet(queryResults());
     } catch (ClassCastException | IllegalArgumentException e) {
-      return OpiListener.error(OPI_SETUP_FAILED, e);
+      return Packet.error(OPI_SETUP_FAILED, e);
     }
   }
 
@@ -299,19 +297,19 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   @Parameter(name = "type", className = Type.class, desc = "Stimulus type: STATIC or KINETIC.", defaultValue = "static")
-  @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
-  @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "list(0)")
+  @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
+  @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", min = 0, max = 3183.099, defaultValue = "3183.099")
-  @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "list('GV')")
+  @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "[\"GV\"]")
   @Parameter(name = "color", className = Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
-  @Parameter(name = "t", className = Double.class, desc = "List of Stimulus presentation times (ms). For STATIC, list must be of length 1. For KINETIC, it must the same length and 'x' and 'y' co-ordinates minus 1", isList = true, optional = true, min = 0, defaultValue = "list(200)")
+  @Parameter(name = "t", className = Double.class, desc = "List of Stimulus presentation times (ms). For STATIC, list must be of length 1. For KINETIC, it must the same length and 'x' and 'y' co-ordinates minus 1", isList = true, optional = true, min = 0, defaultValue = "[200]")
   @Parameter(name = "w", className = Double.class, desc = "[STATIC] Response window (ms).", optional = true, min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "[KINETIC] x co-ordinate when oberver responded (degrees).")
   @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "[KINETIC] y co-ordinate when oberver responded (degrees).")
   public Packet present(HashMap<String, Object> args) {
-    if (this.socket.isClosed()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+    if (this.socket.isClosed()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
       // get common parameters
       Type type = Type.valueOf(((String) args.get("type")).toUpperCase());
@@ -338,12 +336,12 @@ public class O900 extends OpiMachine {
 
       try {
         this.send(message.toString());
-        return new OpiListener.Packet("\"To be constructed\"");  // parseResult(type, this.receive())); TODO
+        return new Packet("\"To be constructed\"");  // parseResult(type, this.receive())); TODO
       } catch (IOException e) {
-        return OpiListener.error(OPI_PRESENT_FAILED, e);
+        return Packet.error(OPI_PRESENT_FAILED, e);
       }
     } catch (ClassCastException | IllegalArgumentException | SecurityException e) {
-      return OpiListener.error(OPI_PRESENT_FAILED, e);
+      return Packet.error(OPI_PRESENT_FAILED, e);
     }
   }
 
@@ -361,9 +359,9 @@ public class O900 extends OpiMachine {
       this.send(OPI_CLOSE);
       this.closeSocket();
     } catch (IOException e) {
-      return OpiListener.error(OPI_CLOSE, e);
+      return Packet.error(OPI_CLOSE, e);
     }
-    return new OpiListener.Packet(true, DISCONNECTED_FROM_HOST);
+    return new Packet(true, DISCONNECTED_FROM_HOST);
   };
 
   /**
@@ -504,7 +502,7 @@ public class O900 extends OpiMachine {
    */
   private String parseResult(Type type, String received) {
     String[] message = received.split("\\|\\|\\|");
-    if (message[0] != "null") OpiListener.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
+    if (message[0] != "null") Packet.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
     StringBuilder jsonStr = new StringBuilder("\n  {\n")
       .append("    \"seen\": " + message[1] + ",\n")
       .append("    \"time\": " + message[2]);

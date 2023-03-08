@@ -21,5 +21,5 @@ public @interface Parameter {
   boolean optional() default false;
   double min() default -1e10;
   double max() default 1e10;
-  String defaultValue() default "?";   // maybe only used for generating R @example code...
+  String defaultValue() default "?";   // JSON format 
 }

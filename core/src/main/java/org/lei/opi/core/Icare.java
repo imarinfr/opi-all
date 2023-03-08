@@ -1,7 +1,5 @@
 package org.lei.opi.core;
 
-import org.lei.opi.core.OpiListener.Packet;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -85,7 +83,7 @@ public class Icare extends OpiMachine {
      * @since 0.0.1
      */
     public Packet initialize(HashMap<String, Object> args) {
-      return new OpiListener.Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
+      return new Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
     };
   
     /**
@@ -96,7 +94,7 @@ public class Icare extends OpiMachine {
      * @since 0.0.1
      */
     public Packet query() {
-      return new OpiListener.Packet(queryResults());
+      return new Packet(queryResults());
     };
   
     /**
@@ -112,43 +110,43 @@ public class Icare extends OpiMachine {
     @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", min = -20, max = 20, defaultValue = "0")
     @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", min = 0, max = 1, defaultValue = "0")
     public Packet setup(HashMap<String, Object> args) {
-      if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
       try {
         int fixCx = (int) ((double) args.get("fixCx"));
         int fixShape = -1;
         switch(Fixation.valueOf(((String) args.get("fixShape")).toUpperCase())) {
           case SPOT -> {
             if (fixCx != 0 && Math.abs(fixCx) != 3 && Math.abs(fixCx) != 6 && Math.abs(fixCx) != 20)
-              return OpiListener.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
+              return Packet.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
             fixShape = 0;
           }
           case SQUARE -> {
             if (fixCx != 0 && Math.abs(fixCx) != 3)
-              return OpiListener.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
+              return Packet.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
             fixShape = 1;
           }
         };
         int tracking = (int) ((double) args.get("tracking"));
-        if (tracking != 0 && tracking != 1) return OpiListener.error(INVALID_TRACKING_SETTING + tracking);
+        if (tracking != 0 && tracking != 1) return Packet.error(INVALID_TRACKING_SETTING + tracking);
         String jsonStr = null;
         try {
           this.send(OPI_OPEN);
           jsonStr = this.receive().toJson(); // parseOpiOpen TODO
-          if (jsonStr.equals(BAD_OPEN)) return OpiListener.error(OPI_OPEN_FAILED);
+          if (jsonStr.equals(BAD_OPEN)) return Packet.error(OPI_OPEN_FAILED);
           this.send(OPI_SET_FIXATION + fixCx + " 0 " + fixShape);
           /* TODO 
           if (this.receive().isError())
-            return OpiListener.error(OPI_SET_FIXATION_FAILED);
+            return Packet.error(OPI_SET_FIXATION_FAILED);
           this.send(OPI_SET_TRACKING + tracking);
           if (this.receive().isError()) // split(" ")[0].equals("0"))
-            return OpiListener.error(OPI_SET_TRACKING_FAILED);
+            return Packet.error(OPI_SET_TRACKING_FAILED);
             */
         } catch (IOException e) {
-          return OpiListener.error(OPI_SETUP_FAILED, e);
+          return Packet.error(OPI_SETUP_FAILED, e);
         }
-        return new OpiListener.Packet(jsonStr);
+        return new Packet(jsonStr);
       } catch (ClassCastException | IllegalArgumentException e) {
-        return OpiListener.error(OPI_SETUP_FAILED, e);
+        return Packet.error(OPI_SETUP_FAILED, e);
       }
     }
   
@@ -176,7 +174,7 @@ public class Icare extends OpiMachine {
     @ReturnMsg(name = "res.num_track_events", className = Double.class, desc = "Number of tracking events that occurred during presentation.", min = 0)
     @ReturnMsg(name = "res.num_motor_fails", className = Double.class, desc = "Number of times motor could not follow fixation movement during presentation.", min = 0)
     public Packet present(HashMap<String, Object> args) {
-      if (!this.socket.isConnected()) return OpiListener.error(DISCONNECTED_FROM_HOST);
+      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
       try {
         int level = (int) Math.round(-10 * Math.log10((double) args.get("lum") / (10000 / Math.PI)));
         StringBuilder opiMessage = new StringBuilder(OPI_PRESENT_STATIC).append(" ")
@@ -187,12 +185,12 @@ public class Icare extends OpiMachine {
           .append((int) ((double) args.get("w")));
           try {
             this.send(opiMessage.toString());
-            return new OpiListener.Packet("TODO"); // parseResult(this.receive())); TODO
+            return new Packet("TODO"); // parseResult(this.receive())); TODO
           } catch (IOException e) {
-            return OpiListener.error(OPI_PRESENT_FAILED, e);
+            return Packet.error(OPI_PRESENT_FAILED, e);
           }
         } catch (ClassCastException | IllegalArgumentException e) {
-        return OpiListener.error(OPI_PRESENT_FAILED, e);
+        return Packet.error(OPI_PRESENT_FAILED, e);
       }
     }
   
@@ -213,9 +211,9 @@ public class Icare extends OpiMachine {
         this.send(OPI_CLOSE);
         String message = "TODO"; // parseOpiClose(this.receive()); TODO
         this.closeSocket();
-        return new OpiListener.Packet(true, message);
+        return new Packet(true, message);
       } catch (ClassCastException | IllegalArgumentException | IOException e) {
-        return OpiListener.error(COULD_NOT_DISCONNECT, e);
+        return Packet.error(COULD_NOT_DISCONNECT, e);
       }
     };
   
@@ -305,7 +303,7 @@ public class Icare extends OpiMachine {
      */
     private String parseResult(String received) {
       String[] message = received.split(" ");
-      if (message[0] != "0") OpiListener.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
+      if (message[0] != "0") Packet.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
       return new StringBuilder("\n  {\n")
         .append("    \"seen\": " + message[1] + ",\n")
         .append("    \"time\": " + message[2] + ",\n")

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.OpiListener;
+import org.lei.opi.core.Packet;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.Query;
 import org.lei.opi.core.definitions.Response;
@@ -147,16 +148,16 @@ public class OpiJovp extends OpiListener {
         try {
             pairs = OpiListener.jsonToPairs(jsonStr);
         } catch (JsonSyntaxException e) {
-            return error(prefix + BAD_JSON, e);
+            return Packet.error(prefix + Packet.BAD_JSON, e);
         }
 
         if (!pairs.containsKey("command")) // needs a command
-            return error(prefix + OpiListener.NO_COMMAND_FIELD);
+            return Packet.error(prefix + OpiListener.NO_COMMAND_FIELD);
         String cmd = pairs.get("command").toString();
 
         // check it is a valid command from Command.*
         if (!Stream.of(OpiListener.Command.values()).anyMatch((e) -> e.name().equalsIgnoreCase(cmd)))
-            return error(prefix + OpiListener.BAD_COMMAND_FIELD);
+            return Packet.error(prefix + OpiListener.BAD_COMMAND_FIELD);
 
         return switch (OpiListener.Command.valueOf(cmd.toUpperCase())) {
             case INITIALIZE -> initialize(pairs);
@@ -164,7 +165,7 @@ public class OpiJovp extends OpiListener {
             case SETUP -> setup(pairs);
             case PRESENT -> present(pairs);
             case CLOSE -> close();
-            default -> error(prefix + BAD_COMMAND + cmd.toUpperCase());
+            default -> Packet.error(prefix + BAD_COMMAND + cmd.toUpperCase());
         };
     }
 
@@ -185,7 +186,7 @@ public class OpiJovp extends OpiListener {
             setAction(Action.SHOW);
             return new Packet(INITIALIZED);
         } catch (IllegalArgumentException | ClassCastException | IOException | NullPointerException e) {
-            return error(INITIALIZE_FAILED, e);
+            return Packet.error(INITIALIZE_FAILED, e);
         }
     }
 
@@ -196,7 +197,7 @@ public class OpiJovp extends OpiListener {
    */
   private Packet query() {
     if (configuration == null || psychoEngine == null)
-        return OpiListener.error("JOVP is not ready yet. Try again or call initialise()");
+        return Packet.error("JOVP is not ready yet. Try again or call initialise()");
 
     Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
@@ -223,7 +224,7 @@ public class OpiJovp extends OpiListener {
       setAction(Action.SETUP);
       return query();
     } catch (ClassCastException | IllegalArgumentException e) {
-      return error(prefix + SETUP_FAILED, e);
+      return Packet.error(prefix + SETUP_FAILED, e);
     }
   }
 
@@ -246,7 +247,7 @@ public class OpiJovp extends OpiListener {
       response = null;
       return new Packet(jsonStr);
     } catch (Exception e) {
-      return error(prefix + PRESENT_FAILED, e);
+      return Packet.error(prefix + PRESENT_FAILED, e);
     }
   }
 
