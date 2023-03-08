@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.lei.opi.core.Display;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.ArrayList;
@@ -58,6 +57,16 @@ public class RgenTests {
   public void opiFunctionTest3() {
     try {
       OpiFunction f = new OpiFunction(new Display(null), "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false);
+      f.generateR(System.out);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void opiFunctionTest4() {
+    try {
+      OpiFunction f = new OpiFunction(new Display(null), "opiSetup",   "setup", "settings", "list(err=%s, seen=%s, time=%s", false);
       f.generateR(System.out);
     } catch (InstantiationException e) {
       e.printStackTrace();

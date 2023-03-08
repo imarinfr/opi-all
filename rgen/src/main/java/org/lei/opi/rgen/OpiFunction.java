@@ -5,9 +5,11 @@ import java.io.PrintWriter;
 
 import java.lang.reflect.Method;
 
+import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.util.function.Function;
 import java.util.HashMap;
+import java.util.List;
 
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.definitions.Parameter;
@@ -45,6 +47,7 @@ public class OpiFunction {
     boolean createSocket;
     MethodData methodData;
     String machineName;
+    OpiMachine machine;
     String callingExample; // String that is a roxygen2 @example that should at least include this function.
 
     /**
@@ -63,6 +66,7 @@ public class OpiFunction {
         this.opiReturnTemplate = opiReturnTemplate;
         this.createSocket = createSocket;
         this.machineName = machine.getClass().getSimpleName();
+        this.machine = machine;
 
             // get @Parameter and @ReturnMsg annotations for this function (ie name == this.opiCoreName)
             // Get any annotations from super classes if they don't conflict
@@ -108,7 +112,7 @@ public class OpiFunction {
      */
     public static String wrapR(String s, int leadingSpaces, boolean isCode) {
         String result = "";
-        while (s.length() > 80 - leadingSpaces) {
+        while (s.length() > 80) {
             int i = s.lastIndexOf(isCode ? "," : " ", 80 - leadingSpaces);
             if (i > -1) {
                 result += s.substring(0, i);
@@ -116,7 +120,7 @@ public class OpiFunction {
                     result += ",";
                 
                 result += "\n#' ";
-                result += " ".repeat(leadingSpaces);
+                result += " ".repeat(leadingSpaces - 3);
                 s = s.substring(i + 1);
             } else {
                 break;  // could not find the break char, so give up
@@ -141,8 +145,44 @@ public class OpiFunction {
         return prefix + wrapR(r.desc(), prefix.length(), false);
     };
 
+      // generate roxygen2 details text for parameter p
+    String makeDetails() {
+        String all = "";
+        for (Parameter p : methodData.parameters.values()) {
+            String str = "";
+            int prefixLen = 0;
+            if (p.isList() || p.isListList()) {
+                str = String.format("#' Elements in `%s` can take on values in ", p.name());
+                prefixLen = 16 + p.name().length();
+            } else {
+                str = String.format("#' `%s` can take on values in ", p.name());
+                prefixLen = 5 + p.name().length();
+            }
+
+            if (p.className() == Double.class) {
+                str += String.format("the range [%s, %s].", p.min(), p.max());
+            } else if (p.className().isEnum()) {
+                List<String> values = machine.enums.get(p.className().getName());
+                str += String.format("the set {%s}.", String.join(", ",values));
+            } else {
+                str = "";
+            }
+
+            if (str.length() > 0)
+                all += "\n" + wrapR(str, prefixLen, false);
+        }
+
+        if (all.length() > 0)
+            all = "#' @details " + all;
+        else
+            all = "#'";
+        return all;
+    }
+
     /**
      * Roxygen2 comments at the header of the function.
+    *   - List possible type/range of each parameter
+    *   - Indicate if a parameter is optional
      */
     private String makeDocumentation() {
         String params = methodData.parameters.values().stream()
@@ -165,6 +205,8 @@ public class OpiFunction {
 #'
 %s
 #'
+%s
+#'
 #' @examples
 #' chooseOpi("%s")
 #' result <- %s(%s)
@@ -173,11 +215,12 @@ public class OpiFunction {
 #'
     """,
     this.opiName, machineName, // title
-    this.opiName,
-    params.length() > 0 ? params : "#'", 
-    rets.length() > 0 ? rets : "#'",
+    this.opiName, // Use...
+    params.length() > 0 ? params : "#'", // @params
+    rets.length() > 0 ? rets : "#'",     //@return
+    makeDetails(),
     machineName,    // chooseOpi
-    this.opiName, 
+    this.opiName, //result
     this.opiInputFieldName.length() > 0 ? String.format("%s = list(%s)", this.opiInputFieldName, this.callingExample) : this.callingExample,
     this.opiName   // seealso
         );
@@ -223,16 +266,18 @@ public class OpiFunction {
     /**
     * Read @Parameters from opiCoreName function in machine and 
     * generate R code for function opiName.
+    * 1 Get Parameter and ResultMsg annotations for Method this.opiCoreName in machine
+    * 2 Write an R function called this.opiName that takes the Parameters and 
+    *   2.1 The initialize function needs to open a socket, the rest just use it
+    *   2.3 The header for each is opiInputFieldName = list (.map(Parameters p -> p.name() = NULL))
+    * 3 Returns the ResultMsg fields in the this.opiReturnTemplate 
+    * 4 Don't forget to write the roxygen2 doco as well!
+    *   4.1 List possible type/range of each parameter
+    *   4.2 Indicate if a parameter is optional
     *
     * @param writer {@link PrintWriter} to which to write output.
     */
     public void generateR(PrintStream writer) {
-            // 1 Get Parameter and ResultMsg annotations for Method this.opiCoreName in machine
-            // 2 Write an R function called this.opiName that takes the Parameters and 
-            // 3 returns the ResultMsg fields in the this.opiReturnTemplate 
-            // 4 Don't forget to write the roxygen2 doco as well!
-
-
         //Stream.of(mData.parameters).map((Parameter p) -> p.className().getSimpleName()).forEach(System.out::println);
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 

@@ -31,10 +31,12 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #' @param ip IP Address of the OPI Monitor.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The success or error message.
 #'    - res$error Error code '0' if all good, something else otherwise.
+#'
+#' @details 
+#' `port` can take on values in the range [0.0, 65535.0].
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -71,10 +73,11 @@ opiInitialise_for_O900 <- function(port = NULL, ip = NULL) {
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The error message or a structure with the following data.
 #'    - res$error '0' if success, something else if error.
+#'
+#'
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -108,25 +111,31 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @param eye Eye to set.
 #' @param fixShape Fixation target.
-#' @param pres Volume for auditory feedback when a stimulus is presented: 0
-#'                means no buzzer.
+#' @param pres Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.
 #' @param resp Volume for auditory feedback when observer presses the clicker: 0
-#'                means no buzzer.
+#'             means no buzzer.
 #' @param fixIntensity Fixation intensity(from 0% to 100%).
 #' @param bgLum Background luminance for eye.
 #' @param bgCol Background color for eye.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
-#'    - res$msg The error message or a structure with the result of QUERY OPI
-#'                 command.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - res$msg The error message or a structure with the result of QUERY OPI command.
 #'    - res$error '0' if success, something else if error.
+#'
+#' @details 
+#' `eye` can take on values in the set {left, right}.
+#' `fixShape` can take on values in the set {center, cross, ring}.
+#' `pres` can take on values in the range [0.0, 3.0].
+#' `resp` can take on values in the range [0.0, 3.0].
+#' `fixIntensity` can take on values in the range [0.0, 100.0].
+#' `bgLum` can take on values in the set {bg_off, bg_1, bg_10, bg_100}.
+#' `bgCol` can take on values in the set {white, yellow}.
 #'
 #' @examples
 #' chooseOpi("O900")
 #' result <- opiSetup(settings = list(eye = "left", fixShape = "center", pres = 0, resp = 0,
-#'                    fixIntensity = 50, bgLum = "10", bgCol = "white"))
+#'                 fixIntensity = 50, bgLum = "10", bgCol = "white"))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -155,20 +164,19 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @usage NULL
 #'
 #' @param size Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
-#'                device has a big wheel)
+#'             device has a big wheel)
 #' @param color Stimulus color (degrees).
 #' @param t List of Stimulus presentation times (ms). For STATIC, list must be
-#'             of length 1. For KINETIC, it must the same length and 'x' and 'y'
-#'             co-ordinates minus 1
+#'          of length 1. For KINETIC, it must the same length and 'x' and 'y'
+#'          co-ordinates minus 1(Optional)
 #' @param lum List of stimuli luminances (cd/m^2).
-#' @param w [STATIC] Response window (ms).
+#' @param w [STATIC] Response window (ms).(Optional)
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
 #' @param type Stimulus type: STATIC or KINETIC.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
@@ -178,10 +186,20 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'    - res$msg$x [KINETIC] x co-ordinate when oberver responded (degrees).
 #'    - res$msg$y [KINETIC] y co-ordinate when oberver responded (degrees).
 #'
+#' @details 
+#' `size` can take on values in the set {gi, gii, giii, giv, gv, gvi}.
+#' `color` can take on values in the set {white, red, blue}.
+#' Elements in `t` can take on values in the range [0.0, 1.0E10].
+#' `lum` can take on values in the range [0.0, 3183.099].
+#' `w` can take on values in the range [0.0, 1.0E10].
+#' Elements in `x` can take on values in the range [-90.0, 90.0].
+#' Elements in `y` can take on values in the range [-90.0, 90.0].
+#' `type` can take on values in the set {static, kinetic}.
+#'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiPresent(stim = list(size = "list('GV')", color = "white", lum = 3183.099,
-#'                      x = list(0), y = list(0), type = "static"))
+#' result <- opiPresent(stim = list(size = "["GV"]", color = "white", lum = 3183.099, x = [0],
+#'                   y = [0], type = "static"))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -212,10 +230,11 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'    - res$error '0' if success, something else if error.
+#'
+#'
 #'
 #' @examples
 #' chooseOpi("O900")

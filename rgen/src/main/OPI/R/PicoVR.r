@@ -31,10 +31,12 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 #' @param ip IP Address of the OPI Monitor.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The success or error message.
 #'    - res$error Error code '0' if all good, something else otherwise.
+#'
+#' @details 
+#' `port` can take on values in the range [0.0, 65535.0].
 #'
 #' @examples
 #' chooseOpi("PicoVR")
@@ -71,10 +73,11 @@ opiInitialise_for_PicoVR <- function(port = NULL, ip = NULL) {
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The error message or a structure with the following data.
 #'    - res$error '0' if success, something else if error.
+#'
+#'
 #'
 #' @examples
 #' chooseOpi("PicoVR")
@@ -113,26 +116,39 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #' @param fixSx diameter along major axis of ellipse (degrees).
 #' @param fixCy y-coordinate of fixation target (degrees).
 #' @param fixSy diameter along minor axis of ellipse (degrees). If not received,
-#'                 then sy = sx.
+#'              then sy = sx.(Optional)
 #' @param fixRotation Angles of rotation of fixation target (degrees). Only
-#'                       useful if sx != sy specified.
+#'                    useful if sx != sy specified.(Optional)
 #' @param fixCol Fixation target color for eye.
 #' @param bgLum Background luminance for eye.
-#' @param tracking Whether to correct stimulus location based on eye position.
+#' @param tracking Whether to correct stimulus location based on eye position.(Optional)
 #' @param bgCol Background color for eye.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
-#'    - res$msg The error message or a structure with the result of QUERY OPI
-#'                 command.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - res$msg The error message or a structure with the result of QUERY OPI command.
 #'    - res$error '0' if success, something else if error.
+#'
+#' @details 
+#' `eye` can take on values in the set {left, right, both}.
+#' `fixShape` can take on values in the set {triangle, square,
+#'           polygon, hollow_triangle, hollow_square, hollow_polygon, cross,
+#'           maltese, circle, annulus, optotype, text, model}.
+#' `fixLum` can take on values in the range [0.0, 1.0E10].
+#' `fixCx` can take on values in the range [-90.0, 90.0].
+#' `fixSx` can take on values in the range [0.0, 1.0E10].
+#' `fixCy` can take on values in the range [-90.0, 90.0].
+#' `fixSy` can take on values in the range [0.0, 1.0E10].
+#' `fixRotation` can take on values in the range [0.0, 360.0].
+#' Elements in `fixCol` can take on values in the range [0.0, 1.0].
+#' `bgLum` can take on values in the range [0.0, 1.0E10].
+#' `tracking` can take on values in the range [0.0, 1.0].
+#' Elements in `bgCol` can take on values in the range [0.0, 1.0].
 #'
 #' @examples
 #' chooseOpi("PicoVR")
-#' result <- opiSetup(settings = list(eye = "list('left')", fixShape = "maltese", fixLum = 20,
-#'                    fixCx = 0, fixSx = 1, fixCy = 0, fixCol = list(0, 1, 0),
-#'                    bgLum = 10, bgCol = list(1, 1, 1)))
+#' result <- opiSetup(settings = list(eye = "LEFT", fixShape = "MALTESE", fixLum = 20, fixCx = 0,
+#'                 fixSx = 1, fixCy = 0, fixCol = [0,1,0], bgLum = 10, bgCol = [1,1,1]))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -161,34 +177,32 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #' @usage NULL
 #'
 #' @param phase List of phases (in degrees) for generation of spatial patterns.
-#'                 Only useful if type != FLAT
-#' @param shape Stimulus shape.
+#'              Only useful if type != FLAT(Optional)
+#' @param shape Stimulus shape.(Optional)
 #' @param sx List of diameters along major axis of ellipse (degrees).
 #' @param lum List of stimuli luminances (cd/m^2).
 #' @param sy List of diameters along minor axis of ellipse (degrees). If not
-#'              received, then sy = sx
+#'           received, then sy = sx(Optional)
 #' @param rotation List of angles of rotation of stimuli (degrees). Only useful
-#'                    if sx != sy specified.
-#' @param type Stimulus type.
-#' @param defocus List of defocus values in Diopters for stimulus
-#'                   post-processing.
+#'                 if sx != sy specified.(Optional)
+#' @param texRotation List of angles of rotation of stimuli (degrees). Only
+#'                    useful if type != FLAT(Optional)
+#' @param length The number of elements in this stimuli.
+#' @param type Stimulus type.(Optional)
+#' @param defocus List of defocus values in Diopters for stimulus post-processing.(Optional)
 #' @param frequency List of frequencies (in cycles per degrees) for generation
-#'                     of spatial patterns. Only useful if type != FLAT
-#' @param eye Eye to test.
+#'                  of spatial patterns. Only useful if type != FLAT(Optional)
+#' @param eye The eye for which to apply the settings.
 #' @param color1 List of stimulus colors 1.
-#' @param color2 List of stimulus colors 2. Only useful if stimulus type != FLAT
+#' @param color2 List of stimulus colors 2. Only useful if stimulus type != FLAT(Optional)
 #' @param t List of stimuli presentation times (ms).
-#' @param contrast List of stimulus contrasts (from 0 to 1). Only useful if type
-#'                    != FLAT.
-#' @param textRotation List of angles of rotation of stimuli (degrees). Only
-#'                        useful if type != FLAT
 #' @param w List of stimuli response windows (ms).
+#' @param contrast List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.(Optional)
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
@@ -198,19 +212,42 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #'    - res$error '0' if success, something else if error.
 #'    - res$msg$seen '1' if seen, '0' if not.
 #'
+#' @details 
+#' Elements in `phase` can take on values in the range [0.0, 1.0E10].
+#' Elements in `shape` can take on values in the set
+#'                   {triangle, square, polygon, hollow_triangle, hollow_square,
+#'                   hollow_polygon, cross, maltese, circle, annulus, optotype, text, model}.
+#' Elements in `sx` can take on values in the range [0.0, 180.0].
+#' Elements in `lum` can take on values in the range [0.0, 1.0E10].
+#' Elements in `sy` can take on values in the range [0.0, 180.0].
+#' Elements in `rotation` can take on values in the range [0.0, 360.0].
+#' Elements in `texRotation` can take on values in the range [0.0, 360.0].
+#' `length` can take on values in the range [-1.0E10, 1.0E10].
+#' Elements in `type` can take on values in the set {flat,
+#'                  checkerboard, sine, squaresine, g1, g2, g3, text, image}.
+#' Elements in `defocus` can take on values in the range [0.0, 1.0E10].
+#' Elements in `frequency` can take on values in the range [0.0, 300.0].
+#' Elements in `eye` can take on values in the set {left, right, both}.
+#' Elements in `color1` can take on values in the range [0.0, 1.0].
+#' Elements in `color2` can take on values in the range [0.0, 1.0].
+#' Elements in `t` can take on values in the range [0.0, 1.0E10].
+#' `w` can take on values in the range [0.0, 1.0E10].
+#' Elements in `contrast` can take on values in the range [0.0, 1.0].
+#' Elements in `x` can take on values in the range [-90.0, 90.0].
+#' Elements in `y` can take on values in the range [-90.0, 90.0].
+#'
 #' @examples
 #' chooseOpi("PicoVR")
-#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(20), eye = list('left'),
-#'                      color1 = list(list(1, 1, 1)), t = list(200), w = list(1500),
-#'                      x = list(0), y = list(0)))
+#' result <- opiPresent(stim = list(sx = [1.72], lum = [20], length = 1, eye = [LEFT],
+#'                   color1 = [[1,1,1]], t = [200], w = 1500, x = [0], y = [0]))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_PicoVR <- function(stim = list(phase = NULL, shape = NULL, sx = NULL, lum = NULL, sy = NULL, rotation = NULL, type = NULL, defocus = NULL, frequency = NULL, eye = NULL, color1 = NULL, color2 = NULL, t = NULL, contrast = NULL, textRotation = NULL, w = NULL, x = NULL, y = NULL)) {
+opiPresent_for_PicoVR <- function(stim = list(phase = NULL, shape = NULL, sx = NULL, lum = NULL, sy = NULL, rotation = NULL, texRotation = NULL, length = NULL, type = NULL, defocus = NULL, frequency = NULL, eye = NULL, color1 = NULL, color2 = NULL, t = NULL, w = NULL, contrast = NULL, x = NULL, y = NULL)) {
 if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
     stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
 
-    msg <- list(phase = stim$phase, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, type = stim$type, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, contrast = stim$contrast, textRotation = stim$textRotation, w = stim$w, x = stim$x, y = stim$y)
+    msg <- list(phase = stim$phase, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, length = stim$length, type = stim$type, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -233,10 +270,11 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'    - res$error '0' if success, something else if error.
+#'
+#'
 #'
 #' @examples
 #' chooseOpi("PicoVR")

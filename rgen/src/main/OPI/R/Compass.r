@@ -31,10 +31,12 @@ if (exists(".opi_env") && !exists("Compass", where = .opi_env))
 #' @param ip IP Address of the OPI Monitor.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The success or error message.
 #'    - res$error Error code '0' if all good, something else otherwise.
+#'
+#' @details 
+#' `port` can take on values in the range [0.0, 65535.0].
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -71,10 +73,11 @@ opiInitialise_for_Compass <- function(port = NULL, ip = NULL) {
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The error message or a structure with the following data.
 #'    - res$error '0' if success, something else if error.
+#'
+#'
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -108,16 +111,19 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #'
 #' @param fixShape Fixation target type for eye.
 #' @param fixCx x-coordinate of fixation target (degrees): Only valid values are
-#'                 -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3
-#'                 for fixation type 'square'.
+#'              -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3
+#'              for fixation type 'square'.
 #' @param tracking Whether to correct stimulus location based on eye position.
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
-#'    - res$msg The error message or a structure with the result of QUERY OPI
-#'                 command.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - res$msg The error message or a structure with the result of QUERY OPI command.
 #'    - res$error '0' if success, something else if error.
+#'
+#' @details 
+#' `fixShape` can take on values in the set {spot, square}.
+#' `fixCx` can take on values in the range [-20.0, 20.0].
+#' `tracking` can take on values in the range [0.0, 1.0].
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -156,24 +162,27 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #' @param y y co-ordinates of stimulus (degrees).
 #'
 #' @return a list contianing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg
-#'           except 'error'.
+#'  * res JSON Object with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
 #'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
 #'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
-#'    - res$num_track_events Number of tracking events that occurred during
-#'                              presentation.
+#'    - res$num_track_events Number of tracking events that occurred during presentation.
 #'    - res$msg$time Response time from stimulus onset if button pressed (ms).
 #'    - res$eyed Diameter of pupil at times eyet (mm).
 #'    - res$time_resp Time since 'epoch' when stimulus response is received, or
-#'                       response window expired (ms).
+#'                    response window expired (ms).
 #'    - res$msg Error message or a structure with the following fields.
 #'    - res$error '0' if success, something else if error.
 #'    - res$msg$seen '1' if seen, '0' if not.
-#'    - res$num_motor_fails Number of times motor could not follow fixation
-#'                             movement during presentation.
-#'    - res$time_rec Time since 'epoch' when command was received at Compass or
-#'                      Maia (ms).
+#'    - res$num_motor_fails Number of times motor could not follow fixation movement during presentation.
+#'    - res$time_rec Time since 'epoch' when command was received at Compass or Maia (ms).
+#'
+#' @details 
+#' `t` can take on values in the range [200.0, 200.0].
+#' `lum` can take on values in the range [0.0, 3183.099].
+#' `w` can take on values in the range [200.0, 2680.0].
+#' `x` can take on values in the range [-30.0, 30.0].
+#' `y` can take on values in the range [-30.0, 30.0].
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -208,13 +217,14 @@ if(!exists(".opi_env") || !exists("Compass", envir = .opi_env) || !("socket" %in
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except
-#'           'error'.
+#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'    - res$error '0' if success, something else if error.
 #'    - res$time The time stamp for fixation data
 #'    - res$x The time stamp for fixation data
 #'    - res$y The time stamp for fixation data
+#'
+#'
 #'
 #' @examples
 #' chooseOpi("Compass")
