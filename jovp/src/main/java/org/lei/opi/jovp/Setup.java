@@ -1,4 +1,4 @@
-package org.lei.opi.core.definitions;
+package org.lei.opi.jovp;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,7 +29,7 @@ import es.optocom.jovp.definitions.ModelType;
  */
 public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol,
                     double fixCx, double fixCy, double fixSx, double fixSy,
-                    double fixRotation, boolean tracking) {
+                    double fixRotation, double tracking) {
 
   /**
    * Processes arguments and create a background record from R OPI.
@@ -57,7 +57,7 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
                      (double) args.get("fixCx"), (double) args.get("fixCy"),
                      (double) args.get("fixSx"), (double) args.get("fixSy"),
                      (double) args.get("fixRotation"),
-                     ((double) args.get("tracking") == 1 ? true : false));
+                     ((double) args.get("tracking")));
   }
 
   /**
@@ -79,7 +79,7 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
                      (double) args.get("fixCx"), (double) args.get("fixCy"),
                      (double) args.get("fixSx"), (double) args.get("fixSy"),
                      (double) args.get("fixRotation"),
-                     (boolean) args.get("tracking"));
+                     (double) args.get("tracking"));
   }
 
   /**

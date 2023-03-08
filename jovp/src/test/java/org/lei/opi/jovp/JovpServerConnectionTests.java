@@ -4,9 +4,16 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import java.lang.reflect.Method;
+
 import org.lei.opi.core.Display;
+import org.lei.opi.core.Jovp;
 import org.lei.opi.core.OpiListener;
+import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.Packet;
+import org.lei.opi.core.definitions.Parameter;
 
 import org.junit.jupiter.api.Test;
 
@@ -245,26 +252,32 @@ public class JovpServerConnectionTests {
             System.out.println(String.format("[testInitialiseSetupPresent] Connected to %s:%s", server.getIP(), server.getPort()));
 
           Packet result = machine.initialize(null);
-          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          System.out.println(String.format("[testInitialiseSetupPresent] Initialize result %s", result));
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
           Packet qResult = machine.query();
-          HashMap<String, Object> hmap = OpiListener.gson.fromJson((String)qResult.getMsg(), HashMap.class);
-          hmap.put("eye", "BOTH");
-          hmap.put("bgLum", 10.0);
-          hmap.put("bgCol", new ArrayList<Double>() {{add(0.5);add(0.5);add(0.5);}});
-          hmap.put("fixShape", "CROSS");
-          hmap.put("fixLum", 50.0);
-          hmap.put("fixCol", new ArrayList<Double>() {{add(0.0);add(1.0);add(0.5);}});
-          hmap.put("fixCx", 0.0);
-          hmap.put("fixCy", 0.0);
-          hmap.put("fixSx", 1.0);
-          hmap.put("fixSy", 1.0);
-          hmap.put("fixRotation", 0.0);
-          hmap.put("tracking", 0.0);
+          System.out.println(String.format("[testInitialiseSetupPresent] Query result: %s", qResult));
+
+            // get all of the default values from core.Jovp::setup()
+          HashMap<String, Object> hmap = new HashMap<String, Object>();
+          hmap.put("command", "SETUP");  
+          try {
+            Method meth = Jovp.class.getDeclaredMethod("setup", HashMap.class);
+            Method pMeth = OpiMachine.class.getDeclaredMethod("setup", HashMap.class);
+            Parameter[] parameters = ArrayUtils.addAll(pMeth.getAnnotationsByType(Parameter.class),
+                                                     meth.getAnnotationsByType(Parameter.class));
+            for (Parameter p : parameters) {
+              Object v = OpiMachine.buildDefault(p);
+              System.out.println(p.name() + " " + p.defaultValue() + " " + v);
+              hmap.put(p.name(), v);
+            }
+          } catch (NoSuchMethodException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return;
+          }
           result = machine.setup(hmap);
-          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
 
           HashMap stim = makeStimulus();
           result = machine.present(stim);

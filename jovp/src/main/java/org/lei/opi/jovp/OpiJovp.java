@@ -9,7 +9,6 @@ import org.lei.opi.core.Packet;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.Query;
 import org.lei.opi.core.definitions.Response;
-import org.lei.opi.core.definitions.Setup;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -209,7 +208,7 @@ public class OpiJovp extends OpiListener {
    * Change settings of background and fixation target
    * trigger the SETUP action
    * 
-   * @param args A map of name:value pairs for parameters
+   * @param args A map of name:value pairs for parameters. Should have all the fields for Setup class.
    *
    * @since 0.1.0
    */

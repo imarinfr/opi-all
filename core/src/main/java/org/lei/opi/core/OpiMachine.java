@@ -30,6 +30,7 @@ import org.reflections.Reflections;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
+import java.lang.reflect.Type;
 
 import javafx.scene.Scene;
 import javafx.scene.Node;
@@ -369,14 +370,14 @@ public abstract class OpiMachine {
     * A helper method to get the entire class for a parameter (eg list<T> or list<list<T>> or T)
     * @param param Parameter for which to get type (mangled grammar!?)
     */
-    public static Class <?> getTotalClass(Parameter param) throws ClassNotFoundException {
-        Class<?> cls = param.className();
-        if (param.isList()) 
-            cls = Class.forName(String.format("ArrayList<%s>", param.className().getName()));
-        else if (param.isListList()) 
-           cls = Class.forName(String.format("ArrayList<ArrayList<%s>>", param.className().getName()));
-
-        return cls;
+    public static Object buildDefault(Parameter param) throws ClassNotFoundException {
+        Type t = TypeToken.get(param.className()).getType();
+        if (param.isList()) {
+            t = TypeToken.getParameterized(ArrayList.class, param.className()).getType();
+        } else if (param.isListList()) {
+            t = TypeToken.getParameterized(ArrayList.class, ArrayList.class, param.className()).getType();
+        }
+        return OpiListener.gson.fromJson(param.defaultValue(), t);
     }
 
     /** 
@@ -403,11 +404,9 @@ public abstract class OpiMachine {
 
                 // optional parameter not here, add it in and go to next param
             if (!pairs.containsKey(param.name()) && param.optional()) {
-                Object defaultVal;
                 try {
-                    defaultVal = OpiListener.gson.fromJson(param.defaultValue(), param.className());
-                    Class<?> cls = getTotalClass(param);
-                    pairs.put(param.name(), cls.cast(defaultVal));
+                    Object defaultVal = OpiMachine.buildDefault(param);
+                    pairs.put(param.name(), defaultVal);
                 } catch (JsonSyntaxException e){
                     return Packet.error(String.format(BAD_DEFAULT, param.name(), funcName, this.getClass()));
                 } catch (ClassNotFoundException e) {
@@ -418,19 +417,6 @@ public abstract class OpiMachine {
 
                 // Ok, it's a mandatory parameter, so let's validate it
             Object valueObj = pairs.get(param.name());
-
-                // first can we find the type and is valueObj of it?
-            Class<?> cls = String.class;
-            try {
-                cls = getTotalClass(param);
-                if (cls == Double.class && valueObj.getClass() == Integer.class)
-                    valueObj = Double.parseDouble(valueObj.toString());
-                valueObj = cls.cast(valueObj);
-            } catch (ClassNotFoundException e) {
-                return Packet.error(String.format(BAD_TYPE, param.name(), param.className().getName(), funcName, this.getClass()));
-            } catch (ClassCastException e) {
-                return Packet.error(String.format(BAD_TYPE2, param.name(), funcName, cls.getName(), this.getClass()));
-            }
 
                 // things are lists when they should be (is this covered above?) check length of lists and list of lists
             if ((param.isListList() || param.isList()) && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
@@ -611,6 +597,6 @@ public abstract class OpiMachine {
      * @since 0.0.1
      */
     protected String toJson(Command command) {
-      return new StringBuilder("{\n  \"command\": ").append(command).append("\n}").toString();
+      return "{\"command\":\"" + command.toString() + "\"}";
     }
 }

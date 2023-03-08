@@ -8,7 +8,6 @@ import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.ReturnMsg;
-import org.lei.opi.core.definitions.Setup;
 
 import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.ModelType;
@@ -48,7 +47,7 @@ public static class Settings extends OpiMachine.Settings {
     /**
      * @param parentScene The Scene to return to when this object is closed.
      *                    If null, then do not create a connection. (Used for GUI to probe class.)
-     * @throws InstantiationException
+     * @throws InstantiationException if cannot connect to JOVP server
      */
     public Jovp(Scene parentScene) throws InstantiationException {
         super(parentScene);
@@ -76,7 +75,6 @@ public static class Settings extends OpiMachine.Settings {
         try {
             this.send(initConfiguration());
             Packet p = this.receive();
-System.out.println(p);
             return p;
         } catch (IOException e) {
             return Packet.error(COULD_NOT_INITIALIZE, e);
@@ -95,7 +93,8 @@ System.out.println(p);
           textAreaCommands.appendText("Query received.\n");
         if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
-            this.send(toJson(Command.QUERY));
+            String q = toJson(Command.QUERY);
+            this.send(q);
             Packet rec = this.receive();
             return rec;
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
@@ -105,6 +104,7 @@ System.out.println(p);
 
   /**
    * opiSetup: Change device background and overall settings
+   * All of the @Parameters here should be fields in the jovp.Setup class.
    * 
    * @param args pairs of argument name and value
    * 
@@ -112,10 +112,10 @@ System.out.println(p);
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "[\"left\"]")
+  @Parameter(name = "eye", className = Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "LEFT")
   @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, defaultValue = "10")
   @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye.", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
-  @Parameter(name = "fixShape", className = ModelType.class, desc = "Fixation target type for eye.", defaultValue = "maltese")
+  @Parameter(name = "fixShape", className = ModelType.class, desc = "Fixation target type for eye.", defaultValue = "MALTESE")
   @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, defaultValue = "20")
   @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, min = 0, max = 1, defaultValue = "[0,1,0]")
   @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees).", min = -90, max = 90, defaultValue = "0")
@@ -129,10 +129,8 @@ System.out.println(p);
       textAreaCommands.appendText("Setup received.\n");
     if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
-      this.send(Setup.create1(args).toJson());
+      this.send(OpiListener.gson.toJson(args));
       return this.receive();
-    } catch (ClassCastException | IllegalArgumentException e) {
-      return Packet.error(COULD_NOT_SETUP, e);
     } catch (IOException e) {
       return Packet.error(COULD_NOT_SETUP, e);
     }
