@@ -1,7 +1,5 @@
 package org.lei.opi.jovp;
 
-import org.lei.opi.core.definitions.Response;
-
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
 import es.optocom.jovp.Timer;

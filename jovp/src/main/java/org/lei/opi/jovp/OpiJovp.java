@@ -6,9 +6,6 @@ import java.util.stream.Stream;
 
 import org.lei.opi.core.OpiListener;
 import org.lei.opi.core.Packet;
-import org.lei.opi.core.definitions.Present;
-import org.lei.opi.core.definitions.Query;
-import org.lei.opi.core.definitions.Response;
 
 import com.google.gson.JsonSyntaxException;
 

@@ -1,6 +1,6 @@
 package org.lei.opi.jovp;
 
-import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
+import static org.lei.opi.jovp.JsonProcessor.toIntArray;
 
 import java.io.FileInputStream;
 import java.io.IOException;

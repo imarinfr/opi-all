@@ -6,12 +6,7 @@ import java.util.HashMap;
 
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
-import org.lei.opi.core.definitions.Present;
 import org.lei.opi.core.definitions.ReturnMsg;
-
-import es.optocom.jovp.definitions.Eye;
-import es.optocom.jovp.definitions.ModelType;
-import es.optocom.jovp.definitions.TextureType;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -112,10 +107,10 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "LEFT")
+  @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "LEFT")
   @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, defaultValue = "10")
   @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye.", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
-  @Parameter(name = "fixShape", className = ModelType.class, desc = "Fixation target type for eye.", defaultValue = "MALTESE")
+  @Parameter(name = "fixShape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Fixation target type for eye.", defaultValue = "MALTESE")
   @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, defaultValue = "20")
   @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, min = 0, max = 1, defaultValue = "[0,1,0]")
   @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees).", min = -90, max = 90, defaultValue = "0")
@@ -129,6 +124,9 @@ public static class Settings extends OpiMachine.Settings {
       textAreaCommands.appendText("Setup received.\n");
     if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
+      Packet p = validateArgs(args, this.opiMethods.get("setup").parameters(), "setup");
+        if (p.getError()) 
+          return(p);
       this.send(OpiListener.gson.toJson(args));
       return this.receive();
     } catch (IOException e) {
@@ -138,20 +136,22 @@ public static class Settings extends OpiMachine.Settings {
 
   /**
    * opiPresent: Present OPI stimulus in perimeter
-   * 
+   * All of the @Parameters should be the fields of the jovp.Present class.  
+   *
    * @param args pairs of argument name and value
    * 
    * @return A JSON object with return messages
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = Eye.class, desc = "Eye to test.", isList = true, defaultValue = "[\"left\"]")
+  @Parameter(name = "length", className = Double.class, desc = "The number of elements in this stimuli.", isList = false, defaultValue = "1")
+  @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", isList = true, defaultValue = "[LEFT]")
   @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "sx", className = Double.class, desc = "List of diameters along major axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "[1.72]")
   @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "[1.72]")
   @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "[200]")
-  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms).", isList = true, min = 0, defaultValue = "[1500]")
+  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms).", isList = false, min = 0, defaultValue = "1500")
   @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "[20]")
   @Parameter(name = "color1", className = Double.class, desc = "List of stimulus colors 1.", isListList = true, min = 0, max = 1, defaultValue = "[[1,1,1]]")
   @Parameter(name = "color2", className = Double.class, desc = "List of stimulus colors 2. Only useful if stimulus type != FLAT", isListList = true, optional = true, min = 0, max = 1, defaultValue = "[[0,1,0]]")
@@ -160,9 +160,9 @@ public static class Settings extends OpiMachine.Settings {
   @Parameter(name = "phase", className = Double.class, desc = "List of phases (in degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, defaultValue = "[0]")
   @Parameter(name = "frequency", className = Double.class, desc = "List of frequencies (in cycles per degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 300, defaultValue = "[0]")
   @Parameter(name = "defocus", className = Double.class, desc = "List of defocus values in Diopters for stimulus post-processing.", isList = true, optional = true, min = 0, defaultValue = "[0]")
-  @Parameter(name = "textRotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
-  @Parameter(name = "shape", className = ModelType.class, desc = "Stimulus shape.", isList = true, optional = true, defaultValue = "[\"circle\"]")
-  @Parameter(name = "type", className = TextureType.class, desc = "Stimulus type.", isList = true, optional = true, defaultValue = "[\"flat\"]")
+  @Parameter(name = "texRotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
+  @Parameter(name = "shape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Stimulus shape.", isList = true, optional = true, defaultValue = "[CIRCLE]")
+  @Parameter(name = "type", className = es.optocom.jovp.definitions.TextureType.class, desc = "Stimulus type.", isList = true, optional = true, defaultValue = "[FLAT]")
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
@@ -172,10 +172,11 @@ public static class Settings extends OpiMachine.Settings {
       textAreaCommands.appendText("Present received.\n");
     if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
-      this.send(Present.process(args).toJson());
+      Packet p = validateArgs(args, this.opiMethods.get("present").parameters(), "present");
+        if (p.getError()) 
+          return(p);
+      this.send(OpiListener.gson.toJson(args));
       return this.receive();
-    } catch (ClassCastException | IllegalArgumentException | NoSuchMethodException | SecurityException e) {
-      return Packet.error(COULD_NOT_PRESENT, e);
     } catch (IOException e) {
       return Packet.error(COULD_NOT_PRESENT, e);
     }

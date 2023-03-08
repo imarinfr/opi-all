@@ -1,11 +1,10 @@
 package org.lei.opi.core;
 
-import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
-import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+
+import java.util.stream.Stream;
 
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -313,8 +312,8 @@ public class O900 extends OpiMachine {
     try {
       // get common parameters
       Type type = Type.valueOf(((String) args.get("type")).toUpperCase());
-      double[] x = toDoubleArray(args.get("x"));
-      double[] y = toDoubleArray(args.get("y"));
+      double[] x = Stream.of(args.get("x")).mapToDouble(Double.class::cast).toArray(); 
+      double[] y = Stream.of(args.get("y")).mapToDouble(Double.class::cast).toArray(); 
       if (x.length != y.length) throw new IllegalArgumentException(INCONSISTENT_XY_SIZES);
       double lum = (double) args.get("lum");
       int size = switch (Size.valueOf(((String) args.get("size")).toUpperCase())) {
@@ -327,7 +326,7 @@ public class O900 extends OpiMachine {
       };
       if (!settings.bigWheel && size == 6) throw new IllegalArgumentException(WRONG_SIZE + size);
       String color =  Color.valueOf(((String) args.get("color")).toUpperCase()).toString().toLowerCase();
-      int[] t = toIntArray(args.get("t"));
+      int[] t = Stream.of(args.get("t")).mapToInt(Integer.class::cast).toArray(); 
       // get specific parameters and mount the message to send
       String message = switch (type) {
         case STATIC -> presentStatic(x, y, lum, size, color, t, (int) (double) args.get("w"));

@@ -13,6 +13,7 @@ import org.lei.opi.core.Jovp;
 import org.lei.opi.core.OpiListener;
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.Packet;
+import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 
 import org.junit.jupiter.api.Test;
@@ -192,27 +193,14 @@ public class JovpServerConnectionTests {
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-          Packet qResult = machine.query();
-          HashMap<String, Object> hmap = OpiListener.gson.fromJson((String)qResult.getMsg(), HashMap.class);
-          hmap.put("eye", "BOTH");
-          hmap.put("bgLum", 10.0);
-          hmap.put("bgCol", new ArrayList<Double>() {{add(0.5);add(0.5);add(0.5);}});
-          hmap.put("fixShape", "CROSS");
-          hmap.put("fixLum", 50.0);
-          hmap.put("fixCol", new ArrayList<Double>() {{add(0.0);add(1.0);add(0.5);}});
-          hmap.put("fixCx", 0.0);
-          hmap.put("fixCy", 0.0);
-          hmap.put("fixSx", 1.0);
-          hmap.put("fixSy", 1.0);
-          hmap.put("fixRotation", 0.0);
-          hmap.put("tracking", 0.0);
+          HashMap<String, Object> hmap = getDefaultValues(Command.SETUP);
           result = machine.setup(hmap);
-          System.out.println(String.format("[testInitialiseSetup] %s", result));
+          System.out.println(String.format("[testInitialiseSetup] Setup result: %s", result));
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
           result = machine.close(); 
-          System.out.println(String.format("[testInitialiseSetup] %s", result));
+          System.out.println(String.format("[testInitialiseSetup] Close result: %s", result));
         } catch (InstantiationException e) {
           System.out.println("Probably couldn't connect Display to JOVP");
           e.printStackTrace();
@@ -256,32 +244,22 @@ public class JovpServerConnectionTests {
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
-          Packet qResult = machine.query();
-          System.out.println(String.format("[testInitialiseSetupPresent] Query result: %s", qResult));
+          for (int t = 0 ; t <= 2 ; t++) {
+            System.out.println("\n-------------- Test Number: " + t);
+            HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
+            HashMap<String, Object> stimArgs = getDefaultValues(Command.PRESENT);
 
-            // get all of the default values from core.Jovp::setup()
-          HashMap<String, Object> hmap = new HashMap<String, Object>();
-          hmap.put("command", "SETUP");  
-          try {
-            Method meth = Jovp.class.getDeclaredMethod("setup", HashMap.class);
-            Method pMeth = OpiMachine.class.getDeclaredMethod("setup", HashMap.class);
-            Parameter[] parameters = ArrayUtils.addAll(pMeth.getAnnotationsByType(Parameter.class),
-                                                     meth.getAnnotationsByType(Parameter.class));
-            for (Parameter p : parameters) {
-              Object v = OpiMachine.buildDefault(p);
-              System.out.println(p.name() + " " + p.defaultValue() + " " + v);
-              hmap.put(p.name(), v);
+            switch(t) {
+                case 1: setupArgs.remove("fixCol");
+                case 2: stimArgs.remove("length");
             }
-          } catch (NoSuchMethodException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return;
-          }
-          result = machine.setup(hmap);
-          System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
+            result = machine.setup(setupArgs);
+            System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
 
-          HashMap stim = makeStimulus();
-          result = machine.present(stim);
-          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+            //HashMap stim = makeStimulus();
+            result = machine.present(stimArgs);
+            System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+          }
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
@@ -323,5 +301,25 @@ public class JovpServerConnectionTests {
     hmap.put("w", new ArrayList<Double>() { {add(1500.0);}});
 
     return hmap;
+  }
+
+  // get all of the default values from core.Jovp::setup()
+  public HashMap<String, Object> getDefaultValues(Command c) {
+      HashMap<String, Object> hmap = new HashMap<String, Object>();
+      hmap.put("command", c.toString());
+      try {
+        Method meth = Jovp.class.getDeclaredMethod(c.toString().toLowerCase(), HashMap.class);
+        Method pMeth = OpiMachine.class.getDeclaredMethod(c.toString().toLowerCase(), HashMap.class);
+        Parameter[] parameters = ArrayUtils.addAll(pMeth.getAnnotationsByType(Parameter.class),
+                                                 meth.getAnnotationsByType(Parameter.class));
+        for (Parameter p : parameters) {
+          Object v = OpiMachine.buildDefault(p);
+          hmap.put(p.name(), v);
+        }
+      } catch (NoSuchMethodException | ClassNotFoundException e) {
+        e.printStackTrace();
+        return null;
+      }
+      return hmap;
   }
 }

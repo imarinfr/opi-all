@@ -1,10 +1,10 @@
-package org.lei.opi.core.definitions;
+package org.lei.opi.jovp;
 
-import static org.lei.opi.core.definitions.JsonProcessor.toColorArray;
-import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
-import static org.lei.opi.core.definitions.JsonProcessor.toIntArray;
-import static org.lei.opi.core.definitions.JsonProcessor.toObjectStream;
-import static org.lei.opi.core.definitions.JsonProcessor.colorValues;
+import static org.lei.opi.jovp.JsonProcessor.colorValues;
+import static org.lei.opi.jovp.JsonProcessor.toColorArray;
+import static org.lei.opi.jovp.JsonProcessor.toDoubleArray;
+import static org.lei.opi.jovp.JsonProcessor.toIntArray;
+import static org.lei.opi.jovp.JsonProcessor.toObjectStream;
 
 import java.util.Arrays;
 import java.util.HashMap;

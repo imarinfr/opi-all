@@ -1,4 +1,4 @@
-package org.lei.opi.core.definitions;
+package org.lei.opi.jovp;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

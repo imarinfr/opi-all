@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -244,12 +245,17 @@ public abstract class OpiMachine {
           Parameter[] parameters = ArrayUtils.addAll(parentMethod.getAnnotationsByType(Parameter.class),
                                                      method.getAnnotationsByType(Parameter.class));
           opiMethods.put(method.getName(), new MethodData(method, parameters));
-        }    // gather all ENUMS for the method
+        }   
+            // gather all the ENUMS used in Parameter annotations for all methods in this class
         enums = new HashMap<String, List<String>>();    
-        Reflections reflections = new Reflections(this.getClass().getPackageName());
-        for (Class<?> e : reflections.getSubTypesOf(Enum.class))
-          enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast)
-            .map(c -> c.name().toLowerCase()).toList());
+        HashSet<Class<?>> enumClasses = new HashSet<Class<?>>();
+        for (String methodName : opiMethods.keySet())
+            for (Parameter p : opiMethods.get(methodName).parameters())
+                if (p.className().isEnum())
+                    enumClasses.add(p.className());
+
+        for (Class<?> e : enumClasses)
+            enums.put(e.getName(), Stream.of(e.getEnumConstants()).map(Enum.class::cast).map(c -> c.name().toLowerCase()).toList());
     }
 
     /*
@@ -447,7 +453,7 @@ public abstract class OpiMachine {
                 Optional<Object> result = pList.stream()
                                                .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
                                                .findAny();
-                if (result.isPresent())
+                if (!result.isPresent())
                     return Packet.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
             } else if (param.className().getSimpleName().equals("Double")) { // validate doubles
                 try {

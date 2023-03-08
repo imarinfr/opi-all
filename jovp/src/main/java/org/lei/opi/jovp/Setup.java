@@ -1,12 +1,12 @@
 package org.lei.opi.jovp;
 
+import static org.lei.opi.jovp.JsonProcessor.colorValues;
+import static org.lei.opi.jovp.JsonProcessor.toDoubleArray;
+
 import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.OpiListener.Command;
-
-import static org.lei.opi.core.definitions.JsonProcessor.toDoubleArray;
-import static org.lei.opi.core.definitions.JsonProcessor.colorValues;
 
 import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.ModelType;
