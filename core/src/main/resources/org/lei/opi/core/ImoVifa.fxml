@@ -50,15 +50,17 @@
 <GridPane prefHeight="515.0" prefWidth="800.0" style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+      <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
   </columnConstraints>
   <rowConstraints>
-    <RowConstraints maxHeight="168.0" minHeight="10.0" prefHeight="78.0" vgrow="NEVER" />
-    <RowConstraints maxHeight="430.0" minHeight="10.0" prefHeight="361.0" vgrow="SOMETIMES" />
-    <RowConstraints maxHeight="130.0" minHeight="10.0" prefHeight="77.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="168.0" minHeight="10.0" prefHeight="121.0" vgrow="NEVER" />
+    <RowConstraints maxHeight="430.0" minHeight="10.0" prefHeight="251.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="199.0" minHeight="10.0" prefHeight="76.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="199.0" minHeight="10.0" prefHeight="73.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnSpan="2" GridPane.halignment="LEFT" GridPane.valignment="CENTER">
+      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnSpan="3" GridPane.halignment="LEFT" GridPane.valignment="CENTER">
          <children>
             <ImageView fitHeight="62.0" fitWidth="81.0" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -75,7 +77,7 @@
                         <Font size="24.0" />
                      </font>
                   </Label>
-                  <Label prefHeight="17.0" prefWidth="147.0" text="Chosen OPI: Display" textFill="WHITE" />
+                  <Label prefHeight="17.0" prefWidth="147.0" text="Chosen OPI: ImoVifa" textFill="WHITE" />
                </children>
                <padding>
                   <Insets left="10.0" />
@@ -83,12 +85,12 @@
             </VBox>
          </children>
       </HBox>
-      <Button fx:id="btnClose" mnemonicParsing="false" onAction="#actionBtnClose" text="Close" GridPane.columnIndex="1" GridPane.halignment="RIGHT" GridPane.rowIndex="2">
+      <Button fx:id="btnClose" mnemonicParsing="false" onAction="#actionBtnClose" text="Close" GridPane.columnIndex="2" GridPane.halignment="RIGHT" GridPane.rowIndex="3">
          <GridPane.margin>
             <Insets right="10.0" />
          </GridPane.margin>
       </Button>
-      <ScatterChart fx:id="scatterChartVF" legendVisible="false" GridPane.rowIndex="1">
+      <ScatterChart fx:id="scatterChartLeft" legendVisible="false" GridPane.rowIndex="1">
         <xAxis>
           <NumberAxis lowerBound="-30.0" side="LEFT" upperBound="30.0" />
         </xAxis>
@@ -96,6 +98,28 @@
           <NumberAxis lowerBound="-30.0" side="LEFT" upperBound="30.0" />
         </yAxis>
       </ScatterChart>
-      <TextArea fx:id="textAreaCommands" editable="false" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <ScatterChart fx:id="scatterChartRight" legendVisible="false" prefHeight="275.0" prefWidth="267.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+         <xAxis>
+            <NumberAxis lowerBound="-30.0" side="LEFT" upperBound="30.0" />
+         </xAxis>
+         <yAxis>
+            <NumberAxis lowerBound="-30.0" side="LEFT" upperBound="30.0" />
+         </yAxis>
+      </ScatterChart>
+      <TextArea fx:id="textAreaCommands" editable="false" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.rowIndex="1" GridPane.rowSpan="2">
+         <GridPane.margin>
+            <Insets right="10.0" />
+         </GridPane.margin>
+      </TextArea>
+      <VBox alignment="TOP_CENTER" GridPane.rowIndex="2">
+         <children>
+            <Label alignment="TOP_CENTER" text="Left Eye" />
+         </children>
+      </VBox>
+      <VBox alignment="TOP_CENTER" GridPane.columnIndex="1" GridPane.rowIndex="2">
+         <children>
+            <Label text="Right Eye" />
+         </children>
+      </VBox>
    </children>
 </GridPane>

@@ -9,6 +9,7 @@ import javafx.scene.chart.ScatterChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.Node;
+import javafx.scene.chart.XYChart;
 
 /**
  * Opens up a window wherever the JOVP wants it
@@ -73,18 +74,28 @@ public class Display extends Jovp {
             for (String k : args.keySet())
                 this.textAreaCommands.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
         }
+        try {
+            double x = ((Double)args.get("x")).doubleValue();
+            double y = ((Double)args.get("y")).doubleValue();
+
+            while (!dataSeries.getData().isEmpty())
+                dataSeries.getData().remove(0);
+            dataSeries.getData().add(new ScatterChart.Data(x, y));
+
+        } catch (Exception ignored) { ; }
+
         return super.present(args);
     }
   
-    //-------------- FXML below here
+    //-------------- FXML below here ---
+
     @FXML
     private Button btnClose;
 
     @FXML
-    private ScatterChart<?, ?> scatterChartLeft;
+    private ScatterChart<Double, Double> scatterChartVF;
 
-    @FXML
-    private ScatterChart<?, ?> scatterChartRight;
+    private XYChart.Series<Double, Double> dataSeries;
 
     @FXML
     private TextArea textAreaCommands;
@@ -92,9 +103,11 @@ public class Display extends Jovp {
     @FXML
     void initialize() {
         assert btnClose != null : "fx:id=\"btnClose\" was not injected: check your FXML file 'Display.fxml'.";
-        assert scatterChartLeft != null : "fx:id=\"scatterChartLeft\" was not injected: check your FXML file 'Display.fxml'.";
-        assert scatterChartRight != null : "fx:id=\"scatterChartRight\" was not injected: check your FXML file 'Display.fxml'.";
+        assert scatterChartVF != null : "fx:id=\"scatterChartLeft\" was not injected: check your FXML file 'Display.fxml'.";
         assert textAreaCommands != null : "fx:id=\"textAreaCommands\" was not injected: check your FXML file 'Display.fxml'.";
+
+        dataSeries = new XYChart.Series<Double, Double>();
+        scatterChartVF.getData().add(dataSeries);
     }
 
     @FXML
