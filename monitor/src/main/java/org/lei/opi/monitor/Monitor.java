@@ -89,7 +89,7 @@ public class Monitor extends Application {
         // IP and port of the monitor (myself) - this will be the address for the client to send commands.
     private String myIpAddress;
     private String myPort;
-    private static OpiListener opiClientListener;  // a bit gruby, but there is only ever one of these...
+    private static OpiListener opiClientListener;  // a bit gruby being static, but there is only ever one of these...
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private boolean myPortHasBeenEdited; // true if myIp or myPort have been edited since last change. 

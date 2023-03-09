@@ -19,19 +19,19 @@ import javafx.scene.Scene;
 public class O900 extends OpiMachine {
 
   /** Allowed eye values */
-  private enum Eye {LEFT, RIGHT}
+  public enum Eye {LEFT, RIGHT}
   /** Allowed background luminances */
-  private enum BackgroundLuminance {BG_OFF, BG_1, BG_10, BG_100}
+  public enum BackgroundLuminance {BG_OFF, BG_1, BG_10, BG_100}
   /** Allowed background colors */
-  private enum BackgroundColor {WHITE, YELLOW}
+  public enum BackgroundColor {WHITE, YELLOW}
   /** Allowed fixation types */
-  private enum Fixation {CENTER, CROSS, RING}
+  public enum Fixation {CENTER, CROSS, RING}
   /** Stimulus type */
-  private enum Type {STATIC, KINETIC}
+  public enum Type {STATIC, KINETIC}
   /** Allowed stimulus colors */
-  private enum Color {WHITE, RED, BLUE}
+  public enum Color {WHITE, RED, BLUE}
   /** Allowed sizes */
-  private enum Size {GI, GII, GIII, GIV, GV, GVI}
+  public enum Size {GI, GII, GIII, GIV, GV, GVI}
 
   /** {@value NA_STRING} */
   private static final String NA_STRING = "NA";
@@ -221,10 +221,10 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = Eye.class, desc = "Eye to set.", defaultValue = "left")
-  @Parameter(name = "bgLum", className = BackgroundLuminance.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
-  @Parameter(name = "bgCol", className = BackgroundColor.class, desc = "Background color for eye.", defaultValue = "white")
-  @Parameter(name = "fixShape", className = Fixation.class, desc = "Fixation target.", defaultValue = "center")
+  @Parameter(name = "eye", className = org.lei.opi.core.O900.Eye.class, desc = "Eye to set.", defaultValue = "left")
+  @Parameter(name = "bgLum", className = org.lei.opi.core.O900.BackgroundLuminance.class, desc = "Background luminance for eye.", min = 0, max = 3183.099, defaultValue = "10")
+  @Parameter(name = "bgCol", className = org.lei.opi.core.O900.BackgroundColor.class, desc = "Background color for eye.", defaultValue = "white")
+  @Parameter(name = "fixShape", className = org.lei.opi.core.O900.Fixation.class, desc = "Fixation target.", defaultValue = "center")
   @Parameter(name = "fixIntensity", className = Double.class, desc = "Fixation intensity(from 0% to 100%).", min = 0, max = 100, defaultValue = "50")
   @Parameter(name = "pres", className = Double.class, desc = "Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.",min = 0, max = 3, defaultValue = "0")
   @Parameter(name = "resp", className = Double.class, desc = "Volume for auditory feedback when observer presses the clicker: 0 means no buzzer.", min = 0, max = 3, defaultValue = "0")
@@ -295,12 +295,12 @@ public class O900 extends OpiMachine {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "type", className = Type.class, desc = "Stimulus type: STATIC or KINETIC.", defaultValue = "static")
+  @Parameter(name = "type", className = org.lei.opi.core.O900.Type.class, desc = "Stimulus type: STATIC or KINETIC.", defaultValue = "static")
   @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", min = 0, max = 3183.099, defaultValue = "3183.099")
-  @Parameter(name = "size", className = Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "[\"GV\"]")
-  @Parameter(name = "color", className = Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
+  @Parameter(name = "size", className = org.lei.opi.core.O900.Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "GV")
+  @Parameter(name = "color", className = org.lei.opi.core.O900.Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
   @Parameter(name = "t", className = Double.class, desc = "List of Stimulus presentation times (ms). For STATIC, list must be of length 1. For KINETIC, it must the same length and 'x' and 'y' co-ordinates minus 1", isList = true, optional = true, min = 0, defaultValue = "[200]")
   @Parameter(name = "w", className = Double.class, desc = "[STATIC] Response window (ms).", optional = true, min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")

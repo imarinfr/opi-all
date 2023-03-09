@@ -15,11 +15,6 @@ public class Packet {
     /** Constant for exception messages: {@value BAD_JSON} */
     public static final String BAD_JSON = "String is not a valid Json object.";
 
-    /** name:value pair in JSON output if there is an error */
-    public static final String ERROR_YES = "\"error\" :" + JSON_TRUE;
-    /** name:value pair in JSON output if there is not an error */
-    private static final String ERROR_NO = "\"error\" :" + JSON_FALSE;
-
     /** true if the socket should be closed that receives this message */
     private boolean close;
     /** true if this message packet contains an error msg */

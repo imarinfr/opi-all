@@ -36,7 +36,7 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'    - res$error Error code '0' if all good, something else otherwise.
 #'
 #' @details 
-#' `port` can take on values in the range [0.0, 65535.0].
+#' `port` can take on values in the range [0, 65535].
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -134,8 +134,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiSetup(settings = list(eye = "left", fixShape = "center", pres = 0, resp = 0,
-#'                 fixIntensity = 50, bgLum = "10", bgCol = "white"))
+#' result <- opiSetup(settings = list(eye = "null", fixShape = "null", pres = 0.0, resp = 0.0,
+#'                 fixIntensity = 50.0, bgLum = "null", bgCol = "null"))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -198,8 +198,8 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiPresent(stim = list(size = "["GV"]", color = "white", lum = 3183.099, x = [0],
-#'                   y = [0], type = "static"))
+#' result <- opiPresent(stim = list(size = "GV", color = "null", lum = 3183.099, x = list(0.0),
+#'                   y = list(0.0), type = "null"))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -230,7 +230,7 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
+#'  * res List of result elements.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'    - res$error '0' if success, something else if error.
 #'

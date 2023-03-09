@@ -118,7 +118,7 @@ public static class Settings extends OpiMachine.Settings {
   @Parameter(name = "fixSx", className = Double.class, desc = "diameter along major axis of ellipse (degrees).", min = 0, defaultValue = "1")
   @Parameter(name = "fixSy", className = Double.class, desc = "diameter along minor axis of ellipse (degrees). If not received, then sy = sx.", optional = true, min = 0, defaultValue = "1")
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
-  @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
+  @Parameter(name = "tracking", className = Integer.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
   public Packet setup(HashMap<String, Object> args) {
     if (textAreaCommands != null) // allows testing without GUI
       textAreaCommands.appendText("Setup received.\n");
@@ -144,7 +144,7 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "length", className = Double.class, desc = "The number of elements in this stimuli.", isList = false, defaultValue = "1")
+  @Parameter(name = "length", className = Integer.class, desc = "The number of elements in this stimuli.", isList = false, defaultValue = "1")
   @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", isList = true, defaultValue = "[LEFT]")
   @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")

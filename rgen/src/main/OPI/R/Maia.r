@@ -36,7 +36,7 @@ if (exists(".opi_env") && !exists("Maia", where = .opi_env))
 #'    - res$error Error code '0' if all good, something else otherwise.
 #'
 #' @details 
-#' `port` can take on values in the range [0.0, 65535.0].
+#' `port` can take on values in the range [0, 65535].
 #'
 #' @examples
 #' chooseOpi("Maia")
@@ -127,7 +127,7 @@ if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% n
 #'
 #' @examples
 #' chooseOpi("Maia")
-#' result <- opiSetup(settings = list(fixShape = "spot", fixCx = 0, tracking = 0))
+#' result <- opiSetup(settings = list(fixShape = "null", fixCx = 0.0, tracking = 0.0))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -186,7 +186,7 @@ if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% n
 #'
 #' @examples
 #' chooseOpi("Maia")
-#' result <- opiPresent(stim = list(t = 200, lum = 100, w = 1500, x = 0, y = 0))
+#' result <- opiPresent(stim = list(t = 200.0, lum = 100.0, w = 1500.0, x = 0.0, y = 0.0))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -217,7 +217,7 @@ if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% n
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
+#'  * res List of result elements.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'    - res$error '0' if success, something else if error.
 #'    - res$time The time stamp for fixation data

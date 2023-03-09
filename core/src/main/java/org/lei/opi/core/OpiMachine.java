@@ -19,14 +19,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
-import org.reflections.Reflections;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -69,9 +67,11 @@ public abstract class OpiMachine {
     /** {@value YES_LIST} */
     static final String YES_LIST = "Parameter '%s' should not be a list but it is for function '%s' in %s.";
     /** {@value NOT_IN_ENUM} */
-    static final String NOT_IN_ENUM = "I cannot find '%s' in enum type '%s' for parameter '%s' in function '%s' in %s.";
+    static final String NOT_IN_ENUM = "I cannot find a value of '%s' in enum type '%s' in function '%s' in %s.";
     /** {@value NOT_DOUBLE} */
     static final String NOT_A_DOUBLE = "Parameter '%s' in function '%s' of '%s' is not double.";
+    /** {@value NOT_AN_INTEGER} */
+    static final String NOT_AN_INTEGER = "Parameter '%s' in function '%s' of '%s' is not integer.";
     /** {@value NOT_A_STRING} */
     static final String NOT_A_STRING = "Parameter '%s' in function '%s' of '%s' should be a String.";
     /** {@value INVOCATION_FAILED} */
@@ -212,9 +212,9 @@ public abstract class OpiMachine {
     protected record MethodData(Method method, Parameter[] parameters) {};
   
         /** The methods of the OpiMachine */
-    protected HashMap<String, MethodData> opiMethods;
+    public HashMap<String, MethodData> opiMethods;
         /** Enum class : enum values defined in the implementing class */
-    protected HashMap<String, List<String>> enums; 
+    public HashMap<String, List<String>> enums; 
   
     /**
      * Set the information about the 5 OPI methods in opiMethods
@@ -373,8 +373,8 @@ public abstract class OpiMachine {
     }
     
     /**
-    * A helper method to get the entire class for a parameter (eg list<T> or list<list<T>> or T)
-    * @param param Parameter for which to get type (mangled grammar!?)
+    * Build a java object from the default JSON string param
+    * @param param Parameter for which to get the default
     */
     public static Object buildDefault(Parameter param) throws ClassNotFoundException {
         Type t = TypeToken.get(param.className()).getType();
@@ -402,7 +402,7 @@ public abstract class OpiMachine {
     *
     * @since 0.2.0
     */
-    protected Packet validateArgs(HashMap<String, Object> pairs, Parameter[] parameters, String funcName) {
+    public Packet validateArgs(HashMap<String, Object> pairs, Parameter[] parameters, String funcName) {
         for (Parameter param : parameters) {
                 // mandatory parameter not received
             if (!pairs.containsKey(param.name()) && !param.optional())
@@ -424,7 +424,7 @@ public abstract class OpiMachine {
                 // Ok, it's a mandatory parameter, so let's validate it
             Object valueObj = pairs.get(param.name());
 
-                // things are lists when they should be (is this covered above?) check length of lists and list of lists
+                // things are lists when they should be check length of lists and list of lists
             if ((param.isListList() || param.isList()) && (!(valueObj instanceof ArrayList) || ((ArrayList<?>) valueObj).size() == 0))
                 return Packet.error(String.format(NOT_LIST, param.name(), funcName, this.getClass()));
             if (!(param.isListList() || param.isList()) && (valueObj instanceof ArrayList))
@@ -433,7 +433,8 @@ public abstract class OpiMachine {
                 ((ArrayList<?>) valueObj).stream().anyMatch(val -> !(val instanceof ArrayList) || ((ArrayList<?>) val).size() == 0))
                     return Packet.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
 
-            // for convenience, let's stick all types (list, listlist, not) in to a simple list.
+                // For convenience, let's stick all types (list, listlist, not) into a simple list.
+                // so we can just iterate over it to check each element.
             List<Object> pList;
             if (param.isListList())
                 pList = (((ArrayList<?>) valueObj).stream().map(Object.class::cast)
@@ -448,25 +449,30 @@ public abstract class OpiMachine {
                 pList = Arrays.asList(valueObj);
 
                 // if param is an enum type, check all are valid
+                // Note added default params are already Enums so just need to check supplied strings
             if (enums.containsKey(param.className().getName())) { // validate enums
                 List<String> enumVals = enums.get(param.className().getName());
-                Optional<Object> result = pList.stream()
-                                               .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
-                                               .findAny();
-                if (!result.isPresent())
-                    return Packet.error(String.format(NOT_IN_ENUM, result.get(), param.className(), param.name(), funcName, this.getClass()));
-            } else if (param.className().getSimpleName().equals("Double")) { // validate doubles
+                Optional<Object> badOnes = pList.stream()
+                                           .filter(p -> !(p.getClass().isEnum()))
+                                           .filter(p -> !(p instanceof String) || !enumVals.stream().anyMatch(ss -> ss.contains(((String) p).toLowerCase())))
+                                           .findAny();
+                if (badOnes.isPresent())
+                    return Packet.error(String.format(NOT_IN_ENUM, param.name(), param.className(), funcName, this.getClass()));
+            } else if (param.className() == Double.class ||  param.className() == Integer.class) { // validate numbers
                 try {
                     double minVal = Math.round(1e10 * param.min()) / 1e10; // avoid weird rounding problems
                     double maxVal = Math.round(1e10 * param.max()) / 1e10;
                     Optional<Double> result = pList.stream()
-                        .map((Object o) -> (Double) o)
-                        .filter((Object v) -> ((Double) v).doubleValue() < minVal || ((Double) v).doubleValue() > maxVal)
+                        .map((Object o) -> (Double)(((Number.class.cast(o)).doubleValue())))
+                        .filter((Double v) -> v.doubleValue() < minVal || v.doubleValue() > maxVal)
                         .findAny();
                     if (result.isPresent())
                         return Packet.error(String.format(OUT_OF_RANGE, param.name(), funcName, this.getClass(), minVal, maxVal, result.get()));
                 } catch (ClassCastException e) {
-                    return Packet.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
+                    if (param.className() == Double.class)
+                        return Packet.error(String.format(NOT_A_DOUBLE, param.name(), funcName, this.getClass()));
+                    else
+                        return Packet.error(String.format(NOT_AN_INTEGER, param.name(), funcName, this.getClass()));
                 }
             } else { // assume param is a String, then validate
               Optional<Object> result = pList.stream().filter(v -> !(v instanceof String)).findAny();
@@ -476,48 +482,6 @@ public abstract class OpiMachine {
           }
           return new Packet(pairs);
         }
-    
-          /* 
-    public String convertToJson(HashMap<String, Object> args, Parameter[] params) {
-        StringBuilder s = new StringBuilder();
-        class JB { // json Builder
-            final static String Q = "\"";
-
-            final static String baseJ(Object o) { 
-                if (o instanceof String) 
-                    return Q + (String)o + Q;
-                return o.toString();
-            }
-                    
-            final static String makeList(Class<?> cls, ArrayList<Object> value) { return "[" + Stream.of(value).map((Object o) -> baseJ(cls.cast(o))) .collect(Collectors.joining(",")) + "]"; }
-
-            final static String nameValue(String n, String v) { return baseJ(n) + ":" + baseJ(v); }
-
-            final static String nameValue(String n, Parameter p, Object value) { 
-                if (p.isList())
-                    return nameValue(n, makeList(p.className(), value));
-            }
-        }
-
-        for (Parameter p : params) {
-            if (args.containsKey(p.name())) {
-                // validate it and add to s
-            } else {
-                if (p.optional()) { // add the default to s
-                    if (p.defaultValue() == null)
-                        throw new IllegalArgumentException("Optional parameter " + p.name() + " must have a default value in its @Parameter annotation." );
-                    s.append(JB.qName(p.name())  ":" + p.type() )
-                } else {
-                        // error - missing p in args
-                    throw new IllegalArgumentException("Missing " + p.name() + " from arguments." );
-                }
-            }
-        }
-    
-        return "";
-    }
-    */
-
   
     /**
      * opiInitialise: initialize OPI.
@@ -531,7 +495,7 @@ public abstract class OpiMachine {
      * @since 0.0.1
      */
     @Parameter(name = "ip", desc = "IP Address of the OPI Monitor.", defaultValue = "localhost")
-    @Parameter(name = "port", className = Double.class, desc = "TCP port of the OPI Monitor.", min = 0, max = 65535, defaultValue = "50001")
+    @Parameter(name = "port", className = Integer.class, desc = "TCP port of the OPI Monitor.", min = 0, max = 65535, defaultValue = "50001")
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, something else otherwise.")
     @ReturnMsg(name = "res.msg", desc = "The success or error message.")
@@ -575,7 +539,7 @@ public abstract class OpiMachine {
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following fields.")
-    @ReturnMsg(name = "res.msg.seen", className = Double.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
+    @ReturnMsg(name = "res.msg.seen", className = Integer.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
     @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed (ms).", min = 0)
     public abstract Packet present(HashMap<String, Object> args);
   
@@ -588,7 +552,7 @@ public abstract class OpiMachine {
      *
      * @since 0.0.1
      */
-    @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
+    @ReturnMsg(name = "res", desc = "List of result elements.")
     @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "The error message or additional results from the CLOSE command")
     public abstract Packet close();

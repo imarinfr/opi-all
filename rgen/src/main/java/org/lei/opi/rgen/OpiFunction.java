@@ -5,11 +5,13 @@ import java.io.PrintWriter;
 
 import java.lang.reflect.Method;
 
-import java.util.stream.Stream;
 import java.util.stream.Collectors;
 import java.util.function.Function;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
+
+import com.google.gson.JsonSyntaxException;
 
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.definitions.Parameter;
@@ -88,15 +90,48 @@ public class OpiFunction {
                 this.opiCoreName, machine));
         } 
 
-            // TODO isListList
-        String s = this.methodData.parameters().values().stream()
-                   .filter((Parameter p) -> !p.optional())
-                   .map((Parameter p) -> 
-                       p.className().getSimpleName().equals("Double") || p.isList() || p.isListList() ?
-                           String.format("%s = %s", p.name(), p.defaultValue()) :
-                           String.format("%s = \"%s\"", p.name(), p.defaultValue()))
-                   .collect(Collectors.joining(", "));
-        this.callingExample = OpiFunction.wrapR(s, 10 + this.opiName.length(), true);
+        this.callingExample = makeCallingExample();
+    }
+
+    /**
+     * Make the body of the calling example which will be S in 
+     *      "result <- opiFunction(x = list(S))" or 
+     *      "result <- opiFunction(S)"
+     * So we just need to make a list of non-optional paramters and their default values.
+     * 
+     * @return String of "param = defaultValue, ..."
+     */
+    private String makeCallingExample() {
+        class Formatter {
+            static String example(Parameter p) {
+                try {
+                    Object o = OpiMachine.buildDefault(p);
+                    return String.format("%s = %s", p.name(), format(o));
+                } catch (ClassNotFoundException ignored) {
+                    return "";
+                } catch (JsonSyntaxException ignored) {
+                    System.out.println(String.format("@Parameter %s has bad JSON for its default value: %s.", p.name(), p.defaultValue()));
+                    return "";
+                }
+            }
+
+            static String format(Object o) {
+                if (o instanceof ArrayList)
+                    return String.format("list(%s)", ((ArrayList<Object>)o).stream().map((Object t) -> format(t)).collect(Collectors.joining(", ")));
+                if (o instanceof Integer) 
+                    return String.format("%d", o); 
+                if (o instanceof Double) 
+                    return String.format("%s", o); 
+                return String.format("\"%s\"", o); 
+            }
+        }
+
+            String s = this.methodData.parameters().values().stream()
+                .filter((Parameter p) -> !p.optional())
+                .map((Parameter p) -> Formatter.example(p))
+                .collect(Collectors.joining(", "));
+
+            return wrapR(s, 10 + this.opiName.length(), true);
     }
 
     /**
@@ -161,6 +196,8 @@ public class OpiFunction {
 
             if (p.className() == Double.class) {
                 str += String.format("the range [%s, %s].", p.min(), p.max());
+            } else if (p.className() == Integer.class) {
+                str += String.format("the range [%s, %s].", (int)p.min(), (int)p.max());
             } else if (p.className().isEnum()) {
                 List<String> values = machine.enums.get(p.className().getName());
                 str += String.format("the set {%s}.", String.join(", ",values));

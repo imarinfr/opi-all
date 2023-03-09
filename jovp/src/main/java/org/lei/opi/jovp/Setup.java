@@ -1,6 +1,5 @@
 package org.lei.opi.jovp;
 
-import static org.lei.opi.jovp.JsonProcessor.colorValues;
 import static org.lei.opi.jovp.JsonProcessor.toDoubleArray;
 
 import java.util.Arrays;
@@ -31,34 +30,6 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
                     double fixCx, double fixCy, double fixSx, double fixSy,
                     double fixRotation, double tracking) {
 
-  /**
-   * Processes arguments and create a background record from R OPI.
-   * The major difference with 'create2' is that 'create1' expects bgLum and
-   * bgCol and fixLum and fixCol whereas 'create2' only expects 'bgCol' and
-   * 'fixCol'. The vectors 'bgCol' and 'fixCol' are color mixtures with
-   * values between 0 and 1 in 'process' but channel luminances in cd/m^2
-   * in 'create2'. Ranges of values goes unchecked
-   * 
-   * 
-   * @param args pairs of argument name and value
-   * 
-   * @return a background record
-   * 
-   * @throws ClassCastException Cast exception
-   * @throws IllegalArgumentException If any value is bad
-   * 
-   * @since 0.0.1
-   */
-  public static Setup create1(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException {
-    return new Setup(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
-                     colorValues((double) args.get("bgLum"), toDoubleArray(args.get("bgCol"))),
-                     ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
-                     colorValues((double) args.get("fixLum"), toDoubleArray(args.get("fixCol"))),
-                     (double) args.get("fixCx"), (double) args.get("fixCy"),
-                     (double) args.get("fixSx"), (double) args.get("fixSy"),
-                     (double) args.get("fixRotation"),
-                     ((double) args.get("tracking")));
-  }
 
   /**
    * Sets arguments create a background record from R OPI

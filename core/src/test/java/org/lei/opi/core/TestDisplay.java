@@ -13,30 +13,52 @@ public void testInit() {
         machine = new Display(null);
     } catch (InstantiationException e) {
         System.out.println("Could not connect to JOVP server");
-        e.printStackTrace();
-        return;
     }
-    //machine.connect();
+    // Needs JOVP server running
+    if (!machine.connect(machine.getSettings().ip, machine.getSettings().port)) {
+        System.out.println("Could not connect to JOVP server");
+    }
 
-    HashMap<String, Object> hmap = new HashMap<String, Object>();
-    
-    hmap.put("command", "initialize");
-    hmap.put("ip", OpiListener.obtainPublicAddress().getHostAddress());
-    hmap.put("port", 50001);
+    int test = 1;
+    if (test == 0) { init(machine); sleep(1); close(machine); }
+    if (test == 1) { init(machine); sleep(1); present(machine) ; close(machine); }
+}
 
+// assumes JOVP server running
+void init(Jovp machine) {
+    String s = "{" + 
+        "\"command\":\"initialize\"," + 
+        String.format("\"ip\": \"%s\",", OpiListener.obtainPublicAddress().getHostAddress()) + 
+        "\"port\":50001" +
+    "}";
+    HashMap<String, Object> hmap = OpiListener.jsonToPairs(s);
     System.out.println(machine.processPairs(hmap));
 }
 
-@Test
-public void testPresent() {
-    Echo machine = new Echo(null);
-
-    HashMap<String, Object> hmap = new HashMap<String, Object>();
-    
-    hmap.put("command", "present");
-
+// assumes JOVP server running
+void close(Jovp machine) {
+    String s = "{" + "\"command\":\"close\"" + "}";
+    HashMap<String, Object> hmap = OpiListener.jsonToPairs(s);
     System.out.println(machine.processPairs(hmap));
 }
 
+void sleep(int seconds) { try {Thread.sleep(seconds * 1000);} catch (InterruptedException ignored) { ; } } 
 
+// assumes JOVP server running
+void present(Jovp machine) {
+    String s = "{" + 
+        "\"command\":\"present\"," + 
+        "\"sx\"     : [1.72]," +
+        "\"lum\"    : [20.0]," +
+        "\"length\" : 1," + 
+        "\"eye\"    : [\"LEFT\"], " + 
+        "\"color1\" : [[1.0, 1.0, 1.0]]," + 
+        "\"t\"      : [200.0]," + 
+        "\"w\"      : 1500.0," + 
+        "\"x\"      : [0.0], " + 
+        "\"y\"      : [0.0]" + 
+    "}";
+    HashMap<String, Object> hmap = OpiListener.jsonToPairs(s);
+    System.out.println(machine.processPairs(hmap));
+}
 }

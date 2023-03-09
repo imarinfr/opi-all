@@ -36,7 +36,7 @@ if (exists(".opi_env") && !exists("ImoVifa", where = .opi_env))
 #'    - res$error Error code '0' if all good, something else otherwise.
 #'
 #' @details 
-#' `port` can take on values in the range [0.0, 65535.0].
+#' `port` can take on values in the range [0, 65535].
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
@@ -142,13 +142,14 @@ if(!exists(".opi_env") || !exists("ImoVifa", envir = .opi_env) || !("socket" %in
 #' `fixRotation` can take on values in the range [0.0, 360.0].
 #' Elements in `fixCol` can take on values in the range [0.0, 1.0].
 #' `bgLum` can take on values in the range [0.0, 1.0E10].
-#' `tracking` can take on values in the range [0.0, 1.0].
+#' `tracking` can take on values in the range [0, 1].
 #' Elements in `bgCol` can take on values in the range [0.0, 1.0].
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
-#' result <- opiSetup(settings = list(eye = "LEFT", fixShape = "MALTESE", fixLum = 20, fixCx = 0,
-#'                 fixSx = 1, fixCy = 0, fixCol = [0,1,0], bgLum = 10, bgCol = [1,1,1]))
+#' result <- opiSetup(settings = list(eye = "LEFT", fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0,
+#'                 fixSx = 1.0, fixCy = 0.0, fixCol = list(0.0, 1.0, 0.0),
+#'                 bgLum = 10.0, bgCol = list(1.0, 1.0, 1.0)))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -222,7 +223,7 @@ if(!exists(".opi_env") || !exists("ImoVifa", envir = .opi_env) || !("socket" %in
 #' Elements in `sy` can take on values in the range [0.0, 180.0].
 #' Elements in `rotation` can take on values in the range [0.0, 360.0].
 #' Elements in `texRotation` can take on values in the range [0.0, 360.0].
-#' `length` can take on values in the range [-1.0E10, 1.0E10].
+#' `length` can take on values in the range [-2147483648, 2147483647].
 #' Elements in `type` can take on values in the set {flat,
 #'                  checkerboard, sine, squaresine, g1, g2, g3, text, image}.
 #' Elements in `defocus` can take on values in the range [0.0, 1.0E10].
@@ -238,8 +239,9 @@ if(!exists(".opi_env") || !exists("ImoVifa", envir = .opi_env) || !("socket" %in
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
-#' result <- opiPresent(stim = list(sx = [1.72], lum = [20], length = 1, eye = [LEFT],
-#'                   color1 = [[1,1,1]], t = [200], w = 1500, x = [0], y = [0]))
+#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(20.0), length = 1,
+#'                   eye = list("LEFT"), color1 = list(list(1.0, 1.0, 1.0)),
+#'                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -270,7 +272,7 @@ if(!exists(".opi_env") || !exists("ImoVifa", envir = .opi_env) || !("socket" %in
 #'
 #'
 #' @return a list contianing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
+#'  * res List of result elements.
 #'    - res$msg The error message or additional results from the CLOSE command
 #'    - res$error '0' if success, something else if error.
 #'
