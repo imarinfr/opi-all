@@ -173,7 +173,7 @@ public static class Settings extends OpiMachine.Settings {
     if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
       Packet p = validateArgs(args, this.opiMethods.get("present").parameters(), "present");
-        if (p.getError()) 
+      if (p.getError()) 
           return(p);
       this.send(OpiListener.gson.toJson(args));
       return this.receive();

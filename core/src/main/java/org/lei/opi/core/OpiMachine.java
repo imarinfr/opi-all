@@ -18,10 +18,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -206,13 +206,37 @@ public abstract class OpiMachine {
      * Class to hold information of the 5 key OPI methods ready for use.
      * Should be set in the constructor
      * 
-     * @param method All methods of the class to find the machine-dependent implementations of the 5 key OPI commands
-     * @param parameters The names expected in the JSON string that is a parameter of the corresponding OPI command
+     * @param method An invokable method for one of the 5 OPI commands
+     * @param parameters The @Parameter notations for that method (including all superclasses)
      */
-    protected record MethodData(Method method, Parameter[] parameters) {};
-  
+    public record MethodData(Method method, HashSet<Parameter> parameters) {};
         /** The methods of the OpiMachine */
     public HashMap<String, MethodData> opiMethods;
+
+    /**
+     * Return all @Parameter annotations for method `method` in the 
+     * chain of classes from c, c.super(), c.super.super.... up to Object.
+     * I think...elements in the returned set will not be unique by parameter.name.
+     *    (So subclass @Parameters do not overwrite super class @Parameters).
+     * 
+     * @param c Class at which to begin looking for @Parameter annotations on method
+     * @param method Method to look for in c and all superclasses of c
+     * @return HashSet of all @Parameter annotations (unique by name)
+     */
+    public static HashSet<Parameter> getAllParameterAnnotations(Class<?> c, Method method) {
+        HashSet<Parameter> params = new HashSet<Parameter>();
+        while (c != null) {
+            for (Method m : c.getMethods()) {
+                if (m.getName() == method.getName()) {
+                    for (Parameter p : m.getAnnotationsByType(Parameter.class))
+                        params.add(p);
+                }
+            }
+            c = c.getSuperclass();  // go up to parent
+        }
+        return(params);
+    }   
+
         /** Enum class : enum values defined in the implementing class */
     public HashMap<String, List<String>> enums; 
   
@@ -237,15 +261,13 @@ public abstract class OpiMachine {
         Method[] methods = Arrays.stream(this.getClass().getMethods())
           .filter((Method m) -> Arrays.stream(commands).anyMatch(m.getName()::equals)).toArray(Method[]::new);
       
-        opiMethods = new HashMap<String, MethodData>();
-      
         // Get OpiMachine and machine-dependent parameters through annotations
+        opiMethods = new HashMap<String, MethodData>();
         for (Method method : methods) {
-          Method parentMethod = Arrays.stream(OpiMachine.class.getMethods()).filter(m -> m.getName().equals(method.getName())).findFirst().get();
-          Parameter[] parameters = ArrayUtils.addAll(parentMethod.getAnnotationsByType(Parameter.class),
-                                                     method.getAnnotationsByType(Parameter.class));
-          opiMethods.put(method.getName(), new MethodData(method, parameters));
-        }   
+            HashSet<Parameter> params = getAllParameterAnnotations(this.getClass(), method);
+            opiMethods.put(method.getName(), new MethodData(method, params));
+        }
+
             // gather all the ENUMS used in Parameter annotations for all methods in this class
         enums = new HashMap<String, List<String>>();    
         HashSet<Class<?>> enumClasses = new HashSet<Class<?>>();
@@ -354,7 +376,7 @@ public abstract class OpiMachine {
 
         // (2) Check and add optional-default params
         if (methodData.parameters != null) {
-            Packet p = validateArgs(pairs, methodData.parameters, funcName);
+            Packet p = validateArgs(pairs, methodData.parameters(), funcName);
             if (!p.getError())
                 pairs = (HashMap<String, Object>)p.getMsg();
             else    
@@ -363,7 +385,7 @@ public abstract class OpiMachine {
 
         // (3) execute method
         try {
-            Packet result = methodData.parameters.length == 0
+            Packet result = methodData.parameters().size() == 0
               ? (Packet) methodData.method.invoke(this)
               : (Packet) methodData.method.invoke(this, pairs);
             return result;
@@ -402,7 +424,7 @@ public abstract class OpiMachine {
     *
     * @since 0.2.0
     */
-    public Packet validateArgs(HashMap<String, Object> pairs, Parameter[] parameters, String funcName) {
+    public Packet validateArgs(HashMap<String, Object> pairs, HashSet<Parameter> parameters, String funcName) {
         for (Parameter param : parameters) {
                 // mandatory parameter not received
             if (!pairs.containsKey(param.name()) && !param.optional())
@@ -569,4 +591,11 @@ public abstract class OpiMachine {
     protected String toJson(Command command) {
       return "{\"command\":\"" + command.toString() + "\"}";
     }
+
+    public void printMethods() {
+        System.out.println("opiMethods:");
+        for(String k : opiMethods.keySet())
+            System.out.println(k + opiMethods.get(k).parameters.stream().map((Parameter o)->o.name()).collect(Collectors.joining(", ")));
+    }
+
 }

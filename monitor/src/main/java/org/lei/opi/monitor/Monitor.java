@@ -2,6 +2,7 @@ package org.lei.opi.monitor;
 
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.OpiListener;
+import org.lei.opi.core.definitions.Parameter;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -9,13 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.Optional;
 
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.net.ConnectException;
 import java.lang.reflect.Constructor;
 
 import javafx.application.Application;
@@ -434,6 +435,9 @@ public class Monitor extends Application {
             e.printStackTrace();
             return;
         }
+System.out.println("Connect: opiMethods for machine " + this.currentMachineChoice);
+opiMachine.printMethods();
+
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/org/lei/opi/core/%s.fxml", this.currentMachineChoice)));
