@@ -4,17 +4,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import javafx.scene.Scene;
+
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
-
-import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
-import javafx.event.ActionEvent;
-import javafx.scene.Scene;
-import javafx.scene.Node;
-import javafx.scene.chart.ScatterChart;
 
 /**
  * JOVP client - will send messages to JOVP server...
@@ -65,8 +59,6 @@ public static class Settings extends OpiMachine.Settings {
     * @since 0.0.1
     */
     public Packet initialize(HashMap<String, Object> args) {
-        if (textAreaCommands != null) // allows testing without GUI
-          textAreaCommands.appendText("Initialize received.\n");
         try {
             this.send(initConfiguration());
             Packet p = this.receive();
@@ -84,8 +76,6 @@ public static class Settings extends OpiMachine.Settings {
      * @since 0.0.1
      */
     public Packet query() {
-        if (textAreaCommands != null) // allows testing without GUI
-          textAreaCommands.appendText("Query received.\n");
         if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
             String q = toJson(Command.QUERY);
@@ -120,8 +110,6 @@ public static class Settings extends OpiMachine.Settings {
   @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
   @Parameter(name = "tracking", className = Integer.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
   public Packet setup(HashMap<String, Object> args) {
-    if (textAreaCommands != null) // allows testing without GUI
-      textAreaCommands.appendText("Setup received.\n");
     if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
       Packet p = validateArgs(args, this.opiMethods.get("setup").parameters(), "setup");
@@ -168,8 +156,6 @@ public static class Settings extends OpiMachine.Settings {
   @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
   @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
   public Packet present(HashMap<String, Object> args) {
-    if (textAreaCommands != null) // allows testing without GUI
-      textAreaCommands.appendText("Present received.\n");
     if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {
       Packet p = validateArgs(args, this.opiMethods.get("present").parameters(), "present");
@@ -182,21 +168,18 @@ public static class Settings extends OpiMachine.Settings {
     }
   }
 
-  /**
-   * opiClose: Send close to Jovp and close my socket to it.
-   * 
-   * @param args pairs of argument name and value
-   *
-   * @return A JSON object with return messages
-   *
-   * @since 0.0.1
-   */
+    /**
+    * opiClose: Send close to Jovp and close my socket to it.
+    * 
+    * @param args pairs of argument name and value
+    *
+    * @return A JSON object with return messages
+    *
+    * @since 0.0.1
+    */
     public Packet close() {
-      if (textAreaCommands != null) { // allows testing without GUI
-        textAreaCommands.appendText("Close received.\n");
-        returnToParentScene((Node)textAreaCommands);
-      }
       if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
+
       try {
           this.send(toJson(Command.CLOSE));   // this will close the server, so no messages coming back
           this.closeSocket();
@@ -204,7 +187,7 @@ public static class Settings extends OpiMachine.Settings {
           return Packet.error(COULD_NOT_CLOSE, e);
       }
       return new Packet(true, DISCONNECTED_FROM_HOST);
-  }
+    }
 
   /** This is what the JOVP Server/Machine is expecting for the Initialize Command */
   private String initConfiguration() {
@@ -221,21 +204,4 @@ public static class Settings extends OpiMachine.Settings {
     .append("  \"gammaFile\": " + settings.gammaFile)
     .append("\n}").toString();
   }
-
-  // FXML code for Monitor GUI after this line ---------------------------------------------
-
-    @FXML
-    private Button btnClose;
-
-    @FXML
-    private ScatterChart<?, ?> scatterChartVF;
-
-    @FXML
-    private TextArea textAreaCommands;
-
-    @FXML
-    void actionBtnClose(ActionEvent event) {
-        returnToParentScene((Node)event.getSource());
-    }
-
 }
