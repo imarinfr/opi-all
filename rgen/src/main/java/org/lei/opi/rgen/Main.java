@@ -62,7 +62,7 @@ machineName, machineName);  // environment name
         String machineName = machine.getClass().getSimpleName();
 
         OpiFunction[] functions = { 
-            new OpiFunction(machine, "opiInitialise", "initialize", "", "list(err = %s)", true),
+            new OpiFunction(machine, "opiInitialise", "initialize", "address", "list(err = %s)", true),
             new OpiFunction(machine, "opiQueryDevice", "query", "", "list(%s)", false),
             new OpiFunction(machine, "opiSetup", "setup", "settings", "%s", false),
             new OpiFunction(machine, "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false),

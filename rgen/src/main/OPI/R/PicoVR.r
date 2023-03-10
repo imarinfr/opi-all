@@ -40,17 +40,19 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 #'
 #' @examples
 #' chooseOpi("PicoVR")
-#' result <- opiInitialise(port = 50001, ip = "localhost")
+#' result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_PicoVR <- function(port = NULL, ip = NULL) {
+opiInitialise_for_PicoVR <- function(address) {
     if (!exists("socket", where = .opi_env$PicoVR))
-        assign("socket", open_socket(ip, port), .opi_env$PicoVR)
+        assign("socket", open_socket(address$ip, address$port), .opi_env$PicoVR)
     else
         return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
-    msg <- list(port = port, ip = ip)
+    if (is.null(address)) return(list(error = 0 , msg = "Nothing to do in opiInitialise."))
+
+    msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -86,9 +88,10 @@ opiInitialise_for_PicoVR <- function(port = NULL, ip = NULL) {
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_PicoVR <- function() {
-if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
+        stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
+    
     msg <- list()
     msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
@@ -120,9 +123,9 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #' @param fixRotation Angles of rotation of fixation target (degrees). Only
 #'                    useful if sx != sy specified.(Optional)
 #' @param fixCol Fixation target color for eye.
-#' @param bgLum Background luminance for eye.
+#' @param bgLum Background luminance for eye (cd/m^2).
 #' @param tracking Whether to correct stimulus location based on eye position.(Optional)
-#' @param bgCol Background color for eye.
+#' @param bgCol Background color for eye (rgb).
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except 'error'.
@@ -153,9 +156,11 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_PicoVR <- function(settings = list(eye = NULL, fixShape = NULL, fixLum = NULL, fixCx = NULL, fixSx = NULL, fixCy = NULL, fixSy = NULL, fixRotation = NULL, fixCol = NULL, bgLum = NULL, tracking = NULL, bgCol = NULL)) {
-if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+opiSetup_for_PicoVR <- function(settings) {
+    if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
+        stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    if (is.null(settings)) return(list(error = 0 , msg = "Nothing to do in opiSetup."))
 
     msg <- list(eye = settings$eye, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCx = settings$fixCx, fixSx = settings$fixSx, fixCy = settings$fixCy, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol)
     msg <- c(list(command = "setup"), msg)
@@ -245,9 +250,11 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_PicoVR <- function(stim = list(phase = NULL, shape = NULL, sx = NULL, lum = NULL, sy = NULL, rotation = NULL, texRotation = NULL, length = NULL, type = NULL, defocus = NULL, frequency = NULL, eye = NULL, color1 = NULL, color2 = NULL, t = NULL, w = NULL, contrast = NULL, x = NULL, y = NULL)) {
-if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
-    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+opiPresent_for_PicoVR <- function(stim) {
+    if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
+        stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
     msg <- list(phase = stim$phase, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, length = stim$length, type = stim$type, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
@@ -285,9 +292,10 @@ if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in%
 #' @seealso [opiClose()]
 #'
 opiClose_for_PicoVR <- function() {
-if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
-    stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
+        stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
+    
     msg <- list()
     msg <- c(list(command = "close"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]

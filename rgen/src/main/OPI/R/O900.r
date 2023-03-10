@@ -40,17 +40,19 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 #' @examples
 #' chooseOpi("O900")
-#' result <- opiInitialise(port = 50001, ip = "localhost")
+#' result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_O900 <- function(port = NULL, ip = NULL) {
+opiInitialise_for_O900 <- function(address) {
     if (!exists("socket", where = .opi_env$O900))
-        assign("socket", open_socket(ip, port), .opi_env$O900)
+        assign("socket", open_socket(address$ip, address$port), .opi_env$O900)
     else
         return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
-    msg <- list(port = port, ip = ip)
+    if (is.null(address)) return(list(error = 0 , msg = "Nothing to do in opiInitialise."))
+
+    msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -86,9 +88,10 @@ opiInitialise_for_O900 <- function(port = NULL, ip = NULL) {
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_O900 <- function() {
-if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+        stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
+    
     msg <- list()
     msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
@@ -139,9 +142,11 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_O900 <- function(settings = list(eye = NULL, fixShape = NULL, pres = NULL, resp = NULL, fixIntensity = NULL, bgLum = NULL, bgCol = NULL)) {
-if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+opiSetup_for_O900 <- function(settings) {
+    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+        stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    if (is.null(settings)) return(list(error = 0 , msg = "Nothing to do in opiSetup."))
 
     msg <- list(eye = settings$eye, fixShape = settings$fixShape, pres = settings$pres, resp = settings$resp, fixIntensity = settings$fixIntensity, bgLum = settings$bgLum, bgCol = settings$bgCol)
     msg <- c(list(command = "setup"), msg)
@@ -203,9 +208,11 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_O900 <- function(stim = list(size = NULL, color = NULL, t = NULL, lum = NULL, w = NULL, x = NULL, y = NULL, type = NULL)) {
-if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+opiPresent_for_O900 <- function(stim) {
+    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+        stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
     msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type)
     msg <- c(list(command = "present"), msg)
@@ -243,9 +250,10 @@ if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% n
 #' @seealso [opiClose()]
 #'
 opiClose_for_O900 <- function() {
-if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
-    stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
+        stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
+    
     msg <- list()
     msg <- c(list(command = "close"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]

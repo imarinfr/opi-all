@@ -7,6 +7,7 @@ import java.lang.reflect.Method;
 
 import java.util.stream.Collectors;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -29,6 +30,38 @@ public class OpiFunction {
         /** This is the name of the OPI environment for storing variables, settings, etc */
     static final String opiEnvName = ".opi_env";
 
+    /**
+     * Break a string into lines using \n#' on spaces if isCode is false else on commas
+     * so that no line is longer than 80 chars. Uses simple greedy algorithm.
+     * 
+     * @param s  String to wrap
+     * @param leadingSpaces  Number of leading spaces to allow for on first line, and to 
+     *                       add to each line after the first.
+     *                       This does not include the 3 chars for "#' ".
+     * @param isCode true if an R command (break on commas, not spaces)
+     * @return
+     */
+    public static String wrapR(String s, int leadingSpaces, boolean isCode) {
+        String result = "";
+        while (s.length() > 80) {
+            int i = s.lastIndexOf(isCode ? "," : " ", 80 - leadingSpaces);
+            if (i > -1) {
+                result += s.substring(0, i);
+                if (isCode) 
+                    result += ",";
+                
+                result += "\n#' ";
+                result += " ".repeat(leadingSpaces - 3);
+                s = s.substring(i + 1);
+            } else {
+                break;  // could not find the break char, so give up
+            }
+        } 
+        result += s;
+
+        return result;
+    }
+
     public record MethodData(HashMap<String, Parameter> parameters, HashMap<String, ReturnMsg> returnMsgs) {
         void addU(Parameter[] ps) {
             for (Parameter p : ps)
@@ -41,7 +74,7 @@ public class OpiFunction {
                     this.returnMsgs.put(r.name(), r);
         }
     };
-    
+   
     String opiName;
     String opiCoreName;
     String opiInputFieldName;
@@ -134,37 +167,7 @@ public class OpiFunction {
             return wrapR(s, 10 + this.opiName.length(), true);
     }
 
-    /**
-     * Break a string into lines using \n#' on spaces if isCode is false else on commas
-     * so that no line is longer than 80 chars. Uses simple greedy algorithm.
-     * 
-     * @param s  String to wrap
-     * @param leadingSpaces  Number of leading spaces to allow for on first line, and to 
-     *                       add to each line after the first.
-     *                       This does not include the 3 chars for "#' ".
-     * @param isCode true if an R command (break on commas, not spaces)
-     * @return
-     */
-    public static String wrapR(String s, int leadingSpaces, boolean isCode) {
-        String result = "";
-        while (s.length() > 80) {
-            int i = s.lastIndexOf(isCode ? "," : " ", 80 - leadingSpaces);
-            if (i > -1) {
-                result += s.substring(0, i);
-                if (isCode) 
-                    result += ",";
-                
-                result += "\n#' ";
-                result += " ".repeat(leadingSpaces - 3);
-                s = s.substring(i + 1);
-            } else {
-                break;  // could not find the break char, so give up
-            }
-        } 
-        result += s;
-
-        return result;
-    }
+   
 
       // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
@@ -267,23 +270,32 @@ public class OpiFunction {
      * R code to generate a JSON msg of list of params and values
      */
     private final String sendMessage() {
+        Supplier<String> checkNull = () -> {
+            if (this.opiInputFieldName.length() > 0)
+                return String.format("if (is.null(%s)) return(list(error = 0 , msg = \"Nothing to do in %s.\"))\n", this.opiInputFieldName, this.opiName);
+            else
+                return "";
+        };
+
         //msg <- c(list(command = "present"), lapply(stim, function(p) ifelse(is.null(p), NULL, p)))
         return String.format("""
+        %s
         msg <- list(%s)
         msg <- c(list(command = "%s"), msg)
         msg <- msg[!unlist(lapply(msg, is.null))]
         msg <- rjson::toJSON(msg)
         writeLines(msg, %s$%s$socket)
     """, 
-        methodData.parameters().values().stream()
+        checkNull.get(), // First check string
+        methodData.parameters().values().stream()  // msg list parameters
             .map((Parameter p) -> String.format("%s = %s%s", 
                 p.name(), 
                 this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "",
                 p.name()))
             .collect(Collectors.joining(", "))
         ,
-        this.opiCoreName,
-        opiEnvName, this.machineName);
+        this.opiCoreName,  // command = 
+        opiEnvName, this.machineName);  // socket
     }
 
     /**
@@ -319,22 +331,7 @@ public class OpiFunction {
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 
             // (2) make the function header
-        String params = this.methodData.parameters().values().stream()
-            .map((Parameter p) -> String.format("%s = NULL",p.name()))
-            .collect(Collectors.joining(", "));
-
-        if (opiInputFieldName.length() == 0) {
-            if (this.methodData.parameters().values().stream()
-                .filter((Parameter p) -> p.name()
-                .contains("."))
-                .findAny()
-                .isPresent())
-                System.err.println("PANIC: I don't know what to do with a Paramter.name() with a '.' in it.");
-        } else {
-            params = String.format("%s = list(%s)", opiInputFieldName, params);
-        } 
-
-        String funcSignature = String.format("%s_for_%s <- function(%s)", this.opiName, machineName, params);
+        String funcSignature = String.format("%s_for_%s <- function(%s)", this.opiName, machineName, this.opiInputFieldName);
 
             // (2) Make the first part of function body which 
             //     - either opens socket or uses existing socket
@@ -347,17 +344,17 @@ public class OpiFunction {
 
             socketCode = String.format("""
                         if (!exists(\"socket\", where = %s$%s))
-                            assign(\"socket\", open_socket(%s, %s), %s$%s) 
+                            assign(\"socket\", open_socket(%s$%s, %s$%s), %s$%s) 
                         else
                             return(list(error = 4, msg = \"Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R.\"))
                     """,
                     opiEnvName, this.machineName,                                  // if exists
-                    parameterForIp, parameterForPort, opiEnvName, this.machineName // assign
+                    this.opiInputFieldName, parameterForIp, this.opiInputFieldName, parameterForPort, opiEnvName, this.machineName // assign
                     );
         } else {
             socketCode = String.format("""
-                if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
-                    stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
+                    if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
+                        stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
                 """, opiEnvName, 
                 this.machineName, opiEnvName,
                 opiEnvName, this.machineName, 

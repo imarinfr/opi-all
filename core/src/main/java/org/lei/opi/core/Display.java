@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.chart.ScatterChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
+import javafx.scene.text.Font;
 import javafx.scene.Node;
 import javafx.scene.chart.XYChart;
 import javafx.event.ActionEvent;
@@ -140,6 +141,7 @@ public class Display extends Jovp {
         assert scatterChartVF != null : "fx:id=\"scatterChartLeft\" was not injected: check your FXML file 'Display.fxml'.";
         assert textAreaCommands != null : "fx:id=\"textAreaCommands\" was not injected: check your FXML file 'Display.fxml'.";
 
+        textAreaCommands.setFont(new Font("Arial", 10));
         dataSeries = new XYChart.Series<Number, Number>();
         scatterChartVF.getData().add(dataSeries);
         scatterChartVF.getXAxis().setAutoRanging(false);

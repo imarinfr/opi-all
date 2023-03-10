@@ -40,17 +40,19 @@ if (exists(".opi_env") && !exists("Maia", where = .opi_env))
 #'
 #' @examples
 #' chooseOpi("Maia")
-#' result <- opiInitialise(port = 50001, ip = "localhost")
+#' result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
 #'
 #' @seealso [opiInitialise()]
 #'
-opiInitialise_for_Maia <- function(port = NULL, ip = NULL) {
+opiInitialise_for_Maia <- function(address) {
     if (!exists("socket", where = .opi_env$Maia))
-        assign("socket", open_socket(ip, port), .opi_env$Maia)
+        assign("socket", open_socket(address$ip, address$port), .opi_env$Maia)
     else
         return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
-    msg <- list(port = port, ip = ip)
+    if (is.null(address)) return(list(error = 0 , msg = "Nothing to do in opiInitialise."))
+
+    msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -86,9 +88,10 @@ opiInitialise_for_Maia <- function(port = NULL, ip = NULL) {
 #' @seealso [opiQueryDevice()]
 #'
 opiQueryDevice_for_Maia <- function() {
-if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
-    stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
+        stop("Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?.")
 
+    
     msg <- list()
     msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
@@ -131,9 +134,11 @@ if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% n
 #'
 #' @seealso [opiSetup()]
 #'
-opiSetup_for_Maia <- function(settings = list(fixShape = NULL, fixCx = NULL, tracking = NULL)) {
-if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
-    stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+opiSetup_for_Maia <- function(settings) {
+    if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
+        stop("Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    if (is.null(settings)) return(list(error = 0 , msg = "Nothing to do in opiSetup."))
 
     msg <- list(fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking)
     msg <- c(list(command = "setup"), msg)
@@ -190,9 +195,11 @@ if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% n
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_Maia <- function(stim = list(t = NULL, lum = NULL, w = NULL, x = NULL, y = NULL)) {
-if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
-    stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+opiPresent_for_Maia <- function(stim) {
+    if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
+        stop("Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?.")
+
+    if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
     msg <- list(t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
@@ -233,9 +240,10 @@ if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% n
 #' @seealso [opiClose()]
 #'
 opiClose_for_Maia <- function() {
-if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
-    stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
+    if(!exists(".opi_env") || !exists("Maia", envir = .opi_env) || !("socket" %in% names(.opi_env$Maia)) || is.null(.opi_env$Maia$socket))
+        stop("Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?.")
 
+    
     msg <- list()
     msg <- c(list(command = "close"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]

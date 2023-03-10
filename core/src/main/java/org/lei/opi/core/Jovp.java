@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import javafx.scene.Scene;
-
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -38,7 +36,7 @@ public static class Settings extends OpiMachine.Settings {
      *                    If null, then do not create a connection. (Used for GUI to probe class.)
      * @throws InstantiationException if cannot connect to JOVP server
      */
-    public Jovp(Scene parentScene) throws InstantiationException {
+    public Jovp(javafx.scene.Scene parentScene) throws InstantiationException {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
         this.parentScene = parentScene;
@@ -98,8 +96,8 @@ public static class Settings extends OpiMachine.Settings {
    * @since 0.0.1
    */
   @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "LEFT")
-  @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye.", min = 0, defaultValue = "10")
-  @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye.", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
+  @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye (cd/m^2).", min = 0, defaultValue = "10")
+  @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye (rgb).", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
   @Parameter(name = "fixShape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Fixation target type for eye.", defaultValue = "MALTESE")
   @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, defaultValue = "20")
   @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, min = 0, max = 1, defaultValue = "[0,1,0]")

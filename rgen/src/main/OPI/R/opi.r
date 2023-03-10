@@ -130,11 +130,11 @@ opiQueryDevice <- function() {
 #' [opiSetup_for_SimNo()], [opiSetup_for_SimYes()], [opiSetup_for_SimHenson()],
 #' [opiSetup_for_SimGaussian()]
 #' @export
-opiSetup <- function(state) {
+opiSetup <- function(settings) {
     if (is.null(.opi_env$chosen_machine))
         stop("you should use chooseOPI() before calling opiSetup.")
 
-    return(do.call(paste0("opiSetup_for_", .opi_env$chosen_machine), list(state = state)))
+    return(do.call(paste0("opiSetup_for_", .opi_env$chosen_machine), list(settings)))
 }
 
 #' opiClose that calls opiSetup_for_MACHINE as appropriate.
