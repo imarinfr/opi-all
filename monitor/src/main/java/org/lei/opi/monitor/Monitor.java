@@ -408,7 +408,7 @@ public class Monitor extends Application {
         final Node source = (Node) event.getSource();
         final Stage stage = (Stage) source.getScene().getWindow();
 
-            // (1 & 2) create connection to OPIMachine and switch to its Scene
+            // (1) create the requested OPIMachine object if possible
         labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
 
         OpiMachine opiMachine = null;
@@ -434,11 +434,12 @@ public class Monitor extends Application {
             return;
         }
 
+            // (2) Load the machines related fxml file and switch to its Scene
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/org/lei/opi/core/%s.fxml", this.currentMachineChoice)));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/org/lei/opi/core/%s", opiMachine.fxmlFileName)));
             loader.setController(opiMachine);
             Parent root = loader.load();
-            Scene scene = new Scene(root, 800, 515);
+            Scene scene = new Scene(root, 800, 800);
 
             stage.setScene(scene);
             stage.show();
@@ -452,12 +453,10 @@ public class Monitor extends Application {
             return;
         }
 
-            // (3) Open my own connection to get commands from (eg) R
-            //     Put my IP address in the box so it is known (Assumes IP Address is localhost)
-            //     If opiClient already exists, then just leave it alone.
+            // (3) Open my own connection to get commands from (eg) R by 
+            //     attaching the opiMachine to the opiClientListener
         labelMessages.setText("");
         Monitor.opiClientListener = new OpiListener(Integer.parseInt(this.myPort), opiMachine);
-        fieldMyIP.setText(OpiListener.obtainPublicAddress().getHostAddress());
     }
 
     /**

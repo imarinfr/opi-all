@@ -19,7 +19,7 @@ public void testInit() {
         System.out.println("Could not connect to JOVP server");
     }
 
-    int test = 1;
+    int test = 0;
     if (test == 0) { init(machine); sleep(1); close(machine); }
     if (test == 1) { init(machine); sleep(1); present(machine) ; close(machine); }
 }

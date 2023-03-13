@@ -12,8 +12,8 @@ import org.lei.opi.core.Display;
 import org.lei.opi.core.Jovp;
 import org.lei.opi.core.OpiListener;
 import org.lei.opi.core.OpiMachine;
-import org.lei.opi.core.Packet;
 import org.lei.opi.core.OpiListener.Command;
+import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 
 import org.junit.jupiter.api.Test;

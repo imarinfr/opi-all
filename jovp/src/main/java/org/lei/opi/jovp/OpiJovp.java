@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.OpiListener;
-import org.lei.opi.core.Packet;
+import org.lei.opi.core.definitions.Packet;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -261,7 +261,7 @@ public class OpiJovp extends OpiListener {
     // args[0] = port number
   public static void main(String args[]) {
     try {
-      OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]) );
+      OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]));
       System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
       opiJovp.startPsychoEngine();
     } catch (NumberFormatException e) {

@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.io.IOUtils;
 import org.lei.opi.core.OpiListener.Command;
+import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
@@ -111,6 +112,10 @@ public abstract class OpiMachine {
   
     /** Scene to which we will return when this object is junked */
     protected Scene parentScene;  // return here when btnClose is clicked on our GUI
+
+    /** Set by constructor depending on viewMode and tracking settings. 
+     *  Do not include full pathname, just simple name with .fxml extension*/
+    public String fxmlFileName;
 
     /** Connection to the real machine */
     protected Socket socket;

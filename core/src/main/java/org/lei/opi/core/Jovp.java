@@ -5,8 +5,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.OpiListener.Command;
+import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
+
+import es.optocom.jovp.definitions.ViewMode;
 
 /**
  * JOVP client - will send messages to JOVP server...
@@ -40,6 +43,11 @@ public static class Settings extends OpiMachine.Settings {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
         this.parentScene = parentScene;
+
+        this.fxmlFileName = String.format("%s_%s.fxml",
+          settings.viewMode.toLowerCase().equals(ViewMode.STEREO.toString().toLowerCase()) ? "stereo" : "mono",
+          settings.tracking ? "yes_tracking" : "no_tracking"
+        );
        
         if (parentScene != null)
             if (!this.connect(settings.ip, settings.port)) {

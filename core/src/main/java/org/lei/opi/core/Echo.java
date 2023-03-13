@@ -8,6 +8,7 @@ package org.lei.opi.core;
  */
 import java.util.HashMap;
 
+import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 
 import javafx.fxml.FXML;
@@ -31,6 +32,7 @@ public class Echo extends OpiMachine {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
         this.parentScene = parentScene;
+        this.fxmlFileName = "Echo.fxml";  // a special one with just text.
     }
   
     void myPrint(String s) {

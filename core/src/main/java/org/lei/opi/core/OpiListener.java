@@ -14,6 +14,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
+import org.lei.opi.core.definitions.Packet;
+
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

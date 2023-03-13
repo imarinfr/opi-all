@@ -1,6 +1,9 @@
-package org.lei.opi.core;
+package org.lei.opi.core.definitions;
 
 import java.io.StringWriter;
+
+import org.lei.opi.core.OpiListener;
+
 import java.io.PrintWriter;
 
 /**

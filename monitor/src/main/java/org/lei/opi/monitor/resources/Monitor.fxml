@@ -52,7 +52,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<GridPane style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.lei.opi.monitor.Monitor">
+<GridPane prefHeight="800.0" prefWidth="800.0" style="-fx-background-color: #787EB2 #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.lei.opi.monitor.Monitor">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" maxWidth="322.0" minWidth="10.0" prefWidth="300.0" />
     <ColumnConstraints hgrow="ALWAYS" maxWidth="466.0" minWidth="10.0" prefWidth="393.0" />
@@ -90,7 +90,7 @@
       </TitledPane>
       <TitledPane animated="false" collapsible="false" text="Settings" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.valignment="TOP" GridPane.vgrow="ALWAYS">
          <content>
-            <TableView fx:id="tableSettings" editable="true">
+            <TableView fx:id="tableSettings" editable="true" prefHeight="760.0" prefWidth="390.0">
               <columns>
                 <TableColumn fx:id="colSettingsProperty" editable="false" maxWidth="1.7976931348623157E308" prefWidth="140.0" sortable="false" text="Property" />
                 <TableColumn fx:id="colSettingsValue" maxWidth="1.7976931348623157E308" prefWidth="281.0" sortable="false" text="Value" />

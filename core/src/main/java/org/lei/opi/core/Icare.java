@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 

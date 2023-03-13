@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import java.util.stream.Stream;
 
+import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
