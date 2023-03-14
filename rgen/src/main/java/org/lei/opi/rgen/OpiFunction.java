@@ -138,7 +138,7 @@ public class OpiFunction {
         class Formatter {
             static String example(Parameter p) {
                 try {
-                    Object o = OpiMachine.buildDefault(p);
+                    Object o = OpiMachine.buildDefault(p, 1);
                     return String.format("%s = %s", p.name(), format(o));
                 } catch (ClassNotFoundException ignored) {
                     return "";

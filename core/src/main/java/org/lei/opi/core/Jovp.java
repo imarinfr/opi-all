@@ -103,7 +103,7 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "LEFT")
+  @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "BOTH")
   @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye (cd/m^2).", min = 0, defaultValue = "10")
   @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye (rgb).", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
   @Parameter(name = "fixShape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Fixation target type for eye.", defaultValue = "MALTESE")
@@ -138,14 +138,13 @@ public static class Settings extends OpiMachine.Settings {
    *
    * @since 0.0.1
    */
-  @Parameter(name = "length", className = Integer.class, desc = "The number of elements in this stimuli.", isList = false, defaultValue = "1")
   @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", isList = true, defaultValue = "[LEFT]")
   @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
   @Parameter(name = "sx", className = Double.class, desc = "List of diameters along major axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "[1.72]")
   @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "[1.72]")
   @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "[200]")
-  @Parameter(name = "w", className = Double.class, desc = "List of stimuli response windows (ms).", isList = false, min = 0, defaultValue = "1500")
+  @Parameter(name = "w", className = Double.class, desc = "Time to wit for response including presentation time (ms).", isList = false, min = 0, defaultValue = "1500")
   @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "[20]")
   @Parameter(name = "color1", className = Double.class, desc = "List of stimulus colors 1.", isListList = true, min = 0, max = 1, defaultValue = "[[1,1,1]]")
   @Parameter(name = "color2", className = Double.class, desc = "List of stimulus colors 2. Only useful if stimulus type != FLAT", isListList = true, optional = true, min = 0, max = 1, defaultValue = "[[0,1,0]]")

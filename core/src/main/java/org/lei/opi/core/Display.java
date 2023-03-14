@@ -17,7 +17,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
@@ -183,35 +182,40 @@ public class Display extends Jovp {
 
         textAreaCommands.setFont(new Font("Arial", 10));
 
-        if (canvasVF != null) canvasVFModel = new VFCanvas();
-        if (canvasVFLeft != null) canvasVFModelLeft = new VFCanvas();
-        if (canvasVFRight != null) canvasVFModelRight = new VFCanvas();
-    
         labelChosen.setText("Chosen OPI: Display");
 
         updateCanvas = new HashMap<String, Consumer<CanvasTriple>>();
         updateCanvas.put("mono", 
             (ct) -> {
-                canvasVFModel.addVFPoint(ct.x(), ct.y(), ct.label().toString());
+                canvasVFModel.updatePoint(ct.x(), ct.y(), ct.label().toString());
                 VFCanvas.draw(canvasVF, canvasVFModel);
             });
         updateCanvas.put("left", 
             (ct) -> {
-                canvasVFModelLeft.addVFPoint(ct.x(), ct.y(), ct.label().toString());
+                canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
                 VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
             });
         updateCanvas.put("right", 
             (ct) -> {
-                canvasVFModelRight.addVFPoint(ct.x(), ct.y(), ct.label().toString());
+                canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
                 VFCanvas.draw(canvasVFRight, canvasVFModelRight);
             });
         updateCanvas.put("both", 
             (ct) -> {
-                canvasVFModelLeft.addVFPoint(ct.x(), ct.y(), ct.label().toString());
+                canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
                 VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
-                canvasVFModelRight.addVFPoint(ct.x(), ct.y(), ct.label().toString());
+                canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
                 VFCanvas.draw(canvasVFRight, canvasVFModelRight);
             });
+
+        if (canvasVF != null) {
+            canvasVFModel = new VFCanvas();
+            updateCanvas.get("mono").accept(new CanvasTriple(0, 0, ""));
+        } else {
+            canvasVFModelLeft = new VFCanvas();
+            canvasVFModelRight = new VFCanvas();
+            updateCanvas.get("both").accept(new CanvasTriple(0, 0, ""));
+        }
     }
 
     @FXML

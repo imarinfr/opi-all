@@ -401,16 +401,27 @@ public abstract class OpiMachine {
     
     /**
     * Build a java object from the default JSON string param
+    * If the object is a list and it is shorter than `length`, add element 0 to the end until it is long enough.
+    *
     * @param param Parameter for which to get the default
+    * @param length The length of a List or ListList that should be created, replicating the single default if necessary.
     */
-    public static Object buildDefault(Parameter param) throws ClassNotFoundException {
+    public static Object buildDefault(Parameter param, int length) throws ClassNotFoundException {
         Type t = TypeToken.get(param.className()).getType();
         if (param.isList()) {
             t = TypeToken.getParameterized(ArrayList.class, param.className()).getType();
         } else if (param.isListList()) {
             t = TypeToken.getParameterized(ArrayList.class, ArrayList.class, param.className()).getType();
         }
-        return OpiListener.gson.fromJson(param.defaultValue(), t);
+        Object singleValue = OpiListener.gson.fromJson(param.defaultValue(), t);
+
+        if (param.isList() || param.isListList()) {
+            ArrayList<Object> a = (ArrayList<Object>)singleValue;
+            while (a.size() < length) 
+                a.add(a.get(0));
+            return a;
+        } else 
+            return singleValue;
     }
 
     /** 
@@ -436,9 +447,11 @@ public abstract class OpiMachine {
               return Packet.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
 
                 // optional parameter not here, add it in and go to next param
+                // (Note stim.length gets turned into a double by fromJSON)
             if (!pairs.containsKey(param.name()) && param.optional()) {
                 try {
-                    Object defaultVal = OpiMachine.buildDefault(param);
+                    Object defaultVal = OpiMachine.buildDefault(param, 
+                        pairs.containsKey("stim.length") ?  (int)Math.round((Double)pairs.get("stim.length")) : 1);
                     pairs.put(param.name(), defaultVal);
                 } catch (JsonSyntaxException e){
                     return Packet.error(String.format(BAD_DEFAULT, param.name(), funcName, this.getClass()));
@@ -556,6 +569,7 @@ public abstract class OpiMachine {
   
     /**
      * opiPresent: Present OPI stimulus in perimeter
+     * Note `stim.length` parameter is used in this.validateArgs, and so is needed for all machines.
      * 
      * @param args pairs of argument name and value
      * 
@@ -563,6 +577,7 @@ public abstract class OpiMachine {
      *
      * @since 0.0.1
      */
+    @Parameter(name = "stim.length", className = Integer.class, desc = "The number of elements in this stimuli.", isList = false, min = 1, defaultValue = "1")
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following fields.")

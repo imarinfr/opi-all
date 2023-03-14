@@ -165,6 +165,7 @@ opiSetup_for_Compass <- function(settings) {
 #' @param w Response window (ms).
 #' @param x x co-ordinates of stimulus (degrees).
 #' @param y y co-ordinates of stimulus (degrees).
+#' @param stim.length The number of elements in this stimuli.
 #'
 #' @return a list contianing:
 #'  * res JSON Object with all of the other fields described in @ReturnMsg except 'error'.
@@ -188,10 +189,11 @@ opiSetup_for_Compass <- function(settings) {
 #' `w` can take on values in the range [200.0, 2680.0].
 #' `x` can take on values in the range [-30.0, 30.0].
 #' `y` can take on values in the range [-30.0, 30.0].
+#' `stim.length` can take on values in the range [1, 2147483647].
 #'
 #' @examples
 #' chooseOpi("Compass")
-#' result <- opiPresent(stim = list(t = 200.0, lum = 100.0, w = 1500.0, x = 0.0, y = 0.0))
+#' result <- opiPresent(stim = list(t = 200.0, lum = 100.0, w = 1500.0, x = 0.0, y = 0.0, stim.length = 1))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -201,7 +203,7 @@ opiPresent_for_Compass <- function(stim) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y)
+    msg <- list(t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, stim.length = stim$stim.length)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

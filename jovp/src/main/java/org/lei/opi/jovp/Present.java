@@ -60,7 +60,7 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
    * @since 0.0.1
    */
   public static Present set(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException, NoSuchMethodException, SecurityException {
-    return new Present((int) (double) args.get("length"),
+    return new Present((int) (double) args.get("stim.length"),
                        toObjectStream(args.get("eye"), Eye.class).toArray(Eye[]::new),
                        toObjectStream(args.get("shape"), ModelType.class).toArray(ModelType[]::new),
                        toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new),
@@ -82,7 +82,7 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
    */
   public String toJson() {
     return new StringBuilder("{\n  \"command\": " + Command.PRESENT + ",\n")
-      .append("  \"length\": " + length + ",\n")
+      .append("  \"stim.length\": " + length + ",\n")
       .append("  \"eye\": " + Arrays.toString(eye) + ",\n")
       .append("  \"type\": " + Arrays.toString(type) + ",\n")
       .append("  \"shape\": " + Arrays.toString(shape) + ",\n")

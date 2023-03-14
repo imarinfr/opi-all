@@ -150,7 +150,7 @@ opiQueryDevice_for_PicoVR <- function() {
 #'
 #' @examples
 #' chooseOpi("PicoVR")
-#' result <- opiSetup(settings = list(eye = "LEFT", fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0,
+#' result <- opiSetup(settings = list(eye = "BOTH", fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0,
 #'                 fixSx = 1.0, fixCy = 0.0, fixCol = list(0.0, 1.0, 0.0),
 #'                 bgLum = 10.0, bgCol = list(1.0, 1.0, 1.0)))
 #'
@@ -193,8 +193,8 @@ opiSetup_for_PicoVR <- function(settings) {
 #'                 if sx != sy specified.(Optional)
 #' @param texRotation List of angles of rotation of stimuli (degrees). Only
 #'                    useful if type != FLAT(Optional)
-#' @param length The number of elements in this stimuli.
 #' @param type Stimulus type.(Optional)
+#' @param stim.length The number of elements in this stimuli.
 #' @param defocus List of defocus values in Diopters for stimulus post-processing.(Optional)
 #' @param frequency List of frequencies (in cycles per degrees) for generation
 #'                  of spatial patterns. Only useful if type != FLAT(Optional)
@@ -228,9 +228,9 @@ opiSetup_for_PicoVR <- function(settings) {
 #' Elements in `sy` can take on values in the range [0.0, 180.0].
 #' Elements in `rotation` can take on values in the range [0.0, 360.0].
 #' Elements in `texRotation` can take on values in the range [0.0, 360.0].
-#' `length` can take on values in the range [-2147483648, 2147483647].
 #' Elements in `type` can take on values in the set {flat,
 #'                  checkerboard, sine, squaresine, g1, g2, g3, text, image}.
+#' `stim.length` can take on values in the range [1, 2147483647].
 #' Elements in `defocus` can take on values in the range [0.0, 1.0E10].
 #' Elements in `frequency` can take on values in the range [0.0, 300.0].
 #' Elements in `eye` can take on values in the set {left, right, both}.
@@ -244,7 +244,7 @@ opiSetup_for_PicoVR <- function(settings) {
 #'
 #' @examples
 #' chooseOpi("PicoVR")
-#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(20.0), length = 1,
+#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(20.0), stim.length = 1,
 #'                   eye = list("LEFT"), color1 = list(list(1.0, 1.0, 1.0)),
 #'                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 #'
@@ -256,7 +256,7 @@ opiPresent_for_PicoVR <- function(stim) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(phase = stim$phase, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, length = stim$length, type = stim$type, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, x = stim$x, y = stim$y)
+    msg <- list(phase = stim$phase, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

@@ -179,6 +179,7 @@ opiSetup_for_O900 <- function(settings) {
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
 #' @param type Stimulus type: STATIC or KINETIC.
+#' @param stim.length The number of elements in this stimuli.
 #'
 #' @return a list contianing:
 #'  * res List with all of the other fields described in @ReturnMsg except 'error'.
@@ -200,11 +201,12 @@ opiSetup_for_O900 <- function(settings) {
 #' Elements in `x` can take on values in the range [-90.0, 90.0].
 #' Elements in `y` can take on values in the range [-90.0, 90.0].
 #' `type` can take on values in the set {static, kinetic}.
+#' `stim.length` can take on values in the range [1, 2147483647].
 #'
 #' @examples
 #' chooseOpi("O900")
 #' result <- opiPresent(stim = list(size = "GV", color = "null", lum = 3183.099, x = list(0.0),
-#'                   y = list(0.0), type = "null"))
+#'                   y = list(0.0), type = "null", stim.length = 1))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -214,7 +216,7 @@ opiPresent_for_O900 <- function(stim) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type)
+    msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type, stim.length = stim$stim.length)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

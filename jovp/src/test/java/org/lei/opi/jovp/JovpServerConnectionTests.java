@@ -257,6 +257,9 @@ public class JovpServerConnectionTests {
             System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
 
             //HashMap stim = makeStimulus();
+            ArrayList<String> a = new ArrayList<String>();
+            a.add("right");
+            stimArgs.put("eye", a);
             result = machine.present(stimArgs);
             System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
           }
@@ -313,7 +316,7 @@ public class JovpServerConnectionTests {
         Parameter[] parameters = ArrayUtils.addAll(pMeth.getAnnotationsByType(Parameter.class),
                                                  meth.getAnnotationsByType(Parameter.class));
         for (Parameter p : parameters) {
-          Object v = OpiMachine.buildDefault(p);
+          Object v = OpiMachine.buildDefault(p, 1);
           hmap.put(p.name(), v);
         }
       } catch (NoSuchMethodException | ClassNotFoundException e) {

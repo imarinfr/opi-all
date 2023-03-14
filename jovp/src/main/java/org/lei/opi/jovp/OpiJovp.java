@@ -2,6 +2,8 @@ package org.lei.opi.jovp;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.OpiListener;
@@ -37,7 +39,8 @@ Receive setup -------> Set some things                  |
                        action = SETUP                   |   null       Check if we are presenting or
                                                         |              waiting for a response.
 Receive present------> action = PRESENT                 |              If we have a response, pass back
-                       busy-wait until response is set  |              to the driver (OpiJovp).
+                       busy-wait until response is set  |              to the server (OpiJovp).
+                       (ie do not change action)        |
 
   
  * @since 0.0.1
@@ -54,38 +57,50 @@ public class OpiJovp extends OpiListener {
     private static final String SETUP_FAILED = "SETUP failed";
     /** {@value PRESENT_FAILED} */
     protected static final String PRESENT_FAILED = "An error occurred during PRESENT command";
+    /** {@value NO_LEFT_BACKGROUND} */
+    protected static final String NO_LEFT_BACKGROUND = "You have asked to PRESENT in the left/both eye/s but you have not called `setup` on the left/both eye/s.";
+    /** {@value NO_RIGHT_BACKGROUND} */
+    protected static final String NO_RIGHT_BACKGROUND = "You have asked to PRESENT in the right/both eye/s but you have not called `setup` on the right/both eye/s.";
     /** {@value CLOSED} */
     private static final String CLOSED = "CLOSE successful";
    
     /** Prefix for all success messages */
-    protected String prefix;
-    /** A background record to communicate with OpiLogic */
-    protected Configuration configuration = null;
+    private String prefix;
+    /** A configuration to communicate with OpiLogic */
+    private Configuration configuration = null;
     /** The psychoEngine */
-    protected PsychoEngine psychoEngine;
-    /** A background record to communicate with OpiLogic */
-    protected Setup[] backgrounds;
+    private PsychoEngine psychoEngine;
+    /** A background array to communicate with OpiLogic. backgrounds[0] is for left eye, [1] for right */
+    private Setup[] backgrounds;
     /** A stimulus record to communicate with OpiLogic */
-    protected Present stimulus;
+    private Present stimulus;
     /** A record to record the results after a stimulus presentation */
-    protected Response response = null;
+    private Response response = null;
 
     /** Machine actions to trigger actions on the main thread. */
-    protected enum Action {
+    public enum Action {
         SHOW,    // initialise obtained, configuration done, create psychoengine
         SETUP,   // psychoengine is up and running, execute setup 
         PRESENT, // begin a presentation
         CLOSE};  // all done
 
-    protected Action action;  // set by calls from the server OpiListner thread and acted upon on main thread
+    private Action action;  // set by calls from the server OpiListner thread and acted upon on main thread (and reset to null there)
 
-      // Don't interrupt another action. Wait until it is finished (ie action == null)
+    public Configuration getConfiguration() { return configuration; }
+    public Action getAction() { return action; }
+    public Setup[] getBackgrounds() { return backgrounds; }
+    public Present getStimulus() { return stimulus; }
+
+    public void setResponse(Response response) { this.response = response; }
+
+    // Don't interrupt another action. Wait until it is finished (ie action is set to null by OPILogic)
     private void setAction(Action a) {
       while (this.action != null) {
         try { Thread.sleep(10); } catch (InterruptedException ignored) {; }
       }
       this.action = a;
     }
+    public void setActionToNull() { action = null; }
    
     public OpiJovp(int port) { 
         super(port, null);   // do not give a machine to the OpiListner as we override the process() method here and the machine is not needed.
@@ -224,28 +239,41 @@ public class OpiJovp extends OpiListener {
     }
   }
 
-  /**
-   * Present a stimulus
-   * Trigger the PRESENT action and spin waiting for a response.
-   *
-   * @param args A map of name:value pairs for parameters
-   *
-   * @since 0.1.0
-   */
-  private Packet present(HashMap<String, Object> args) {
-    try {
-      stimulus = Present.set(args);
-      setAction(Action.PRESENT);
-      while (response == null) {
-        Thread.sleep(100);  // wait for response
-      }
-      String jsonStr = response.toJson(configuration.tracking());
-      response = null;
-      return new Packet(jsonStr);
-    } catch (Exception e) {
-      return Packet.error(prefix + PRESENT_FAILED, e);
+    /**
+     * Present a stimulus
+     * Trigger the PRESENT action and spin waiting for a response.
+     *
+     * @param args A map of name:value pairs for parameters
+     *
+     * @since 0.1.0
+     */
+    private Packet present(HashMap<String, Object> args) {
+        if (args.containsKey("eye")) {
+            List<Eye> eyes = ((ArrayList<String>)args.get("eye"))
+                .stream()
+                .map((String s) -> Eye.valueOf((s).toUpperCase()))
+                .toList();
+            for (Eye eye : eyes) {
+                if ((eye == Eye.BOTH || eye == Eye.LEFT) && backgrounds[0] == null)
+                    return Packet.error(prefix + NO_LEFT_BACKGROUND);
+                if ((eye == Eye.BOTH || eye == Eye.RIGHT) && backgrounds[1] == null)
+                    return Packet.error(prefix + NO_RIGHT_BACKGROUND);
+            }
+        }
+   
+        try {
+            stimulus = Present.set(args);
+            setAction(Action.PRESENT);
+            while (response == null) {
+                Thread.sleep(100);  // wait for response
+            }
+            String jsonStr = response.toJson(configuration.tracking());
+            response = null;
+            return new Packet(jsonStr);
+        } catch (Exception e) {
+            return Packet.error(prefix + PRESENT_FAILED, e);
+        }
     }
-  }
 
   /**
    * Stop the psychoEngine and the socket server. (ie totally kill the JOVP with CLOSE action)
