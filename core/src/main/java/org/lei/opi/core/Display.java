@@ -1,26 +1,14 @@
 package org.lei.opi.core;
 
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import org.lei.opi.core.definitions.Packet;
-import org.lei.opi.core.definitions.VFCanvas;
-
-import es.optocom.jovp.definitions.ViewMode;
-
-import java.util.ArrayList;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.image.ImageView;
-import javafx.scene.text.Font;
 import javafx.scene.Node;
 import javafx.event.ActionEvent;
-import javafx.scene.canvas.Canvas;
 
 /**
  * Opens up a window wherever the JOVP wants it
@@ -29,11 +17,8 @@ public class Display extends Jovp {
     
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
 
-    private record CanvasTriple(double x, double y, String label) { ; };
-
     public Display(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
-
     }
 
      /**
@@ -91,34 +76,7 @@ public class Display extends Jovp {
      * @since 0.2.0
      */
     public Packet present(HashMap<String, Object> args) {
-        if (parentScene != null) {
-            Platform.runLater(()-> {
-                textAreaCommands.appendText("Present:\n");
-                for (String k : args.keySet())
-                    textAreaCommands.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
-            });
-
-            Platform.runLater(() -> {
-                try {
-                    ArrayList<Double> xList = (ArrayList<Double>)args.get("x");
-                    ArrayList<Double> yList = (ArrayList<Double>)args.get("y");
-                    ArrayList<Double> lList = (ArrayList<Double>)args.get("lum");
-                    ArrayList<String> eList = (ArrayList<String>)args.get("eye");
-
-                    for (int i = 0 ; i < xList.size(); i++) {
-                        CanvasTriple ct = new CanvasTriple(xList.get(i), yList.get(i), Long.toString(Math.round(lList.get(i))));
-                        if (getSettings().viewMode.toLowerCase().equals(ViewMode.STEREO.toString().toLowerCase()))
-                            updateCanvas.get(eList.get(i).toLowerCase()).accept(ct);
-                        else
-                            updateCanvas.get("mono").accept(ct);
-                    }
-                } catch (Exception e) { 
-                    System.out.println("Display present() canvas troubles");
-                    e.printStackTrace();
-                }
-            });
-        }
-
+        updateGUIOnPresent(args);
         return super.present(args);
     }
 
@@ -141,85 +99,11 @@ public class Display extends Jovp {
         return super.close();
     }
   
-    //-------------- FXML below here ---
-
-    @FXML
-    private Button btnClose;
-
-    @FXML
-    private Canvas canvasVF;            // mono
-    private VFCanvas canvasVFModel;
-
-    @FXML
-    private Canvas canvasVFLeft;        // stereo
-    private VFCanvas canvasVFModelLeft;
-
-    @FXML
-    private Canvas canvasVFRight;
-    private VFCanvas canvasVFModelRight;
-
-    @FXML
-    private ImageView imageViewLeft;  // if tracking on
-
-    @FXML
-    private ImageView imageViewRight;  // if tracking on
-
-    @FXML
-    private Label labelChosen;
-
-    @FXML
-    private TextArea textAreaCommands;
-
-    /** Set of 4 functions indexed by "mono", "left", "right", "both" to 
-     * to take a (x, y, label) and update the relevant canvas */
-    private HashMap<String, Consumer<CanvasTriple>> updateCanvas;
-
+    //-------------- Machine Specific FXML below here ---
     @FXML
     void initialize() {
-        assert btnClose != null : String.format("fx:id=\"btnClose\" was not injected: check your FXML file %s", fxmlFileName);
-        assert textAreaCommands != null : String.format("fx:id=\"textAreaCommands\" was not injected: check your FXML file %s", fxmlFileName);
-        assert labelChosen != null : String.format("fx:id=\"labelChosen\" was not injected: check your FXML file %s", fxmlFileName);
-
-        textAreaCommands.setFont(new Font("Arial", 10));
+        setupJavaFX();
 
         labelChosen.setText("Chosen OPI: Display");
-
-        updateCanvas = new HashMap<String, Consumer<CanvasTriple>>();
-        updateCanvas.put("mono", 
-            (ct) -> {
-                canvasVFModel.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                VFCanvas.draw(canvasVF, canvasVFModel);
-            });
-        updateCanvas.put("left", 
-            (ct) -> {
-                canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
-            });
-        updateCanvas.put("right", 
-            (ct) -> {
-                canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                VFCanvas.draw(canvasVFRight, canvasVFModelRight);
-            });
-        updateCanvas.put("both", 
-            (ct) -> {
-                canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
-                canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                VFCanvas.draw(canvasVFRight, canvasVFModelRight);
-            });
-
-        if (canvasVF != null) {
-            canvasVFModel = new VFCanvas();
-            updateCanvas.get("mono").accept(new CanvasTriple(0, 0, ""));
-        } else {
-            canvasVFModelLeft = new VFCanvas();
-            canvasVFModelRight = new VFCanvas();
-            updateCanvas.get("both").accept(new CanvasTriple(0, 0, ""));
-        }
-    }
-
-    @FXML
-    void actionBtnClose(ActionEvent event) {
-        returnToParentScene((Node)event.getSource());
     }
 }

@@ -42,7 +42,7 @@
       <FlowPane alignment="CENTER" prefHeight="326.0" prefWidth="600.0">
          <children>
             <Canvas fx:id="canvasVF" height="250.0" width="250.0" />
-            <ImageView fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="imageView" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" />
             <TextArea fx:id="textAreaCommands" prefHeight="469.0" prefWidth="500.0" />
          </children>
       </FlowPane>
