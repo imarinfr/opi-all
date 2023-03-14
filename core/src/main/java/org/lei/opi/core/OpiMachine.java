@@ -68,7 +68,7 @@ public abstract class OpiMachine {
     /** {@value YES_LIST} */
     static final String YES_LIST = "Parameter '%s' should not be a list but it is for function '%s' in %s.";
     /** {@value NOT_IN_ENUM} */
-    static final String NOT_IN_ENUM = "I cannot find a value of '%s' in enum type '%s' in function '%s' in %s.";
+    static final String NOT_IN_ENUM = "I cannot find the value you gave for '%s' in enum type '%s' in function '%s' in %s.";
     /** {@value NOT_DOUBLE} */
     static final String NOT_A_DOUBLE = "Parameter '%s' in function '%s' of '%s' is not double.";
     /** {@value NOT_AN_INTEGER} */

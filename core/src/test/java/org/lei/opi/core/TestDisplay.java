@@ -19,7 +19,7 @@ public void testInit() {
         System.out.println("Could not connect to JOVP server");
     }
 
-    int test = 0;
+    int test = 1;
     if (test == 0) { init(machine); sleep(1); close(machine); }
     if (test == 1) { init(machine); sleep(1); present(machine) ; close(machine); }
 }
@@ -50,7 +50,7 @@ void present(Jovp machine) {
         "\"command\":\"present\"," + 
         "\"sx\"     : [1.72]," +
         "\"lum\"    : [20.0]," +
-        "\"length\" : 1," + 
+        "\"stim.length\" : 1," + 
         "\"eye\"    : [\"LEFT\"], " + 
         "\"color1\" : [[1.0, 1.0, 1.0]]," + 
         "\"t\"      : [200.0]," + 

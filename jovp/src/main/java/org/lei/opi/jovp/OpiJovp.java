@@ -116,7 +116,7 @@ public class OpiJovp extends OpiListener {
     public void startPsychoEngine() {
         // Have to start PsychoEngine on the main thread (as it uses GLFW)
         // so we cannot trigger it from the server OpiListener thread.
-        // So we will just spin here on the main thread until we can progress in state == INIT
+        // So we will just spin here on the main thread until we can progress (action == SHOW)
         while (this.action != Action.SHOW) {
           try { Thread.sleep(500);} catch(InterruptedException ignored) { ; }
         }
@@ -232,6 +232,7 @@ public class OpiJovp extends OpiListener {
         backgrounds[0] = Setup.create2(args);
       if(configuration.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
         backgrounds[1] = Setup.create2(args);
+
       setAction(Action.SETUP);
       return query();
     } catch (ClassCastException | IllegalArgumentException e) {
@@ -287,6 +288,7 @@ public class OpiJovp extends OpiListener {
   }
 
     // args[0] = port number
+    // not opiJovp is `running` on a separate thread as a server
   public static void main(String args[]) {
     try {
       OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]));

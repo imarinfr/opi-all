@@ -1,7 +1,5 @@
 package org.lei.opi.jovp;
 
-import java.util.ArrayList;
-
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
 import es.optocom.jovp.Timer;
@@ -69,9 +67,10 @@ public class OpiLogic implements PsychoLogic {
                 };
             }
         }
-        // set size of the background to be the field of view
+
         for (int i = 0; i < fixations.length; i++) 
             fixations[i].size(DEFAULT_FIXATION_SIZE);
+
         stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
         stimulus.show(false);
     }
@@ -89,13 +88,14 @@ public class OpiLogic implements PsychoLogic {
       double[] fov = psychoEngine.getFieldOfView();
       // add perimetry items: background, fixation, and stimulus.
       for (int i = 0; i < backgrounds.length; i++) {
-        backgrounds[i].position(0, 0, 100);
+        fixations[i].position(0, 0, driver.getConfiguration().distance() - 3);
+        items.add(fixations[i]);
+
+        backgrounds[i].position(0, 0, driver.getConfiguration().distance() - 1);
         backgrounds[i].size(fov[0], fov[1]);
         items.add(backgrounds[i]);
-        fixations[i].position(0, 0, 98);
-        items.add(fixations[i]);
       }
-      stimulus.position(0, 0, 99);
+      stimulus.position(0, 0, driver.getConfiguration().distance() - 2);
       items.add(stimulus);
       driver.setActionToNull(); // Action is over
     }
@@ -127,7 +127,9 @@ public class OpiLogic implements PsychoLogic {
     @Override
     public void update(PsychoEngine psychoEngine) {
       double[] fov = psychoEngine.getFieldOfView();
-      for (int i = 0; i < backgrounds.length; i++) backgrounds[i].size(fov[0], fov[1]);
+      for (int i = 0; i < backgrounds.length; i++) 
+        backgrounds[i].size(fov[0], fov[1]);
+
       // Instructions are always given by the OpiDriver.
       // OpiLogic sets action back to null once instruction is carried out,
       // except when presenting, where the OpiDriver waits for a response.
@@ -158,7 +160,7 @@ public class OpiLogic implements PsychoLogic {
     private void setup() {
       for (int i = 0; i < backgrounds.length; i++) {
         if (driver.getBackgrounds()[i] != null) {
-          backgrounds[i].setColor(gammaCorrection(driver.getBackgrounds()[i].bgCol()));
+          backgrounds[i].setColors(gammaCorrection(driver.getBackgrounds()[i].bgCol()), gammaCorrection(driver.getBackgrounds()[i].bgCol()));
           fixations[i].update(new Model(driver.getBackgrounds()[i].fixShape()));
           fixations[i].position(driver.getBackgrounds()[i].fixCx(), driver.getBackgrounds()[i].fixCy());
           fixations[i].size(driver.getBackgrounds()[i].fixSx(), driver.getBackgrounds()[i].fixSy());

@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 
 import org.lei.opi.core.Display;
 import org.lei.opi.core.Jovp;
-import org.lei.opi.core.OpiListener;
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
@@ -19,6 +18,8 @@ import org.lei.opi.core.definitions.Parameter;
 import org.junit.jupiter.api.Test;
 
 import es.optocom.jovp.Controller;
+import es.optocom.jovp.definitions.ModelType;
+import es.optocom.jovp.definitions.TextureType;
 
 /**
  *
@@ -231,9 +232,9 @@ public class JovpServerConnectionTests {
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
           
         try {
+            // initialise()
           Display machine = new Display(null);
           System.out.println("[testInitialiseSetupPresent] " + machine);
-
           if (machine != null && !machine.connect(server.getIP(), server.getPort()))
             System.out.println(String.format("[testInitialiseSetupPresent] Cannot connect to %s:%s", server.getIP(), server.getPort()));
           else
@@ -244,6 +245,7 @@ public class JovpServerConnectionTests {
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
+            // setup()....present()
           for (int t = 0 ; t <= 2 ; t++) {
             System.out.println("\n-------------- Test Number: " + t);
             HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
@@ -251,7 +253,7 @@ public class JovpServerConnectionTests {
 
             switch(t) {
                 case 1: setupArgs.remove("fixCol");
-                case 2: stimArgs.remove("length");
+                case 2: stimArgs.remove("stim.length");
             }
             result = machine.setup(setupArgs);
             System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
@@ -263,6 +265,71 @@ public class JovpServerConnectionTests {
             result = machine.present(stimArgs);
             System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
           }
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
+      }
+    });
+
+    t.start();
+    server.startPsychoEngine();
+    try { t.join(); } catch (InterruptedException ignored) { ; }
+  }
+
+  /**
+   * Open monitor, send initialise message, get reply, setup, get reply, close.
+   * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.
+   * Note 2 need vulkan and JOVP installed too
+   * @since 0.2.0
+   */
+  @Test
+  public void testInitialiseSetupPresent2() {
+    OpiJovp server = new OpiJovp(50002);
+    System.out.println("[testInitialiseSetupPresent] " + server);
+
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("[testInitialiseSetupPresent] Waiting 2 seconds...");
+        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          
+        try {
+            // initialise()
+          Display machine = new Display(null);
+          System.out.println("[testInitialiseSetupPresent] " + machine);
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testInitialiseSetupPresent] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testInitialiseSetupPresent] Connected to %s:%s", server.getIP(), server.getPort()));
+
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[testInitialiseSetupPresent] Initialize result %s", result));
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
+          HashMap<String, Object> stimArgs = getDefaultValues(Command.PRESENT);
+
+          result = machine.setup(setupArgs);
+          System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
+          ArrayList<ModelType> a = new ArrayList<ModelType>();
+          a.add(es.optocom.jovp.definitions.ModelType.SQUARE);
+          stimArgs.remove("shape");
+          stimArgs.put("shape", a);
+
+          ArrayList<es.optocom.jovp.definitions.TextureType> b = new ArrayList<TextureType>();
+          b.add(es.optocom.jovp.definitions.TextureType.IMAGE);
+          stimArgs.remove("type");
+          stimArgs.put("type", b);
+
+          result = machine.present(stimArgs);
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
