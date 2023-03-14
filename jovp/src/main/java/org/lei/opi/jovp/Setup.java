@@ -15,8 +15,10 @@ import es.optocom.jovp.definitions.ModelType;
  * 
  * @param eye the eye for which to apply the settings
  * @param bgCol background RGBA color where each channel range is from 0 to max luminance
+ * @param bgLum cd/m^2 for background 
  * @param fixShape fixation type
  * @param fixCol fixation RGBA color where each channel range is from 0 to max luminance
+ * @param fixLum cd/m^2 for fixation 
  * @param fixCx x center of the fixation target in degrees of visual angle
  * @param fixCy y center of the fixation target in degrees of visual angle
  * @param fixSx mayor axis size of the fixation target in degrees of visual angle
@@ -26,7 +28,7 @@ import es.optocom.jovp.definitions.ModelType;
  *
  * @since 0.0.1
  */
-public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol,
+public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, double[] fixCol, double fixLum,
                     double fixCx, double fixCy, double fixSx, double fixSy,
                     double fixRotation, double tracking) {
 
@@ -45,8 +47,10 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
   public static Setup create2(HashMap<String, Object> args) throws ClassCastException {
     return new Setup(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
                      toDoubleArray(args.get("bgCol")),
+                     (double)(args.get("bgLum")),
                      ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),
                      toDoubleArray(args.get("fixCol")),
+                     (double)(args.get("fixLum")),
                      (double) args.get("fixCx"), (double) args.get("fixCy"),
                      (double) args.get("fixSx"), (double) args.get("fixSy"),
                      (double) args.get("fixRotation"),
@@ -64,8 +68,10 @@ public record Setup(Eye eye, double[] bgCol, ModelType fixShape, double[] fixCol
     return new StringBuilder("{\n  \"command\": " + Command.SETUP + ",\n")
       .append("  \"eye\": " + eye.toString() + ",\n")
       .append("  \"bgCol\": " + Arrays.toString(bgCol) + ",\n")
+      .append("  \"bgLum\": " + bgLum + ",\n")
       .append("  \"fixShape\": " + fixShape.toString() + ",\n")
       .append("  \"fixCol\": " + Arrays.toString(fixCol) + ",\n")
+      .append("  \"fixLum\": " + fixLum + ",\n")
       .append("  \"fixCx\": " + fixCx + ",\n")
       .append("  \"fixCy\": " + fixCy + ",\n")
       .append("  \"fixSx\": " + fixSx + ",\n")

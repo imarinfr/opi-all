@@ -119,7 +119,7 @@ public class Jovp extends OpiMachine {
      * @since 0.0.1
      */
     @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", defaultValue = "BOTH")
-    @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye (cd/m^2).", optional = true, min = 0, defaultValue = "10")
+    @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye (cd/m^2).", min = 0, defaultValue = "10")
     @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye (rgb).", isList = true, min = 0, max = 1, defaultValue = "[1,1,1]")
     @Parameter(name = "fixShape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Fixation target type for eye.", defaultValue = "MALTESE")
     @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", min = 0, defaultValue = "20")

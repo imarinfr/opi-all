@@ -26,6 +26,7 @@ import es.optocom.jovp.definitions.TextureType;
  * @param y y center of the stimulus in degrees of visual angle
  * @param sx major axis size of the stimulus in degrees of visual angle
  * @param sy minor axis size of the stimulus in degrees of visual angle
+ * @param lum cd/m^2 for stimulus 
  * @param color1 stimulus color 1 for flat surfaces and patterns
  * @param color2 stimulus color 2 for patterns
  * @param rotation rotation of the stimulus in degrees
@@ -41,12 +42,14 @@ import es.optocom.jovp.definitions.TextureType;
  */
 public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] type,
                       double[] x, double[] y, double[] sx, double[] sy,
-                      double[][] color1, double[][] color2, double[] rotation, double[] contrast,
+                      double[] lum, double[][] color1, double[][] color2, 
+                      double[] rotation, 
+                      double[] contrast,
                       double[] phase, double[] frequency, double[] defocus,
                       double[] texRotation, int[] t, int w) {
 
   /**
-   * Set stimulus record from R OPI
+   * Create a stimulus record from R OPI
    * 
    * @param args pairs of argument name and value
    * 
@@ -66,6 +69,7 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
                        toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new),
                        toDoubleArray(args.get("x")), toDoubleArray(args.get("y")),
                        toDoubleArray(args.get("sx")), toDoubleArray(args.get("sy")),
+                       toDoubleArray(args.get("lum")), 
                        toColorArray(args.get("color1")), toColorArray(args.get("color2")),
                        toDoubleArray(args.get("rotation")), toDoubleArray(args.get("contrast")),
                        toDoubleArray(args.get("phase")), toDoubleArray(args.get("frequency")),
@@ -90,6 +94,7 @@ public record Present(int length, Eye[] eye, ModelType[] shape, TextureType[] ty
       .append("  \"y\": " + Arrays.toString(y) + ",\n")
       .append("  \"sx\": " + Arrays.toString(sx) + ",\n")
       .append("  \"sy\": " + Arrays.toString(sy)+ ",\n")
+      .append("  \"lum\": " + Arrays.toString(lum) + ",\n")
       .append("  \"color1\": " + Arrays.deepToString(color1) + ",\n")
       .append("  \"color2\": " + Arrays.deepToString(color2) + ",\n")
       .append("  \"rotation\": " + Arrays.toString(rotation) + ",\n")

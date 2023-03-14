@@ -1,5 +1,7 @@
 package org.lei.opi.jovp;
 
+import java.util.Arrays;
+
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
 import es.optocom.jovp.Timer;
@@ -160,12 +162,17 @@ public class OpiLogic implements PsychoLogic {
     private void setup() {
       for (int i = 0; i < backgrounds.length; i++) {
         if (driver.getBackgrounds()[i] != null) {
-          backgrounds[i].setColors(gammaCorrection(driver.getBackgrounds()[i].bgCol()), gammaCorrection(driver.getBackgrounds()[i].bgCol()));
+          double bgLum = driver.getBackgrounds()[i].bgLum();
+          double[] bgCol = driver.getBackgrounds()[i].bgCol();
+          double fixLum = driver.getBackgrounds()[i].fixLum();
+          double[] fixCol = driver.getBackgrounds()[i].fixCol();
+System.out.println(bgLum + " " + Arrays.toString(gammaLumToColor(bgLum, bgCol)));
+          backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
           fixations[i].update(new Model(driver.getBackgrounds()[i].fixShape()));
           fixations[i].position(driver.getBackgrounds()[i].fixCx(), driver.getBackgrounds()[i].fixCy());
           fixations[i].size(driver.getBackgrounds()[i].fixSx(), driver.getBackgrounds()[i].fixSy());
           fixations[i].rotation(driver.getBackgrounds()[i].fixRotation());
-          fixations[i].setColor(gammaCorrection(driver.getBackgrounds()[i].fixCol()));
+          fixations[i].setColor(gammaLumToColor(fixLum, fixCol));
         }
       }
       driver.setActionToNull();
@@ -212,16 +219,29 @@ public class OpiLogic implements PsychoLogic {
       stimulus.position(driver.getStimulus().x()[index], driver.getStimulus().y()[index]);
       stimulus.size(driver.getStimulus().sx()[index], driver.getStimulus().sy()[index]);
       stimulus.rotation(driver.getStimulus().rotation()[index]);
-      stimulus.setColors(gammaCorrection(driver.getStimulus().color1()[index]), gammaCorrection(driver.getStimulus().color2()[index]));
+
+      stimulus.setColors(
+        gammaLumToColor(driver.getStimulus().lum()[index], driver.getStimulus().color1()[index]), 
+        gammaLumToColor(driver.getStimulus().lum()[index], driver.getStimulus().color2()[index]));
+
       stimulus.contrast(driver.getStimulus().contrast()[index]);
       stimulus.frequency(driver.getStimulus().phase()[index], driver.getStimulus().frequency()[index]);
       stimulus.defocus(driver.getStimulus().defocus()[index]);
       stimulus.texRotation(driver.getStimulus().texRotation()[index]);
     }
 
-    /** Apply gamma correction */
-    private double[] gammaCorrection(double[] bgCol) {
-      return driver.getConfiguration().calibration().colorValues(bgCol);
+    /** 
+     * Apply inverse gamma to convert cd/m^2 to RGB in [0, 1]
+     * @param luminance [0]=R [1]=G [2]=B cd/m^2
+     * */
+    private double[] gammaLumToColor(double[] luminance) {
+      return driver.getConfiguration().calibration().getColorValues(luminance);
+    }
+
+      // multiply luminance * color and then convert 
+    private double[] gammaLumToColor(double luminance, double[] color) {
+      double lum[] = Arrays.stream(color).map((double c) -> c * luminance).toArray();
+      return gammaLumToColor(lum);
     }
 
 }
