@@ -84,7 +84,6 @@ public class Calibration {
                 this.inverseGamma[rgb][lum] = this.gamma[rgb][gammaIndex];
             }
         }
-        System.out.println(maxAllL + " " + Arrays.toString(this.inverseGamma[0]));
     }
   
     /**
@@ -108,8 +107,6 @@ public class Calibration {
             (luminances[rgb] > maxLum[rgb] ? 
                 1 : 
                 this.inverseGamma[rgb][(int)Math.round(luminances[rgb])]);
-
-System.out.println(Arrays.toString(luminances) + " -> " + Arrays.toString(color));
 
       return color;
     }

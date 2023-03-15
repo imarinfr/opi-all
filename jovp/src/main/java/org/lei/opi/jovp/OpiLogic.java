@@ -166,7 +166,6 @@ public class OpiLogic implements PsychoLogic {
           double[] bgCol = driver.getBackgrounds()[i].bgCol();
           double fixLum = driver.getBackgrounds()[i].fixLum();
           double[] fixCol = driver.getBackgrounds()[i].fixCol();
-System.out.println(bgLum + " " + Arrays.toString(gammaLumToColor(bgLum, bgCol)));
           backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
           fixations[i].update(new Model(driver.getBackgrounds()[i].fixShape()));
           fixations[i].position(driver.getBackgrounds()[i].fixCx(), driver.getBackgrounds()[i].fixCy());

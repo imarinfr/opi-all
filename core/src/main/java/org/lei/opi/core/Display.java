@@ -8,7 +8,6 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.Node;
-import javafx.event.ActionEvent;
 
 /**
  * Opens up a window wherever the JOVP wants it
