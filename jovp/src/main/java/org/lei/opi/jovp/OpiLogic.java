@@ -10,6 +10,7 @@ import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Texture;
 import es.optocom.jovp.definitions.Command;
 import es.optocom.jovp.definitions.ModelType;
+import es.optocom.jovp.definitions.TextureType;
 
 /**
  * Logic for the PsychoEngine
@@ -190,14 +191,14 @@ public class OpiLogic implements PsychoLogic {
     /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
     private void checkAction() {
         if (timer.getElapsedTime() > 0) // if timer is active, we are presenting
-            if (stimulus.show() && timer.getElapsedTime() > presentationTime + driver.getStimulus().t()[stimIndex]) {
-                presentationTime += driver.getStimulus().t()[stimIndex];
+            if (stimulus.show() && timer.getElapsedTime() > presentationTime + driver.getStimulus(stimIndex).t()) {
+                presentationTime += driver.getStimulus(stimIndex).t();
                 // if presentation time is over for the last element of the array, then hide stimulus
-                if (stimIndex == driver.getStimulus().length() - 1) 
+                if (stimIndex == driver.getStimuliLength() - 1) 
                     stimulus.show(false);
                 else 
                     updateStimulus(++stimIndex);
-            } else if (timer.getElapsedTime() > driver.getStimulus().w()) {
+            } else if (timer.getElapsedTime() > driver.getStimulus(stimIndex).w()) {
                 // if no response, reset timer and send negative response
                 timer.stop();
                     // TODO tracking results need to be put in response
@@ -207,26 +208,35 @@ public class OpiLogic implements PsychoLogic {
 
     /** Update stimulus upon request */
     private void updateStimulus(int index) {
-      stimulus.eye(driver.getStimulus().eye()[index]);
-      if (index > 0) {
-        // for performance, do not regenerate stimulus model and texture unless it has changed
-        if(driver.getStimulus().shape()[index] != driver.getStimulus().shape()[index - 1])
-          stimulus.update(new Model(driver.getStimulus().shape()[index]));
-        if(driver.getStimulus().type()[index] != driver.getStimulus().type()[index - 1])
-          stimulus.update(new Texture(driver.getStimulus().type()[index]));
-      } else stimulus.update(new Model(driver.getStimulus().shape()[index]), new Texture(driver.getStimulus().type()[index]));
-      stimulus.position(driver.getStimulus().x()[index], driver.getStimulus().y()[index]);
-      stimulus.size(driver.getStimulus().sx()[index], driver.getStimulus().sy()[index]);
-      stimulus.rotation(driver.getStimulus().rotation()[index]);
+        Stimulus stim = driver.getStimulus(index);
+        stimulus.eye(stim.eye());
+            // for performance, do not regenerate stimulus model and texture unless it has changed
+        boolean newTexture = index == 0;
+        if (index > 0) {
+            Stimulus prevStim = driver.getStimulus(index - 1);
+            if(stim.shape() != prevStim.shape())
+                stimulus.update(new Model(stim.shape()));
 
-      stimulus.setColors(
-        gammaLumToColor(driver.getStimulus().lum()[index], driver.getStimulus().color1()[index]), 
-        gammaLumToColor(driver.getStimulus().lum()[index], driver.getStimulus().color2()[index]));
+            if ((stim.type() != prevStim.type())
+            || (stim.type() == TextureType.IMAGE && prevStim.type() == TextureType.IMAGE && !stim.imageFilename().equals(prevStim.imageFilename())))
+                newTexture = true;
+        } else 
+            stimulus.update(new Model(stim.shape()));
 
-      stimulus.contrast(driver.getStimulus().contrast()[index]);
-      stimulus.frequency(driver.getStimulus().phase()[index], driver.getStimulus().frequency()[index]);
-      stimulus.defocus(driver.getStimulus().defocus()[index]);
-      stimulus.texRotation(driver.getStimulus().texRotation()[index]);
+        if (newTexture)
+            if (stim.type() == TextureType.IMAGE)
+                stimulus.update(new Texture(stim.imageFilename()));  // give it the string filename
+            else
+                stimulus.update(new Texture(stim.type()));  
+
+        stimulus.position(stim.x(), stim.y());
+        stimulus.size(stim.sx(), stim.sy());
+        stimulus.rotation(stim.rotation());
+        stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
+        stimulus.contrast(stim.contrast());
+        stimulus.frequency(stim.phase(), stim.frequency());
+        stimulus.defocus(stim.defocus());
+        stimulus.texRotation(stim.texRotation());
     }
 
     /** 

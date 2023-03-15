@@ -184,7 +184,9 @@ opiSetup_for_Display <- function(settings) {
 #'
 #' @param phase List of phases (in degrees) for generation of spatial patterns.
 #'              Only useful if type != FLAT(Optional)
-#' @param shape Stimulus shape.(Optional)
+#' @param imageFilename If type == IMAGE, this is the local filename on the
+#'                      machine of the image to use(Optional)
+#' @param shape Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE, SQUARE.(Optional)
 #' @param sx List of diameters along major axis of ellipse (degrees).
 #' @param lum List of stimuli luminances (cd/m^2).
 #' @param sy List of diameters along minor axis of ellipse (degrees). If not
@@ -193,7 +195,8 @@ opiSetup_for_Display <- function(settings) {
 #'                 if sx != sy specified.(Optional)
 #' @param texRotation List of angles of rotation of stimuli (degrees). Only
 #'                    useful if type != FLAT(Optional)
-#' @param type Stimulus type.(Optional)
+#' @param type Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
+#'             SQUARESINE, G1, G2, G3, IMAGE(Optional)
 #' @param stim.length The number of elements in this stimuli.
 #' @param defocus List of defocus values in Diopters for stimulus post-processing.(Optional)
 #' @param frequency List of frequencies (in cycles per degrees) for generation
@@ -202,7 +205,7 @@ opiSetup_for_Display <- function(settings) {
 #' @param color1 List of stimulus colors 1.
 #' @param color2 List of stimulus colors 2. Only useful if stimulus type != FLAT(Optional)
 #' @param t List of stimuli presentation times (ms).
-#' @param w List of stimuli response windows (ms).
+#' @param w Time to wit for response including presentation time (ms).
 #' @param contrast List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.(Optional)
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
@@ -256,7 +259,7 @@ opiPresent_for_Display <- function(stim) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(phase = stim$phase, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, x = stim$x, y = stim$y)
+    msg <- list(phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

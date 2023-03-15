@@ -72,8 +72,8 @@ public class OpiJovp extends OpiListener {
     private PsychoEngine psychoEngine;
     /** A background array to communicate with OpiLogic. backgrounds[0] is for left eye, [1] for right */
     private Setup[] backgrounds;
-    /** A stimulus record to communicate with OpiLogic */
-    private Present stimulus;
+    /** An array of stimulus records that sit here for OpiLogic to interegate */
+    private Stimulus[] stimuli;
     /** A record to record the results after a stimulus presentation */
     private Response response = null;
 
@@ -89,7 +89,8 @@ public class OpiJovp extends OpiListener {
     public Configuration getConfiguration() { return configuration; }
     public Action getAction() { return action; }
     public Setup[] getBackgrounds() { return backgrounds; }
-    public Present getStimulus() { return stimulus; }
+    public Stimulus getStimulus(int i) throws ArrayIndexOutOfBoundsException { return stimuli[i]; }
+    public int getStimuliLength() { return stimuli.length; }
 
     public void setResponse(Response response) { this.response = response; }
 
@@ -241,8 +242,10 @@ public class OpiJovp extends OpiListener {
   }
 
     /**
-     * Present a stimulus
-     * Trigger the PRESENT action and spin waiting for a response.
+     * Present a stimulus by
+     *   (1) If 'eye' is specified, check the background relevant to that eye has been `setup`
+     *   (2) Build the array if Stimulus objects
+     *   (3) Trigger the PRESENT action in OpiLogic and spin waiting for a response.
      *
      * @param args A map of name:value pairs for parameters
      *
@@ -263,7 +266,7 @@ public class OpiJovp extends OpiListener {
         }
    
         try {
-            stimulus = Present.set(args);
+            stimuli = Stimulus.create(args);
             setAction(Action.PRESENT);
             while (response == null) {
                 Thread.sleep(100);  // wait for response

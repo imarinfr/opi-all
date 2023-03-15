@@ -43,7 +43,7 @@ public class JsonProcessor {
    * @since 0.0.1
    */
   public static String[] toStringArray(Object list) throws ClassCastException {
-    return ((ArrayList<?>) list).stream().map(String.class::cast).map(String::toUpperCase).toArray(String[]::new);
+    return ((ArrayList<?>) list).stream().map(String.class::cast).toArray(String[]::new);
   }
 
   /**
