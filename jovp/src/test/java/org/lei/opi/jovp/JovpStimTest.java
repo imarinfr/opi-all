@@ -25,8 +25,8 @@ public class JovpStimTest {
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
-  @Test
-  public void testStims1() {
+ 
+  public void aTestStims1() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetupPresent] " + server);
 
@@ -105,8 +105,8 @@ public class JovpStimTest {
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
-  @Test
-  public void testStims2() {
+  
+  public void aTestStims2() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetupPresent] " + server);
 

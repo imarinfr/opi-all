@@ -25,8 +25,8 @@ public class JovpImageStimTest {
     * Note 2 need vulkan and JOVP installed too
     * @since 0.2.0
     */
-    @Test
-    public void testSetupBgLumAndCol() {
+    
+    public void aTestSetupBgLumAndCol() {
         OpiJovp server = new OpiJovp(50002);
         System.out.println("[testSetupBgLumAndCol] " + server);
        

@@ -3,6 +3,7 @@ package org.lei.opi.jovp;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
@@ -63,6 +64,8 @@ public class OpiJovp extends OpiListener {
     protected static final String NO_RIGHT_BACKGROUND = "You have asked to PRESENT in the right/both eye/s but you have not called `setup` on the right/both eye/s.";
     /** {@value CLOSED} */
     private static final String CLOSED = "CLOSE successful";
+    /** {@value UNIMPLEMENTED_FORMAT} */
+    private static final String UNIMPLEMENTED_FORMAT = "%s: Parameter %s is not implemented for value %s in function %s.";
    
     /** Prefix for all success messages */
     private String prefix;
@@ -220,6 +223,7 @@ public class OpiJovp extends OpiListener {
   /**
    * Change settings of background and fixation target
    * trigger the SETUP action
+   * Check for unimplemented values of fixShape.
    * 
    * @param args A map of name:value pairs for parameters. Should have all the fields for Setup class.
    *
@@ -234,6 +238,12 @@ public class OpiJovp extends OpiListener {
       if(configuration.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
         backgrounds[1] = Setup.create2(args);
 
+      if (args.containsKey("fixShape")) {
+          String fs = (String)args.get("fixShape");
+          if (List.of(new String[] {"HOLLOW_TRIANGLE", "HOLLOW_SQUARE", "HOLLOW_POLYGON", "ANNULUS", "OPTOTYPE", "TEXT", "MODEL"}).contains(fs.toUpperCase()))
+            return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", fs, "setup()"));
+      }
+
       setAction(Action.SETUP);
       return query();
     } catch (ClassCastException | IllegalArgumentException e) {
@@ -245,7 +255,8 @@ public class OpiJovp extends OpiListener {
      * Present a stimulus by
      *   (1) If 'eye' is specified, check the background relevant to that eye has been `setup`
      *   (2) Build the array if Stimulus objects
-     *   (3) Trigger the PRESENT action in OpiLogic and spin waiting for a response.
+     *   (3) Check for unimplemented `type` and `shape`
+     *   (4) Trigger the PRESENT action in OpiLogic and spin waiting for a response.
      *
      * @param args A map of name:value pairs for parameters
      *
@@ -263,6 +274,18 @@ public class OpiJovp extends OpiListener {
                 if ((eye == Eye.BOTH || eye == Eye.RIGHT) && backgrounds[1] == null)
                     return Packet.error(prefix + NO_RIGHT_BACKGROUND);
             }
+        }
+
+        if (args.containsKey("shape")) {
+            String s = (String)args.get("shape");
+            if (List.of(new String[] {"HOLLOW_TRIANGLE", "HOLLOW_SQUARE", "HOLLOW_POLYGON", "ANNULUS", "OPTOTYPE", "TEXT", "MODEL"}).contains(s.toUpperCase()))
+              return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", s, "setup()"));
+        }
+
+        if (args.containsKey("type")) {
+            String s = (String)args.get("type");
+            if (List.of(new String[] {"TEXT"}).contains(s.toUpperCase()))
+              return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", s, "setup()"));
         }
    
         try {

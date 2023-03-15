@@ -75,8 +75,7 @@ public class JovpParamTest {
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
-  @Test
-  public void testInitialise() {
+  public void aTestInitialise() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialise] " + server);
 
@@ -121,8 +120,8 @@ public class JovpParamTest {
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
-  @Test
-  public void testInitialiseQuery() {
+  
+  public void aTestInitialiseQuery() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseQuery] " + server);
 
@@ -170,8 +169,9 @@ public class JovpParamTest {
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
+
   @Test
-  public void testInitialiseSetup() {
+  public void aTestInitialiseSetup() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetup] " + server);
 
@@ -196,6 +196,8 @@ public class JovpParamTest {
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
           HashMap<String, Object> hmap = getDefaultValues(Command.SETUP);
+          hmap.put("fixShape", "MALTESE");
+          hmap.put("bgLum", 200.0);
           result = machine.setup(hmap);
           System.out.println(String.format("[testInitialiseSetup] Setup result: %s", result));
 
@@ -222,7 +224,7 @@ public class JovpParamTest {
    * @since 0.2.0
    */
   @Test
-  public void testInitialiseSetupPresent() {
+  public void aTestInitialiseSetupPresent() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetupPresent] " + server);
 

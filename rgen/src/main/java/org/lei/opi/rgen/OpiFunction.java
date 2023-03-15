@@ -172,7 +172,7 @@ public class OpiFunction {
       // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
         String prefix =  String.format("#' @param %s ",p.name());
-        return prefix + wrapR(p.desc() + (p.optional() ? "(Optional)" : ""), prefix.length(), false);
+        return prefix + wrapR(p.desc() + (p.optional() ? " (Optional)" : ""), prefix.length(), false);
     };
 
       // generate roxygen2 string for return value r

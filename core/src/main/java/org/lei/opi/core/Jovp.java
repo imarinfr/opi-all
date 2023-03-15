@@ -171,7 +171,7 @@ public class Jovp extends OpiMachine {
     @Parameter(name = "texRotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if type != FLAT", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
     @Parameter(name = "shape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE, SQUARE.", isList = true, optional = true, defaultValue = "[CIRCLE]")
     @Parameter(name = "type", className = es.optocom.jovp.definitions.TextureType.class, desc = "Stimulus type. Values include FLAT, SINE, CHECKERBOARD, SQUARESINE, G1, G2, G3, IMAGE", isList = true, optional = true, defaultValue = "[FLAT]")
-    @Parameter(name = "imageFilename", className = String.class, desc = "If type == IMAGE, this is the local filename on the machine of the image to use", isList = true, optional = true, defaultValue = "[FLAT]")
+    @Parameter(name = "imageFilename", className = String.class, desc = "If type == IMAGE, the filename on the local filesystem of the machine running JOVP of the image to use", isList = true, optional = true, defaultValue = "[FLAT]")
     @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
     @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
     @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
