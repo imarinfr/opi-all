@@ -3,7 +3,6 @@ package org.lei.opi.jovp;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.ArrayList;
 import java.util.stream.Stream;
 
@@ -264,7 +263,7 @@ public class OpiJovp extends OpiListener {
      */
     private Packet present(HashMap<String, Object> args) {
         if (args.containsKey("eye")) {
-            List<Eye> eyes = ((ArrayList<String>)args.get("eye"))
+            List<Eye> eyes = ((List<String>)args.get("eye"))
                 .stream()
                 .map((String s) -> Eye.valueOf((s).toUpperCase()))
                 .toList();
@@ -276,17 +275,15 @@ public class OpiJovp extends OpiListener {
             }
         }
 
-        if (args.containsKey("shape")) {
-            String s = (String)args.get("shape");
-            if (List.of(new String[] {"HOLLOW_TRIANGLE", "HOLLOW_SQUARE", "HOLLOW_POLYGON", "ANNULUS", "OPTOTYPE", "TEXT", "MODEL"}).contains(s.toUpperCase()))
-              return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", s, "setup()"));
-        }
+        if (args.containsKey("shape"))
+          for (String s : (List<String>)args.get("shape"))
+            if (List.of(new String[] {"HOLLOW_TRIANGLE", "HOLLOW_SQUARE", "HOLLOW_POLYGON", "ANNULUS", "TEXT", "MODEL"}).contains(s.toUpperCase()))
+                return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "shape", s, "present()"));
 
-        if (args.containsKey("type")) {
-            String s = (String)args.get("type");
-            if (List.of(new String[] {"TEXT"}).contains(s.toUpperCase()))
-              return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", s, "setup()"));
-        }
+        if (args.containsKey("type"))
+          for (String s : (List<String>)args.get("type"))
+              if (List.of(new String[] {"TEXT"}).contains(s.toUpperCase()))
+                return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "type", s, "present()"));
    
         try {
             stimuli = Stimulus.create(args);

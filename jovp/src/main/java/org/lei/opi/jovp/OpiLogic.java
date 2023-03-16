@@ -212,17 +212,23 @@ public class OpiLogic implements PsychoLogic {
         stimulus.eye(stim.eye());
             // for performance, do not regenerate stimulus model and texture unless it has changed
         boolean newTexture = index == 0;
+        boolean newModel = index == 0;
         if (index > 0) {
             Stimulus prevStim = driver.getStimulus(index - 1);
-            if(stim.shape() != prevStim.shape())
-                stimulus.update(new Model(stim.shape()));
+            if(stim.shape() != prevStim.shape()
+            || (stim.shape() == ModelType.OPTOTYPE && prevStim.shape() == ModelType.OPTOTYPE && !stim.optotype().equals(prevStim.optotype())))
+                newModel = true;
 
             if ((stim.type() != prevStim.type())
             || (stim.type() == TextureType.IMAGE && prevStim.type() == TextureType.IMAGE && !stim.imageFilename().equals(prevStim.imageFilename())))
                 newTexture = true;
-        } else 
-            stimulus.update(new Model(stim.shape()));
+        }
 
+        if (newModel)
+            if (stim.shape() == ModelType.OPTOTYPE)
+                stimulus.update(new Model(stim.optotype()));  // give it the optotype
+            else
+                stimulus.update(new Model(stim.shape()));
         if (newTexture)
             if (stim.type() == TextureType.IMAGE)
                 stimulus.update(new Texture(stim.imageFilename()));  // give it the string filename
@@ -232,7 +238,8 @@ public class OpiLogic implements PsychoLogic {
         stimulus.position(stim.x(), stim.y());
         stimulus.size(stim.sx(), stim.sy());
         stimulus.rotation(stim.rotation());
-        stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
+          // NOTE - JOVP seems to have color1 and color2 reversed for FLAT
+        stimulus.setColors(gammaLumToColor(stim.lum(), stim.colorMin()), gammaLumToColor(stim.lum(), stim.colorMax()));
         stimulus.contrast(stim.contrast());
         stimulus.frequency(stim.phase(), stim.frequency());
         stimulus.defocus(stim.defocus());

@@ -173,9 +173,9 @@ opiSetup_for_O900 <- function(settings) {
 #' @param color Stimulus color (degrees).
 #' @param t List of Stimulus presentation times (ms). For STATIC, list must be
 #'          of length 1. For KINETIC, it must the same length and 'x' and 'y'
-#'          co-ordinates minus 1(Optional)
+#'          co-ordinates minus 1 (Optional)
 #' @param lum List of stimuli luminances (cd/m^2).
-#' @param w [STATIC] Response window (ms).(Optional)
+#' @param w [STATIC] Response window (ms). (Optional)
 #' @param x List of x co-ordinates of stimuli (degrees).
 #' @param y List of y co-ordinates of stimuli (degrees).
 #' @param type Stimulus type: STATIC or KINETIC.
