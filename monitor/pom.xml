@@ -24,8 +24,6 @@
 	      <configuration>
             <!-- <mainClass>org.lei.opi.monitor.OpiMonitor</mainClass> -->
 		          <mainClass>org.lei.opi.monitor.Monitor</mainClass>
-	          </manifest>
-	        </archive>
 	      </configuration>
     </plugin>
     <plugin>
