@@ -30,10 +30,9 @@
   <groupId>org.lei.opi</groupId>
   <artifactId>opi</artifactId>
   <packaging>pom</packaging>
-  <version>0.2.0-SNAPSHOT</version>
+  <version>0.2.0</version>
   <name>OPI project</name>
-  <!-- TODO change it to the project's website 
-  <url>http://www.example.com</url> -->
+  <url>http://perimetry.org/opi</url>
 
   <modules>
     <module>core</module>
@@ -54,8 +53,8 @@
             <target>${java.version}</target>
           </configuration>
         </plugin>
-      </plugins>
-    </pluginManagement>
+    </plugins>
+   </pluginManagement>
   </build>
 
   <dependencies>

@@ -312,13 +312,18 @@ public class OpiJovp extends OpiListener {
 
     // args[0] = port number
     // not opiJovp is `running` on a separate thread as a server
-  public static void main(String args[]) {
-    try {
-      OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]));
-      System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
-      opiJovp.startPsychoEngine();
-    } catch (NumberFormatException e) {
-      e.printStackTrace();
+    public static void main(String args[]) {
+        if (args.length != 1) {
+            System.out.println("Usage: java -jar opiJovp.jar [port number]");
+            System.exit(-1);
+        }
+
+        try {
+            OpiJovp opiJovp = new OpiJovp(Integer.parseInt(args[0]));
+            System.out.println("Machine address is " + opiJovp.getIP() + ":" + opiJovp.getPort());
+            opiJovp.startPsychoEngine();
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
     }
-  }
 }
