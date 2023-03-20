@@ -436,7 +436,7 @@ public class Monitor extends Application {
 
             // (2) Load the machines related fxml file and switch to its Scene
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource(String.format("/org/lei/opi/core/%s", opiMachine.fxmlFileName)));
+            FXMLLoader loader = new FXMLLoader(opiMachine.getClass().getResource(String.format("/org/lei/opi/core/%s", opiMachine.fxmlFileName)));
             loader.setController(opiMachine);
             Parent root = loader.load();
             Scene scene = new Scene(root, 800, 800);
