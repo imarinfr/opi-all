@@ -2,7 +2,7 @@
 # An implementation of the OPI that simulates responses using
 # a Cummulative Gaussian distribution as the Frequency of Seeing curve.
 #
-# Author: Andrew Turpin    (aturpin@unimelb.edu.au)
+# Author: Andrew Turpin
 #
 # Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
 #
@@ -29,8 +29,7 @@ require(stats)
 #' [opiPresent].
 #' All values are in dB relative to `maxStim`.
 #'
-#' @param type A single character that is:
-#'   *  `sd` standard deviation of Cummulative Gaussian
+#' @param sd Standard deviation of Cummulative Gaussian.
 #' @param maxStim The maximum stimuls value (0 dB) in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param ... Any other parameters you like, they are ignored.
 #'
@@ -101,7 +100,9 @@ opiPresent_for_SimGaussian <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ..
 
     px_var <- .opi_env$sim_gaussian$sd
 
-    pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(stim$lum, mean = tt, sd = px_var))
+    level <- cdTodb(stim$lum, .opi_env$sim_gaussian$maxStim)
+
+    pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(level, mean = tt, sd = px_var))
 
     return(list(
         err = NULL,

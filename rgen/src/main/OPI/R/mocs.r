@@ -1,24 +1,24 @@
 #
 # MOCS algorithm for a single location, nAFC possible with beeps.
 #
-# Author: Andrew Turpin    (aturpin@unimelb.edu.au)
+# Author: Andrew Turpin
 #         (Based on disucssions with Tony Redmond July 2012).
 # Date: May 2015
+# Modified Tue 21 Mar 2023: changed licence from gnu to Apache 2.0 
 #
-# Copyright 2015 Andrew Turpin
-# This program is part of the OPI (http://perimetry.org/OPI).
-# OPI is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# any later version.
+# Copyright [2022] [Andrew Turpin]
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 
 require(stats)
@@ -98,7 +98,7 @@ require(utils)
 #'     \item{\code{correct_n} is the index i of the luminance level (\code{lli}) that
 #'       should be treated as a ``correct'' response (the correct interval). For a
 #'       standard MOCS, this will be 1; for a 2AFC, this will be 1 or 2. This number will
-#'       be in the range [1,m].}
+#'       be in the range \code{[1,m]}.}
 #'       \item{\code{lli} is the i'th luminance level to be used at this location for
 #'       interval i of the presentation in cd/\eqn{\mbox{m}^2}{m^2}. For a standard MOCS,
 #'       i=1, and the \code{params} matrix will have 5 columns. For a 2AFC, there will be

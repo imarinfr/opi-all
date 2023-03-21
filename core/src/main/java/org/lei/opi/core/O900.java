@@ -303,11 +303,11 @@ public class O900 extends OpiMachine {
   @Parameter(name = "size", className = org.lei.opi.core.O900.Size.class, desc = "Stimulus size (degrees). Can be Goldmann Size I to V (or VI if device has a big wheel)", defaultValue = "GV")
   @Parameter(name = "color", className = org.lei.opi.core.O900.Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
   @Parameter(name = "t", className = Double.class, desc = "List of Stimulus presentation times (ms). For STATIC, list must be of length 1. For KINETIC, it must the same length and 'x' and 'y' co-ordinates minus 1", isList = true, optional = true, min = 0, defaultValue = "[200]")
-  @Parameter(name = "w", className = Double.class, desc = "[STATIC] Response window (ms).", optional = true, min = 0, defaultValue = "1500")
+  @Parameter(name = "w", className = Double.class, desc = "Response window for STATIC (ms).", optional = true, min = 0, defaultValue = "1500")
   @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
   @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
-  @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "[KINETIC] x co-ordinate when oberver responded (degrees).")
-  @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "[KINETIC] y co-ordinate when oberver responded (degrees).")
+  @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "x co-ordinate when oberver responded (degrees) for KINETIC.")
+  @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "y co-ordinate when oberver responded (degrees) for KINETIC.")
   public Packet present(HashMap<String, Object> args) {
     if (this.socket.isClosed()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {

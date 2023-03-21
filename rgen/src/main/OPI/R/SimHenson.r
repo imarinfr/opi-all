@@ -2,7 +2,7 @@
 # An implementation of the OPI that simulates responses using 
 # Henson et al (2000) variability.
 #
-# Author: Andrew Turpin    (aturpin@unimelb.edu.au)
+# Author: Andrew Turpin
 #
 # Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
 #
@@ -36,8 +36,9 @@ opiQueryDevice_for_SimHenson <- function() list(machine = "SimHenson")
 #'
 #' Simulates reponses using a Frequency of Seeing (FoS) curve.
 #'
-#' The FoS is modelled as a cummulative Gaussian function with standard deviation
-#' equal to `min(cap, exp( A * t + B))`, where t is the threshold/mean of the FoS.
+#' The FoS is modelled as a cummulative Gaussian function over dB with 
+#' standard deviation equal to `min(cap, exp( A * t + B))`, where 
+#' t is the threshold/mean of the FoS in dB.
 #' All values are in dB relative to `maxStim`.
 #'
 #' @param type A single character that is:
@@ -100,11 +101,11 @@ opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 
 
 #' Does nothing.
 #'
-#' @param state Any object you like, it is ignored.
+#' @param settings Any object you like, it is ignored.
 #'
 #' @return NULL
 #'
-opiSetup_for_SimHenson <- function(state)  NULL
+opiSetup_for_SimHenson <- function(settings)  NULL
 
 #' Determine the response to a stimuli by sampling from a cummulative Gaussian
 #' Frequency-of-Seeing (FoS) curve (also known as the psychometric function).
@@ -121,7 +122,7 @@ opiSetup_for_SimHenson <- function(state)  NULL
 #'   * `lum` which is the stim value in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param fpr false positive rate for the FoS curve (range 0..1).
 #' @param fnr false negative rate for the FoS curve (range 0..1).
-#' @param tt  mean of the assumed FoS curve (cd/\eqn{\mbox{m}^2}{m^2}).
+#' @param tt  mean of the assumed FoS curve in dB.
 #' @param ...  Any other parameters you like, they are ignored.
 #'
 #' @return A list contianing:
@@ -141,16 +142,16 @@ opiSetup_for_SimHenson <- function(state)  NULL
 #'   warning("opiClose() failed")
 #'
 opiPresent_for_SimHenson <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...) {
-
     if (!exists(".opi_env") || !exists("sim_henson", where = .opi_env))
         return(list(err = "You have not called opiInitialise.", seen = NA, time = NA))
 
     if (is.null(stim) || ! "lum" %in% names(stim))
         return(list(err = "'stim' should be a list with a name 'lum'. stim$lum is the cd/m^2 to present.", seen = NA, time = NA))
 
+    level <- cdTodb(stim$lum, .opi_env$sim_henson$maxStim)
     px_var <- min(.opi_env$sim_henson$cap, exp(.opi_env$sim_henson$A*tt + .opi_env$sim_henson$B)) # variability of patient, henson formula 
 
-    pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(stim$lum, mean = tt, sd = px_var))
+    pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(level, mean = tt, sd = px_var))
 
     return(list(
         err = NULL,

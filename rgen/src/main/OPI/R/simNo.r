@@ -1,7 +1,7 @@
 #
 # An implementation of the OPI that simulates a patient that never responds.
 #
-# Author: Andrew Turpin    (aturpin@unimelb.edu.au)
+# Author: Andrew Turpin
 #
 # Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
 #

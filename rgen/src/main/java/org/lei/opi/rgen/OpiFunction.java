@@ -198,9 +198,9 @@ public class OpiFunction {
             }
 
             if (p.className() == Double.class) {
-                str += String.format("the range [%s, %s].", p.min(), p.max());
+                str += String.format("the range \\code{[%s, %s]}.", p.min(), p.max());
             } else if (p.className() == Integer.class) {
-                str += String.format("the range [%s, %s].", (int)p.min(), (int)p.max());
+                str += String.format("the range \\code{[%s, %s]}.", (int)p.min(), (int)p.max());
             } else if (p.className().isEnum()) {
                 List<String> values = machine.enums.get(p.className().getName());
                 str += String.format("the set {%s}.", String.join(", ",values));
@@ -228,7 +228,7 @@ public class OpiFunction {
         String params = methodData.parameters.values().stream()
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
-        String rets = "#' @return a list contianing:\n" + 
+        String rets = "#' @return a list containing:\n" + 
             methodData.returnMsgs.values().stream()
             .map(prettyReturn)
             .collect(Collectors.joining("\n"));
@@ -347,19 +347,24 @@ public class OpiFunction {
                             assign(\"socket\", open_socket(%s$%s, %s$%s), %s$%s) 
                         else
                             return(list(error = 4, msg = \"Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R.\"))
+
+                        if (is.null(%s$%s$socket))
+                            return(list(error = 2, msg = sprintf(\"Cannot Cannot find a server at %%s on port %%s\", %s$%s, %s$%s)))
                     """,
                     opiEnvName, this.machineName,                                  // if exists
-                    this.opiInputFieldName, parameterForIp, this.opiInputFieldName, parameterForPort, opiEnvName, this.machineName // assign
+                    this.opiInputFieldName, parameterForIp, this.opiInputFieldName, parameterForPort, opiEnvName, this.machineName, // assign
+                    opiEnvName, this.machineName, // null socket
+                    this.opiInputFieldName, parameterForIp, this.opiInputFieldName, parameterForPort // error=2 ip port
                     );
         } else {
             socketCode = String.format("""
                     if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
-                        stop("Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.")
-                """, opiEnvName, 
-                this.machineName, opiEnvName,
-                opiEnvName, this.machineName, 
-                opiEnvName, this.machineName,
-                this.opiName
+                        return(list(error = 3, msg = \"Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.\"))
+                """, opiEnvName, //exists
+                this.machineName, opiEnvName, // !exists
+                opiEnvName, this.machineName,  // socket
+                opiEnvName, this.machineName, // null socket
+                this.opiName  // function name
                 );
         }
 

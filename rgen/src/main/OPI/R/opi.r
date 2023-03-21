@@ -1,4 +1,4 @@
-# Open Perimetry Interface implementation for %s
+# Open Perimetry Interface controlling class.
 #
 # Copyright [2022] [Andrew Turpin & Ivan Marin-Franch]
 #
@@ -81,8 +81,9 @@ chooseOpi <- chooseOPI
 #' @param ... Parameters specific to each machine as described in the 'See Also' functions.
 #'
 #' @seealso [opiInitialise_for_Compass()], [opiInitialise_for_ImoVifa()],
-#' [opiInitialise_for_Kowa()], [opiInitialise_for_O900()], [opiInitialise_for_O600()],
 #' [opiInitialise_for_PhoneHMD()], [opiInitialise_for_Display()], [opiInitialise_for_PicoVR()],
+#' [opiInitialise_for_O900()], 
+# [opiInitialise_for_Kowa()], [opiInitialise_for_O900()],
 #' [opiInitialise_for_SimNo()], [opiInitialise_for_SimYes()], [opiInitialise_for_SimHenson()],
 #' [opiInitialise_for_SimGaussian()]
 #' @export
@@ -104,7 +105,8 @@ opiInitialize <- opiInitialise
 #' listed below in the ’See Also’.
 #'
 #' @seealso [opiQueryDevice_for_Compass()], [opiQueryDevice_for_ImoVifa()],
-#' [opiQueryDevice_for_Kowa()], [opiQueryDevice_for_O900()], [opiQueryDevice_for_O600()],
+#' [opiQueryDevice_for_O900()], 
+# [opiQueryDevice_for_Kowa()], [opiQueryDevice_for_O600()],
 #' [opiQueryDevice_for_PhoneHMD()], [opiQueryDevice_for_Display()], [opiQueryDevice_for_PicoVR()],
 #' [opiQueryDevice_for_SimNo()], [opiQueryDevice_for_SimYes()], [opiQueryDevice_for_SimHenson()],
 #' [opiQueryDevice_for_SimGaussian()]
@@ -122,10 +124,11 @@ opiQueryDevice <- function() {
 #' Specific paramters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
-#' @param state A list containing the same names as that returned by {@link opi_queryDevice}.
+#' @param settings A list containing the same names as that returned by {@link opi_queryDevice}.
 #'
 #' @seealso [opiSetup_for_Compass()], [opiSetup_for_ImoVifa()],
-#' [opiSetup_for_Kowa()], [opiSetup_for_O900()], [opiSetup_for_O600()],
+#' [opiSetup_for_O900()], 
+# [opiSetup_for_Kowa()], [opiSetup_for_O600()],
 #' [opiSetup_for_PhoneHMD()], [opiSetup_for_Display()], [opiSetup_for_PicoVR()],
 #' [opiSetup_for_SimNo()], [opiSetup_for_SimYes()], [opiSetup_for_SimHenson()],
 #' [opiSetup_for_SimGaussian()]
@@ -144,7 +147,8 @@ opiSetup <- function(settings) {
 #' listed below in the ’See Also’.
 #'
 #' @seealso [opiClose_for_Compass()], [opiClose_for_ImoVifa()],
-#' [opiClose_for_Kowa()], [opiClose_for_O900()], [opiClose_for_O600()],
+#' [opiClose_for_O900()],
+# [opiClose_for_Kowa()], [opiClose_for_O600()],
 #' [opiClose_for_PhoneHMD()], [opiClose_for_Display()], [opiClose_for_PicoVR()],
 #' [opiClose_for_SimNo()], [opiClose_for_SimYes()], [opiClose_for_SimHenson()],
 #' [opiClose_for_SimGaussian()]
@@ -166,7 +170,8 @@ opiClose <- function() {
 #' @param ...  Other arguments that might be needed by each machine in the 'See Also' methods.
 #'
 #' @seealso [opiPresent_for_Compass()], [opiPresent_for_ImoVifa()],
-#' [opiPresent_for_Kowa()], [opiPresent_for_O900()], [opiPresent_for_O600()],
+#' [opiPresent_for_O900()], 
+# [opiPresent_for_Kowa()], [opiPresent_for_O600()],
 #' [opiPresent_for_PhoneHMD()], [opiPresent_for_Display()], [opiPresent_for_PicoVR()],
 #' [opiPresent_for_SimNo()], [opiPresent_for_SimYes()], [opiPresent_for_SimHenson()],
 #' [opiPresent_for_SimGaussian()]
@@ -175,17 +180,21 @@ opiPresent <- function(stim, ...) {
     if (is.null(.opi_env$chosen_machine))
         stop("you should use chooseOPI() before calling opiPresent.")
 
+        # for backwards compatability for version < OPI 3.0
+    if ("level" %in% names(stim) && !("lum" %in% names(stim)))
+        stim <- c(stim, lum = stim$level)
+
     return(do.call(paste0("opiPresent_for_", .opi_env$chosen_machine), list(stim = stim, ...)))
 }
 
 #'
-#' Open a socket on ip and port. Will `stop()` on error.
+#' Open a socket on ip and port. 
 #'
 #' @param ip IP address of socket
 #' @param port TCP port of socket
 #' @param machineName Machine name for error message
 #'
-#' @return Socket
+#' @return Socket or NULL on error
 #'
 open_socket <- function(ip, port, machineName) {
     cat("Looking for a server at ", ip, port, "...\n")
@@ -195,7 +204,8 @@ open_socket <- function(ip, port, machineName) {
                     blocking = TRUE, open = "w+b",
                     timeout = 10)
         , error = function(e) {
-            stop(paste("Cannot find a server at", ip, "on port", port))
+            warning(paste("Cannot find a server at", ip, "on port", port))
+            return(NULL)
         }
     ))
 
