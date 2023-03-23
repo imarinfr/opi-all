@@ -1,10 +1,9 @@
 package org.lei.opi.core;
 
-import java.io.FileInputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -12,6 +11,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -146,12 +147,13 @@ public abstract class OpiMachine {
    */
     public static HashMap<String, Object> readSettingsFile() throws FileNotFoundException {
         Gson gson = new Gson();
-        String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
+        String fp = System.getProperty("user.dir") + File.separator + SETTINGS_FILE;
         try {
             // Get default settings
-            InputStream inputStream = new FileInputStream(fp);
-            return gson.fromJson(IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8)),
-              new TypeToken<HashMap<String, Object>>() {}.getType());
+            String s = Files.readString(Path.of(fp), StandardCharsets.UTF_8);
+System.out.println(fp);
+System.out.println(s);
+            return gson.fromJson(s, new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (IOException | AssertionError e) {
             System.out.println("Could not read settings file " + fp);
         }

@@ -6,7 +6,7 @@
   "java.test.config": {
     "vmArgs": [
       "${env:LWJGL_JAVA_VM_FLAGS}",
-      "-Dorg.lwjgl.vulkan.libname=${env:VULKAN_SDK}/lib/libvulkan.dylib", 
+      "-Dorg.lwjgl.librarypath=${env:VULKAN_SDK}/lib", 
       "--module-path=${env:M2_HOME}/repository/org/openjfx",
       "--add-modules=ALL-MODULE-PATH"
     ]
