@@ -5,7 +5,7 @@
   "java.dependency.packagePresentation": "hierarchical",
   "java.test.config": {
     "vmArgs": [
-      "-XstartOnFirstThread", 
+      "${env:LWJGL_JAVA_VM_FLAGS}",
       "-Dorg.lwjgl.vulkan.libname=${env:VULKAN_SDK}/lib/libvulkan.dylib", 
       "--module-path=${env:M2_HOME}/repository/org/openjfx",
       "--add-modules=ALL-MODULE-PATH"
