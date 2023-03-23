@@ -151,8 +151,6 @@ public abstract class OpiMachine {
         try {
             // Get default settings
             String s = Files.readString(Path.of(fp), StandardCharsets.UTF_8);
-System.out.println(fp);
-System.out.println(s);
             return gson.fromJson(s, new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (IOException | AssertionError e) {
             System.out.println("Could not read settings file " + fp);
