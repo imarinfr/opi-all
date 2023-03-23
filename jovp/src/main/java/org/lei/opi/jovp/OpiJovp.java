@@ -3,7 +3,6 @@ package org.lei.opi.jovp;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.OpiListener;
@@ -106,7 +105,7 @@ public class OpiJovp extends OpiListener {
     public void setActionToNull() { action = null; }
    
     public OpiJovp(int port) { 
-        super(port, null);   // do not give a machine to the OpiListner as we override the process() method here and the machine is not needed.
+        super(port, null);   // do not give a machine to the OpiListener as we override the process() method here and the machine is not needed.
         this.action = null;
     } 
 
