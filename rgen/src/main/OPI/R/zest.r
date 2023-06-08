@@ -354,8 +354,10 @@ ZEST.start <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
 #' @rdname ZEST
 #' @param state Current state of the ZEST returned by \code{ZEST.start} and \code{ZEST.step}.
 #' @param nextStim A valid object for \code{opiPresent} to use as its \code{nextStim}.
+#' @param fixedStimValue A number in \code{state$domain} that, is \code{!is.na}, will be used as the stimulus value
+#'                       overriding \code{state$minStimulus}, \code{state$maxStimulus} and \code{state$stimChoice}.
 #' @export
-ZEST.step <- function(state, nextStim=NULL) {
+ZEST.step <- function(state, nextStim = NULL, fixedStimValue = NA) {
 
     if (state$stimChoice == "mean") {
         stimIndex <- which.min(abs(state$domain - sum(state$pdf * state$domain)))
@@ -369,6 +371,9 @@ ZEST.step <- function(state, nextStim=NULL) {
     stim <- state$domain[stimIndex]
     stim <- max(stim, state$minStimulus)   # check not outside [minStimulus,maxStimulus]
     stim <- min(stim, state$maxStimulus)
+
+    if (!is.na(fixedStimValue))
+        stim <- fixedStimValue
 
     params <- c(list(stim=state$makeStim(stim, state$numPresentations), nextStim=nextStim), state$opiParams)
     opiResp <- do.call(opiPresent, params)

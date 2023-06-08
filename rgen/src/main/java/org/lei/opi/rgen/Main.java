@@ -76,16 +76,6 @@ machineName, machineName);  // environment name
 
         for (OpiFunction f : functions) 
             f.generateR(writer);
-
-        writer.println(String.format("""
-
-#' Set background color and luminance in both eyes. 
-#' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
-#' @usage NULL
-#' @seealso [opiSetup()]
-opiSetBackground_for_%s <- function(lum, color, ...) {return("Deprecated")}
-
-        """, machineName));
     } 
   
     public static void main(String args[]) {

@@ -14,7 +14,7 @@ import java.lang.annotation.*;
 @Repeatable(Parameters.class)
 public @interface Parameter {
   String name();
-  Class<?> className() default String.class;
+  Class<?> className() default String.class;   // Seems this is either String, Double or a user defined Enum class
   String desc();
   boolean isList() default false;
   boolean isListList() default false; // for list of lists, as list of RGB color values

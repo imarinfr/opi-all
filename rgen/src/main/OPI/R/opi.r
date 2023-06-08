@@ -187,6 +187,13 @@ opiPresent <- function(stim, ...) {
     return(do.call(paste0("opiPresent_for_", .opi_env$chosen_machine), list(stim = stim, ...)))
 }
 
+#' Set background color and luminance in both eyes. 
+#' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
+#' @usage NULL
+#' @seealso [opiSetup()]
+#' @export
+opiSetBackground <- function(lum, color, ...) {return("Deprecated. Use opiSetup()")}
+
 #'
 #' Open a socket on ip and port. 
 #'

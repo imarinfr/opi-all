@@ -203,7 +203,7 @@ public class OpiFunction {
                 str += String.format("the range \\code{[%s, %s]}.", (int)p.min(), (int)p.max());
             } else if (p.className().isEnum()) {
                 List<String> values = machine.enums.get(p.className().getName());
-                str += String.format("the set {%s}.", String.join(", ",values));
+                str += String.format("the set \\code{{%s}}.", String.join(", ",values.stream().map((String s) -> "\"" + s + "\"").toList()));
             } else {
                 str = "";
             }
