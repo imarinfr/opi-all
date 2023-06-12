@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 /**
@@ -18,5 +19,11 @@ public class Compass extends Icare {
      */
     public Compass(Scene parentScene) {
         super(parentScene); 
+    }
+
+    @Override
+    @FXML
+    void initialize() {
+        setupJavaFX("Compass");
     }
 }

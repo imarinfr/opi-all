@@ -10,6 +10,7 @@ import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 /**
@@ -523,4 +524,10 @@ public class O900 extends OpiMachine {
     return jsonStr.append("\n  }").toString();
   }
 
+    //-------------- Machine Specific FXML below here ---
+    @Override
+    @FXML
+    void initialize() {
+        setupJavaFX("Octopus 900");
+    }
 }

@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 /**
@@ -19,5 +20,10 @@ public class Maia extends Icare {
 
     public Maia (Scene parentScene) {
         super(parentScene);
+    }
+
+    @FXML
+    void initialize() {
+        setupJavaFX("MAIA");
     }
 }

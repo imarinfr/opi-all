@@ -30,16 +30,18 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param port TCP port of the OPI Monitor.
-#' @param ip IP Address of the OPI Monitor.
+#' @param \code{address} A list containing:
+#'  * \code{port} TCP port of the OPI Monitor.
+#'  * \code{ip} IP Address of the OPI Monitor.
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The success or error message.
-#'    - res$error Error code '0' if all good, something else otherwise.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The success or error message.
+#'    - \code{res$error} Error code '0' if all good, something else otherwise.
 #'
 #' @details 
-#' `port` can take on values in the range \code{[0, 65535]}.
+#'
+#' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -78,12 +80,13 @@ opiInitialise_for_O900 <- function(address) {
 #'
 #' @usage NULL
 #'
+#' @param \code{} A list containing:
+
 #'
-#'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The error message or a structure with the following data.
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The error message or a structure with the following data.
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -118,29 +121,38 @@ opiQueryDevice_for_O900 <- function() {
 #'
 #' @usage NULL
 #'
-#' @param eye Eye to set.
-#' @param fixShape Fixation target.
-#' @param pres Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.
-#' @param resp Volume for auditory feedback when observer presses the clicker: 0
-#'             means no buzzer.
-#' @param fixIntensity Fixation intensity(from 0% to 100%).
-#' @param bgLum Background luminance for eye.
-#' @param bgCol Background color for eye.
+#' @param \code{settings} A list containing:
+#'  * \code{eye} Eye to set.
+#'  * \code{fixShape} Fixation target.
+#'  * \code{pres} Volume for auditory feedback when a stimulus is presented: 0 means no buzzer.
+#'  * \code{resp} Volume for auditory feedback when observer presses the
+#'                clicker: 0 means no buzzer.
+#'  * \code{fixIntensity} Fixation intensity(from 0% to 100%).
+#'  * \code{bgLum} Background luminance for eye.
+#'  * \code{bgCol} Background color for eye.
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The error message or a structure with the result of QUERY OPI command.
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The error message or a structure with the result of QUERY OPI command.
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #' @details 
-#' `eye` can take on values in the set \code{{"left", "right"}}.
-#' `fixShape` can take on values in the set \code{{"center", "cross", "ring"}}.
-#' `pres` can take on values in the range \code{[0.0, 3.0]}.
-#' `resp` can take on values in the range \code{[0.0, 3.0]}.
-#' `fixIntensity` can take on values in the range \code{[0.0, 100.0]}.
-#' `bgLum` can take on values in the set \code{{"bg_off", "bg_1",
+#'
+#' \code{eye} can take on values in the set \code{{"left", "right"}}.
+#'
+#' \code{fixShape} can take on values in the set \code{{"center",
+#'           "cross", "ring"}}.
+#'
+#' \code{pres} can take on values in the range \code{[0.0, 3.0]}.
+#'
+#' \code{resp} can take on values in the range \code{[0.0, 3.0]}.
+#'
+#' \code{fixIntensity} can take on values in the range \code{[0.0, 100.0]}.
+#'
+#' \code{bgLum} can take on values in the set \code{{"bg_off", "bg_1",
 #'        "bg_10", "bg_100"}}.
-#' `bgCol` can take on values in the set \code{{"white", "yellow"}}.
+#'
+#' \code{bgCol} can take on values in the set \code{{"white", "yellow"}}.
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -175,41 +187,51 @@ opiSetup_for_O900 <- function(settings) {
 #'
 #' @usage NULL
 #'
-#' @param size Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
-#'             device has a big wheel)
-#' @param color Stimulus color (degrees).
-#' @param t List of Stimulus presentation times (ms). For STATIC, list must be
-#'          of length 1. For KINETIC, it must the same length and 'x' and 'y'
-#'          co-ordinates minus 1 (Optional)
-#' @param lum List of stimuli luminances (cd/m^2).
-#' @param w Response window for STATIC (ms). (Optional)
-#' @param x List of x co-ordinates of stimuli (degrees).
-#' @param y List of y co-ordinates of stimuli (degrees).
-#' @param type Stimulus type: STATIC or KINETIC.
-#' @param stim.length The number of elements in this stimuli.
+#' @param \code{stim} A list containing:
+#'  * \code{size} Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
+#'                device has a big wheel)
+#'  * \code{color} Stimulus color (degrees).
+#'  * \code{t} List of Stimulus presentation times (ms). For STATIC, list must
+#'             be of length 1. For KINETIC, it must the same length and 'x' and
+#'             'y' co-ordinates minus 1 (Optional)
+#'  * \code{lum} List of stimuli luminances (cd/m^2).
+#'  * \code{w} Response window for STATIC (ms). (Optional)
+#'  * \code{x} List of x co-ordinates of stimuli (degrees).
+#'  * \code{y} List of y co-ordinates of stimuli (degrees).
+#'  * \code{type} Stimulus type: STATIC or KINETIC.
+#'  * \code{stim.length} The number of elements in this stimuli.
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
-#'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
-#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$error '0' if success, something else if error.
-#'    - res$msg$seen '1' if seen, '0' if not.
-#'    - res$msg$x x co-ordinate when oberver responded (degrees) for KINETIC.
-#'    - res$msg$y y co-ordinate when oberver responded (degrees) for KINETIC.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg$eyey} y co-ordinates of pupil at times eyet (degrees).
+#'    - \code{res$msg$eyex} x co-ordinates of pupil at times eyet (degrees).
+#'    - \code{res$msg$time} Response time from stimulus onset if button pressed (ms).
+#'    - \code{res$msg} Error message or a structure with the following fields.
+#'    - \code{res$error} '0' if success, something else if error.
+#'    - \code{res$msg$seen} '1' if seen, '0' if not.
+#'    - \code{res$msg$x} x co-ordinate when oberver responded (degrees) for KINETIC.
+#'    - \code{res$msg$y} y co-ordinate when oberver responded (degrees) for KINETIC.
 #'
 #' @details 
-#' `size` can take on values in the set \code{{"gi", "gii", "giii",
-#'       "giv", "gv", "gvi"}}.
-#' `color` can take on values in the set \code{{"white", "red", "blue"}}.
-#' Elements in `t` can take on values in the range \code{[0.0, 1.0E10]}.
-#' `lum` can take on values in the range \code{[0.0, 3183.099]}.
-#' `w` can take on values in the range \code{[0.0, 1.0E10]}.
-#' Elements in `x` can take on values in the range \code{[-90.0, 90.0]}.
-#' Elements in `y` can take on values in the range \code{[-90.0, 90.0]}.
-#' `type` can take on values in the set \code{{"static", "kinetic"}}.
-#' `stim.length` can take on values in the range \code{[1, 2147483647]}.
+#'
+#' \code{size} can take on values in the set \code{{"gi", "gii",
+#'       "giii", "giv", "gv", "gvi"}}.
+#'
+#' \code{color} can take on values in the set \code{{"white", "red", "blue"}}.
+#'
+#' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{lum} can take on values in the range \code{[0.0, 3183.099]}.
+#'
+#' \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{x} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' \code{type} can take on values in the set \code{{"static", "kinetic"}}.
+#'
+#' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
 #'
 #' @examples
 #' chooseOpi("O900")
@@ -244,12 +266,13 @@ opiPresent_for_O900 <- function(stim) {
 #'
 #' @usage NULL
 #'
+#' @param \code{} A list containing:
+
 #'
-#'
-#' @return a list containing:
-#'  * res List of result elements.
-#'    - res$msg The error message or additional results from the CLOSE command
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List of result elements.
+#'    - \code{res$msg} The error message or additional results from the CLOSE command
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #'
 #'

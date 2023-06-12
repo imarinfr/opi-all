@@ -30,16 +30,18 @@ if (exists(".opi_env") && !exists("ImoVifa", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param port TCP port of the OPI Monitor.
-#' @param ip IP Address of the OPI Monitor.
+#' @param \code{address} A list containing:
+#'  * \code{port} TCP port of the OPI Monitor.
+#'  * \code{ip} IP Address of the OPI Monitor.
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The success or error message.
-#'    - res$error Error code '0' if all good, something else otherwise.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The success or error message.
+#'    - \code{res$error} Error code '0' if all good, something else otherwise.
 #'
 #' @details 
-#' `port` can take on values in the range \code{[0, 65535]}.
+#'
+#' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
@@ -78,12 +80,13 @@ opiInitialise_for_ImoVifa <- function(address) {
 #'
 #' @usage NULL
 #'
+#' @param \code{} A list containing:
+
 #'
-#'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The error message or a structure with the following data.
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The error message or a structure with the following data.
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -118,42 +121,55 @@ opiQueryDevice_for_ImoVifa <- function() {
 #'
 #' @usage NULL
 #'
-#' @param eye The eye for which to apply the settings.
-#' @param fixShape Fixation target type for eye.
-#' @param fixLum Fixation target luminance for eye.
-#' @param fixCx x-coordinate of fixation target (degrees).
-#' @param fixSx diameter along major axis of ellipse (degrees).
-#' @param fixCy y-coordinate of fixation target (degrees).
-#' @param fixSy diameter along minor axis of ellipse (degrees). If not received,
-#'              then sy = sx. (Optional)
-#' @param fixRotation Angles of rotation of fixation target (degrees). Only
-#'                    useful if sx != sy specified. (Optional)
-#' @param fixCol Fixation target color for eye.
-#' @param bgLum Background luminance for eye (cd/m^2).
-#' @param tracking Whether to correct stimulus location based on eye position. (Optional)
-#' @param bgCol Background color for eye (rgb).
+#' @param \code{settings} A list containing:
+#'  * \code{eye} The eye for which to apply the settings.
+#'  * \code{fixShape} Fixation target type for eye.
+#'  * \code{fixLum} Fixation target luminance for eye.
+#'  * \code{fixCx} x-coordinate of fixation target (degrees).
+#'  * \code{fixSx} diameter along major axis of ellipse (degrees).
+#'  * \code{fixCy} y-coordinate of fixation target (degrees).
+#'  * \code{fixSy} diameter along minor axis of ellipse (degrees). If not
+#'                 received, then sy = sx. (Optional)
+#'  * \code{fixRotation} Angles of rotation of fixation target (degrees). Only
+#'                       useful if sx != sy specified. (Optional)
+#'  * \code{fixCol} Fixation target color for eye.
+#'  * \code{bgLum} Background luminance for eye (cd/m^2).
+#'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
+#'  * \code{bgCol} Background color for eye (rgb).
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The error message or a structure with the result of QUERY OPI command.
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The error message or a structure with the result of QUERY OPI command.
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #' @details 
-#' `eye` can take on values in the set \code{{"left", "right", "both"}}.
-#' `fixShape` can take on values in the set \code{{"triangle",
+#'
+#' \code{eye} can take on values in the set \code{{"left", "right", "both"}}.
+#'
+#' \code{fixShape} can take on values in the set \code{{"triangle",
 #'           "square", "polygon", "hollow_triangle", "hollow_square",
 #'           "hollow_polygon", "cross", "maltese", "circle", "annulus",
 #'           "optotype", "text", "model"}}.
-#' `fixLum` can take on values in the range \code{[0.0, 1.0E10]}.
-#' `fixCx` can take on values in the range \code{[-90.0, 90.0]}.
-#' `fixSx` can take on values in the range \code{[0.0, 1.0E10]}.
-#' `fixCy` can take on values in the range \code{[-90.0, 90.0]}.
-#' `fixSy` can take on values in the range \code{[0.0, 1.0E10]}.
-#' `fixRotation` can take on values in the range \code{[0.0, 360.0]}.
-#' Elements in `fixCol` can take on values in the range \code{[0.0, 1.0]}.
-#' `bgLum` can take on values in the range \code{[0.0, 1.0E10]}.
-#' `tracking` can take on values in the range \code{[0, 1]}.
-#' Elements in `bgCol` can take on values in the range \code{[0.0, 1.0]}.
+#'
+#' \code{fixLum} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{fixCx} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' \code{fixSx} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{fixCy} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' \code{fixSy} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{fixRotation} can take on values in the range \code{[0.0, 360.0]}.
+#'
+#' Elements in \code{fixCol} can take on values in the range \code{[0.0, 1.0]}.
+#'
+#' \code{bgLum} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{tracking} can take on values in the range \code{[0, 1]}.
+#'
+#' Elements in \code{bgCol} can take on values in the range \code{[0.0, 1.0]}.
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
@@ -189,79 +205,107 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'
 #' @usage NULL
 #'
-#' @param phase List of phases (in degrees) for generation of spatial patterns.
-#'              Only useful if type != FLAT (Optional)
-#' @param imageFilename If type == IMAGE, the filename on the local filesystem
-#'                      of the machine running JOVP of the image to use (Optional)
-#' @param shape Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE, SQUARE,
-#'              OPTOTYPE. (Optional)
-#' @param sx List of diameters along major axis of ellipse (degrees).
-#' @param lum List of stimuli luminances (cd/m^2).
-#' @param colorMax List of stimulus max colors for all shapes
-#' @param sy List of diameters along minor axis of ellipse (degrees). If not
-#'           received, then sy = sx (Optional)
-#' @param rotation List of angles of rotation of stimuli (degrees). Only useful
-#'                 if sx != sy specified. (Optional)
-#' @param texRotation List of angles of rotation of stimuli (degrees). Only
-#'                    useful if type != FLAT (Optional)
-#' @param colorMin List of stimulus min colors for non-FLAT shapes. (Optional)
-#' @param type Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
-#'             SQUARESINE, G1, G2, G3, IMAGE (Optional)
-#' @param stim.length The number of elements in this stimuli.
-#' @param defocus List of defocus values in Diopters for stimulus post-processing. (Optional)
-#' @param frequency List of frequencies (in cycles per degrees) for generation
-#'                  of spatial patterns. Only useful if type != FLAT (Optional)
-#' @param eye The eye for which to apply the settings.
-#' @param t List of stimuli presentation times (ms).
-#' @param w Time to wit for response including presentation time (ms).
-#' @param contrast List of stimulus contrasts (from 0 to 1). Only useful if type
-#'                 != FLAT. (Optional)
-#' @param optotype If shape == OPTOTYPE, the letter A to Z to use (Optional)
-#' @param x List of x co-ordinates of stimuli (degrees).
-#' @param y List of y co-ordinates of stimuli (degrees).
+#' @param \code{stim} A list containing:
+#'  * \code{phase} List of phases (in degrees) for generation of spatial
+#'                 patterns. Only useful if type != FLAT (Optional)
+#'  * \code{imageFilename} If type == IMAGE, the filename on the local
+#'                         filesystem of the machine running JOVP of the image to use (Optional)
+#'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
+#'                 SQUARE, OPTOTYPE. (Optional)
+#'  * \code{sx} List of diameters along major axis of ellipse (degrees).
+#'  * \code{lum} List of stimuli luminances (cd/m^2).
+#'  * \code{colorMax} List of stimulus max colors for all shapes
+#'  * \code{sy} List of diameters along minor axis of ellipse (degrees). If not
+#'              received, then sy = sx (Optional)
+#'  * \code{rotation} List of angles of rotation of stimuli (degrees). Only
+#'                    useful if sx != sy specified. (Optional)
+#'  * \code{texRotation} List of angles of rotation of stimuli (degrees). Only
+#'                       useful if type != FLAT (Optional)
+#'  * \code{colorMin} List of stimulus min colors for non-FLAT shapes. (Optional)
+#'  * \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
+#'                SQUARESINE, G1, G2, G3, IMAGE (Optional)
+#'  * \code{stim.length} The number of elements in this stimuli.
+#'  * \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
+#'  * \code{frequency} List of frequencies (in cycles per degrees) for
+#'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
+#'  * \code{eye} The eye for which to apply the settings.
+#'  * \code{t} List of stimuli presentation times (ms).
+#'  * \code{w} Time to wit for response including presentation time (ms).
+#'  * \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
+#'                    type != FLAT. (Optional)
+#'  * \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
+#'  * \code{x} List of x co-ordinates of stimuli (degrees).
+#'  * \code{y} List of y co-ordinates of stimuli (degrees).
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg$eyey y co-ordinates of pupil at times eyet (degrees).
-#'    - res$msg$eyex x co-ordinates of pupil at times eyet (degrees).
-#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
-#'    - res$msg$eyed Diameter of pupil at times eyet (mm).
-#'    - res$msg$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$error '0' if success, something else if error.
-#'    - res$msg$seen '1' if seen, '0' if not.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg$eyey} y co-ordinates of pupil at times eyet (degrees).
+#'    - \code{res$msg$eyex} x co-ordinates of pupil at times eyet (degrees).
+#'    - \code{res$msg$time} Response time from stimulus onset if button pressed (ms).
+#'    - \code{res$msg$eyed} Diameter of pupil at times eyet (mm).
+#'    - \code{res$msg$eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'    - \code{res$msg} Error message or a structure with the following fields.
+#'    - \code{res$error} '0' if success, something else if error.
+#'    - \code{res$msg$seen} '1' if seen, '0' if not.
 #'
 #' @details 
-#' Elements in `phase` can take on values in the range \code{[0.0, 1.0E10]}.
-#' Elements in `shape` can take on values in the set
+#'
+#' Elements in \code{phase} can take on values in the range
+#'                   \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{shape} can take on values in the set
 #'                   \code{{"triangle", "square", "polygon", "hollow_triangle",
 #'                   "hollow_square", "hollow_polygon", "cross", "maltese",
 #'                   "circle", "annulus", "optotype", "text", "model"}}.
-#' Elements in `sx` can take on values in the range \code{[0.0, 180.0]}.
-#' Elements in `lum` can take on values in the range \code{[0.0, 1.0E10]}.
-#' Elements in `colorMax` can take on values in the range \code{[0.0, 1.0]}.
-#' Elements in `sy` can take on values in the range \code{[0.0, 180.0]}.
-#' Elements in `rotation` can take on values in the range \code{[0.0, 360.0]}.
-#' Elements in `texRotation` can take on values in
-#'                         the range \code{[0.0, 360.0]}.
-#' Elements in `colorMin` can take on values in the range \code{[0.0, 1.0]}.
-#' Elements in `type` can take on values in the set
+#'
+#' Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
+#'
+#' Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{colorMax} can take on values in the
+#'                      range \code{[0.0, 1.0]}.
+#'
+#' Elements in \code{sy} can take on values in the range \code{[0.0, 180.0]}.
+#'
+#' Elements in \code{rotation} can take on values in the
+#'                      range \code{[0.0, 360.0]}.
+#'
+#' Elements in \code{texRotation} can take on values
+#'                         in the range \code{[0.0, 360.0]}.
+#'
+#' Elements in \code{colorMin} can take on values in the
+#'                      range \code{[0.0, 1.0]}.
+#'
+#' Elements in \code{type} can take on values in the set
 #'                  \code{{"flat", "checkerboard", "sine", "squaresine", "g1",
 #'                  "g2", "g3", "text", "image"}}.
-#' `stim.length` can take on values in the range \code{[1, 2147483647]}.
-#' Elements in `defocus` can take on values in the range \code{[0.0, 1.0E10]}.
-#' Elements in `frequency` can take on values in the range \code{[0.0, 300.0]}.
-#' Elements in `eye` can take on values in the set
+#'
+#' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
+#'
+#' Elements in \code{defocus} can take on values in the
+#'                     range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{frequency} can take on values in
+#'                       the range \code{[0.0, 300.0]}.
+#'
+#' Elements in \code{eye} can take on values in the set
 #'                 \code{{"left", "right", "both"}}.
-#' Elements in `t` can take on values in the range \code{[0.0, 1.0E10]}.
-#' `w` can take on values in the range \code{[0.0, 1.0E10]}.
-#' Elements in `contrast` can take on values in the range \code{[0.0, 1.0]}.
-#' Elements in `optotype` can take on values in the set
-#'                      \code{{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
-#'                      "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u",
-#'                      "v", "w", "x", "y", "z"}}.
-#' Elements in `x` can take on values in the range \code{[-90.0, 90.0]}.
-#' Elements in `y` can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{contrast} can take on values in the
+#'                      range \code{[0.0, 1.0]}.
+#'
+#' Elements in \code{optotype} can take on values in the
+#'                      set \code{{"a", "b", "c", "d", "e", "f", "g", "h", "i",
+#'                      "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
+#'                      "u", "v", "w", "x", "y", "z"}}.
+#'
+#' Elements in \code{x} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
@@ -297,12 +341,13 @@ opiPresent_for_ImoVifa <- function(stim) {
 #'
 #' @usage NULL
 #'
+#' @param \code{} A list containing:
+
 #'
-#'
-#' @return a list containing:
-#'  * res List of result elements.
-#'    - res$msg The error message or additional results from the CLOSE command
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List of result elements.
+#'    - \code{res$msg} The error message or additional results from the CLOSE command
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #'
 #'

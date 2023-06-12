@@ -99,10 +99,9 @@ public class Display extends Jovp {
     }
   
     //-------------- Machine Specific FXML below here ---
+    @Override
     @FXML
     void initialize() {
-        setupJavaFX();
-
-        labelChosen.setText("Chosen OPI: Display");
+        setupJavaFX("Display");
     }
 }

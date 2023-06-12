@@ -30,16 +30,18 @@ if (exists(".opi_env") && !exists("Compass", where = .opi_env))
 #'
 #' @usage NULL
 #'
-#' @param port TCP port of the OPI Monitor.
-#' @param ip IP Address of the OPI Monitor.
+#' @param \code{address} A list containing:
+#'  * \code{port} TCP port of the OPI Monitor.
+#'  * \code{ip} IP Address of the OPI Monitor.
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The success or error message.
-#'    - res$error Error code '0' if all good, something else otherwise.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The success or error message.
+#'    - \code{res$error} Error code '0' if all good, something else otherwise.
 #'
 #' @details 
-#' `port` can take on values in the range \code{[0, 65535]}.
+#'
+#' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -78,12 +80,13 @@ opiInitialise_for_Compass <- function(address) {
 #'
 #' @usage NULL
 #'
+#' @param \code{} A list containing:
+
 #'
-#'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The error message or a structure with the following data.
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The error message or a structure with the following data.
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -118,21 +121,25 @@ opiQueryDevice_for_Compass <- function() {
 #'
 #' @usage NULL
 #'
-#' @param fixShape Fixation target type for eye.
-#' @param fixCx x-coordinate of fixation target (degrees): Only valid values are
-#'              -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3
-#'              for fixation type 'square'.
-#' @param tracking Whether to correct stimulus location based on eye position.
+#' @param \code{settings} A list containing:
+#'  * \code{fixShape} Fixation target type for eye.
+#'  * \code{fixCx} x-coordinate of fixation target (degrees): Only valid values
+#'                 are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3,
+#'                 0, 3 for fixation type 'square'.
+#'  * \code{tracking} Whether to correct stimulus location based on eye position.
 #'
-#' @return a list containing:
-#'  * res List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$msg The error message or a structure with the result of QUERY OPI command.
-#'    - res$error '0' if success, something else if error.
+#' @return A list containing:
+#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$msg} The error message or a structure with the result of QUERY OPI command.
+#'    - \code{res$error} '0' if success, something else if error.
 #'
 #' @details 
-#' `fixShape` can take on values in the set \code{{"spot", "square"}}.
-#' `fixCx` can take on values in the range \code{[-20.0, 20.0]}.
-#' `tracking` can take on values in the range \code{[0.0, 1.0]}.
+#'
+#' \code{fixShape} can take on values in the set \code{{"spot", "square"}}.
+#'
+#' \code{fixCx} can take on values in the range \code{[-20.0, 20.0]}.
+#'
+#' \code{tracking} can take on values in the range \code{[0.0, 1.0]}.
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -166,36 +173,43 @@ opiSetup_for_Compass <- function(settings) {
 #'
 #' @usage NULL
 #'
-#' @param t Presentation time (ms).
-#' @param lum Stimuli luminance (cd/m^2).
-#' @param w Response window (ms).
-#' @param x x co-ordinates of stimulus (degrees).
-#' @param y y co-ordinates of stimulus (degrees).
-#' @param stim.length The number of elements in this stimuli.
+#' @param \code{stim} A list containing:
+#'  * \code{t} Presentation time (ms).
+#'  * \code{lum} Stimuli luminance (cd/m^2).
+#'  * \code{w} Response window (ms).
+#'  * \code{x} x co-ordinates of stimulus (degrees).
+#'  * \code{y} y co-ordinates of stimulus (degrees).
+#'  * \code{stim.length} The number of elements in this stimuli.
 #'
-#' @return a list containing:
-#'  * res JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'    - res$eyet Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'    - res$eyex x co-ordinates of pupil at times eyet (pixels).
-#'    - res$eyey y co-ordinates of pupil at times eyet (pixels).
-#'    - res$num_track_events Number of tracking events that occurred during presentation.
-#'    - res$msg$time Response time from stimulus onset if button pressed (ms).
-#'    - res$eyed Diameter of pupil at times eyet (mm).
-#'    - res$time_resp Time since 'epoch' when stimulus response is received, or
-#'                    response window expired (ms).
-#'    - res$msg Error message or a structure with the following fields.
-#'    - res$error '0' if success, something else if error.
-#'    - res$msg$seen '1' if seen, '0' if not.
-#'    - res$num_motor_fails Number of times motor could not follow fixation movement during presentation.
-#'    - res$time_rec Time since 'epoch' when command was received at Compass or Maia (ms).
+#' @return A list containing:
+#'  * \code{res} JSON Object with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'    - \code{res$eyex} x co-ordinates of pupil at times eyet (pixels).
+#'    - \code{res$eyey} y co-ordinates of pupil at times eyet (pixels).
+#'    - \code{res$num_track_events} Number of tracking events that occurred during presentation.
+#'    - \code{res$msg$time} Response time from stimulus onset if button pressed (ms).
+#'    - \code{res$eyed} Diameter of pupil at times eyet (mm).
+#'    - \code{res$time_resp} Time since 'epoch' when stimulus response is
+#'                           received, or response window expired (ms).
+#'    - \code{res$msg} Error message or a structure with the following fields.
+#'    - \code{res$error} '0' if success, something else if error.
+#'    - \code{res$msg$seen} '1' if seen, '0' if not.
+#'    - \code{res$num_motor_fails} Number of times motor could not follow fixation movement during presentation.
+#'    - \code{res$time_rec} Time since 'epoch' when command was received at Compass or Maia (ms).
 #'
 #' @details 
-#' `t` can take on values in the range \code{[200.0, 200.0]}.
-#' `lum` can take on values in the range \code{[0.0, 3183.099]}.
-#' `w` can take on values in the range \code{[200.0, 2680.0]}.
-#' `x` can take on values in the range \code{[-30.0, 30.0]}.
-#' `y` can take on values in the range \code{[-30.0, 30.0]}.
-#' `stim.length` can take on values in the range \code{[1, 2147483647]}.
+#'
+#' \code{t} can take on values in the range \code{[200.0, 200.0]}.
+#'
+#' \code{lum} can take on values in the range \code{[0.0, 3183.099]}.
+#'
+#' \code{w} can take on values in the range \code{[200.0, 2680.0]}.
+#'
+#' \code{x} can take on values in the range \code{[-30.0, 30.0]}.
+#'
+#' \code{y} can take on values in the range \code{[-30.0, 30.0]}.
+#'
+#' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
 #'
 #' @examples
 #' chooseOpi("Compass")
@@ -229,15 +243,16 @@ opiPresent_for_Compass <- function(stim) {
 #'
 #' @usage NULL
 #'
+#' @param \code{} A list containing:
+
 #'
-#'
-#' @return a list containing:
-#'  * res List of result elements.
-#'    - res$msg The error message or additional results from the CLOSE command
-#'    - res$error '0' if success, something else if error.
-#'    - res$time The time stamp for fixation data
-#'    - res$x The time stamp for fixation data
-#'    - res$y The time stamp for fixation data
+#' @return A list containing:
+#'  * \code{res} List of result elements.
+#'    - \code{res$msg} The error message or additional results from the CLOSE command
+#'    - \code{res$error} '0' if success, something else if error.
+#'    - \code{res$time} The time stamp for fixation data
+#'    - \code{res$x} The time stamp for fixation data
+#'    - \code{res$y} The time stamp for fixation data
 #'
 #'
 #'

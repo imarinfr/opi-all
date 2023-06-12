@@ -2,28 +2,15 @@ package org.lei.opi.core;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
-import org.lei.opi.core.definitions.VFCanvas;
 
 import es.optocom.jovp.definitions.ViewMode;
-
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.image.ImageView;
-import javafx.scene.text.Font;
-import javafx.scene.Node;
 
 /**
  * JOVP client - will send messages to JOVP server...
@@ -56,13 +43,12 @@ public class Jovp extends OpiMachine {
     public Jovp(javafx.scene.Scene parentScene) throws InstantiationException {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
-        this.parentScene = parentScene;
 
-        this.fxmlFileName = String.format("%s_%s.fxml",
-          settings.viewMode.toLowerCase().equals(ViewMode.STEREO.toString().toLowerCase()) ? "stereo" : "mono",
-          settings.tracking ? "yes_tracking" : "no_tracking"
+        setVFCanvas(
+          settings.viewMode.toLowerCase().equals(ViewMode.MONO.toString().toLowerCase()),
+          settings.tracking
         );
-       
+
         if (parentScene != null) {
             if (!this.connect(settings.ip, settings.port)) {
               throw new InstantiationException(String.format("Cannot connect to %s:%s", settings.ip, settings.port));
@@ -226,170 +212,7 @@ public class Jovp extends OpiMachine {
         .append("  \"gammaFile\": " + settings.gammaFile)
         .append("\n}").toString();
     }
-   
-// ----------- Java FX stuff common to all subclasses
-// Assumes that Scene will be one of
-//    mono_no_tracking.fxml
-//    mono_yes_tracking.fxml
-//    stereo_no_tracking.fxml
-//    stereo_yes_tracking.fxml
 
     @FXML
-    protected Button btnClose;
-
-    @FXML
-    protected Canvas canvasVF;            // mono
-    protected VFCanvas canvasVFModel;
-
-    @FXML
-    protected Canvas canvasVFLeft;        // stereo
-    protected VFCanvas canvasVFModelLeft;
-
-    @FXML
-    protected Canvas canvasVFRight;
-    protected VFCanvas canvasVFModelRight;
-
-    @FXML
-    protected ImageView imageView;  // if tracking on, mono
-
-    @FXML
-    protected ImageView imageViewLeft;  // if tracking on
-
-    @FXML
-    protected ImageView imageViewRight;  // if tracking on
-
-    @FXML
-    protected Label labelChosen;
-
-    @FXML
-    protected TextArea textAreaCommands;
-
-    protected record CanvasTriple(double x, double y, String label) { ; };
-
-    /** Set of 4 functions indexed by "mono", "left", "right", "both" to 
-    * to take a (x, y, label) and update the relevant canvas */
-    protected HashMap<String, Consumer<CanvasTriple>> updateCanvas;
-   
-    /**
-     * This should be called from the FXML initialize() method
-     * in the subclass to set up updateCanvas and any other
-     * things common to all JOVP GUIs.
-     * TODO - add some tracking stuff
-     */
-    protected void setupJavaFX() {
-        assert btnClose != null : String.format("fx:id=\"btnClose\" was not injected: check your FXML file %s", fxmlFileName);
-        assert textAreaCommands != null : String.format("fx:id=\"textAreaCommands\" was not injected: check your FXML file %s", fxmlFileName);
-        assert labelChosen != null : String.format("fx:id=\"labelChosen\" was not injected: check your FXML file %s", fxmlFileName);
-
-        textAreaCommands.setFont(new Font("Arial", 10));
-
-        updateCanvas = new HashMap<String, Consumer<CanvasTriple>>();
-        updateCanvas.put("mono", 
-             (ct) -> {
-                 canvasVFModel.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                 VFCanvas.draw(canvasVF, canvasVFModel);
-             });
-        updateCanvas.put("left", 
-             (ct) -> {
-                 canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                 VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
-             });
-        updateCanvas.put("right", 
-             (ct) -> {
-                canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                 VFCanvas.draw(canvasVFRight, canvasVFModelRight);
-             });
-        updateCanvas.put("both", 
-             (ct) -> {
-                 canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                 VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
-                 canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
-                 VFCanvas.draw(canvasVFRight, canvasVFModelRight);
-             });
-
-             // put up a blank canvas
-        if (canvasVF != null) {
-            canvasVFModel = new VFCanvas();
-            updateCanvas.get("mono").accept(new CanvasTriple(0, 0, ""));
-        } else {
-            canvasVFModelLeft = new VFCanvas();
-            canvasVFModelRight = new VFCanvas();
-            updateCanvas.get("both").accept(new CanvasTriple(0, 0, ""));
-        }
-     }
-            
-    /**
-     * Update both the textArea with the present details
-     * and the canvas with stimulus value and location.
-     *
-     * @param args The @Param pairs. Should contain keys x, y, lum, eye.
-     */
-    protected void updateGUIOnPresent(HashMap<String, Object> args) {
-        if (this.parentScene == null)
-            return;
-
-        Platform.runLater(()-> {
-            textAreaCommands.appendText("Present:\n");
-            for (String k : args.keySet())
-                textAreaCommands.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
-        });
-
-        Platform.runLater(() -> {
-            try {
-                ArrayList<Double> xList = (ArrayList<Double>)args.get("x");
-                ArrayList<Double> yList = (ArrayList<Double>)args.get("y");
-                ArrayList<Double> lList = (ArrayList<Double>)args.get("lum");
-                ArrayList<String> eList = (ArrayList<String>)args.get("eye");
-
-                for (int i = 0 ; i < xList.size(); i++) {
-                    CanvasTriple ct = new CanvasTriple(xList.get(i), yList.get(i), Long.toString(Math.round(lList.get(i))));
-                    if (getSettings().viewMode.toLowerCase().equals(ViewMode.STEREO.toString().toLowerCase()))
-                        updateCanvas.get(eList.get(i).toLowerCase()).accept(ct);
-                    else
-                        updateCanvas.get("mono").accept(ct);
-                }
-            } catch (Exception e) { 
-                System.out.println("Display present() canvas troubles");
-                e.printStackTrace();
-            }
-        });
-    }
-
-    @FXML
-    void actionBtnClose(ActionEvent event) {
-        returnToParentScene((Node)event.getSource());
-    }
+    void initialize() { ; }
 }  
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   
-   

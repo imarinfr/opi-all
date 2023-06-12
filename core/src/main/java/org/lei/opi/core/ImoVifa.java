@@ -100,11 +100,8 @@ public class ImoVifa extends Jovp {
         return super.close();
     }
   
-    //-------------- FXML below here ---
     @FXML
     void initialize() {
-        setupJavaFX();
-
-        labelChosen.setText("Chosen OPI: ImoVifa");
+        setupJavaFX("ImoVifa");
     }
 }

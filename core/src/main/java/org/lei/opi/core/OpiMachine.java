@@ -21,12 +21,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.function.Consumer;
 
 import org.apache.commons.io.IOUtils;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
+import org.lei.opi.core.definitions.VFCanvas;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -37,6 +39,14 @@ import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.stage.Stage;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.image.ImageView;
+import javafx.scene.text.Font;
 
 /**
  * The OPI machine standard for communication with perimeters.
@@ -117,6 +127,11 @@ public abstract class OpiMachine {
     /** Set by constructor depending on viewMode and tracking settings. 
      *  Do not include full pathname, just simple name with .fxml extension*/
     public String fxmlFileName;
+
+        // Set by call to setVFCanvas. Controls number of eyes shown in GUI
+    public boolean viewModeIsMono;
+        // Set by call to setVFCanvas. Controls whether tracking images shown in GUI
+    public boolean trackingOn;
 
     /** Connection to the real machine */
     protected Socket socket;
@@ -525,7 +540,7 @@ public abstract class OpiMachine {
   
     /**
      * opiInitialise: initialize OPI.
-     * All machines will need "ip" and "port" (these are referenced in rgen, so perhaps dont change them)
+     * All machines will need "ip" and "port" (these are referenced in rgen, so perhaps don't change them)
      * as the address of the Monitor to which the R client will connect.
      * 
      * @param args A map of name:value pairs for Params
@@ -618,4 +633,149 @@ public abstract class OpiMachine {
             System.out.println(k + opiMethods.get(k).parameters.stream().map((Parameter o)->o.name()).collect(Collectors.joining(", ")));
     }
 
+// ----------- Java FX stuff common to all subclasses
+// Assumes that Scene will be one of
+//    mono_no_tracking.fxml
+//    mono_yes_tracking.fxml
+//    stereo_no_tracking.fxml
+//    stereo_yes_tracking.fxml
+
+    @FXML
+    protected Button btnClose;
+
+    @FXML
+    protected Canvas canvasVF;            // mono
+    protected VFCanvas canvasVFModel;
+
+    @FXML
+    protected Canvas canvasVFLeft;        // stereo
+    protected VFCanvas canvasVFModelLeft;
+
+    @FXML
+    protected Canvas canvasVFRight;
+    protected VFCanvas canvasVFModelRight;
+
+    @FXML
+    protected ImageView imageView;  // if tracking on, mono
+
+    @FXML
+    protected ImageView imageViewLeft;  // if tracking on stereo
+
+    @FXML
+    protected ImageView imageViewRight;  // if tracking on stereo
+
+    @FXML
+    protected Label labelChosen;
+
+    @FXML
+    protected TextArea textAreaCommands;
+
+    protected record CanvasTriple(double x, double y, String label) { ; };
+
+    /** Set of 4 functions indexed by "mono", "left", "right", "both" to 
+    * to take a (x, y, label) and update the relevant canvas */
+    protected HashMap<String, Consumer<CanvasTriple>> updateCanvas;
+   
+    protected void setVFCanvas(boolean mono, boolean tracking) {
+        this.viewModeIsMono = mono;
+        this.trackingOn = tracking;
+        this.fxmlFileName = String.format("%s_%s.fxml", 
+            viewModeIsMono ? "mono" : "stereo",
+            tracking ? "yes_tracking" : "no_tracking");
+    }
+
+    /**
+     * This should be called from the FXML initialize() method
+     * in the subclass to set up updateCanvas and any other
+     * things common to all JOVP GUIs.
+     * TODO - add some tracking stuff
+     */
+    protected void setupJavaFX(String chosenLabel) {
+        assert btnClose != null : String.format("fx:id=\"btnClose\" was not injected: check your FXML file %s", fxmlFileName);
+        assert textAreaCommands != null : String.format("fx:id=\"textAreaCommands\" was not injected: check your FXML file %s", fxmlFileName);
+        assert labelChosen != null : String.format("fx:id=\"labelChosen\" was not injected: check your FXML file %s", fxmlFileName);
+
+        labelChosen.setText(String.format("Chosen OPI: %s", chosenLabel));
+
+        textAreaCommands.setFont(new Font("Arial", 10));
+
+        updateCanvas = new HashMap<String, Consumer<CanvasTriple>>();
+        updateCanvas.put("mono", 
+             (ct) -> {
+                 canvasVFModel.updatePoint(ct.x(), ct.y(), ct.label().toString());
+                 VFCanvas.draw(canvasVF, canvasVFModel);
+             });
+        updateCanvas.put("left", 
+             (ct) -> {
+                 canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
+                 VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
+             });
+        updateCanvas.put("right", 
+             (ct) -> {
+                canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
+                 VFCanvas.draw(canvasVFRight, canvasVFModelRight);
+             });
+        updateCanvas.put("both", 
+             (ct) -> {
+                 canvasVFModelLeft.updatePoint(ct.x(), ct.y(), ct.label().toString());
+                 VFCanvas.draw(canvasVFLeft, canvasVFModelLeft);
+                 canvasVFModelRight.updatePoint(ct.x(), ct.y(), ct.label().toString());
+                 VFCanvas.draw(canvasVFRight, canvasVFModelRight);
+             });
+
+             // put up a blank canvas
+        if (canvasVF != null) {
+            canvasVFModel = new VFCanvas();
+            updateCanvas.get("mono").accept(new CanvasTriple(0, 0, ""));
+        } else {
+            canvasVFModelLeft = new VFCanvas();
+            canvasVFModelRight = new VFCanvas();
+            updateCanvas.get("both").accept(new CanvasTriple(0, 0, ""));
+        }
+     }
+            
+    /**
+     * Update both the textArea with the present details
+     * and the canvas with stimulus value and location.
+     *
+     * @param args The @Param pairs. Should contain keys x, y, lum, eye.
+     */
+    protected void updateGUIOnPresent(HashMap<String, Object> args) {
+        if (this.parentScene == null)
+            return;
+
+        Platform.runLater(()-> {
+            textAreaCommands.appendText("Present:\n");
+            for (String k : args.keySet())
+                textAreaCommands.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
+        });
+
+        Platform.runLater(() -> {
+            try {
+                ArrayList<Double> xList = (ArrayList<Double>)args.get("x");
+                ArrayList<Double> yList = (ArrayList<Double>)args.get("y");
+                ArrayList<Double> lList = (ArrayList<Double>)args.get("lum");
+                ArrayList<String> eList = (ArrayList<String>)args.get("eye");
+
+                for (int i = 0 ; i < xList.size(); i++) {
+                    CanvasTriple ct = new CanvasTriple(xList.get(i), yList.get(i), Long.toString(Math.round(lList.get(i))));
+                    if (this.viewModeIsMono)
+                        updateCanvas.get("mono").accept(ct);
+                    else
+                        updateCanvas.get(eList.get(i).toLowerCase()).accept(ct);
+                }
+            } catch (Exception e) { 
+                System.out.println("Display present() canvas troubles");
+                e.printStackTrace();
+            }
+        });
+    }
+
+    @FXML
+    void actionBtnClose(ActionEvent event) {
+        returnToParentScene((Node)event.getSource());
+    }
+
+    @FXML
+    abstract void initialize();
 }

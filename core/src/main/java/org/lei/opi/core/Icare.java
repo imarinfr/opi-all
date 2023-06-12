@@ -10,6 +10,8 @@ import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
+import javafx.application.Platform;
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 public class Icare extends OpiMachine {
@@ -68,7 +70,8 @@ public class Icare extends OpiMachine {
     public Icare(Scene parentScene) {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
-        this.parentScene = parentScene;
+
+        setVFCanvas(true, trackingOn);
 
         if (parentScene != null)
           this.connect(settings.ip, settings.port);
@@ -84,6 +87,10 @@ public class Icare extends OpiMachine {
      * @since 0.0.1
      */
     public Packet initialize(HashMap<String, Object> args) {
+      if (parentScene != null)
+        Platform.runLater(()-> {
+          textAreaCommands.appendText("OPI Initialized");
+        });
       return new Packet(String.format(CONNECTED_TO_HOST, settings.ip, settings.port));
     };
   
@@ -95,7 +102,13 @@ public class Icare extends OpiMachine {
      * @since 0.0.1
      */
     public Packet query() {
-      return new Packet(queryResults());
+      String results = queryResults();
+
+      if (parentScene != null)
+        Platform.runLater(()-> {
+          textAreaCommands.appendText(results);
+        });
+      return new Packet(results);
     };
   
     /**
@@ -111,44 +124,47 @@ public class Icare extends OpiMachine {
     @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees): Only valid values are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3, 0, 3 for fixation type 'square'.", min = -20, max = 20, defaultValue = "0")
     @Parameter(name = "tracking", className = Double.class, desc = "Whether to correct stimulus location based on eye position.", min = 0, max = 1, defaultValue = "0")
     public Packet setup(HashMap<String, Object> args) {
-      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
-      try {
-        int fixCx = (int) ((double) args.get("fixCx"));
-        int fixShape = -1;
-        switch(Fixation.valueOf(((String) args.get("fixShape")).toUpperCase())) {
-          case SPOT -> {
-            if (fixCx != 0 && Math.abs(fixCx) != 3 && Math.abs(fixCx) != 6 && Math.abs(fixCx) != 20)
-              return Packet.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
-            fixShape = 0;
-          }
-          case SQUARE -> {
-            if (fixCx != 0 && Math.abs(fixCx) != 3)
-              return Packet.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
-            fixShape = 1;
-          }
-        };
-        int tracking = (int) ((double) args.get("tracking"));
-        if (tracking != 0 && tracking != 1) return Packet.error(INVALID_TRACKING_SETTING + tracking);
-        String jsonStr = null;
+        if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
+
         try {
-          this.send(OPI_OPEN);
-          jsonStr = this.receive().toJson(); // parseOpiOpen TODO
-          if (jsonStr.equals(BAD_OPEN)) return Packet.error(OPI_OPEN_FAILED);
-          this.send(OPI_SET_FIXATION + fixCx + " 0 " + fixShape);
-          /* TODO 
-          if (this.receive().isError())
-            return Packet.error(OPI_SET_FIXATION_FAILED);
-          this.send(OPI_SET_TRACKING + tracking);
-          if (this.receive().isError()) // split(" ")[0].equals("0"))
-            return Packet.error(OPI_SET_TRACKING_FAILED);
-            */
-        } catch (IOException e) {
+            int fixCx = (int) ((double) args.get("fixCx"));
+
+            int fixShape = -1;
+            switch(Fixation.valueOf(((String) args.get("fixShape")).toUpperCase())) {
+                case SPOT -> {
+                  if (fixCx != 0 && Math.abs(fixCx) != 3 && Math.abs(fixCx) != 6 && Math.abs(fixCx) != 20)
+                    return Packet.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
+                  fixShape = 0;
+                }
+                case SQUARE -> {
+                  if (fixCx != 0 && Math.abs(fixCx) != 3)
+                    return Packet.error(String.format(INVALID_FIXATION_SETTING, fixCx, Fixation.SPOT));
+                  fixShape = 1;
+                }
+            };
+
+            int tracking = (int) ((double) args.get("tracking"));
+            if (tracking != 0 && tracking != 1) return Packet.error(INVALID_TRACKING_SETTING + tracking);
+            String jsonStr = null;
+            try {
+              this.send(OPI_OPEN);
+              jsonStr = this.receive().toJson(); // parseOpiOpen TODO
+              if (jsonStr.equals(BAD_OPEN)) return Packet.error(OPI_OPEN_FAILED);
+              this.send(OPI_SET_FIXATION + fixCx + " 0 " + fixShape);
+              /* TODO 
+              if (this.receive().isError())
+                return Packet.error(OPI_SET_FIXATION_FAILED);
+              this.send(OPI_SET_TRACKING + tracking);
+              if (this.receive().isError()) // split(" ")[0].equals("0"))
+                return Packet.error(OPI_SET_TRACKING_FAILED);
+                */
+            } catch (IOException e) {
+              return Packet.error(OPI_SETUP_FAILED, e);
+            }
+            return new Packet(jsonStr);
+        } catch (ClassCastException | IllegalArgumentException e) {
           return Packet.error(OPI_SETUP_FAILED, e);
         }
-        return new Packet(jsonStr);
-      } catch (ClassCastException | IllegalArgumentException e) {
-        return Packet.error(OPI_SETUP_FAILED, e);
-      }
     }
   
     /**
@@ -347,5 +363,8 @@ public class Icare extends OpiMachine {
   
         return(sb);
     }
-   
+
+ //-------------- Machine Specific FXML below here ---
+    @FXML
+    void initialize() { ; }
 }
