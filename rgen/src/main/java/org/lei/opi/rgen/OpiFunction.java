@@ -171,15 +171,15 @@ public class OpiFunction {
 
       // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
-        String prefix =  String.format("#' @param %s ",p.name());
+        String prefix =  String.format("#'  * \\code{%s} ",p.name());
         return prefix + wrapR(p.desc() + (p.optional() ? " (Optional)" : ""), prefix.length(), false);
     };
 
       // generate roxygen2 string for return value r
     private static Function<ReturnMsg, String> prettyReturn = (ReturnMsg r) -> {
         String prefix = r.name().contains(".") ?
-            String.format("#'    - %s ",r.name().replaceAll("\\.", "\\$")) :
-            String.format("#'  * %s ",r.name());
+            String.format("#'    - \\code{%s} ",r.name().replaceAll("\\.", "\\$")) :
+            String.format("#'  * \\code{%s} ",r.name());
         return prefix + wrapR(r.desc(), prefix.length(), false);
     };
 
@@ -190,10 +190,10 @@ public class OpiFunction {
             String str = "";
             int prefixLen = 0;
             if (p.isList() || p.isListList()) {
-                str = String.format("#' Elements in `%s` can take on values in ", p.name());
+                str = String.format("#' Elements in \\code{%s} can take on values in ", p.name());
                 prefixLen = 16 + p.name().length();
             } else {
-                str = String.format("#' `%s` can take on values in ", p.name());
+                str = String.format("#' \\code{%s} can take on values in ", p.name());
                 prefixLen = 5 + p.name().length();
             }
 
@@ -209,7 +209,7 @@ public class OpiFunction {
             }
 
             if (str.length() > 0)
-                all += "\n" + wrapR(str, prefixLen, false);
+                all += "\n#'\n" + wrapR(str, prefixLen, false);
         }
 
         if (all.length() > 0)
@@ -225,10 +225,11 @@ public class OpiFunction {
     *   - Indicate if a parameter is optional
      */
     private String makeDocumentation() {
-        String params = methodData.parameters.values().stream()
+        String params = "#' @param \\code{" + this.opiInputFieldName + "} A list containing:\n" + 
+            methodData.parameters.values().stream()
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
-        String rets = "#' @return a list containing:\n" + 
+        String rets = "#' @return A list containing:\n" + 
             methodData.returnMsgs.values().stream()
             .map(prettyReturn)
             .collect(Collectors.joining("\n"));
