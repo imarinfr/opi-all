@@ -106,7 +106,6 @@ public abstract class Icare extends OpiMachine {
     @ReturnMsg(name = "res.image", desc = "The captured IR image at initialisation (base64 encoded).")
     public Packet initialize(HashMap<String, Object> args) {
         try {
-            System.out.println("outgoing " + this.outgoing);
             this.send(OPI_OPEN);
 
                 // Need to temporarily read this.incoming with a DataInputStream (seems very risky!)
@@ -124,7 +123,7 @@ public abstract class Icare extends OpiMachine {
             int imageSize = n - 4 * 4;
             if (imageSize > 0) {
                 this.image = new byte[imageSize];
-                this.incoming.read(this.image, 0, imageSize);
+                this.incoming.readFully(this.image, 0, imageSize);
             }
         } catch (IOException e) {
             return Packet.error(OPI_OPEN_FAILED + e);
@@ -219,7 +218,7 @@ public abstract class Icare extends OpiMachine {
             String result = this.readline();
             if (!result.equals("0"))
                 return Packet.error(OPI_SET_TRACKING_FAILED + result);
-            this.settings.tracking = true;
+            this.settings.tracking = tracking  == 1 ? true : false;
         } catch (IOException e) {
             return Packet.error(OPI_SET_TRACKING_FAILED, e);
         }
@@ -258,16 +257,19 @@ public abstract class Icare extends OpiMachine {
         if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
             int level = (int) Math.round(-10 * Math.log10((double) args.get("lum") / (10000 / Math.PI)));
-            StringBuilder opiMessage = new StringBuilder(OPI_PRESENT_STATIC).append(" ")
-                .append((int) ((double) args.get("x"))).append(" ")
-                .append((int) ((double) args.get("y"))).append(" ")
-                .append(level).append(" 3 ")
-                .append((int) ((double) args.get("t"))).append(" ")
-                .append((int) ((double) args.get("w")));
+            String opiMessage = String.format("%s%s %s %s %s %s %s\n",
+                OPI_PRESENT_STATIC,
+                (int)Math.round((double) args.get("x")),
+                (int)Math.round((double) args.get("y")),
+                level,
+                3,
+                (int)Math.round((double) args.get("t")),
+                (int)Math.round((double) args.get("w")));
                 try {
-                      this.send(opiMessage.toString());
+                      this.send(opiMessage);
+                      String res = this.readline(); 
                       updateGUIOnPresent(args);
-                      return new Packet(parseResult(this.readline())); 
+                      return new Packet(parseResult(res));
                 } catch (IOException e) {
                       return Packet.error(OPI_PRESENT_FAILED, e);
                 }
