@@ -159,6 +159,7 @@ public abstract class Icare extends OpiMachine {
 
       if (parentScene != null)
         Platform.runLater(()-> {
+          textAreaCommands.appendText("\nOPI Query:\n");
           textAreaCommands.appendText(results);
         });
       return new Packet(results);
@@ -203,6 +204,11 @@ public abstract class Icare extends OpiMachine {
         } catch (IOException e) {
             return Packet.error(OPI_SET_FIXATION_FAILED, e);
         }
+        if (parentScene != null) 
+        Platform.runLater(()-> {
+            textAreaCommands.appendText("OPI Setup\n");
+            textAreaCommands.appendText("\tSet Fixation to " + args.get("fixShape") + " at " + fixCx + "\n");
+        });
 
             // And then the tracking
         int tracking = (int) ((double) args.get("tracking")); /// TODO might want to alter the canvas
@@ -217,6 +223,10 @@ public abstract class Icare extends OpiMachine {
         } catch (IOException e) {
             return Packet.error(OPI_SET_TRACKING_FAILED, e);
         }
+        if (parentScene != null) 
+        Platform.runLater(()-> {
+            textAreaCommands.appendText("\tTracking " + (this.settings.tracking ? "On" : "Off") + "\n");
+        });
 
         return new Packet(queryResults());
     }
@@ -292,17 +302,22 @@ public abstract class Icare extends OpiMachine {
                 float x = this.incoming.readFloat();
                 float y = this.incoming.readFloat();
            
-                sb.append(",{");
-                sb.append(String.format("\"time\" : %s,\n", t));
-                sb.append(String.format("\"posx\" : %s,\n", x));
-                sb.append(String.format("\"posy\" : %s\n", y));
+                sb.append("\n,{");
+                sb.append(String.format("\"time\" : %s,", t));
+                sb.append(String.format("\"posx\" : %s,", x));
+                sb.append(String.format("\"posy\" : %s", y));
                 sb.append("}");
             }
+            sb.delete(0, 2); // remove leading "\n,"
            
             this.closeSocket();
 
-                // remove leading ","
-            return new Packet(true, "[" + sb.delete(0, 1).toString() + "]");
+            if (parentScene != null) 
+            Platform.runLater(()-> {
+                textAreaCommands.appendText("\nOPI Closed\n");
+                textAreaCommands.appendText(sb.toString());
+            });
+            return new Packet(true, "[" + sb.toString() + "]");
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
             return Packet.error(COULD_NOT_DISCONNECT, e);
         }
