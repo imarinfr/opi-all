@@ -36,8 +36,13 @@ if (exists(".opi_env") && !exists("Maia", where = .opi_env))
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
+#'    - \code{res$prly} The y-coordinate of the PRL measured initialisation (pixels).
+#'    - \code{res$onhx} The x-coordinate of the ONH measured initialisation (pixels).
+#'    - \code{res$prlx} The x-coordinate of the PRL measured initialisation (pixels).
 #'    - \code{res$msg} The success or error message.
 #'    - \code{res$error} Error code '0' if all good, something else otherwise.
+#'    - \code{res$onhy} The y-coordinate of the ONH measured initialisation (pixels).
+#'    - \code{res$image} The captured IR image at initialisation (base64 encoded).
 #'
 #' @details 
 #'

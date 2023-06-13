@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 /*
@@ -10,5 +11,10 @@ public class PhoneHMD extends Jovp {
     
     public PhoneHMD(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
+    }
+
+    @FXML
+    void initialize() {
+        setupJavaFX("PhoneHMD");
     }
 }

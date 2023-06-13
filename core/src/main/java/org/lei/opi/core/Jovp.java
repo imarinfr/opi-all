@@ -10,14 +10,13 @@ import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
 import es.optocom.jovp.definitions.ViewMode;
-import javafx.fxml.FXML;
 
 /**
  * JOVP client - will send messages to JOVP server...
  *
  * @since 0.0.1
  */
-public class Jovp extends OpiMachine {
+public abstract class Jovp extends OpiMachine {
 
     public static class Settings extends OpiMachine.Settings {
         public int screen;
@@ -212,7 +211,4 @@ public class Jovp extends OpiMachine {
         .append("  \"gammaFile\": " + settings.gammaFile)
         .append("\n}").toString();
     }
-
-    @FXML
-    void initialize() { ; }
 }  

@@ -21,7 +21,6 @@ public class Compass extends Icare {
         super(parentScene); 
     }
 
-    @Override
     @FXML
     void initialize() {
         setupJavaFX("Compass");

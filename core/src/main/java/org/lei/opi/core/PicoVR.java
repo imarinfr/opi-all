@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 /*
@@ -12,4 +13,10 @@ public class PicoVR extends Jovp {
     public PicoVR(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
     }
+
+    @FXML
+    void initialize() {
+        setupJavaFX("PicoVR");
+    }
+
 }

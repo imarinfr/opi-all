@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -23,7 +24,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.function.Consumer;
 
-import org.apache.commons.io.IOUtils;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
@@ -135,7 +135,7 @@ public abstract class OpiMachine {
 
     /** Connection to the real machine */
     protected Socket socket;
-    protected BufferedReader incoming;
+    protected DataInputStream incoming;
     protected PrintWriter outgoing;
   
     /** 
@@ -309,7 +309,7 @@ public abstract class OpiMachine {
     public boolean connect(String ip, int port) {
         try {
             this.socket = new Socket(ip, port);
-            this.incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF8"));
+            this.incoming = new DataInputStream(socket.getInputStream());
             this.outgoing = new PrintWriter(socket.getOutputStream());
         } catch (IOException e) {
             System.out.println(e.getStackTrace());
@@ -333,14 +333,45 @@ public abstract class OpiMachine {
     }
      
     /**
-    * Receive Packet as a \n terminated JSON string from server
+    * Receive Packet as a UTF-8 \n terminated JSON string from server
     * @return The message received in a Packet
     * @throws IOException If socket cannot be accessed
     * @since 0.2.0
     */
     Packet receive() throws IOException {
-        String rec = incoming.readLine();
-        return OpiListener.gson.fromJson(rec, Packet.class);
+        String str = this.readline();
+        return OpiListener.gson.fromJson(str, Packet.class);
+    }
+
+    /**
+    * Receive a UTF-8 \n terminated string from server
+    * @return The message received in a Packet
+    * @throws IOException If socket cannot be accessed
+    * @since 3.0.0
+    */
+    String readline() throws IOException {
+        byte bs[] = new byte[4];
+        StringBuffer str = new StringBuffer(128);
+        bs[0] = incoming.readByte();
+        while (bs[0] != '\n') {
+            if (bs[0] < 128)
+                str.append((char)bs[0]);
+            else if (bs[0] < 2048) {
+                bs[1] = incoming.readByte();
+                str.append(new String(Arrays.copyOfRange(bs, 0, 2), "UTF-8"));
+            } else if (bs[0] < 65535) {
+                bs[1] = incoming.readByte();
+                bs[2] = incoming.readByte();
+                str.append(new String(Arrays.copyOfRange(bs, 0, 3), "UTF-8"));
+            } else {
+                bs[1] = incoming.readByte();
+                bs[2] = incoming.readByte();
+                bs[3] = incoming.readByte();
+                str.append(new String(Arrays.copyOfRange(bs, 0, 4), "UTF-8"));
+            }
+            bs[0] = incoming.readByte();
+        }
+        return(str.toString());
     }
      
     /**
