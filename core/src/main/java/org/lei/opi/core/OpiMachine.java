@@ -782,12 +782,32 @@ public abstract class OpiMachine {
         });
 
         Platform.runLater(() -> {
-            try {
-                ArrayList<Double> xList = (ArrayList<Double>)args.get("x");
-                ArrayList<Double> yList = (ArrayList<Double>)args.get("y");
-                ArrayList<Double> lList = (ArrayList<Double>)args.get("lum");
-                ArrayList<String> eList = (ArrayList<String>)args.get("eye");
+            if (!args.containsKey("x") || !args.containsKey("y") || !args.containsKey("lum")) {
+                System.out.println("updateGUIOnPresent cannot find one or more of 'x', 'y', or 'lum'. Not showing anything");
+                return;
+            }
 
+            List<Double> xList, yList, lList;
+            List<String> eList;
+
+            if (args.get("x") instanceof ArrayList) {
+                xList = (List<Double>)args.get("x");
+                yList = (List<Double>)args.get("y");
+                lList = (List<Double>)args.get("lum");
+            } else {
+                xList = Arrays.asList((Double)args.get("x"));
+                yList = Arrays.asList((Double)args.get("y"));
+                lList = Arrays.asList((Double)args.get("lum"));
+            }
+            if (args.containsKey("eye"))
+                eList = (List<String>)args.get("eye");
+            else {
+                eList = new ArrayList<String>();
+                for (int i = 0 ; i < xList.size() ; i++)
+                    eList.add("mono");
+            }
+
+            try {
                 for (int i = 0 ; i < xList.size(); i++) {
                     CanvasTriple ct = new CanvasTriple(xList.get(i), yList.get(i), Long.toString(Math.round(lList.get(i))));
                     if (this.viewModeIsMono)
