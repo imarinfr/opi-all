@@ -2,9 +2,9 @@
 # MOCS algorithm for a single location, nAFC possible with beeps.
 #
 # Author: Andrew Turpin
-#         (Based on disucssions with Tony Redmond July 2012).
+#         (Based on discussions with Tony Redmond July 2012).
 # Date: May 2015
-# Modified Tue 21 Mar 2023: changed licence from gnu to Apache 2.0 
+# Modified Tue 21 Mar 2023: changed licence from gnu to Apache 2.0
 #
 # Copyright [2022] [Andrew Turpin]
 #
@@ -29,42 +29,42 @@ require(utils)
 # The number of AFC are given by the number of columns in params.
 #
 # Input parameters
-#   params  A matrix where each row is 
+#   params  A matrix where each row is
 #           x y loc_num number-of-present'ns correct_lum_num luminance-level-1 ll2 ll3 ...
 #           Each row of params is presented number-of-presentations times in the
-#           order determined by the "order" paramter. For a yes/no MOCS, there is 
+#           order determined by the "order" parameter. For a yes/no MOCS, there is
 #           only one luminance level. For @AFC, there are two, etc.
 #
 #   order     Control the order in which the stimuli are presented.
 #               "random" - uniform random for all trials.
-#               "fixed"   - just present in order of 1:nrow(params), ignoring 
+#               "fixed"   - just present in order of 1:nrow(params), ignoring
 #                           number-of-presentations column.
 #
-#   responseWindowMeth Control time perimeter waits for response. 
-#               "speed" - after an average of the last 'speedHistory' 
+#   responseWindowMeth Control time perimeter waits for response.
+#               "speed" - after an average of the last 'speedHistory'
 #                         response times, with a minimum of 'responseFloor'.
 #                         Initially responseFloor.
 #               "constant" - always use responseFloor.
 #               "forceKey" - wait for a keyboard input.
 #
-#   responseHistory - number of past yesses to average to get reposnse window
+#   responseHistory - number of past yesses to average to get response window
 #                      (only used if responseWindowMeth == "speed")
 #
-#   responseFloor Minimum response window (for any responseWindowMeth except forceKey). 
-#                   
+#   responseFloor Minimum response window (for any responseWindowMeth except forceKey).
+#
 #   keyHandler   Function to get a keyboard input and returns as for opiPresent:
 #                list(seen={TRUE|FALSE}, response time (in ms), error code).
-#                Param to function is correct lum level (col 4 of params), and 
+#                Param to function is correct lum level (col 4 of params), and
 #                result of opiPresent.
-#                   
+#
 #   interStimMin Regardless of response, wait runif(interStimMin, interStimMax) ms.
 #   interStimMax
 #
 #   beep_function A funtion that takes 'correct', 'incorrect', or a stimulus number
 #                 and plays an appropriate sound.
 #
-#   makeStim  A helper function to take a row of params[] and a response window 
-#             length in ms, and create a list of OPI stimuli types for 
+#   makeStim  A helper function to take a row of params[] and a response window
+#             length in ms, and create a list of OPI stimuli types for
 #             passing to opiPresent. Might include checkFixationOK function.
 #
 #   stim_print A function that takes opiStaticStimulus and return list from opiPresent
@@ -72,15 +72,15 @@ require(utils)
 #
 #   ...       Parameters for opiPresent
 #
-# Returns a data.frame with one row per stim, 
+# Returns a data.frame with one row per stim,
 #       col 1 Location number (row number in input params matrix)
-#       col 2 x 
-#       col 3 y 
-#       col 4 correct_lum_num 
+#       col 2 x
+#       col 3 y
+#       col 4 correct_lum_num
 #       col 5 true/false all fixations in trial good according to checkFixationOK (TRUE if no checkFixationOK)
 #       ncol(params)-1 are same as params[5:],
 #       column last-2 = correct/incorrect
-#       column last-1 = response time 
+#       column last-1 = response time
 #       column last   = err code
 #
 # Also prints x,y,fixations_good,stim_print(stim, return) for each trial
@@ -108,7 +108,7 @@ require(utils)
 #'   \itemize{
 #'     \item{\code{"random"} Randomise the order of trials/locations.}
 #'     \item{\code{"fixed"} Present each row of \code{params} in order of
-#'       \code{1:nrow(params)}, ignoring the \code{n} (3rd) column in \code{params}.}
+#'       \code{1:nrow(params)}, ignoring the \code{n} (4th) column in \code{params}.}
 #'   }
 #' @param responseWindowMeth Control time perimeter waits for response.
 #'   \itemize{
@@ -143,14 +143,14 @@ require(utils)
 #' response at the end. So if there is only 5 columns, it is a yes/no task. If there are 6
 #' columns it is a 2-interval-forced-choice. Generally, an nIFC experiment has 4+n columns in
 #' \code{params}.
-#' 
+#'
 #' Note that when the \code{order} is \code{"random"}, the number of trials in the test will be
 #' the sum of the 3rd column of \code{params}. When the \code{order} is \code{"fixed"}, there is
 #' only one presentation per row, regardless of the value in the 3rd column of \code{params}.
-#' 
+#'
 #' If a response is received before the final trial in a nIFC experiment, it is ignored.
-#' 
-#' If the \code{checkFixationOK} funciton is present in a stimulus, then it is called after each
+#'
+#' If the \code{checkFixationOK} function is present in a stimulus, then it is called after each
 #' presentation, and the result is ``anded'' with each stimulus in a trial to get a TRUE/FALSE
 #' for fixating on all stimuli in a trial.
 #' @return Returns a data.frame with one row per stimulus copied from params with extra columns
@@ -192,11 +192,11 @@ require(utils)
 #'   }
 #'   return(res)
 #' }
-#' 
+#'
 #' ################################################################
 #' # Read in a key press 'z' is correct==1, 'm' otherwise
 #' #    correct is either 1 or 2, whichever is the correct interval
-#' #   
+#' #
 #' # Return list(seen={TRUE|FALSE}, time=time, err=NULL))
 #' #        seen is TRUE if correct key pressed
 #' ################################################################
@@ -204,8 +204,8 @@ require(utils)
 #'   if (length(dir(".", "getKeyPress.py")) < 1)
 #'     stop('Python script getKeyPress.py missing?')
 #' }
-#' 
-#' keyHandler <- function(correct, ret) { 
+#'
+#' keyHandler <- function(correct, ret) {
 #'   return(list(seen=TRUE, time=0, err=NULL))
 #'   ONE <- "b'z'"
 #'   TWO <- "b'm'"
@@ -230,7 +230,7 @@ require(utils)
 #' # First param is correct, next is 1 for left button, 2 for right button
 #' # Left button (LB) is correct for interval 1, RB for interval 2
 #' #    correct is either 1 or 2, whichever is the correct interval
-#' #   
+#' #
 #' # Return list(seen={TRUE|FALSE}, time=time, err=NULL))
 #' #        seen is TRUE if correct key pressed
 #' ################################################################
@@ -275,14 +275,14 @@ require(utils)
 #'   }
 #' }
 #' @export
-MOCS <- function(params=NA, 
-                 order="random",
-                 responseWindowMeth="constant", 
-                 responseFloor=1500, 
-                 responseHistory=5, 
-                 keyHandler=function(correct,ret) return(list(TRUE, 0, NULL)),
-                 interStimMin=200,
-                 interStimMax=500,
+MOCS <- function(params = NA,
+                 order = "random",
+                 responseWindowFunction = "constant",
+                 responseFloor = 1500,
+                 responseHistory = 5,
+                 keyHandler = function(correct, ret) return(list(TRUE, 0, NULL)),
+                 interStimMin = 200,
+                 interStimMax = 500,
                  beep_function,
                  makeStim,
                  stim_print, ...) {
@@ -295,7 +295,7 @@ MOCS <- function(params=NA,
     if (order == "random") {
         for(i in 1:nrow(params)) {
             reps <- params[i,4]
-            mocs <- rbind(mocs, matrix(params[i,], ncol=ncol(params), nrow=reps, byrow=T))
+            mocs <- rbind(mocs, matrix(params[i,], ncol = ncol(params), nrow = reps, byrow = TRUE))
         }
         mocs <- mocs[order(stats::runif(nrow(mocs))), ]
     } else if (order == "fixed") {
@@ -313,6 +313,7 @@ MOCS <- function(params=NA,
     } else if (!is.element(responseWindowMeth, c("constant", "forceKey"))) {
         stop(paste("Invalid responseWindowMeth in MOCS: ", responseWindowMeth))
     }
+
         ####################################################
         # loop through every presentation except last (is dummy)
         ####################################################
@@ -326,7 +327,7 @@ MOCS <- function(params=NA,
             rwin <- 0
         } else {
             rwin <- max(responseFloor, mean(respTimeHistory))
-        } 
+        }
         stims     <- nextStims
         nextStims <- makeStim(as.double(mocs[i+1,]), rwin)
 
@@ -336,60 +337,53 @@ MOCS <- function(params=NA,
             beep_function(stimNum)
             s <- stims[[stimNum]]
             if (stimNum == length(stims)) {
-              ret <- opiPresent(stim=s, nextStim=nextStims[[stimNum]], ...)
-
-              fixation_good <- TRUE
-              if (!is.null(s$checkFixationOK))
-                fixation_good <- s$checkFixationOK(ret)
-              all_fixations_good <- all_fixations_good && fixation_good
-            
-              cat(sprintf(",%f,%f,%f,",s$x,s$y, fixation_good))
-              cat(stim_print(s,ret))
+              ret <- opiPresent(stim = s, nextStim = nextStims[[stimNum]], ...)
             } else {
               startTime <- Sys.time()
+              ret <- opiPresent(stim = s, nextStim = NULL, ...)
+            }
 
-              ret <- opiPresent(stim=s, nextStim=NULL, ...)
-
-              fixation_good <- TRUE
-              if (!is.null(s$checkFixationOK))
+            fixation_good <- TRUE
+            if (!is.null(s$checkFixationOK))
                 fixation_good <- s$checkFixationOK(ret)
-              all_fixations_good <- all_fixations_good && fixation_good
-            
-              cat(sprintf(",%f,%f,%f,",s$x,s$y, fixation_good))
-              cat(stim_print(s,ret))
+            all_fixations_good <- all_fixations_good && fixation_good
 
-                # just check that the reponse window wasn't scuppered by a response
-              while (Sys.time() - startTime < s$responseWindow/1000)
+            cat(sprintf(",%f,%f,%f,",s$x,s$y, fixation_good))
+            cat(stim_print(s, ret))
+
+            if (stimNum < length(stims)) {
+                # just check that the response window wasn't shortened by a response
+              while (Sys.time() - startTime < s$responseWindow / 1000)
                 Sys.sleep(0.05)
             }
         }
 
         if (responseWindowMeth == "forceKey")
           ret <- keyHandler(mocs[i, 6], ret)
- 
+
         if (is.null(ret$err)) {
-            if (ret$seen) 
+            if (ret$seen)
                 beep_function('correct')
-            else 
+            else
                 beep_function('incorrect')
-        
-            if (ret$seen && responseWindowMeth == "speed") 
+
+            if (ret$seen && responseWindowMeth == "speed")
                 respTimeHistory <- c(utils::tail(respTimeHistory, -1), ret$time)
         } else {
             warning("Opi Present return error in MOCS")
-            error_count <- error_count + 1 
+            error_count <- error_count + 1
         }
 
         cat(sprintf(',%g,%g\n',ret$seen,  ret$time))
-        
-        Sys.sleep(stats::runif(1, min=interStimMin, max=interStimMax)/1000)
+
+        Sys.sleep(stats::runif(1, min = interStimMin, max = interStimMax)/1000)
 
         results <- rbind(results, c(mocs[i,1:5], all_fixations_good, mocs[i,6:ncol(mocs)], ret))
     }
-    
+
     if (error_count > 0)
         warning(paste("There were", error_count, "Opi Present return errors in MOCS"))
-    
+
     return(results)
 }#MOCS()
 
@@ -397,16 +391,16 @@ MOCS <- function(params=NA,
 # tests
 ###################################
 ###t0 <- matrix(c(
-###    9,9, 3, 1, 3145  , 
-###    6,6, 4, 1,  313  , 
+###    9,9, 3, 1, 3145  ,
+###    6,6, 4, 1,  313  ,
 ###    3,3, 5, 1,   31.4
-###), ncol=5, byrow=TRUE)
+###), ncol = 5, byrow = TRUE)
 ###
 ###t1 <- matrix(c(
 ###    9,9, 3, 1, 3145  , 314,
 ###    6,6, 4, 2,  313  , 314,
 ###    3,3, 5, 2,   31.4, 314
-###), ncol=6, byrow=TRUE)
+###), ncol = 6, byrow = TRUE)
 ###
 ###a1 <- list(sin(1:10000/20), sin(1:10000/20), sin(1:10000/10), sin(1:10000/30))
 ###
@@ -416,9 +410,9 @@ MOCS <- function(params=NA,
 ###    res <- NULL
 ###    for(i in 5:length(p)) {
 ###
-###        s <- list(x=p[1], y=p[2], level=p[5], size=0.43, duration=200,
-###                  responseWindow=ifelse(i < length(p), 0, BETWEEN_FLASH_TIME),
-###                  checkFixationOK=NULL
+###        s <- list(x = p[1], y = p[2], level = p[5], size = 0.43, duration = 200,
+###                  responseWindow = ifelse(i < length(p), 0, BETWEEN_FLASH_TIME),
+###                  checkFixationOK = NULL
 ###             )
 ###        class(s) <- "opiStaticStimulus"
 ###        res <- c(res, list(s))
@@ -447,9 +441,9 @@ MOCS <- function(params=NA,
 ####chooseOpi("SimNo")
 ###chooseOpi("SimHenson")
 ###opiInitialise()
-####r <- MOCS(params=t0, interStimMin=0, interStimMax=0, makeStim=makeStim, tt=10, fpr=0.0, fnr=0) 
-####r <- MOCS(params=t1, interStimMin=0, interStimMax=0, makeStim=makeStim, tt=10, fpr=0, fnr=0) 
-####r <- MOCS(params=t1, audio=a1, responseWindowMeth="forceKey", keyHandler=keyHandler, interStimMin=0, interStimMax=0, makeStim=makeStim, tt=10, fpr=0, fnr=0) 
+####r <- MOCS(params=t0, interStimMin=0, interStimMax=0, makeStim=makeStim, tt=10, fpr=0.0, fnr=0)
+####r <- MOCS(params=t1, interStimMin=0, interStimMax=0, makeStim=makeStim, tt=10, fpr=0, fnr=0)
+####r <- MOCS(params=t1, audio=a1, responseWindowMeth="forceKey", keyHandler=keyHandler, interStimMin=0, interStimMax=0, makeStim=makeStim, tt=10, fpr=0, fnr=0)
 ###
 ####print(r)
 ###

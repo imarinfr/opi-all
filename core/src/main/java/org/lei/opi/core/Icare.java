@@ -241,9 +241,9 @@ public abstract class Icare extends OpiMachine {
      */
     @Parameter(name = "x", className = Double.class, desc = "x co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
     @Parameter(name = "y", className = Double.class, desc = "y co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
-    @Parameter(name = "lum", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100")
-    @Parameter(name = "t", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200")
-    @Parameter(name = "w", className = Double.class, desc = "Response window (ms).", min = 200, max = 2680, defaultValue = "1500")
+    @Parameter(name = "level", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100")
+    @Parameter(name = "duration", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200")
+    @Parameter(name = "responseWindow", className = Double.class, desc = "Response window (ms).", min = 200, max = 2680, defaultValue = "1500")
     @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (pixels).")
     @ReturnMsg(name = "res.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (pixels).")
@@ -256,15 +256,15 @@ public abstract class Icare extends OpiMachine {
     public Packet present(HashMap<String, Object> args) {
         if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
-            int level = (int) Math.round(-10 * Math.log10((double) args.get("lum") / (10000 / Math.PI)));
+            int level = (int) Math.round(-10 * Math.log10((double) args.get("level") / (10000 / Math.PI)));
             String opiMessage = String.format("%s%s %s %s %s %s %s\n",
                 OPI_PRESENT_STATIC,
                 (int)Math.round((double) args.get("x")),
                 (int)Math.round((double) args.get("y")),
                 level,
                 3,
-                (int)Math.round((double) args.get("t")),
-                (int)Math.round((double) args.get("w")));
+                (int)Math.round((double) args.get("duration")),
+                (int)Math.round((double) args.get("responseWindow")));
                 try {
                       this.send(opiMessage);
                       String res = this.readline(); 

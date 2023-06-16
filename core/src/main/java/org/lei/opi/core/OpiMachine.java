@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.BufferedReader;
 import java.io.DataInputStream;
-import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -344,7 +342,7 @@ public abstract class OpiMachine {
     }
 
     /**
-    * Receive a UTF-8 \n terminated string from server
+    * Receive a UTF-8 \n terminated string from server (Not the modified UTF-8 of DataInput/Output)
     * @return The message received in a Packet
     * @throws IOException If socket cannot be accessed
     * @since 3.0.0

@@ -213,7 +213,7 @@ opiSetup_for_PicoVR <- function(settings) {
 #'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 #'                 SQUARE, OPTOTYPE. (Optional)
 #'  * \code{sx} List of diameters along major axis of ellipse (degrees).
-#'  * \code{lum} List of stimuli luminances (cd/m^2).
+#'  * \code{level} List of stimuli luminances (cd/m^2).
 #'  * \code{colorMax} List of stimulus max colors for all shapes
 #'  * \code{sy} List of diameters along minor axis of ellipse (degrees). If not
 #'              received, then sy = sx (Optional)
@@ -229,8 +229,8 @@ opiSetup_for_PicoVR <- function(settings) {
 #'  * \code{frequency} List of frequencies (in cycles per degrees) for
 #'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{t} List of stimuli presentation times (ms).
-#'  * \code{w} Time to wit for response including presentation time (ms).
+#'  * \code{duration} List of stimuli presentation times (ms).
+#'  * \code{responseWindow} Time to wit for response including presentation time (ms).
 #'  * \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
 #'                    type != FLAT. (Optional)
 #'  * \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
@@ -260,7 +260,8 @@ opiSetup_for_PicoVR <- function(settings) {
 #'
 #' Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
 #'
-#' Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
+#' Elements in \code{level} can take on values in the range
+#'                   \code{[0.0, 1.0E10]}.
 #'
 #' Elements in \code{colorMax} can take on values in the
 #'                      range \code{[0.0, 1.0]}.
@@ -291,9 +292,10 @@ opiSetup_for_PicoVR <- function(settings) {
 #' Elements in \code{eye} can take on values in the set
 #'                 \code{{"left", "right", "both"}}.
 #'
-#' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
+#' Elements in \code{duration} can take on values in the
+#'                      range \code{[0.0, 1.0E10]}.
 #'
-#' \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
+#' \code{responseWindow} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
 #' Elements in \code{contrast} can take on values in the
 #'                      range \code{[0.0, 1.0]}.
@@ -309,9 +311,10 @@ opiSetup_for_PicoVR <- function(settings) {
 #'
 #' @examples
 #' chooseOpi("PicoVR")
-#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(20.0), colorMax = list(list(1.0,
-#'                   1.0, 1.0)), stim.length = 1, eye = list("LEFT"),
-#'                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
+#' result <- opiPresent(stim = list(sx = list(1.72), level = list(20.0),
+#'                   colorMax = list(list(1.0, 1.0, 1.0)), stim.length = 1,
+#'                   eye = list("LEFT"), duration = list(200.0),
+#'                   responseWindow = 1500.0, x = list(0.0), y = list(0.0)))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -321,7 +324,7 @@ opiPresent_for_PicoVR <- function(stim) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, lum = stim$lum, colorMax = stim$colorMax, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, colorMin = stim$colorMin, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, t = stim$t, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
+    msg <- list(phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, level = stim$level, colorMax = stim$colorMax, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, colorMin = stim$colorMin, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, duration = stim$duration, responseWindow = stim$responseWindow, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

@@ -127,11 +127,11 @@ opiQueryDevice_for_Compass <- function() {
 #' @usage NULL
 #'
 #' @param \code{settings} A list containing:
-#'  * \code{fixShape} Fixation target type for eye.
+#'  * \code{fixShape} Fixation target type for eye. (Optional)
 #'  * \code{fixCx} x-coordinate of fixation target (degrees): Only valid values
 #'                 are -20, -6, -3, 0, 3, 6, 20 for fixation type 'spot' and -3,
-#'                 0, 3 for fixation type 'square'.
-#'  * \code{tracking} Whether to correct stimulus location based on eye position.
+#'                 0, 3 for fixation type 'square'. (Optional)
+#'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
@@ -148,7 +148,7 @@ opiQueryDevice_for_Compass <- function() {
 #'
 #' @examples
 #' chooseOpi("Compass")
-#' result <- opiSetup(settings = list(fixShape = "null", fixCx = 0.0, tracking = 0.0))
+#' result <- opiSetup(settings = list())
 #'
 #' @seealso [opiSetup()]
 #'
@@ -179,11 +179,11 @@ opiSetup_for_Compass <- function(settings) {
 #' @usage NULL
 #'
 #' @param \code{stim} A list containing:
-#'  * \code{t} Presentation time (ms).
-#'  * \code{lum} Stimuli luminance (cd/m^2).
-#'  * \code{w} Response window (ms).
+#'  * \code{duration} Presentation time (ms).
+#'  * \code{level} Stimuli luminance (cd/m^2).
 #'  * \code{x} x co-ordinates of stimulus (degrees).
 #'  * \code{y} y co-ordinates of stimulus (degrees).
+#'  * \code{responseWindow} Response window (ms).
 #'  * \code{stim.length} The number of elements in this stimuli.
 #'
 #' @return A list containing:
@@ -204,21 +204,22 @@ opiSetup_for_Compass <- function(settings) {
 #'
 #' @details 
 #'
-#' \code{t} can take on values in the range \code{[200.0, 200.0]}.
+#' \code{duration} can take on values in the range \code{[200.0, 200.0]}.
 #'
-#' \code{lum} can take on values in the range \code{[0.0, 3183.099]}.
-#'
-#' \code{w} can take on values in the range \code{[200.0, 2680.0]}.
+#' \code{level} can take on values in the range \code{[0.0, 3183.099]}.
 #'
 #' \code{x} can take on values in the range \code{[-30.0, 30.0]}.
 #'
 #' \code{y} can take on values in the range \code{[-30.0, 30.0]}.
 #'
+#' \code{responseWindow} can take on values in the range \code{[200.0, 2680.0]}.
+#'
 #' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
 #'
 #' @examples
 #' chooseOpi("Compass")
-#' result <- opiPresent(stim = list(t = 200.0, lum = 100.0, w = 1500.0, x = 0.0, y = 0.0, stim.length = 1))
+#' result <- opiPresent(stim = list(duration = 200.0, level = 100.0, x = 0.0, y = 0.0,
+#'                   responseWindow = 1500.0, stim.length = 1))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -228,7 +229,7 @@ opiPresent_for_Compass <- function(stim) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, stim.length = stim$stim.length)
+    msg <- list(duration = stim$duration, level = stim$level, x = stim$x, y = stim$y, responseWindow = stim$responseWindow, stim.length = stim$stim.length)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
