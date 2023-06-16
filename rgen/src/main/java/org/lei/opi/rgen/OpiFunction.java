@@ -130,7 +130,7 @@ public class OpiFunction {
      * Make the body of the calling example which will be S in 
      *      "result <- opiFunction(x = list(S))" or 
      *      "result <- opiFunction(S)"
-     * So we just need to make a list of non-optional paramters and their default values.
+     * So we just need to make a list of non-optional parameters and their default values.
      * 
      * @return String of "param = defaultValue, ..."
      */
