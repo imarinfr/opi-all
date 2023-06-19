@@ -36,7 +36,7 @@ public class RgenTests {
   @Test
   public void opiFunctionTest1() {
     try {
-      OpiFunction f = new OpiFunction(new Display(null), "opiInitialise", "initialize", "", "list(err = %s)", true);
+      OpiFunction f = new OpiFunction(new Display(null), "opiInitialise", "initialize", "", "list(err = %s)", true, true);
       f.generateR(System.out);
     } catch (InstantiationException e) {
       e.printStackTrace();
@@ -46,7 +46,7 @@ public class RgenTests {
   @Test
   public void opiFunctionTest2() {
     try {
-      OpiFunction f = new OpiFunction(new Display(null), "opiInitializzze", "initialize", "", "list(err = %s)", true);
+      OpiFunction f = new OpiFunction(new Display(null), "opiInitializzze", "initialize", "", "list(err = %s)", true, false);
       f.generateR(System.out);
     } catch (InstantiationException e) {
       e.printStackTrace();
@@ -56,7 +56,7 @@ public class RgenTests {
   @Test
   public void opiFunctionTest3() {
     try {
-      OpiFunction f = new OpiFunction(new Display(null), "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false);
+      OpiFunction f = new OpiFunction(new Display(null), "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false, true);
       f.generateR(System.out);
     } catch (InstantiationException e) {
       e.printStackTrace();
@@ -66,7 +66,7 @@ public class RgenTests {
   @Test
   public void opiFunctionTest4() {
     try {
-      OpiFunction f = new OpiFunction(new Display(null), "opiSetup",   "setup", "settings", "list(err=%s, seen=%s, time=%s", false);
+      OpiFunction f = new OpiFunction(new Display(null), "opiSetup",   "setup", "settings", "list(err=%s, seen=%s, time=%s", false, false);
       f.generateR(System.out);
     } catch (InstantiationException e) {
       e.printStackTrace();

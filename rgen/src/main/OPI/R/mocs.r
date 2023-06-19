@@ -24,67 +24,6 @@
 require(stats)
 require(utils)
 
-################################################################################
-# Perform a MOCS, possibly with alternate-forced-choice stimuli.
-# The number of AFC are given by the number of columns in params.
-#
-# Input parameters
-#   params  A matrix where each row is
-#           x y loc_num number-of-present'ns correct_lum_num luminance-level-1 ll2 ll3 ...
-#           Each row of params is presented number-of-presentations times in the
-#           order determined by the "order" parameter. For a yes/no MOCS, there is
-#           only one luminance level. For @AFC, there are two, etc.
-#
-#   order     Control the order in which the stimuli are presented.
-#               "random" - uniform random for all trials.
-#               "fixed"   - just present in order of 1:nrow(params), ignoring
-#                           number-of-presentations column.
-#
-#   responseWindowMeth Control time perimeter waits for response.
-#               "speed" - after an average of the last 'speedHistory'
-#                         response times, with a minimum of 'responseFloor'.
-#                         Initially responseFloor.
-#               "constant" - always use responseFloor.
-#               "forceKey" - wait for a keyboard input.
-#
-#   responseHistory - number of past yesses to average to get response window
-#                      (only used if responseWindowMeth == "speed")
-#
-#   responseFloor Minimum response window (for any responseWindowMeth except forceKey).
-#
-#   keyHandler   Function to get a keyboard input and returns as for opiPresent:
-#                list(seen={TRUE|FALSE}, response time (in ms), error code).
-#                Param to function is correct lum level (col 4 of params), and
-#                result of opiPresent.
-#
-#   interStimMin Regardless of response, wait runif(interStimMin, interStimMax) ms.
-#   interStimMax
-#
-#   beep_function A funtion that takes 'correct', 'incorrect', or a stimulus number
-#                 and plays an appropriate sound.
-#
-#   makeStim  A helper function to take a row of params[] and a response window
-#             length in ms, and create a list of OPI stimuli types for
-#             passing to opiPresent. Might include checkFixationOK function.
-#
-#   stim_print A function that takes opiStaticStimulus and return list from opiPresent
-#              and returns a string to print.
-#
-#   ...       Parameters for opiPresent
-#
-# Returns a data.frame with one row per stim,
-#       col 1 Location number (row number in input params matrix)
-#       col 2 x
-#       col 3 y
-#       col 4 correct_lum_num
-#       col 5 true/false all fixations in trial good according to checkFixationOK (TRUE if no checkFixationOK)
-#       ncol(params)-1 are same as params[5:],
-#       column last-2 = correct/incorrect
-#       column last-1 = response time
-#       column last   = err code
-#
-# Also prints x,y,fixations_good,stim_print(stim, return) for each trial
-################################################################################
 #' @rdname MOCS
 #' @title Method of Constant Stimuli (MOCS)
 #' @description MOCS performs either a yes/no or n-interval-forced-choice Method of
@@ -123,7 +62,7 @@ require(utils)
 #' @param responseHistory Number of past yeses to average to get response window
 #'   (only used if \code{responseWindowMeth} is \code{"speed"}).
 #' @param keyHandler Function to get a keyboard input and returns as for \code{opiPresent}:
-#'   list(seen={TRUE|FALSE}, response time (in ms), error code). The parameters passed to
+#'   list(err={NULL|msg}, seen={TRUE|FALSE}, time = response time (in ms)). The parameters passed to
 #'   the function are the correct interval number (column 4 of \code{params}), and the
 #'   result of \code{opiPresent}. See Examples.
 #' @param interStimMin Regardless of response, wait \code{runif(interStimMin, interStimMax)} ms.
@@ -154,18 +93,18 @@ require(utils)
 #' presentation, and the result is ``anded'' with each stimulus in a trial to get a TRUE/FALSE
 #' for fixating on all stimuli in a trial.
 #' @return Returns a data.frame with one row per stimulus copied from params with extra columns
-#' that are location number in the first column, and the return values from \code{opiPresent()}
-#' and a record of fixation (if \code{checkFixationOK} present in stim objects returned from
-#' \code{makeStim}: see example). These last values will differ depending on which
+#' appended: checkFixation checks, and the return values from \code{opiPresent()}
+#' (see example). These last values will differ depending on which
 #' machine/simulation you are running (as chosen with \code{chooseOpi()}.
 #' \itemize{
 #'   \item{column 1: x}
 #'   \item{column 2: y}
 #'   \item{column 3: location number}
-#'   \item{column 4: correct stimulus index}
-#'   \item{column 5: TRUE/FALSE was fixating for all presentations in this trial according to
+#'   \item{column 4: number of times to repeat this stim}
+#'   \item{column 5: correct stimulus index}
+#'   \item{column 6: TRUE/FALSE was fixating for all presentations in this trial according to
 #'     \code{checkFixationOK}}
-#'   \item{column 6...: columns from params}
+#'   \item{column 7...: columns from params}
 #'   \item{...: columns from opiPresent return}
 #' }
 #' @references
@@ -277,10 +216,10 @@ require(utils)
 #' @export
 MOCS <- function(params = NA,
                  order = "random",
-                 responseWindowFunction = "constant",
+                 responseWindowMeth = "constant",
                  responseFloor = 1500,
                  responseHistory = 5,
-                 keyHandler = function(correct, ret) return(list(TRUE, 0, NULL)),
+                 keyHandler = function(correct, ret) return(list(seen = TRUE, time = 0, err = NULL)),
                  interStimMin = 200,
                  interStimMax = 500,
                  beep_function,
@@ -293,9 +232,9 @@ MOCS <- function(params = NA,
         ################################################
     mocs <- NULL
     if (order == "random") {
-        for(i in 1:nrow(params)) {
-            reps <- params[i,4]
-            mocs <- rbind(mocs, matrix(params[i,], ncol = ncol(params), nrow = reps, byrow = TRUE))
+        for (i in 1:nrow(params)) {
+            reps <- params[i, 4]
+            mocs <- rbind(mocs, matrix(params[i, ], ncol = ncol(params), nrow = reps, byrow = TRUE))
         }
         mocs <- mocs[order(stats::runif(nrow(mocs))), ]
     } else if (order == "fixed") {
@@ -319,8 +258,8 @@ MOCS <- function(params = NA,
         ####################################################
     error_count <- 0
     results <- NULL
-    nextStims <- makeStim(as.double(mocs[1,]), responseFloor)
-    for(i in 1:(nrow(mocs)-1)) {
+    nextStims <- makeStim(as.double(mocs[1, ]), responseFloor)
+    for (i in 1:(nrow(mocs) - 1)) {
         if (responseWindowMeth == "constant") {
             rwin <- responseFloor
         } else if (responseWindowMeth == "forceKey") {
@@ -329,13 +268,14 @@ MOCS <- function(params = NA,
             rwin <- max(responseFloor, mean(respTimeHistory))
         }
         stims     <- nextStims
-        nextStims <- makeStim(as.double(mocs[i+1,]), rwin)
+        nextStims <- makeStim(as.double(mocs[i + 1, ]), rwin)
 
-        cat(sprintf('Trial,%g,Location,%g',i, mocs[i,3]))
+        cat(sprintf('\nTrial,%g,Location,%g', i, mocs[i, 3]))
         all_fixations_good <- TRUE
         for (stimNum in 1:length(stims)) {
             beep_function(stimNum)
             s <- stims[[stimNum]]
+
             if (stimNum == length(stims)) {
               ret <- opiPresent(stim = s, nextStim = nextStims[[stimNum]], ...)
             } else {
@@ -348,7 +288,7 @@ MOCS <- function(params = NA,
                 fixation_good <- s$checkFixationOK(ret)
             all_fixations_good <- all_fixations_good && fixation_good
 
-            cat(sprintf(",%f,%f,%f,",s$x,s$y, fixation_good))
+            cat(sprintf(",%f,%f,%f,", s$x, s$y, fixation_good))
             cat(stim_print(s, ret))
 
             if (stimNum < length(stims)) {
@@ -374,11 +314,11 @@ MOCS <- function(params = NA,
             error_count <- error_count + 1
         }
 
-        cat(sprintf(',%g,%g\n',ret$seen,  ret$time))
+        cat(sprintf(',%g,%g\n', ret$seen,  ret$time))
 
         Sys.sleep(stats::runif(1, min = interStimMin, max = interStimMax)/1000)
 
-        results <- rbind(results, c(mocs[i,1:5], all_fixations_good, mocs[i,6:ncol(mocs)], ret))
+        results <- rbind(results, c(mocs[i, 1:5], all_fixations_good, mocs[i, 6:ncol(mocs)], ret))
     }
 
     if (error_count > 0)

@@ -2,12 +2,9 @@ package org.lei.opi.core;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
@@ -232,6 +229,9 @@ public abstract class Icare extends OpiMachine {
   
     /**
      * opiPresent: Present OPI stimulus in perimeter
+     *
+     * Note @Parameter "lum" is expected by updateGUIonPresent in OpiMachine, so is renamed 
+     * from "level" in R for backwards compatibility with the CRAN OPI package.
      * 
      * @param args pairs of argument name and value
      * 
@@ -241,9 +241,9 @@ public abstract class Icare extends OpiMachine {
      */
     @Parameter(name = "x", className = Double.class, desc = "x co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
     @Parameter(name = "y", className = Double.class, desc = "y co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
-    @Parameter(name = "level", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100")
-    @Parameter(name = "duration", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200")
-    @Parameter(name = "responseWindow", className = Double.class, desc = "Response window (ms).", min = 200, max = 2680, defaultValue = "1500")
+    @Parameter(name = "lum", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100", opiRName = "level")
+    @Parameter(name = "t", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200", opiRName = "duration")
+    @Parameter(name = "w", className = Double.class, desc = "Response window (ms).", min = 0, max = 2680, defaultValue = "1500", opiRName = "responseWindow")
     @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (pixels).")
     @ReturnMsg(name = "res.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (pixels).")
@@ -256,15 +256,15 @@ public abstract class Icare extends OpiMachine {
     public Packet present(HashMap<String, Object> args) {
         if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
-            int level = (int) Math.round(-10 * Math.log10((double) args.get("level") / (10000 / Math.PI)));
+            int level = (int) Math.round(-10 * Math.log10((double) args.get("lum") / (10000 / Math.PI)));
             String opiMessage = String.format("%s%s %s %s %s %s %s\n",
                 OPI_PRESENT_STATIC,
                 (int)Math.round((double) args.get("x")),
                 (int)Math.round((double) args.get("y")),
                 level,
                 3,
-                (int)Math.round((double) args.get("duration")),
-                (int)Math.round((double) args.get("responseWindow")));
+                (int)Math.round((double) args.get("t")),
+                (int)Math.round((double) args.get("w")));
                 try {
                       this.send(opiMessage);
                       String res = this.readline(); 
@@ -333,17 +333,17 @@ public abstract class Icare extends OpiMachine {
      * @since 3.0.0
      */
     private String queryResults() {
-        String image = "";
+        String encodedImage = "";
         if (this.image != null) {
             Base64.Encoder encoder = Base64.getEncoder();
-            image = encoder.encodeToString(this.image);
+            encodedImage = encoder.encodeToString(this.image);
         }
-        return new StringBuilder("\n  {\n")
+        return new StringBuilder("\n{\n")
             .append("    \"prlx\": " + prlx + ",\n")
             .append("    \"prly\": " + prly + ",\n")
             .append("    \"onhx\": " + onhx + ",\n")
             .append("    \"onhy\": " + onhy + ",\n")
-            .append("    \"image\": " + image + ",\n")
+            .append("    \"image\": \"" + encodedImage + "\",\n")
             .append("    \"minX\": " + settings.minX + ",\n")
             .append("    \"maxX\": " + settings.maxX + ",\n")
             .append("    \"minY\": " + settings.minY + ",\n")
@@ -356,7 +356,7 @@ public abstract class Icare extends OpiMachine {
             .append("    \"minLuminance\": " + settings.minLuminance + ",\n")
             .append("    \"maxLuminance\": " + settings.maxLuminance + ",\n")
             .append("    \"tracking\": " + settings.tracking + "\n")
-            .append("\n  }").toString();
+            .append("\n}").toString();
     };
   
     /**
@@ -381,6 +381,6 @@ public abstract class Icare extends OpiMachine {
         .append("    \"time_rec\": " + message[4] + ",\n")
         .append("    \"time_resp\": " + message[5] + ",\n")
         .append("    \"num_track_events\": " + message[6] + ",\n")
-        .append("    \"num_motor_fails\": " + message[7] + ",\n  }").toString();
+        .append("    \"num_motor_fails\": " + message[7] + "\n}").toString();
     }
 }

@@ -138,6 +138,7 @@ public abstract class Jovp extends OpiMachine {
      *
      * @since 0.0.1
      */
+    @Parameter(name = "stim.length", className = Integer.class, desc = "The number of elements in this stimuli.", isList = false, min = 1, defaultValue = "1")
     @Parameter(name = "eye", className = es.optocom.jovp.definitions.Eye.class, desc = "The eye for which to apply the settings.", isList = true, defaultValue = "[LEFT]")
     @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
     @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")

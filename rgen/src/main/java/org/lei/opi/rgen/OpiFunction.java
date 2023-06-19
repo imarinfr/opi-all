@@ -80,6 +80,7 @@ public class OpiFunction {
     String opiInputFieldName;  // The input field name in OPI Standard. Can be empty for no param in the OPI standard.
     String opiReturnTemplate;  // A format string that is valid R with %s for places where return values should be plugged in. eg "list(err=%s")" 
     boolean createSocket;      // True if this function creates a socket
+    boolean addOtherParams;    // If true, include '...' in the function signature (eg for opiPresent)
     MethodData methodData;     // details on the @Parameters and @ReturnMsg
     String machineName;        // OpiMachine name that has called this...
     OpiMachine machine;        // the machine that has called this
@@ -92,14 +93,16 @@ public class OpiFunction {
     * @param opiInputFieldName Essential input field name in OPI Standard. Can be empty for no param in the OPI standard.
     * @param opiReturnTemplate A format string that is valid R with %s for places where return values should be plugged in. eg "list(err=%s")" 
     * @param createSocket If true, look for Parameters ipOPI... and portOPI and create a socket for other functions to use.
+    * @param addOtherParams If true, include '...' in the function signature (eg for opiPresent)
     */
     public OpiFunction(OpiMachine machine, String opiName, String opiCoreName, String opiInputFieldName,
-            String opiReturnTemplate, boolean createSocket) {
+            String opiReturnTemplate, boolean createSocket, boolean addOtherParams) {
         this.opiName = opiName;
         this.opiCoreName = opiCoreName;
         this.opiInputFieldName = opiInputFieldName;
         this.opiReturnTemplate = opiReturnTemplate;
         this.createSocket = createSocket;
+        this.addOtherParams = addOtherParams;
         this.machineName = machine.getClass().getSimpleName();
         this.machine = machine;
 
@@ -177,9 +180,10 @@ public class OpiFunction {
 
       // generate roxygen2 string for return value r
     private static Function<ReturnMsg, String> prettyReturn = (ReturnMsg r) -> {
-        String prefix = r.name().contains(".") ?
-            String.format("#'    - \\code{%s} ",r.name().replaceAll("\\.", "\\$")) :
-            String.format("#'  * \\code{%s} ",r.name());
+        //String prefix = r.name().contains(".") ?
+        //    String.format("#'    - \\code{%s} ",r.name().replaceAll("\\.", "\\$")) :
+        //    String.format("#'  * \\code{%s} ",r.name());
+        String prefix = String.format("#'  * \\code{%s} ",r.name());
         return prefix + wrapR(r.desc(), prefix.length(), false);
     };
 
@@ -230,6 +234,9 @@ public class OpiFunction {
             methodData.parameters.values().stream()
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
+        if (this.addOtherParams)
+            params += String.format("\n#'\n#' @param \\code{...} Parameters for other %s implementations that are ignored here.", this.opiName);
+
         String rets = "#' @return A list containing:\n" + 
             methodData.returnMsgs.values().stream()
             .map(prettyReturn)
@@ -282,18 +289,17 @@ public class OpiFunction {
         //msg <- c(list(command = "present"), lapply(stim, function(p) ifelse(is.null(p), NULL, p)))
         return String.format("""
         %s
-        msg <- list(%s)
+        msg <- list(%s)  
         msg <- c(list(command = "%s"), msg)
         msg <- msg[!unlist(lapply(msg, is.null))]
         msg <- rjson::toJSON(msg)
         writeLines(msg, %s$%s$socket)
     """, 
         checkNull.get(), // First check string
-        methodData.parameters().values().stream()  // msg list parameters
+        methodData.parameters().values().stream()  // non-optional msg list parameters
             .map((Parameter p) -> String.format("%s = %s%s", 
-                p.opiRName().length() > 0 ? p.opiRName() : p.name(), 
-                this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "",
-                p.opiRName().length() > 0 ? p.opiRName() : p.name()))
+                p.name(), 
+                this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "", p.opiRName().length() > 0 ? p.opiRName() : p.name()))
             .collect(Collectors.joining(", "))
         ,
         this.opiCoreName,  // command = 
@@ -309,6 +315,10 @@ public class OpiFunction {
         if (length(res) == 0)
             return(list(error = 5, msg = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
         res <- rjson::fromJSON(res)
+        if (res$error)
+            res <- c(err = res$msg)
+        else
+            res <- c(list(err = NULL), res$msg)
         return(res)
     """, 
         opiEnvName, this.machineName);
@@ -333,7 +343,10 @@ public class OpiFunction {
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 
             // (2) make the function header
-        String funcSignature = String.format("%s_for_%s <- function(%s)", this.opiName, machineName, this.opiInputFieldName);
+        String funcSignature = String.format("%s_for_%s <- function(%s%s)", 
+            this.opiName, 
+            machineName, 
+            this.opiInputFieldName, this.addOtherParams ? ", ..." : "");
 
             // (2) Make the first part of function body which 
             //     - either opens socket or uses existing socket

@@ -36,8 +36,8 @@ if (exists(".opi_env") && !exists("PhoneHMD", where = .opi_env))
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg} The success or error message.
-#'    - \code{res$error} Error code '0' if all good, something else otherwise.
+#'  * \code{res.msg} The success or error message.
+#'  * \code{res.error} Error code '0' if all good, something else otherwise.
 #'
 #' @details 
 #'
@@ -70,6 +70,10 @@ opiInitialise_for_PhoneHMD <- function(address) {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -85,8 +89,8 @@ opiInitialise_for_PhoneHMD <- function(address) {
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg} The error message or a structure with the following data.
-#'    - \code{res$error} '0' if success, something else if error.
+#'  * \code{res.msg} The error message or a structure with the following data.
+#'  * \code{res.error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -111,6 +115,10 @@ opiQueryDevice_for_PhoneHMD <- function() {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -139,8 +147,8 @@ opiQueryDevice_for_PhoneHMD <- function() {
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg} The error message or a structure with the result of QUERY OPI command.
-#'    - \code{res$error} '0' if success, something else if error.
+#'  * \code{res.msg} The error message or a structure with the result of QUERY OPI command.
+#'  * \code{res.error} '0' if success, something else if error.
 #'
 #' @details 
 #'
@@ -195,6 +203,10 @@ opiSetup_for_PhoneHMD <- function(settings) {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -213,7 +225,7 @@ opiSetup_for_PhoneHMD <- function(settings) {
 #'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 #'                 SQUARE, OPTOTYPE. (Optional)
 #'  * \code{sx} List of diameters along major axis of ellipse (degrees).
-#'  * \code{level} List of stimuli luminances (cd/m^2).
+#'  * \code{lum} List of stimuli luminances (cd/m^2).
 #'  * \code{colorMax} List of stimulus max colors for all shapes
 #'  * \code{sy} List of diameters along minor axis of ellipse (degrees). If not
 #'              received, then sy = sx (Optional)
@@ -229,24 +241,26 @@ opiSetup_for_PhoneHMD <- function(settings) {
 #'  * \code{frequency} List of frequencies (in cycles per degrees) for
 #'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{duration} List of stimuli presentation times (ms).
-#'  * \code{responseWindow} Time to wit for response including presentation time (ms).
+#'  * \code{t} List of stimuli presentation times (ms).
+#'  * \code{w} Time to wit for response including presentation time (ms).
 #'  * \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
 #'                    type != FLAT. (Optional)
 #'  * \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
 #'  * \code{x} List of x co-ordinates of stimuli (degrees).
 #'  * \code{y} List of y co-ordinates of stimuli (degrees).
 #'
+#' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
+#'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg$eyey} y co-ordinates of pupil at times eyet (degrees).
-#'    - \code{res$msg$eyex} x co-ordinates of pupil at times eyet (degrees).
-#'    - \code{res$msg$time} Response time from stimulus onset if button pressed (ms).
-#'    - \code{res$msg$eyed} Diameter of pupil at times eyet (mm).
-#'    - \code{res$msg$eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'    - \code{res$msg} Error message or a structure with the following fields.
-#'    - \code{res$error} '0' if success, something else if error.
-#'    - \code{res$msg$seen} '1' if seen, '0' if not.
+#'  * \code{res.msg.eyey} y co-ordinates of pupil at times eyet (degrees).
+#'  * \code{res.msg.eyex} x co-ordinates of pupil at times eyet (degrees).
+#'  * \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
+#'  * \code{res.msg.eyed} Diameter of pupil at times eyet (mm).
+#'  * \code{res.msg.eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'  * \code{res.msg} Error message or a structure with the following fields.
+#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{res.msg.seen} '1' if seen, '0' if not.
 #'
 #' @details 
 #'
@@ -260,8 +274,7 @@ opiSetup_for_PhoneHMD <- function(settings) {
 #'
 #' Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
 #'
-#' Elements in \code{level} can take on values in the range
-#'                   \code{[0.0, 1.0E10]}.
+#' Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
 #' Elements in \code{colorMax} can take on values in the
 #'                      range \code{[0.0, 1.0]}.
@@ -292,10 +305,9 @@ opiSetup_for_PhoneHMD <- function(settings) {
 #' Elements in \code{eye} can take on values in the set
 #'                 \code{{"left", "right", "both"}}.
 #'
-#' Elements in \code{duration} can take on values in the
-#'                      range \code{[0.0, 1.0E10]}.
+#' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
-#' \code{responseWindow} can take on values in the range \code{[0.0, 1.0E10]}.
+#' \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
 #' Elements in \code{contrast} can take on values in the
 #'                      range \code{[0.0, 1.0]}.
@@ -311,20 +323,19 @@ opiSetup_for_PhoneHMD <- function(settings) {
 #'
 #' @examples
 #' chooseOpi("PhoneHMD")
-#' result <- opiPresent(stim = list(sx = list(1.72), level = list(20.0),
-#'                   colorMax = list(list(1.0, 1.0, 1.0)), stim.length = 1,
-#'                   eye = list("LEFT"), duration = list(200.0),
-#'                   responseWindow = 1500.0, x = list(0.0), y = list(0.0)))
+#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(20.0), colorMax = list(list(1.0,
+#'                   1.0, 1.0)), stim.length = 1, eye = list("LEFT"),
+#'                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_PhoneHMD <- function(stim) {
+opiPresent_for_PhoneHMD <- function(stim, ...) {
     if(!exists(".opi_env") || !exists("PhoneHMD", envir = .opi_env) || !("socket" %in% names(.opi_env$PhoneHMD)) || is.null(.opi_env$PhoneHMD$socket))
         return(list(error = 3, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, level = stim$level, colorMax = stim$colorMax, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, colorMin = stim$colorMin, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, duration = stim$duration, responseWindow = stim$responseWindow, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
+    msg <- list(phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, lum = stim$lum, colorMax = stim$colorMax, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, colorMin = stim$colorMin, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, t = stim$t, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -334,6 +345,10 @@ opiPresent_for_PhoneHMD <- function(stim) {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -349,8 +364,8 @@ opiPresent_for_PhoneHMD <- function(stim) {
 #'
 #' @return A list containing:
 #'  * \code{res} List of result elements.
-#'    - \code{res$msg} The error message or additional results from the CLOSE command
-#'    - \code{res$error} '0' if success, something else if error.
+#'  * \code{res.msg} The error message or additional results from the CLOSE command
+#'  * \code{res.error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -375,6 +390,10 @@ opiClose_for_PhoneHMD <- function() {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 

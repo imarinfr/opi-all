@@ -613,15 +613,13 @@ public abstract class OpiMachine {
   
     /**
      * opiPresent: Present OPI stimulus in perimeter
-     * Note `stim.length` parameter is used in this.validateArgs, and so is needed for all machines.
      * 
      * @param args pairs of argument name and value
      * 
-     * @return A JSON object with return messages
+     * @return A Packet containing a JSON object
      *
      * @since 0.0.1
      */
-    @Parameter(name = "stim.length", className = Integer.class, desc = "The number of elements in this stimuli.", isList = false, min = 1, defaultValue = "1")
     @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
     @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
     @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following fields.")

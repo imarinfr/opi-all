@@ -36,8 +36,8 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg} The success or error message.
-#'    - \code{res$error} Error code '0' if all good, something else otherwise.
+#'  * \code{res.msg} The success or error message.
+#'  * \code{res.error} Error code '0' if all good, something else otherwise.
 #'
 #' @details 
 #'
@@ -70,6 +70,10 @@ opiInitialise_for_O900 <- function(address) {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -85,8 +89,8 @@ opiInitialise_for_O900 <- function(address) {
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg} The error message or a structure with the following data.
-#'    - \code{res$error} '0' if success, something else if error.
+#'  * \code{res.msg} The error message or a structure with the following data.
+#'  * \code{res.error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -111,6 +115,10 @@ opiQueryDevice_for_O900 <- function() {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -133,8 +141,8 @@ opiQueryDevice_for_O900 <- function() {
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg} The error message or a structure with the result of QUERY OPI command.
-#'    - \code{res$error} '0' if success, something else if error.
+#'  * \code{res.msg} The error message or a structure with the result of QUERY OPI command.
+#'  * \code{res.error} '0' if success, something else if error.
 #'
 #' @details 
 #'
@@ -177,6 +185,10 @@ opiSetup_for_O900 <- function(settings) {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -199,18 +211,19 @@ opiSetup_for_O900 <- function(settings) {
 #'  * \code{x} List of x co-ordinates of stimuli (degrees).
 #'  * \code{y} List of y co-ordinates of stimuli (degrees).
 #'  * \code{type} Stimulus type: STATIC or KINETIC.
-#'  * \code{stim.length} The number of elements in this stimuli.
+#'
+#' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'    - \code{res$msg$eyey} y co-ordinates of pupil at times eyet (degrees).
-#'    - \code{res$msg$eyex} x co-ordinates of pupil at times eyet (degrees).
-#'    - \code{res$msg$time} Response time from stimulus onset if button pressed (ms).
-#'    - \code{res$msg} Error message or a structure with the following fields.
-#'    - \code{res$error} '0' if success, something else if error.
-#'    - \code{res$msg$seen} '1' if seen, '0' if not.
-#'    - \code{res$msg$x} x co-ordinate when oberver responded (degrees) for KINETIC.
-#'    - \code{res$msg$y} y co-ordinate when oberver responded (degrees) for KINETIC.
+#'  * \code{res.msg.eyey} y co-ordinates of pupil at times eyet (degrees).
+#'  * \code{res.msg.eyex} x co-ordinates of pupil at times eyet (degrees).
+#'  * \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
+#'  * \code{res.msg} Error message or a structure with the following fields.
+#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{res.msg.seen} '1' if seen, '0' if not.
+#'  * \code{res.msg.x} x co-ordinate when oberver responded (degrees) for KINETIC.
+#'  * \code{res.msg.y} y co-ordinate when oberver responded (degrees) for KINETIC.
 #'
 #' @details 
 #'
@@ -231,22 +244,20 @@ opiSetup_for_O900 <- function(settings) {
 #'
 #' \code{type} can take on values in the set \code{{"static", "kinetic"}}.
 #'
-#' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
-#'
 #' @examples
 #' chooseOpi("O900")
 #' result <- opiPresent(stim = list(size = "GV", color = "null", lum = 3183.099, x = list(0.0),
-#'                   y = list(0.0), type = "null", stim.length = 1))
+#'                   y = list(0.0), type = "null"))
 #'
 #' @seealso [opiPresent()]
 #'
-opiPresent_for_O900 <- function(stim) {
+opiPresent_for_O900 <- function(stim, ...) {
     if(!exists(".opi_env") || !exists("O900", envir = .opi_env) || !("socket" %in% names(.opi_env$O900)) || is.null(.opi_env$O900$socket))
         return(list(error = 3, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type, stim.length = stim$stim.length)
+    msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)
@@ -256,6 +267,10 @@ opiPresent_for_O900 <- function(stim) {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 
@@ -271,8 +286,8 @@ opiPresent_for_O900 <- function(stim) {
 #'
 #' @return A list containing:
 #'  * \code{res} List of result elements.
-#'    - \code{res$msg} The error message or additional results from the CLOSE command
-#'    - \code{res$error} '0' if success, something else if error.
+#'  * \code{res.msg} The error message or additional results from the CLOSE command
+#'  * \code{res.error} '0' if success, something else if error.
 #'
 #'
 #'
@@ -297,6 +312,10 @@ opiClose_for_O900 <- function() {
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
+    if (res$error)
+        res <- c(err = res$msg)
+    else
+        res <- c(list(err = NULL), res$msg)
     return(res)
 }
 

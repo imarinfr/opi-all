@@ -1,19 +1,19 @@
 package org.lei.opi.core.definitions;
 
+import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.lei.opi.core.OpiListener;
-
-import java.io.PrintWriter;
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 /**
  * A class to hold string messages with attributes attached.
  */
 public class Packet {
     /** {@value JSON_TRUE} */
-    private static final String JSON_TRUE = "\"true\"";
+    private static final String JSON_TRUE = "true";
     /** {@value JSON_FALSE} */
-    private static final String JSON_FALSE = "\"false\"";
+    private static final String JSON_FALSE = "false";
 
     /** Constant for exception messages: {@value BAD_JSON} */
     public static final String BAD_JSON = "String is not a valid Json object.";
@@ -45,7 +45,8 @@ public class Packet {
         return String.format("{\"error\":%s,\"close\":%s,\"msg\":%s}", 
             this.error ? JSON_TRUE : JSON_FALSE, 
             this.close ? JSON_TRUE : JSON_FALSE, 
-            OpiListener.gson.toJson(this.getMsg())); 
+            this.getMsg()); 
+            //OpiListener.gson.toJson(this.getMsg()));     // removed 19 June 2023 - will it break JOVP?
     }
 
     /**
@@ -73,6 +74,15 @@ public class Packet {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
-        return error(String.format("{\"description\":\"%s\",\"exception\":\"%s\"}", description, sw.toString())); 
+        pw.close();
+
+        Gson gson = new Gson();
+        record Err(String description, String exception) { };
+        Err err = new Err(description, pw.toString());
+        try {
+            return error(gson.toJson(err));
+        } catch (JsonSyntaxException e) {
+            return error("Unknown error");
+        }
     }
 }
