@@ -297,17 +297,17 @@ ZEST <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
 
 #' @rdname ZEST
 #' @export
-ZEST.start <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
-            likelihood=sapply(domain, function(tt) 0.03 + (1-0.03-0.03)*(1-stats::pnorm(domain, tt, 1))),
-            stopType="S",
-            stopValue=1.5,
-            minStimulus=utils::head(domain, 1),
-            maxStimulus=utils::tail(domain, 1),
-            maxSeenLimit=2,
-            minNotSeenLimit=2,
-            maxPresentations=100,
+ZEST.start <- function(domain = 0:40, prior = rep(1/length(domain),length(domain)),
+            likelihood = sapply(domain, function(tt) 0.03 + (1-0.03-0.03)*(1-stats::pnorm(domain, tt, 1))),
+            stopType = "S",
+            stopValue = 1.5,
+            minStimulus = utils::head(domain, 1),
+            maxStimulus = utils::tail(domain, 1),
+            maxSeenLimit = 2,
+            minNotSeenLimit = 2,
+            maxPresentations = 100,
             makeStim,
-            stimChoice="mean",
+            stimChoice = "mean",
             ...) {
     ##########################
     # Validate params
@@ -315,39 +315,39 @@ ZEST.start <- function(domain=0:40, prior=rep(1/length(domain),length(domain)),
     if (!is.element(stopType, c("S", "H", "N")))
         stop("ZEST.start: stopType must be one of 'S', 'N', or 'H'")
     if (nrow(likelihood) != length(domain))
-        stop(paste("ZEST.start: not enough rows in likelihood. Expect",length(domain)))
+        stop(paste("ZEST.start: not enough rows in likelihood. Expect", length(domain)))
     if (ncol(likelihood) != length(domain))
-        stop(paste("ZEST.start: not enough cols in likelihood. Expect",length(domain)))
+        stop(paste("ZEST.start: not enough cols in likelihood. Expect", length(domain)))
 
     if (!is.element(minStimulus, domain))
-        warning(paste("ZEST.start: you specified minStimulus=",minStimulus,"but it is not in domain."))
+        stop(paste("ZEST.start: you specified minStimulus =", minStimulus, "but it is not in 'domain'."))
     if (!is.element(maxStimulus, domain))
-        warning(paste("ZEST.start: you specified maxStimulus=",maxStimulus,"but it is not in domain."))
+        stop(paste("ZEST.start: you specified maxStimulus =", maxStimulus, "but it is not in 'domain'."))
 
     pdf <- prior/sum(prior)
 
-    return(list(name="ZEST",
-                domain=domain, 
-                pdf=pdf,
-                likelihood=likelihood, 
-                stopType=stopType,
-                stopValue=stopValue,
-                minStimulus=minStimulus,
-                maxStimulus=maxStimulus,
-                maxSeenLimit=maxSeenLimit,
-                minNotSeenLimit=minNotSeenLimit,
-                maxPresentations=maxPresentations,
-                makeStim=makeStim,
-                stimChoice=stimChoice,
-                currSeenLimit=0,                    # number of times maxStimulus seen
-                currNotSeenLimit=0,                 # number of times minStimulus not seen
-                numPresentations=0,                 # number of presentations so far
-                stimuli=NULL,                       # vector of stims shown
-                responses=NULL,                     # vector of responses (1 seen, 0 not)
-                responseTimes=NULL,                 # vector of response times
-                fixated=NULL,                       # vector of true/false for fixated one per stimuli
-                opiResp=NULL,                       # list of opiPresent return values
-                opiParams=list(...)                 # the extra params
+    return(list(name = "ZEST",
+                domain = domain, 
+                pdf = pdf,
+                likelihood = likelihood, 
+                stopType = stopType,
+                stopValue = stopValue,
+                minStimulus = minStimulus,
+                maxStimulus = maxStimulus,
+                maxSeenLimit = maxSeenLimit,
+                minNotSeenLimit = minNotSeenLimit,
+                maxPresentations = maxPresentations,
+                makeStim = makeStim,
+                stimChoice = stimChoice,
+                currSeenLimit = 0,                    # number of times maxStimulus seen
+                currNotSeenLimit = 0,                 # number of times minStimulus not seen
+                numPresentations = 0,                 # number of presentations so far
+                stimuli = NULL,                       # vector of stims shown
+                responses = NULL,                     # vector of responses (1 seen, 0 not)
+                responseTimes = NULL,                 # vector of response times
+                fixated = NULL,                       # vector of true/false for fixated one per stimuli
+                opiResp = NULL,                       # list of opiPresent return values
+                opiParams = list(...)                 # the extra params
             ))
 }# ZEST.start
 
@@ -369,8 +369,14 @@ ZEST.step <- function(state, nextStim = NULL, fixedStimValue = NA) {
         stop(paste("ZEST.step: stimChoice = ",state$stimChoice," not implemented."))
     }
     stim <- state$domain[stimIndex]
-    stim <- max(stim, state$minStimulus)   # check not outside [minStimulus,maxStimulus]
-    stim <- min(stim, state$maxStimulus)
+    if (stim < state$minStimulus) {
+        stim <- state$minStimulus
+        stimIndex <- which.min(abs(stim - state$domain))
+    }
+    if (stim > state$maxStimulus) {
+        stim <- state$maxStimulus
+        stimIndex <- which.min(abs(stim - state$domain))
+    }
 
     if (!is.na(fixedStimValue))
         stim <- fixedStimValue
@@ -452,14 +458,14 @@ ZEST.final <- function(state) {
 #                  duration=200, responseWindow=1500, 
 #                   checkFixationOK=NULL)
 #         class(s) <- "opiStaticStimulus"
-#     
+#
 #         return(s)
 #     }
 #makeNextStim <- function(x,y) { 
 #         s <- list(x=9, y=9, level=dbTocd(db,10000/pi), size=0.43, color="white",
 #                  duration=200, responseWindow=1500, checkFixationOK=NULL)
 #         class(s) <- "opiStaticStimulus"
-#     
+#
 #         return(s)
 #     }
 #
