@@ -8,6 +8,8 @@ import java.util.HashMap;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
+import org.lei.opi.core.definitions.ICarePresentResults;
+import org.lei.opi.core.definitions.ICareQueryResults;
 
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -61,8 +63,8 @@ public abstract class Icare extends OpiMachine {
       public double maxX;
       public double minY;
       public double maxY;
-      public int minPressentationTime;
-      public int maxPressentationTime;
+      public int minPresentationTime;
+      public int maxPresentationTime;
       public int minResponseWindow;
       public int maxResponseWindow;
       public double backgroundLuminance;
@@ -151,12 +153,12 @@ public abstract class Icare extends OpiMachine {
      * @since 3.0.0
      */
     public Packet query() {
-      String results = queryResults();
+      ICareQueryResults results = queryResults();
 
       if (parentScene != null)
         Platform.runLater(()-> {
           textAreaCommands.appendText("\nOPI Query:\n");
-          textAreaCommands.appendText(results);
+          textAreaCommands.appendText(results.toString());
         });
       return new Packet(results);
     };
@@ -332,31 +334,30 @@ public abstract class Icare extends OpiMachine {
      *
      * @since 3.0.0
      */
-    private String queryResults() {
+    private ICareQueryResults queryResults() {
         String encodedImage = "";
         if (this.image != null) {
             Base64.Encoder encoder = Base64.getEncoder();
             encodedImage = encoder.encodeToString(this.image);
         }
-        return new StringBuilder("\n{\n")
-            .append("    \"prlx\": " + prlx + ",\n")
-            .append("    \"prly\": " + prly + ",\n")
-            .append("    \"onhx\": " + onhx + ",\n")
-            .append("    \"onhy\": " + onhy + ",\n")
-            .append("    \"image\": \"" + encodedImage + "\",\n")
-            .append("    \"minX\": " + settings.minX + ",\n")
-            .append("    \"maxX\": " + settings.maxX + ",\n")
-            .append("    \"minY\": " + settings.minY + ",\n")
-            .append("    \"maxY\": " + settings.maxY + ",\n")
-            .append("    \"minPressentationTime\": " + settings.minPressentationTime + ",\n")
-            .append("    \"maxPressentationTime\": " + settings.maxPressentationTime + ",\n")
-            .append("    \"minResponseWindow\": " + settings.minResponseWindow + ",\n")
-            .append("    \"maxResponseWindow\": " + settings.maxResponseWindow+ ",\n")
-            .append("    \"backgroundLuminance\": " + settings.backgroundLuminance + ",\n")
-            .append("    \"minLuminance\": " + settings.minLuminance + ",\n")
-            .append("    \"maxLuminance\": " + settings.maxLuminance + ",\n")
-            .append("    \"tracking\": " + settings.tracking + "\n")
-            .append("\n}").toString();
+        return new ICareQueryResults(
+            prlx,
+            prly,
+            onhx,
+            onhy,
+            encodedImage,
+            settings.minX,
+            settings.maxX,
+            settings.minY,
+            settings.maxY,
+            settings.minPresentationTime,
+            settings.maxPresentationTime,
+            settings.minResponseWindow,
+            settings.maxResponseWindow,
+            settings.backgroundLuminance,
+            settings.minLuminance,
+            settings.maxLuminance,
+            settings.tracking);
     };
   
     /**
@@ -368,19 +369,19 @@ public abstract class Icare extends OpiMachine {
      *
      * @since 3.0.0
      */
-    private String parseResult(String received) {
+    private ICarePresentResults parseResult(String received) {
       String[] message = received.split(" ");
       if (message[0] != "0") Packet.error(OPI_PRESENT_FAILED + "Error code received is: " + message[0]);
-      return new StringBuilder("\n  {\n")
-        .append("    \"seen\": " + message[1] + ",\n")
-        .append("    \"time\": " + message[2] + ",\n")
-        .append("    \"eyex\": " + message[9] + ",\n")
-        .append("    \"eyey\": " + message[10] + ",\n")
-        .append("    \"eyed\": " + message[8] + ",\n")
-        .append("    \"eyet\": " + message[3] + ",\n")
-        .append("    \"time_rec\": " + message[4] + ",\n")
-        .append("    \"time_resp\": " + message[5] + ",\n")
-        .append("    \"num_track_events\": " + message[6] + ",\n")
-        .append("    \"num_motor_fails\": " + message[7] + "\n}").toString();
+      return new ICarePresentResults(
+        message[1].equals("1"),
+        Integer.parseInt(message[2]),
+        Integer.parseInt(message[9]),
+        Integer.parseInt(message[10]),
+        Float.parseFloat(message[8]),
+        Integer.parseInt(message[3]),
+        Integer.parseInt(message[4]),
+        Integer.parseInt(message[5]),
+        Integer.parseInt(message[6]),
+        Integer.parseInt(message[7]));
     }
 }

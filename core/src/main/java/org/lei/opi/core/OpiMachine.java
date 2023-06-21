@@ -488,7 +488,8 @@ public abstract class OpiMachine {
         for (Parameter param : parameters) {
                 // mandatory parameter not received
             if (!pairs.containsKey(param.name()) && !param.optional())
-              return Packet.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
+              return Packet.error(String.format(MISSING_PARAMETER, 
+                param.opiRName().length() > 0 ?  param.opiRName() : param.name(), funcName, this.getClass()));
 
                 // optional parameter not here, add it in and go to next param
                 // (Note stim.length gets turned into a double by fromJSON)

@@ -3,6 +3,8 @@ package org.lei.opi.core.definitions;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+import org.lei.opi.core.OpiListener;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -45,14 +47,13 @@ public class Packet {
         return String.format("{\"error\":%s,\"close\":%s,\"msg\":%s}", 
             this.error ? JSON_TRUE : JSON_FALSE, 
             this.close ? JSON_TRUE : JSON_FALSE, 
-            this.getMsg()); 
-            //OpiListener.gson.toJson(this.getMsg()));     // removed 19 June 2023 - will it break JOVP?
+            OpiListener.gson.toJson(this.getMsg()));     // removed 19 June 2023 - will it break JOVP?
     }
 
     /**
      * Create a Packet with error=true
      * 
-     * @param description String error description (no extra quotes)
+     * @param description String error description (no extra quotes - so not JSON)
      * 
      * @return Packet 
      * 
@@ -76,11 +77,10 @@ public class Packet {
         exception.printStackTrace(pw);
         pw.close();
 
-        Gson gson = new Gson();
         record Err(String description, String exception) { };
         Err err = new Err(description, pw.toString());
         try {
-            return error(gson.toJson(err));
+            return error(OpiListener.gson.toJson(err));
         } catch (JsonSyntaxException e) {
             return error("Unknown error");
         }

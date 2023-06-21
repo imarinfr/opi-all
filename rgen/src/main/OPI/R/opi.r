@@ -48,22 +48,26 @@ assign("chosen_machine", NULL, .opi_env) # Chosen machine from machine_list by c
 #' It should be called before any other OPI functions.
 #'
 #' @param machine Machine name to use. Set to NULL to get a list.
-#' @returns NULL
+#' @returns NULL on success or list of machines otherwise.
 #' @export
 chooseOPI <- function(machine = NULL) {
     if (is.null(machine)) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
         print(unlist(.opi_env$machine_list))
-    } else if (! machine %in% .opi_env$machine_list) {
+        return(unlist(.opi_env$machine_list))
+    }
+
+    if (! machine %in% .opi_env$machine_list) {
         cat(sprintf("%s is not a valid OPI machine.\nYou should choose from:\n", machine))
         print(unlist(.opi_env$machine_list))
-    } else {
-        #if (machine == "PicoVR") machine <- "Jovp"
-        #if (machine == "Display") machine <- "Jovp"
-        #if (machine == "PhoneHMD") machine <- "Jovp"
-        #if (machine == "ImoVifa") machine <- "Jovp"
-        assign("chosen_machine", machine, .opi_env)
+        return(unlist(.opi_env$machine_list))
     }
+
+    #if (machine == "PicoVR") machine <- "Jovp"
+    #if (machine == "Display") machine <- "Jovp"
+    #if (machine == "PhoneHMD") machine <- "Jovp"
+    #if (machine == "ImoVifa") machine <- "Jovp"
+    assign("chosen_machine", machine, .opi_env)
     return(NULL)
 }
 
