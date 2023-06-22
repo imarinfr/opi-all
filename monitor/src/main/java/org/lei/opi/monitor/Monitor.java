@@ -383,7 +383,7 @@ public class Monitor extends Application {
             }
         });
 
-        this.myIpAddress = OpiListener.obtainPublicAddress().getHostAddress(); // set ot localhost as assumed
+        this.myIpAddress = OpiListener.obtainPublicAddress().getHostAddress(); // set to localhost as assumed
         this.fieldMyIP.setText(this.myIpAddress);
 
             // (4) Set window size

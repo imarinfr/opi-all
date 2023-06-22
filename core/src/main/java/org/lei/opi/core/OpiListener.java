@@ -154,7 +154,7 @@ public class OpiListener extends Thread {
     public void run() {
         Socket socket;
         try {
-            server = new ServerSocket(this.port, 0, this.address);
+            server = new ServerSocket(this.port); //, 0, this.address);
             socket = server.accept();
             this.connected = true;
             incoming = new BufferedReader(new InputStreamReader(socket.getInputStream(), CHARSET_NAME));
