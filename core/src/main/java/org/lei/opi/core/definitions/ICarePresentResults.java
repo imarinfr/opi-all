@@ -7,8 +7,8 @@ public record ICarePresentResults (
     int eyey,       // location of projection on image in pixels
     float eyed,
     int eyet,    // hardware time of button press
-    int time_rec,  // epoch time command received
-    int time_resp,  // epoch time command response
+    long time_rec,  // epoch time command received
+    long time_resp,  // epoch time command response
     int num_track_events,
     int num_motor_fails) 
 { 

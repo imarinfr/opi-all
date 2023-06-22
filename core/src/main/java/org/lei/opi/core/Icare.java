@@ -379,8 +379,8 @@ public abstract class Icare extends OpiMachine {
         Integer.parseInt(message[10]),
         Float.parseFloat(message[8]),
         Integer.parseInt(message[3]),
-        Integer.parseInt(message[4]),
-        Integer.parseInt(message[5]),
+        Long.parseLong(message[4]),
+        Long.parseLong(message[5]),
         Integer.parseInt(message[6]),
         Integer.parseInt(message[7]));
     }
