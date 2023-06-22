@@ -5,7 +5,6 @@ import java.io.StringWriter;
 
 import org.lei.opi.core.OpiListener;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 /**
