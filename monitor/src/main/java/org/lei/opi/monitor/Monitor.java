@@ -464,24 +464,29 @@ public class Monitor extends Application {
      */
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("resources/Monitor.fxml"));
-    
-        Scene scene = new Scene(root, 800, 515);
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("resources/Monitor.fxml"));
+        
+            Scene scene = new Scene(root, 800, 515);
 
-        stage.setTitle("OPI Monitor (v3.0 2022)");
-        stage.setScene(scene);
+            stage.setTitle("OPI Monitor (v3.0 2022)");
+            stage.setScene(scene);
 
-            // whenever we return to the home scene
-            // (1) Kill the opiClientListener 
-            // (2) Set labelMessage to ""
-        stage.sceneProperty().addListener((observable, oldScene, newScene) -> {
-            if (newScene == scene && Monitor.opiClientListener != null) {
-                Monitor.opiClientListener.closeListener();
-                Monitor.opiClientListener = null;
-            }
-        });
+                // whenever we return to the home scene
+                // (1) Kill the opiClientListener 
+                // (2) Set labelMessage to ""
+            stage.sceneProperty().addListener((observable, oldScene, newScene) -> {
+                if (newScene == scene && Monitor.opiClientListener != null) {
+                    Monitor.opiClientListener.closeListener();
+                    Monitor.opiClientListener = null;
+                }
+            });
 
-        stage.show();
+            stage.show();
+        } catch (Throwable e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     /**
@@ -497,6 +502,6 @@ public class Monitor extends Application {
 
     // should not be called directly from command line.
     public static void main(String[] args) {
-        launch(); 
+       launch(); 
     }
 }
