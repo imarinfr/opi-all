@@ -139,7 +139,8 @@ public class OpiJovp extends OpiListener {
         if (configuration.fullScreen()) psychoEngine.setFullScreen();
 
         this.action = null; 
-        psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
+        //psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
+        psychoEngine.start(configuration.input(), Paradigm.CLICKER);
 
         this.psychoEngine.cleanup();
     }
@@ -215,6 +216,7 @@ public class OpiJovp extends OpiListener {
     Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
       configuration.calibration().getMaxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor());
+
     return new Packet(q.toJson());
   }
 
@@ -310,7 +312,7 @@ public class OpiJovp extends OpiListener {
   }
 
     // args[0] = port number
-    // not opiJovp is `running` on a separate thread as a server
+    // note opiJovp is `running` on a separate thread as a server
     public static void main(String args[]) {
         if (args.length != 1) {
             System.out.println("Usage: java -jar opiJovp.jar [port number]");

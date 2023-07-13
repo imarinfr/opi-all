@@ -20,7 +20,7 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param monitor display of the OPI JOVP machine
  * @since 0.0.1
  */
-public record Query(int distance, double[] fov, ViewMode viewMode, String input, boolean pseudoGray,
+public record Query(int distance, float[] fov, ViewMode viewMode, String input, boolean pseudoGray,
                     boolean fullScreen, boolean tracking, double[] maxLum, String gammaFile, Monitor monitor) {
 
   /**
@@ -42,7 +42,7 @@ public record Query(int distance, double[] fov, ViewMode viewMode, String input,
       .append("    \"maxLum\": " + Arrays.toString(maxLum));
     if (monitor != null) {
       int[] colorDepth = monitor.getColorDepth();
-      double[] dpi = monitor.getDpi();  
+      float[] dpi = monitor.getDpi();  
       str.append(",\n")
         .append("    \"xFov\": " + fov[0] + ",\n")
         .append("    \"yFov\": " + fov[1] + ",\n")

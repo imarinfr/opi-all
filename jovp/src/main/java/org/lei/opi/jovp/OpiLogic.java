@@ -9,6 +9,7 @@ import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Texture;
 import es.optocom.jovp.definitions.Command;
+import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.TextureType;
 
@@ -75,7 +76,7 @@ public class OpiLogic implements PsychoLogic {
             fixations[i].size(DEFAULT_FIXATION_SIZE);
 
         stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
-        stimulus.show(false);
+        stimulus.show(Eye.NONE);
     }
 
     /**
@@ -88,25 +89,28 @@ public class OpiLogic implements PsychoLogic {
     @Override
     public void init(PsychoEngine psychoEngine) {
       // set size of the background to be the field of view
-      double[] fov = psychoEngine.getFieldOfView();
+      float[] fov = psychoEngine.getFieldOfView();
       // add perimetry items: background, fixation, and stimulus.
       for (int i = 0; i < backgrounds.length; i++) {
-        fixations[i].position(0, 0, driver.getConfiguration().distance() - 3);
-        items.add(fixations[i]);
+        fixations[i].position(0, 0);
+        fixations[i].distance(driver.getConfiguration().distance() - 3);
+        view.add(fixations[i]);
 
-        backgrounds[i].position(0, 0, driver.getConfiguration().distance() - 1);
+        backgrounds[i].position(0, 0);
+        backgrounds[i].distance(driver.getConfiguration().distance() - 1);
         backgrounds[i].size(fov[0], fov[1]);
-        items.add(backgrounds[i]);
+        view.add(backgrounds[i]);
       }
-      stimulus.position(0, 0, driver.getConfiguration().distance() - 2);
-      items.add(stimulus);
+      stimulus.position(0, 0);
+      stimulus.distance(driver.getConfiguration().distance() - 2);
+      view.add(stimulus);
       driver.setActionToNull(); // Action is over
     }
 
     /**
      * Process input
      *
-     * @param command the command received
+     * @param command the command received  
      * 
      * @since 0.0.1
      */
@@ -117,7 +121,7 @@ public class OpiLogic implements PsychoLogic {
       if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
       driver.setResponse(new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255));
       timer.stop();
-      stimulus.show(false);
+      stimulus.show(Eye.NONE);
     }
 
     /**
@@ -129,7 +133,7 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void update(PsychoEngine psychoEngine) {
-      double[] fov = psychoEngine.getFieldOfView();
+      float[] fov = psychoEngine.getFieldOfView();
       for (int i = 0; i < backgrounds.length; i++) 
         backgrounds[i].size(fov[0], fov[1]);
 
@@ -182,7 +186,6 @@ public class OpiLogic implements PsychoLogic {
     private void present() {
       stimIndex = 0;
       updateStimulus(stimIndex);
-      stimulus.show(true);
       timer.start();
       presentationTime = 0;
       driver.setActionToNull();
@@ -191,11 +194,11 @@ public class OpiLogic implements PsychoLogic {
     /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
     private void checkAction() {
         if (timer.getElapsedTime() > 0) // if timer is active, we are presenting
-            if (stimulus.show() && timer.getElapsedTime() > presentationTime + driver.getStimulus(stimIndex).t()) {
+            if (stimulus.showing() && timer.getElapsedTime() > presentationTime + driver.getStimulus(stimIndex).t()) {
                 presentationTime += driver.getStimulus(stimIndex).t();
                 // if presentation time is over for the last element of the array, then hide stimulus
                 if (stimIndex == driver.getStimuliLength() - 1) 
-                    stimulus.show(false);
+                    stimulus.show(Eye.NONE);
                 else 
                     updateStimulus(++stimIndex);
             } else if (timer.getElapsedTime() > driver.getStimulus(stimIndex).w()) {
@@ -209,7 +212,10 @@ public class OpiLogic implements PsychoLogic {
     /** Update stimulus upon request */
     private void updateStimulus(int index) {
         Stimulus stim = driver.getStimulus(index);
-        stimulus.eye(stim.eye());
+System.out.println("Item eye:" + stimulus.getEye());
+        stimulus.show(stim.eye());
+System.out.println("Local stim eye:" + stim.eye());
+System.out.println("Item eye:" + stimulus.getEye());
             // for performance, do not regenerate stimulus model and texture unless it has changed
         boolean newTexture = index == 0;
         boolean newModel = index == 0;
