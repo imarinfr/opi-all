@@ -28,6 +28,8 @@ public abstract class Jovp extends OpiMachine {
         public String input;
         public boolean tracking;
         public String gammaFile;
+
+        public void setScreen(int screen) { this.screen = screen; }
     };
 
     /** Settings */
@@ -58,13 +60,16 @@ public abstract class Jovp extends OpiMachine {
     /**
     * opiInitialise: initialize OPI
     * 
-    * @param args A map of name:value pairs for Params - ignored here.
+    * @param args A map of name:value pairs for Params these are used to overide any of the default initConfiguration().
     * 
     * @return A JSON object with machine specific initialise information
     * 
     * @since 0.0.1
     */
     public Packet initialize(HashMap<String, Object> args) {
+        if (args != null && args.containsKey("screen")) // TODO this is a horrible hack to allow for IMO. 
+          settings.setScreen((int)args.get("screen"));
+
         try {
             this.send(initConfiguration());
             Packet p = this.receive();

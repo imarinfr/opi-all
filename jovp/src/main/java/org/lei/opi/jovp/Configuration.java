@@ -108,12 +108,19 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
     private static Calibration loadCalibration(String gammaFile) throws IllegalArgumentException, ClassCastException, IOException {
         Gson gson = new Gson();
         String jsonStr;
+        System.out.println("attempting to load gamma file from path " + gammaFile);
         // Get calibration from a path or from resources
         try(InputStream inputStream = new FileInputStream(gammaFile)) {
             jsonStr = calibrationFromPath(gammaFile);
         } catch (IOException e) { // if gamma not path, then see if it is in resources
-            jsonStr = calibrationFromResources(gammaFile);
-          // if gamma not path and not a resource file, then throw IOException
+            System.out.println("Cannot load gamma file from path " + gammaFile + " trying resources");
+            try {
+              jsonStr = calibrationFromResources(gammaFile);
+            } catch (Exception e2) {
+              System.out.println("Cannot load gamma file from resources either. Giving up.");
+              // if gamma not path and not a resource file, then throw IOException
+              throw e2;
+            }
         }
 
         HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());

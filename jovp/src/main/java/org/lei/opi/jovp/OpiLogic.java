@@ -212,10 +212,7 @@ public class OpiLogic implements PsychoLogic {
     /** Update stimulus upon request */
     private void updateStimulus(int index) {
         Stimulus stim = driver.getStimulus(index);
-System.out.println("Item eye:" + stimulus.getEye());
         stimulus.show(stim.eye());
-System.out.println("Local stim eye:" + stim.eye());
-System.out.println("Item eye:" + stimulus.getEye());
             // for performance, do not regenerate stimulus model and texture unless it has changed
         boolean newTexture = index == 0;
         boolean newModel = index == 0;

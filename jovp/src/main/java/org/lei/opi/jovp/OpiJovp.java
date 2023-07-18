@@ -200,6 +200,7 @@ public class OpiJovp extends OpiListener {
             setAction(Action.SHOW);
             return new Packet(INITIALIZED);
         } catch (IllegalArgumentException | ClassCastException | IOException | NullPointerException e) {
+            e.printStackTrace();
             return Packet.error(INITIALIZE_FAILED, e);
         }
     }
@@ -211,7 +212,7 @@ public class OpiJovp extends OpiListener {
    */
   private Packet query() {
     if (configuration == null || psychoEngine == null)
-        return Packet.error("JOVP is not ready yet. Try again or call initialise()");
+        return Packet.error("JOVP is not ready yet. Try again or call opiInitialise()");
 
     Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
@@ -230,6 +231,8 @@ public class OpiJovp extends OpiListener {
    * @since 0.1.0
    */
   private Packet setup(HashMap<String, Object> args) {
+    if (configuration == null)
+        return Packet.error("JOVP is not ready yet. Try again or call opiInitialise()");
     try {
       // Get eye for the instruction
       Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());

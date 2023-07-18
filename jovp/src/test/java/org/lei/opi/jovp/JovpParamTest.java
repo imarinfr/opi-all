@@ -3,7 +3,6 @@ package org.lei.opi.jovp;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -19,8 +18,6 @@ import org.lei.opi.core.definitions.Parameter;
 import org.junit.jupiter.api.Test;
 
 import es.optocom.jovp.Controller;
-import es.optocom.jovp.definitions.ModelType;
-import es.optocom.jovp.definitions.TextureType;
 
 /**
  *
@@ -189,8 +186,9 @@ public class JovpParamTest {
             System.out.println(String.format("[testInitialiseSetup] Cannot connect to %s:%s", server.getIP(), server.getPort()));
           else
             System.out.println(String.format("[testInitialiseSetup] Connected to %s:%s", server.getIP(), server.getPort()));
-
-          Packet result = machine.initialize(null);
+          
+          HashMap<String, Object> args = new HashMap<String, Object>(){{ put("screen", 1);}};
+          Packet result = machine.initialize(args);
           System.out.println(String.format("[testInitialiseSetup] %s", result));
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
@@ -201,7 +199,7 @@ public class JovpParamTest {
           result = machine.setup(hmap);
           System.out.println(String.format("[testInitialiseSetup] Setup result: %s", result));
 
-          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          try { Thread.sleep(20000); } catch (InterruptedException ignored) { ; }
 
           result = machine.close(); 
           System.out.println(String.format("[testInitialiseSetup] Close result: %s", result));
