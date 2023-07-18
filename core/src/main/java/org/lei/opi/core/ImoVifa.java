@@ -33,7 +33,12 @@ public class ImoVifa extends Jovp {
         Platform.runLater(()-> {
             if (textAreaCommands != null)
                 textAreaCommands.appendText("OPI Initialized");
-        });
+        });    
+            // Make sure screen = 1 is present for ImoVifa
+        if (args == null)
+            args = new HashMap<String, Object>(){{ put("screen", 1);}};
+        else
+            args.put("screen", 1);
         return super.initialize(args);
     };
   
