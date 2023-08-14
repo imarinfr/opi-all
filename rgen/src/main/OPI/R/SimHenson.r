@@ -154,7 +154,7 @@ opiPresent_for_SimHenson <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...)
     pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(level, mean = tt, sd = px_var))
 
     return(list(
-        err = NULL,
+        error = NULL,
         seen = stats::runif(1) < pr_seeing,
         time = 0
     ))

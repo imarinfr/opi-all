@@ -71,9 +71,9 @@ opiInitialise_for_O900 <- function(address) {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -116,9 +116,9 @@ opiQueryDevice_for_O900 <- function() {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -186,9 +186,9 @@ opiSetup_for_O900 <- function(settings) {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -268,9 +268,9 @@ opiPresent_for_O900 <- function(stim, ...) {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -313,9 +313,9 @@ opiClose_for_O900 <- function() {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 

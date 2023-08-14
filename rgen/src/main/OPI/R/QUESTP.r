@@ -454,21 +454,21 @@ QUESTP <- function(Fun, #function to be fitted, needs to output a probability of
         state <- r$state
         if (verbose == 2) {
             cat(sprintf("Presentation %2d: ", state$numPresentations))
-            cat(sprintf("stim= %5s response=%s ", paste0(as.numeric(tail(state$stimuli,1)), collapse = ", "),
-                        tail(state$responses,1)))
-            cat(sprintf("fixation= %1.0g ", tail(state$fixated,1)))
+            cat(sprintf("stim= %5s response=%s ", paste0(as.numeric(utils::tail(state$stimuli,1)), collapse = ", "),
+                        utils::tail(state$responses,1)))
+            cat(sprintf("fixation= %1.0g ", utils::tail(state$fixated,1)))
             cat(sprintf("stdev= %8.4g H= %8.4g\n", QUESTP.stdev(state), QUESTP.entropy(state)))
         }
         if (verbose > 0)
             pdfs <- c(pdfs, list(state$pdf))
 
         if (!is.na(minInterStimInterval) && !is.na(maxInterStimInterval))
-            Sys.sleep(runif(1, min = minInterStimInterval, max = maxInterStimInterval)/1000)
+            Sys.sleep(stats::runif(1, min = minInterStimInterval, max = maxInterStimInterval)/1000)
     }
 
     return(list(
-        npres = tail(state$numPresentations,1),        # number of presentations
-        respSeq = data.frame(ID = paste0(as.numeric(tail(state$stimuli,1)), collapse = ", "),
+        npres = utils::tail(state$numPresentations,1),        # number of presentations
+        respSeq = data.frame(ID = paste0(as.numeric(utils::tail(state$stimuli,1)), collapse = ", "),
                            responses = state$responses,
                            fixated = state$fixated,
                            stimuli = state$stimuli), # response sequence (list of triples)
@@ -633,9 +633,9 @@ QUESTP.step <- function(state, nextStim = NULL) {
 
     #stim <- getTargetStim(state)
 
-    if (length(stim) > 1 & opiQueryDevice()$isSim){
+    if (length(stim) > 1 && substr(opiQueryDevice()$machine, 1, 3) == "Sim") {
         if (is.function(state$opiParams$ttH)){
-            state$opiParams$tt <- max(state$opiParams$ttH(stim),0)
+            state$opiParams$tt <- max(state$opiParams$ttH(stim), 0)
         }else{
             stop("For multi-dimensional stimuli,
                  OPI needs a helper function for the stimulus

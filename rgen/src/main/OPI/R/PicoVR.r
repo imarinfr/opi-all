@@ -71,9 +71,9 @@ opiInitialise_for_PicoVR <- function(address) {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -116,9 +116,9 @@ opiQueryDevice_for_PicoVR <- function() {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -152,7 +152,8 @@ opiQueryDevice_for_PicoVR <- function() {
 #'
 #' @details 
 #'
-#' \code{eye} can take on values in the set \code{{"left", "right", "both"}}.
+#' \code{eye} can take on values in the set \code{{"left", "right",
+#'      "both", "none"}}.
 #'
 #' \code{fixShape} can take on values in the set \code{{"triangle",
 #'           "square", "polygon", "hollow_triangle", "hollow_square",
@@ -204,9 +205,9 @@ opiSetup_for_PicoVR <- function(settings) {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -303,7 +304,7 @@ opiSetup_for_PicoVR <- function(settings) {
 #'                       the range \code{[0.0, 300.0]}.
 #'
 #' Elements in \code{eye} can take on values in the set
-#'                 \code{{"left", "right", "both"}}.
+#'                 \code{{"left", "right", "both", "none"}}.
 #'
 #' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
@@ -346,9 +347,9 @@ opiPresent_for_PicoVR <- function(stim, ...) {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -391,9 +392,9 @@ opiClose_for_PicoVR <- function() {
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- rjson::fromJSON(res)
     if (res$error)
-        res <- c(err = res$msg)
+        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
-        res <- c(list(err = NULL), res$msg)
+        res <- c(list(err = NULL), res)
     return(res)
 }
 
