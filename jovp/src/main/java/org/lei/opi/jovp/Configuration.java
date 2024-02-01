@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.lei.opi.core.Jovp;
@@ -46,7 +47,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
     /** {@value PARADIGM} */
     static final Paradigm PARADIGM = Paradigm.CLICKER;
     /** {@value VALIDATION_LAYERS} */
-    static final boolean VALIDATION_LAYERS = PsychoEngine.VALIDATION_LAYERS;
+    static final boolean VALIDATION_LAYERS = false; // PsychoEngine.VALIDATION_LAYERS;
     /** {@value API_DUMP} */
     static final boolean API_DUMP = false;
 
@@ -106,14 +107,17 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
      * @since 0.0.1
      */
     private static Calibration loadCalibration(String gammaFile) throws IllegalArgumentException, ClassCastException, IOException {
+        //List<String> files = IOUtils.readLines(Jovp.class.getResourceAsStream("."), StandardCharsets.UTF_8);
+        //System.out.println("resources: " + files);
+
         Gson gson = new Gson();
         String jsonStr;
-        System.out.println("attempting to load gamma file from path " + gammaFile);
+        System.out.print("attempting to load gamma file from path " + gammaFile + "...");
         // Get calibration from a path or from resources
         try(InputStream inputStream = new FileInputStream(gammaFile)) {
             jsonStr = calibrationFromPath(gammaFile);
         } catch (IOException e) { // if gamma not path, then see if it is in resources
-            System.out.println("Cannot load gamma file from path " + gammaFile + " trying resources");
+            System.out.println("Cannot load gamma file from path " + gammaFile + " trying core/resources");
             try {
               jsonStr = calibrationFromResources(gammaFile);
             } catch (Exception e2) {
@@ -122,6 +126,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
               throw e2;
             }
         }
+        System.out.println("Success");
 
         HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
         double[] gammaRed = ((ArrayList<?>) pairs.get("gammaRed")).stream().mapToDouble(Double.class::cast).toArray();

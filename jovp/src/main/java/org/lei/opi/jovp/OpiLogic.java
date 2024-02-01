@@ -92,11 +92,11 @@ public class OpiLogic implements PsychoLogic {
       float[] fov = psychoEngine.getFieldOfView();
       // add perimetry items: background, fixation, and stimulus.
       for (int i = 0; i < backgrounds.length; i++) {
-        fixations[i].position(0, 0);
+        fixations[i].position(0.0d, 0.0d);
         fixations[i].distance(driver.getConfiguration().distance() - 3);
         view.add(fixations[i]);
 
-        backgrounds[i].position(0, 0);
+        backgrounds[i].position(0.0d, 0.0d);
         backgrounds[i].distance(driver.getConfiguration().distance() - 1);
         backgrounds[i].size(fov[0], fov[1]);
         view.add(backgrounds[i]);
