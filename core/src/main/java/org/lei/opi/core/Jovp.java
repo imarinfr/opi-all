@@ -67,9 +67,8 @@ public abstract class Jovp extends OpiMachine {
     * @since 0.0.1
     */
     public Packet initialize(HashMap<String, Object> args) {
-        if (args != null && args.containsKey("screen")) // TODO this is a horrible hack to allow for IMO. 
-          settings.setScreen((int)args.get("screen"));
-
+        //if (args != null && args.containsKey("screen")) // TODO this is a horrible hack to allow for IMO. 
+        //  settings.setScreen((int)args.get("screen"));
         try {
             this.send(initConfiguration());
             Packet p = this.receive();
@@ -151,9 +150,9 @@ public abstract class Jovp extends OpiMachine {
     @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "[200]")
     @Parameter(name = "w", className = Double.class, desc = "Time to wait for response including presentation time (ms).", isList = false, min = 0, defaultValue = "1500")
     @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "[300]")
-    @Parameter(name = "colorMax", className = Double.class, desc = "List of stimulus max colors for all shapes", isListList = true, min = 0, max = 1, defaultValue = "[[1,1,1]]")
+    @Parameter(name = "color1", className = Double.class, desc = "List of stimulus colors for FLAT shapes and patterns.", isListList = true, min = 0, max = 1, defaultValue = "[[0,0,0]]")
     @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "[1.72]")
-    @Parameter(name = "colorMin", className = Double.class, desc = "List of stimulus min colors for non-FLAT shapes.", isListList = true, optional = true, min = 0, max = 1, defaultValue = "[[0,0,0]]")
+    @Parameter(name = "color2", className = Double.class, desc = "List of second colors for non-FLAT shapes", isListList = true, optional = true, min = 0, max = 1, defaultValue = "[[1,1,1]]")
     @Parameter(name = "rotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if sx != sy specified.", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
     @Parameter(name = "contrast", className = Double.class, desc = "List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.", isList = true, optional = true, min = 0, max = 1, defaultValue = "[1]")
     @Parameter(name = "phase", className = Double.class, desc = "List of phases (in degrees) for generation of spatial patterns. Only useful if type != FLAT", isList = true, optional = true, min = 0, defaultValue = "[0]")

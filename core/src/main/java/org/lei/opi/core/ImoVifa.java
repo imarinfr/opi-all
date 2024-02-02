@@ -34,11 +34,13 @@ public class ImoVifa extends Jovp {
             if (textAreaCommands != null)
                 textAreaCommands.appendText("OPI Initialized");
         });    
-            // Make sure screen = 1 is present for ImoVifa
+            // Make sure screen = 1 and viewMode = "STEREO" is present for ImoVifa
         if (args == null)
             args = new HashMap<String, Object>(){{ put("screen", 1);}};
         else
             args.put("screen", 1);
+
+        args.put("viewMode", "STEREO");
         return super.initialize(args);
     };
   

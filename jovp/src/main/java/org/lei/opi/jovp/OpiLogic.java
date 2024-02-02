@@ -242,7 +242,7 @@ public class OpiLogic implements PsychoLogic {
         stimulus.size(stim.sx(), stim.sy());
         stimulus.rotation(stim.rotation());
           // NOTE - JOVP seems to have color1 and color2 reversed for FLAT
-        stimulus.setColors(gammaLumToColor(stim.lum(), stim.colorMin()), gammaLumToColor(stim.lum(), stim.colorMax()));
+        stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
         stimulus.contrast(stim.contrast());
         stimulus.frequency(stim.phase(), stim.frequency());
         stimulus.defocus(stim.defocus());

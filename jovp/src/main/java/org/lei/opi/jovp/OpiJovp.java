@@ -56,6 +56,8 @@ public class OpiJovp extends OpiListener {
     private static final String SETUP_FAILED = "SETUP failed";
     /** {@value PRESENT_FAILED} */
     protected static final String PRESENT_FAILED = "An error occurred during PRESENT command";
+    /** {@value NO_BOTH_IN_MONO} */
+    protected static final String NO_BOTH_IN_MONO = "I cannot present to BOTH eyes in MONO mode.";
     /** {@value NO_LEFT_BACKGROUND} */
     protected static final String NO_LEFT_BACKGROUND = "You have asked to PRESENT in the left/both eye/s but you have not called `setup` on the left/both eye/s.";
     /** {@value NO_RIGHT_BACKGROUND} */
@@ -89,6 +91,7 @@ public class OpiJovp extends OpiListener {
 
     public Configuration getConfiguration() { return configuration; }
     public Action getAction() { return action; }
+    //public Setup[] getBackgrounds() { return backgrounds; }
     public Setup[] getBackgrounds() { return backgrounds; }
     public Stimulus getStimulus(int i) throws ArrayIndexOutOfBoundsException { return stimuli[i]; }
     public int getStimuliLength() { return stimuli.length; }
@@ -124,7 +127,7 @@ public class OpiJovp extends OpiListener {
         }
 
         if (configuration == null) {
-            System.out.println("Cannot start the psychoengine with a null configuration");
+            System.out.println("Cannot start the psychoEngine with a null configuration");
             return;
         }
 
@@ -132,6 +135,8 @@ public class OpiJovp extends OpiListener {
 
         psychoEngine.hide();
         psychoEngine.setMonitor(configuration.screen());
+
+        psychoEngine.setViewMode(configuration.viewMode());
 
         if(configuration.physicalSize().length != 0)
             psychoEngine.setPhysicalSize(configuration.physicalSize()[0], configuration.physicalSize()[1]);
@@ -195,7 +200,7 @@ public class OpiJovp extends OpiListener {
             this.prefix = "OPI JOVP " + configuration.machine() + ": ";
             switch (configuration.viewMode()) {
               case MONO -> backgrounds = new Setup[] {null};
-              case STEREO -> backgrounds = new Setup[] {null, null};
+              case STEREO -> backgrounds = new Setup[] {null, null}; 
             }
             setAction(Action.SHOW);
             return new Packet(INITIALIZED);
@@ -272,6 +277,8 @@ public class OpiJovp extends OpiListener {
                 .map((String s) -> Eye.valueOf((s).toUpperCase()))
                 .toList();
             for (Eye eye : eyes) {
+                if (eye == Eye.BOTH && backgrounds.length == 1)
+                    return Packet.error(prefix + NO_BOTH_IN_MONO);
                 if ((eye == Eye.BOTH || eye == Eye.LEFT) && backgrounds[0] == null)
                     return Packet.error(prefix + NO_LEFT_BACKGROUND);
                 if ((eye == Eye.BOTH || eye == Eye.RIGHT) && backgrounds[1] == null)

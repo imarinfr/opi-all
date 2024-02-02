@@ -24,8 +24,8 @@ import es.optocom.jovp.definitions.TextureType;
 * @param sx major axis size of the stimulus in degrees of visual angle
 * @param sy minor axis size of the stimulus in degrees of visual angle
 * @param lum cd/m^2 for stimulus 
-* @param colorMin stimulus color 1 for flat surfaces and patterns
-* @param colorMax stimulus color 2 for patterns
+* @param color1 stimulus color 1 for flat surfaces and patterns
+* @param color2 stimulus color 2 for patterns
 * @param rotation rotation of the stimulus in degrees
 * @param contrast stimulus contrast
 * @param phase stimulus spatial phase
@@ -42,8 +42,8 @@ import es.optocom.jovp.definitions.TextureType;
 public record Stimulus(Eye eye, ModelType shape, TextureType type,
                       double x, double y, double sx, double sy,
                       double lum, 
-                      double[] colorMin, 
-                      double[] colorMax, 
+                      double[] color1, 
+                      double[] color2, 
                       double rotation, 
                       double contrast,
                       double phase, double frequency, double defocus,
@@ -80,8 +80,8 @@ public record Stimulus(Eye eye, ModelType shape, TextureType type,
                 toDoubleArray(args.get("sx"))[index], 
                 toDoubleArray(args.get("sy"))[index],
                 toDoubleArray(args.get("lum"))[index], 
-                toColorArray(args.get("colorMin"))[index], 
-                toColorArray(args.get("colorMax"))[index],
+                toColorArray(args.get("color1"))[index], 
+                toColorArray(args.get("color2"))[index],
                 toDoubleArray(args.get("rotation"))[index], 
                 toDoubleArray(args.get("contrast"))[index],
                 toDoubleArray(args.get("phase"))[index], 
