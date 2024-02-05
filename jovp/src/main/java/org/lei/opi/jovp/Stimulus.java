@@ -7,7 +7,7 @@ import static org.lei.opi.jovp.JsonProcessor.toObjectStream;
 
 import java.util.HashMap;
 
-
+import es.optocom.jovp.definitions.EnvelopeType;
 import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.Optotype;
@@ -50,7 +50,9 @@ public record Stimulus(Eye eye, ModelType shape, TextureType type,
                       double texRotation, 
                       double t, double w,
                       String imageFilename,
-                      Optotype optotype) {
+                      Optotype optotype,
+                      EnvelopeType envType, 
+                      double envSdx, double envSdy, double envRotation) {
 
     /**
      * Create an array of stimulus record from R OPI of length `stim.length`
@@ -91,7 +93,11 @@ public record Stimulus(Eye eye, ModelType shape, TextureType type,
                 toDoubleArray(args.get("t"))[index], 
                 (double)args.get("w"),
                 toStringArray(args.get("imageFilename"))[index],
-                toObjectStream(args.get("optotype"), Optotype.class).toArray(Optotype[]::new)[index]
+                toObjectStream(args.get("optotype"), Optotype.class).toArray(Optotype[]::new)[index],
+                toObjectStream(args.get("envType"), EnvelopeType.class).toArray(EnvelopeType[]::new)[index],
+                toDoubleArray(args.get("envSdx"))[index],
+                toDoubleArray(args.get("envSdy"))[index],
+                toDoubleArray(args.get("envRotation"))[index]
             );
         }
         return stimuli;

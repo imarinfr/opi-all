@@ -263,6 +263,8 @@ public class OpiLogic implements PsychoLogic {
         stimulus.texRotation(stim.texRotation());
         stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
 
+        stimulus.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
+
         stimulus.show(stim.eye());
     }
 
