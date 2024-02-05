@@ -59,6 +59,8 @@ public class OpiLogic implements PsychoLogic {
                 fixations = new Item[] {
                     new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
                 };
+                backgrounds[0].show(Eye.BOTH);
+                fixations[0].show(Eye.BOTH);
           }
             case STEREO -> {
                 backgrounds = new Item[] {
@@ -69,6 +71,10 @@ public class OpiLogic implements PsychoLogic {
                     new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture()),
                     new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
                 };
+                backgrounds[0].show(Eye.LEFT);
+                backgrounds[1].show(Eye.RIGHT);
+                fixations[0].show(Eye.LEFT);
+                fixations[1].show(Eye.RIGHT);
             }
         }
 
@@ -88,23 +94,26 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void init(PsychoEngine psychoEngine) {
-      // set size of the background to be the field of view
-      float[] fov = psychoEngine.getFieldOfView();
-      // add perimetry items: background, fixation, and stimulus.
-      for (int i = 0; i < backgrounds.length; i++) {
-        fixations[i].position(0.0d, 0.0d);
-        fixations[i].distance(driver.getConfiguration().distance() - 3);
-        view.add(fixations[i]);
+        // set size of the background to be the field of view
+        float[] fov = psychoEngine.getFieldOfView();
 
-        backgrounds[i].position(0.0d, 0.0d);
-        backgrounds[i].distance(driver.getConfiguration().distance() - 1);
-        backgrounds[i].size(fov[0], fov[1]);
-        view.add(backgrounds[i]);
-      }
-      stimulus.position(0, 0);
-      stimulus.distance(driver.getConfiguration().distance() - 2);
-      view.add(stimulus);
-      driver.setActionToNull(); // Action is over
+        // add perimetry items: background, fixation, and stimulus.
+        for (int i = 0; i < backgrounds.length; i++) {
+          fixations[i].position(0.0d, 0.0d);
+          fixations[i].distance(driver.getConfiguration().distance() - 3);
+          view.add(fixations[i]);
+
+          backgrounds[i].position(0.0d, 0.0d);
+          backgrounds[i].distance(driver.getConfiguration().distance() - 1);
+          backgrounds[i].size(fov[0], fov[1]);    // TODO: Will this work for Images?
+          view.add(backgrounds[i]);
+        }
+
+        stimulus.position(0, 0);
+        stimulus.distance(driver.getConfiguration().distance() - 2);
+        view.add(stimulus);
+
+        driver.setActionToNull(); // Action is over
     }
 
     /**
@@ -135,7 +144,7 @@ public class OpiLogic implements PsychoLogic {
     public void update(PsychoEngine psychoEngine) {
       float[] fov = psychoEngine.getFieldOfView();
       for (int i = 0; i < backgrounds.length; i++) 
-        backgrounds[i].size(fov[0], fov[1]);
+        backgrounds[i].size(fov[0], fov[1]);  // TODO: again, will this work for image backgrounds?
 
       // Instructions are always given by the OpiDriver.
       // OpiLogic sets action back to null once instruction is carried out,
@@ -147,9 +156,12 @@ public class OpiLogic implements PsychoLogic {
           case SHOW -> show(psychoEngine);
           case SETUP -> setup();
           case PRESENT -> present();
-          case CLOSE -> psychoEngine.finish();
+          case CLOSE -> {
+            psychoEngine.finish();
+            System.exit(0);
+          }
         }
-    }
+      }
 
     /** Show psychoEngine */
     private void show(PsychoEngine psychoEngine) {
@@ -163,23 +175,27 @@ public class OpiLogic implements PsychoLogic {
       driver.setActionToNull();
     }
 
-    /** Change background */
+    /** Change background and/or fixation markers */
     private void setup() {
-      for (int i = 0; i < backgrounds.length; i++) {
-        if (driver.getBackgrounds()[i] != null) {
-          double bgLum = driver.getBackgrounds()[i].bgLum();
-          double[] bgCol = driver.getBackgrounds()[i].bgCol();
-          double fixLum = driver.getBackgrounds()[i].fixLum();
-          double[] fixCol = driver.getBackgrounds()[i].fixCol();
-          backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
-          fixations[i].update(new Model(driver.getBackgrounds()[i].fixShape()));
-          fixations[i].position(driver.getBackgrounds()[i].fixCx(), driver.getBackgrounds()[i].fixCy());
-          fixations[i].size(driver.getBackgrounds()[i].fixSx(), driver.getBackgrounds()[i].fixSy());
-          fixations[i].rotation(driver.getBackgrounds()[i].fixRotation());
-          fixations[i].setColor(gammaLumToColor(fixLum, fixCol));
+        for (int i = 0; i < backgrounds.length; i++) {
+            Setup input_bg = driver.getBackgrounds()[i];
+            if (input_bg != null) {
+                double bgLum = input_bg.bgLum();
+                double[] bgCol = input_bg.bgCol();
+                backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
+
+                if (input_bg.bgImageFilename().length() > 0) {    // a bit yuck, but rgen needs a default value...
+                    backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
+                }
+
+                fixations[i].update(new Model(input_bg.fixShape()));
+                fixations[i].position(input_bg.fixCx(), input_bg.fixCy());
+                fixations[i].size(input_bg.fixSx(), input_bg.fixSy());
+                fixations[i].rotation(input_bg.fixRotation());
+                fixations[i].setColor(gammaLumToColor(input_bg.fixLum(), input_bg.fixCol()));
+            }
         }
-      }
-      driver.setActionToNull();
+        driver.setActionToNull();
     }
 
     /** Present stimulus upon request */
@@ -212,7 +228,7 @@ public class OpiLogic implements PsychoLogic {
     /** Update stimulus upon request */
     private void updateStimulus(int index) {
         Stimulus stim = driver.getStimulus(index);
-        stimulus.show(stim.eye());
+
             // for performance, do not regenerate stimulus model and texture unless it has changed
         boolean newTexture = index == 0;
         boolean newModel = index == 0;
@@ -241,12 +257,13 @@ public class OpiLogic implements PsychoLogic {
         stimulus.position(stim.x(), stim.y());
         stimulus.size(stim.sx(), stim.sy());
         stimulus.rotation(stim.rotation());
-          // NOTE - JOVP seems to have color1 and color2 reversed for FLAT
-        stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
         stimulus.contrast(stim.contrast());
         stimulus.frequency(stim.phase(), stim.frequency());
         stimulus.defocus(stim.defocus());
         stimulus.texRotation(stim.texRotation());
+        stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
+
+        stimulus.show(stim.eye());
     }
 
     /** 

@@ -65,6 +65,58 @@ public class JovpParamTest {
     System.out.println(Arrays.toString(Controller.getSuitableControllers()));
   }
 
+    @Test
+    public void testSetupParam_Display1() {
+        Jovp machine;
+        try {
+          machine= new Display(null);
+        } catch (Exception e) {
+            return;
+        }
+
+        ArrayList<Double> white = new ArrayList<Double>() { {add(1d); add(1d); add(1d);}};
+        ArrayList<Double> green = new ArrayList<Double>() { {add(0d); add(1d); add(0d);}};
+
+        HashMap<String, Object> args = new HashMap<String, Object>();
+
+        Packet p;
+
+        System.out.println("Minimal");
+        args.put("eye", "Left");
+        p = machine.validateArgs(args, machine.opiMethods.get("setup").parameters(), "setup");
+        System.out.println(p);
+
+        System.out.println("BgLum");
+        args.put("bgLum", 255);
+        args.put("bgCol", white);
+        p = machine.validateArgs(args, machine.opiMethods.get("setup").parameters(), "setup");
+        System.out.println(p);
+
+        System.out.println("Bg Image");
+        args.clear();
+        args.put("eye", "Right");
+        args.put("bgImageFilename", "/path/clouds1.jpg");
+        p = machine.validateArgs(args, machine.opiMethods.get("setup").parameters(), "setup");
+        System.out.println(p);
+        args.put("eye", "Left");
+        args.put("bgImageFilename", "/path/clouds2.jpg");
+        p = machine.validateArgs(args, machine.opiMethods.get("setup").parameters(), "setup");
+        System.out.println(p);
+
+        System.out.println("Fixation");
+        args.put("fixShape", "CROSS");
+        args.put("fixCx", 0.0);
+        args.put("fixCy", 0.0);
+        args.put("fixSx", 0.0);
+        args.put("fixLum", 0.0);
+        args.put("fixCol", green);
+        args.put("tracking", 0d);
+        args.put("fixRotation", 0d);
+
+        p = machine.validateArgs(args, machine.opiMethods.get("setup").parameters(), "setup");
+        System.out.println(p);
+    }
+
   /**
    *
    * Open monitor, send initialise message, get reply.

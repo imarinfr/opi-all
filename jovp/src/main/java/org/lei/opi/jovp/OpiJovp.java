@@ -91,7 +91,6 @@ public class OpiJovp extends OpiListener {
 
     public Configuration getConfiguration() { return configuration; }
     public Action getAction() { return action; }
-    //public Setup[] getBackgrounds() { return backgrounds; }
     public Setup[] getBackgrounds() { return backgrounds; }
     public Stimulus getStimulus(int i) throws ArrayIndexOutOfBoundsException { return stimuli[i]; }
     public int getStimuliLength() { return stimuli.length; }
@@ -116,7 +115,7 @@ public class OpiJovp extends OpiListener {
      * Run the psychoEngine. Needs to be started from the main thread
      * Connects in OpiLogic
      *
-     * @since 0.1.0
+     * @since v0.1.0
      */
     public void startPsychoEngine() {
         // Have to start PsychoEngine on the main thread (as it uses GLFW)

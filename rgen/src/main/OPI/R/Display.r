@@ -130,20 +130,21 @@ opiQueryDevice_for_Display <- function() {
 #' @usage NULL
 #'
 #' @param \code{settings} A list containing:
-#'  * \code{eye} The eye for which to apply the settings.
+#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
 #'  * \code{fixShape} Fixation target type for eye.
 #'  * \code{fixLum} Fixation target luminance for eye.
 #'  * \code{fixCx} x-coordinate of fixation target (degrees).
-#'  * \code{fixSx} diameter along major axis of ellipse (degrees).
 #'  * \code{fixCy} y-coordinate of fixation target (degrees).
-#'  * \code{fixSy} diameter along minor axis of ellipse (degrees). If not
-#'                 received, then sy = sx. (Optional)
-#'  * \code{fixRotation} Angles of rotation of fixation target (degrees). Only
-#'                       useful if sx != sy specified. (Optional)
 #'  * \code{fixCol} Fixation target color for eye.
 #'  * \code{bgLum} Background luminance for eye (cd/m^2).
 #'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
 #'  * \code{bgCol} Background color for eye (rgb).
+#'  * \code{eye} The eye for which to apply the settings.
+#'  * \code{fixSx} diameter along major axis of ellipse (degrees).
+#'  * \code{fixSy} diameter along minor axis of ellipse (degrees). If not
+#'                 received, then sy = sx. (Optional)
+#'  * \code{fixRotation} Angles of rotation of fixation target (degrees). Only
+#'                       useful if sx != sy specified. (Optional)
 #'
 #' @return A list containing:
 #'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
@@ -151,9 +152,6 @@ opiQueryDevice_for_Display <- function() {
 #'  * \code{res.error} '0' if success, something else if error.
 #'
 #' @details 
-#'
-#' \code{eye} can take on values in the set \code{{"left", "right",
-#'      "both", "none"}}.
 #'
 #' \code{fixShape} can take on values in the set \code{{"triangle",
 #'           "square", "polygon", "hollow_triangle", "hollow_square",
@@ -164,13 +162,7 @@ opiQueryDevice_for_Display <- function() {
 #'
 #' \code{fixCx} can take on values in the range \code{[-90.0, 90.0]}.
 #'
-#' \code{fixSx} can take on values in the range \code{[0.0, 1.0E10]}.
-#'
 #' \code{fixCy} can take on values in the range \code{[-90.0, 90.0]}.
-#'
-#' \code{fixSy} can take on values in the range \code{[0.0, 1.0E10]}.
-#'
-#' \code{fixRotation} can take on values in the range \code{[0.0, 360.0]}.
 #'
 #' Elements in \code{fixCol} can take on values in the range \code{[0.0, 1.0]}.
 #'
@@ -180,11 +172,20 @@ opiQueryDevice_for_Display <- function() {
 #'
 #' Elements in \code{bgCol} can take on values in the range \code{[0.0, 1.0]}.
 #'
+#' \code{eye} can take on values in the set \code{{"left", "right",
+#'      "both", "none"}}.
+#'
+#' \code{fixSx} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{fixSy} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{fixRotation} can take on values in the range \code{[0.0, 360.0]}.
+#'
 #' @examples
 #' chooseOpi("Display")
-#' result <- opiSetup(settings = list(eye = "BOTH", fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0,
-#'                 fixSx = 1.0, fixCy = 0.0, fixCol = list(0.0, 1.0, 0.0),
-#'                 bgLum = 10.0, bgCol = list(1.0, 1.0, 1.0)))
+#' result <- opiSetup(settings = list(fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0, fixCy = 0.0,
+#'                 fixCol = list(0.0, 1.0, 0.0), bgLum = 10.0, bgCol = list(1.0,
+#'                 1.0, 1.0), eye = "BOTH", fixSx = 1.0))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -194,7 +195,7 @@ opiSetup_for_Display <- function(settings) {
 
     if (is.null(settings)) return(list(error = 0 , msg = "Nothing to do in opiSetup."))
 
-    msg <- list(eye = settings$eye, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCx = settings$fixCx, fixSx = settings$fixSx, fixCy = settings$fixCy, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol)
+    msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

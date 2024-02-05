@@ -457,7 +457,12 @@ public abstract class OpiMachine {
         } else if (param.isListList()) {
             t = TypeToken.getParameterized(ArrayList.class, ArrayList.class, param.className()).getType();
         }
-        Object singleValue = OpiListener.gson.fromJson(param.defaultValue(), t);
+
+        Object singleValue;
+        if (param.className() == String.class && param.defaultValue().length() == 0) // allow empty string as a default
+            singleValue = new String();
+        else
+            singleValue = OpiListener.gson.fromJson(param.defaultValue(), t);
 
         if (param.isList() || param.isListList()) {
             ArrayList<Object> a = (ArrayList<Object>)singleValue;
@@ -491,7 +496,7 @@ public abstract class OpiMachine {
               return Packet.error(String.format(MISSING_PARAMETER, 
                 param.opiRName().length() > 0 ?  param.opiRName() : param.name(), funcName, this.getClass()));
 
-                // optional parameter not here, add it in and go to next param
+                // Optional parameter not here, add it in and go to next param
                 // (Note stim.length gets turned into a double by fromJSON)
             if (!pairs.containsKey(param.name()) && param.optional()) {
                 try {
@@ -506,7 +511,7 @@ public abstract class OpiMachine {
                 continue;
             }
 
-                // Ok, it's a mandatory parameter, so let's validate it
+                // Ok we've got a value; let's validate it
             Object valueObj = pairs.get(param.name());
 
                 // things are lists when they should be check length of lists and list of lists

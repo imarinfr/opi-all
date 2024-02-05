@@ -30,7 +30,7 @@ import es.optocom.jovp.definitions.ModelType;
  */
 public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, double[] fixCol, double fixLum,
                     double fixCx, double fixCy, double fixSx, double fixSy,
-                    double fixRotation, double tracking) {
+                    double fixRotation, double tracking, String bgImageFilename) {
 
 
   /**
@@ -54,7 +54,8 @@ public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, d
                      (double) args.get("fixCx"), (double) args.get("fixCy"),
                      (double) args.get("fixSx"), (double) args.get("fixSy"),
                      (double) args.get("fixRotation"),
-                     (double) args.get("tracking"));
+                     (double) args.get("tracking"),
+                     (String) args.get("bgImageFilename"));
   }
 
   /**
@@ -77,7 +78,8 @@ public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, d
       .append("  \"fixSx\": " + fixSx + ",\n")
       .append("  \"fixSy\": " + fixSy + ",\n")
       .append("  \"fixRotation\": " + fixRotation + ",\n")
-      .append("  \"tracking\": " + tracking)
+      .append("  \"tracking\": " + tracking + ",\n")
+      .append("  \"bgImageFilename\": " + bgImageFilename)
       .append("\n}").toString();
   }
 
