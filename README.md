@@ -128,8 +128,7 @@ under the Apache 2.0 license. Please read the license information in the attache
 ## Future Work
 * Write a doclet to format @Parmeters Annotaion nicely in javadoc.
 * Modularise OpiMachine.process() so Enum, Double and List are all handled consistently.
-* Add contrast, spatial frequency and defocus @Parameters to Imo.present()
 
-* Add GUI elements somehow...
+* Add eye tracking to GUI if availabl
 
-* Far future: incorporate O900 and Compass into this framework
+* Far future: incorporate O900 into this framework
