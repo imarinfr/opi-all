@@ -167,6 +167,7 @@ public abstract class Jovp extends OpiMachine {
     @Parameter(name = "shape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE, SQUARE, OPTOTYPE.", isList = true, optional = true, defaultValue = "[CIRCLE]")
     @Parameter(name = "type", className = es.optocom.jovp.definitions.TextureType.class, desc = "Stimulus type. Values include FLAT, SINE, CHECKERBOARD, SQUARESINE, G1, G2, G3, IMAGE", isList = true, optional = true, defaultValue = "[FLAT]")
     @Parameter(name = "imageFilename", className = String.class, desc = "If type == IMAGE, the filename on the local filesystem of the machine running JOVP of the image to use", isList = true, optional = true, defaultValue = "[\"x.jpg\"]")
+    @Parameter(name = "fullFoV", className = Double.class, desc = "If !0 fullFoV scales image to full field of view and sx/sy are ignored.", isList = true, optional = true, defaultValue = "[0]")
     @Parameter(name = "optotype", className = es.optocom.jovp.definitions.Optotype.class, desc = "If shape == OPTOTYPE, the letter A to Z to use", isList = true, optional = true, defaultValue = "[E]")
     @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
     @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")

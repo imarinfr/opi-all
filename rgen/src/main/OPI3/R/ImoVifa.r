@@ -131,16 +131,17 @@ opiQueryDevice_for_ImoVifa <- function() {
 #'
 #' @param \code{settings} A list containing:
 #'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
-#'  * \code{fixShape} Fixation target type for eye.
-#'  * \code{fixLum} Fixation target luminance for eye.
-#'  * \code{fixCx} x-coordinate of fixation target (degrees).
-#'  * \code{fixCy} y-coordinate of fixation target (degrees).
-#'  * \code{fixCol} Fixation target color for eye.
-#'  * \code{bgLum} Background luminance for eye (cd/m^2).
+#'  * \code{fixShape} Fixation target type for eye. (Optional)
+#'  * \code{fixLum} Fixation target luminance for eye. (Optional)
+#'  * \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
+#'  * \code{fixCy} y-coordinate of fixation target (degrees). (Optional)
+#'  * \code{fixCol} Fixation target color for eye. (Optional)
+#'  * \code{bgLum} Background luminance for eye (cd/m^2). (Optional)
 #'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
-#'  * \code{bgCol} Background color for eye (rgb).
+#'  * \code{bgCol} Background color for eye (rgb). (Optional)
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{fixSx} diameter along major axis of ellipse (degrees).
+#'  * \code{fixSx} diameter along major axis of ellipse (degrees). 0 to hide
+#'                 fixation marker. (Optional)
 #'  * \code{fixSy} diameter along minor axis of ellipse (degrees). If not
 #'                 received, then sy = sx. (Optional)
 #'  * \code{fixRotation} Angles of rotation of fixation target (degrees). Only
@@ -183,9 +184,7 @@ opiQueryDevice_for_ImoVifa <- function() {
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
-#' result <- opiSetup(settings = list(fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0, fixCy = 0.0,
-#'                 fixCol = list(0.0, 1.0, 0.0), bgLum = 10.0, bgCol = list(1.0,
-#'                 1.0, 1.0), eye = "BOTH", fixSx = 1.0))
+#' result <- opiSetup(settings = list(eye = "BOTH"))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -220,6 +219,21 @@ opiSetup_for_ImoVifa <- function(settings) {
 #' @usage NULL
 #'
 #' @param \code{stim} A list containing:
+#'  * \code{envSdx} List of envelope sd in x direction in degrees. Only useful
+#'                  if envType != NONE (Optional)
+#'  * \code{lum} List of stimuli luminances (cd/m^2).
+#'  * \code{envSdy} List of envelope sd in y direction in degrees. Only useful
+#'                  if envType != NONE (Optional)
+#'  * \code{envRotation} List of envelope rotations in degrees. Only useful if envType != NONE (Optional)
+#'  * \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
+#'                SQUARESINE, G1, G2, G3, IMAGE (Optional)
+#'  * \code{stim.length} The number of elements in this stimuli.
+#'  * \code{frequency} List of frequencies (in cycles per degrees) for
+#'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
+#'  * \code{color1} List of stimulus colors for FLAT shapes and patterns.
+#'  * \code{color2} List of second colors for non-FLAT shapes (Optional)
+#'  * \code{fullFoV} If !0 fullFoV scales image to full field of view and sx/sy
+#'                   are ignored. (Optional)
 #'  * \code{phase} List of phases (in degrees) for generation of spatial
 #'                 patterns. Only useful if type != FLAT (Optional)
 #'  * \code{imageFilename} If type == IMAGE, the filename on the local
@@ -227,23 +241,17 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 #'                 SQUARE, OPTOTYPE. (Optional)
 #'  * \code{sx} List of diameters along major axis of ellipse (degrees).
-#'  * \code{lum} List of stimuli luminances (cd/m^2).
 #'  * \code{sy} List of diameters along minor axis of ellipse (degrees). If not
 #'              received, then sy = sx (Optional)
 #'  * \code{rotation} List of angles of rotation of stimuli (degrees). Only
 #'                    useful if sx != sy specified. (Optional)
 #'  * \code{texRotation} List of angles of rotation of stimuli (degrees). Only
 #'                       useful if type != FLAT (Optional)
-#'  * \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
-#'                SQUARESINE, G1, G2, G3, IMAGE (Optional)
-#'  * \code{stim.length} The number of elements in this stimuli.
 #'  * \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
-#'  * \code{frequency} List of frequencies (in cycles per degrees) for
-#'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{color1} List of stimulus colors for FLAT shapes and patterns.
-#'  * \code{color2} List of second colors for non-FLAT shapes (Optional)
 #'  * \code{t} List of stimuli presentation times (ms).
+#'  * \code{envType} List of envelope types to apply to the stims). Only useful
+#'                   if type != FLAT (Optional)
 #'  * \code{w} Time to wait for response including presentation time (ms).
 #'  * \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
 #'                    type != FLAT. (Optional)
@@ -266,6 +274,33 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'
 #' @details 
 #'
+#' Elements in \code{envSdx} can take on values in the
+#'                    range \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{envSdy} can take on values in the
+#'                    range \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{envRotation} can take on values
+#'                         in the range \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{type} can take on values in the set
+#'                  \code{{"flat", "checkerboard", "sine", "squaresine", "g1",
+#'                  "g2", "g3", "text", "image"}}.
+#'
+#' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
+#'
+#' Elements in \code{frequency} can take on values in
+#'                       the range \code{[0.0, 300.0]}.
+#'
+#' Elements in \code{color1} can take on values in the range \code{[0.0, 1.0]}.
+#'
+#' Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
+#'
+#' Elements in \code{fullFoV} can take on values in the
+#'                     range \code{[-1.0E10, 1.0E10]}.
+#'
 #' Elements in \code{phase} can take on values in the range
 #'                   \code{[0.0, 1.0E10]}.
 #'
@@ -276,8 +311,6 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'
 #' Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
 #'
-#' Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
-#'
 #' Elements in \code{sy} can take on values in the range \code{[0.0, 180.0]}.
 #'
 #' Elements in \code{rotation} can take on values in the
@@ -286,26 +319,16 @@ opiSetup_for_ImoVifa <- function(settings) {
 #' Elements in \code{texRotation} can take on values
 #'                         in the range \code{[0.0, 360.0]}.
 #'
-#' Elements in \code{type} can take on values in the set
-#'                  \code{{"flat", "checkerboard", "sine", "squaresine", "g1",
-#'                  "g2", "g3", "text", "image"}}.
-#'
-#' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
-#'
 #' Elements in \code{defocus} can take on values in the
 #'                     range \code{[0.0, 1.0E10]}.
-#'
-#' Elements in \code{frequency} can take on values in
-#'                       the range \code{[0.0, 300.0]}.
 #'
 #' Elements in \code{eye} can take on values in the set
 #'                 \code{{"left", "right", "both", "none"}}.
 #'
-#' Elements in \code{color1} can take on values in the range \code{[0.0, 1.0]}.
-#'
-#' Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
-#'
 #' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{envType} can take on values in the
+#'                     set \code{{"none", "square", "circle", "gaussian"}}.
 #'
 #' \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
@@ -323,8 +346,8 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'
 #' @examples
 #' chooseOpi("ImoVifa")
-#' result <- opiPresent(stim = list(sx = list(1.72), lum = list(300.0), stim.length = 1,
-#'                   eye = list("LEFT"), color1 = list(list(0.0, 0.0, 0.0)),
+#' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(0.0,
+#'                   0.0, 0.0)), sx = list(1.72), eye = list("LEFT"),
 #'                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 #'
 #' @seealso [opiPresent()]
@@ -335,7 +358,7 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, lum = stim$lum, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, type = stim$type, stim.length = stim$stim.length, defocus = stim$defocus, frequency = stim$frequency, eye = stim$eye, color1 = stim$color1, color2 = stim$color2, t = stim$t, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
+    msg <- list(envSdx = stim$envSdx, lum = stim$lum, envSdy = stim$envSdy, envRotation = stim$envRotation, type = stim$type, stim.length = stim$stim.length, frequency = stim$frequency, color1 = stim$color1, color2 = stim$color2, fullFoV = stim$fullFoV, phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, defocus = stim$defocus, eye = stim$eye, t = stim$t, envType = stim$envType, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- rjson::toJSON(msg)

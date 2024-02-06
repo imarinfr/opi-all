@@ -6,6 +6,21 @@
 \arguments{
 \item{\code{stim}}{A list containing:
 \itemize{
+\item \code{envSdx} List of envelope sd in x direction in degrees. Only useful
+if envType != NONE (Optional)
+\item \code{lum} List of stimuli luminances (cd/m^2).
+\item \code{envSdy} List of envelope sd in y direction in degrees. Only useful
+if envType != NONE (Optional)
+\item \code{envRotation} List of envelope rotations in degrees. Only useful if envType != NONE (Optional)
+\item \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
+SQUARESINE, G1, G2, G3, IMAGE (Optional)
+\item \code{stim.length} The number of elements in this stimuli.
+\item \code{frequency} List of frequencies (in cycles per degrees) for
+generation of spatial patterns. Only useful if type != FLAT (Optional)
+\item \code{color1} List of stimulus colors for FLAT shapes and patterns.
+\item \code{color2} List of second colors for non-FLAT shapes (Optional)
+\item \code{fullFoV} If !0 fullFoV scales image to full field of view and sx/sy
+are ignored. (Optional)
 \item \code{phase} List of phases (in degrees) for generation of spatial
 patterns. Only useful if type != FLAT (Optional)
 \item \code{imageFilename} If type == IMAGE, the filename on the local
@@ -13,23 +28,17 @@ filesystem of the machine running JOVP of the image to use (Optional)
 \item \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 SQUARE, OPTOTYPE. (Optional)
 \item \code{sx} List of diameters along major axis of ellipse (degrees).
-\item \code{lum} List of stimuli luminances (cd/m^2).
 \item \code{sy} List of diameters along minor axis of ellipse (degrees). If not
 received, then sy = sx (Optional)
 \item \code{rotation} List of angles of rotation of stimuli (degrees). Only
 useful if sx != sy specified. (Optional)
 \item \code{texRotation} List of angles of rotation of stimuli (degrees). Only
 useful if type != FLAT (Optional)
-\item \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
-SQUARESINE, G1, G2, G3, IMAGE (Optional)
-\item \code{stim.length} The number of elements in this stimuli.
 \item \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
-\item \code{frequency} List of frequencies (in cycles per degrees) for
-generation of spatial patterns. Only useful if type != FLAT (Optional)
 \item \code{eye} The eye for which to apply the settings.
-\item \code{color1} List of stimulus colors for FLAT shapes and patterns.
-\item \code{color2} List of second colors for non-FLAT shapes (Optional)
 \item \code{t} List of stimuli presentation times (ms).
+\item \code{envType} List of envelope types to apply to the stims). Only useful
+if type != FLAT (Optional)
 \item \code{w} Time to wait for response including presentation time (ms).
 \item \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
 type != FLAT. (Optional)
@@ -59,6 +68,33 @@ This is for internal use only. Use \code{\link[=opiPresent]{opiPresent()}} with
 these Arguments and you will get the Value back.
 }
 \details{
+Elements in \code{envSdx} can take on values in the
+range \code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
+
+Elements in \code{envSdy} can take on values in the
+range \code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{envRotation} can take on values
+in the range \code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{type} can take on values in the set
+\code{{"flat", "checkerboard", "sine", "squaresine", "g1",
+                 "g2", "g3", "text", "image"}}.
+
+\code{stim.length} can take on values in the range \code{[1, 2147483647]}.
+
+Elements in \code{frequency} can take on values in
+the range \code{[0.0, 300.0]}.
+
+Elements in \code{color1} can take on values in the range \code{[0.0, 1.0]}.
+
+Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
+
+Elements in \code{fullFoV} can take on values in the
+range \code{[-1.0E10, 1.0E10]}.
+
 Elements in \code{phase} can take on values in the range
 \code{[0.0, 1.0E10]}.
 
@@ -69,8 +105,6 @@ Elements in \code{shape} can take on values in the set
 
 Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
 
-Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
-
 Elements in \code{sy} can take on values in the range \code{[0.0, 180.0]}.
 
 Elements in \code{rotation} can take on values in the
@@ -79,26 +113,16 @@ range \code{[0.0, 360.0]}.
 Elements in \code{texRotation} can take on values
 in the range \code{[0.0, 360.0]}.
 
-Elements in \code{type} can take on values in the set
-\code{{"flat", "checkerboard", "sine", "squaresine", "g1",
-                 "g2", "g3", "text", "image"}}.
-
-\code{stim.length} can take on values in the range \code{[1, 2147483647]}.
-
 Elements in \code{defocus} can take on values in the
 range \code{[0.0, 1.0E10]}.
-
-Elements in \code{frequency} can take on values in
-the range \code{[0.0, 300.0]}.
 
 Elements in \code{eye} can take on values in the set
 \code{{"left", "right", "both", "none"}}.
 
-Elements in \code{color1} can take on values in the range \code{[0.0, 1.0]}.
-
-Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
-
 Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
+
+Elements in \code{envType} can take on values in the
+set \code{{"none", "square", "circle", "gaussian"}}.
 
 \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
 
@@ -116,8 +140,8 @@ Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
 }
 \examples{
 chooseOpi("PhoneHMD")
-result <- opiPresent(stim = list(sx = list(1.72), lum = list(300.0), stim.length = 1,
-                  eye = list("LEFT"), color1 = list(list(0.0, 0.0, 0.0)),
+result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(0.0,
+                  0.0, 0.0)), sx = list(1.72), eye = list("LEFT"),
                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 
 }

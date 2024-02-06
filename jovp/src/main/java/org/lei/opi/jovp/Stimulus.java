@@ -35,7 +35,12 @@ import es.optocom.jovp.definitions.TextureType;
 * @param t presentation time in ms
 * @param w response window in ms
 * @param imageFilename If type == IMAGE, the filename of the image to present
+* @param fullFoV If !0 then ignore sx and sy and scale the stimulus to the full field of view, otherwise use sx and sy to scale the stim.
 * @param optotype If shape == OPTOTYPE, the letter A to Z of the optotype to present
+* @param envType Type of envelope
+* @param envSdx Standard deviation in x for envelope (ignored if envType == NONE)
+* @param envSdy Standard deviation in y for envelope (ignored if envType == NONE)
+* @param envRotation Rotation of envelope (ignored if envType == NONE)
 *
 * @since 0.0.1
 */
@@ -50,6 +55,7 @@ public record Stimulus(Eye eye, ModelType shape, TextureType type,
                       double texRotation, 
                       double t, double w,
                       String imageFilename,
+                      double fullFoV,
                       Optotype optotype,
                       EnvelopeType envType, 
                       double envSdx, double envSdy, double envRotation) {
@@ -93,6 +99,7 @@ public record Stimulus(Eye eye, ModelType shape, TextureType type,
                 toDoubleArray(args.get("t"))[index], 
                 (double)args.get("w"),
                 toStringArray(args.get("imageFilename"))[index],
+                toDoubleArray(args.get("fullFoV"))[index],
                 toObjectStream(args.get("optotype"), Optotype.class).toArray(Optotype[]::new)[index],
                 toObjectStream(args.get("envType"), EnvelopeType.class).toArray(EnvelopeType[]::new)[index],
                 toDoubleArray(args.get("envSdx"))[index],

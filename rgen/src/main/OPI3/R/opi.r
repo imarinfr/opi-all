@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-packageStartupMessage("OPI version", utils::packageVersion("OPI"))
+packageStartupMessage("OPI3 version", utils::packageVersion("OPI3"))
 
 # Used for holding state of the OPI
 

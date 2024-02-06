@@ -34,14 +34,18 @@ public class OpiLogic implements PsychoLogic {
     /** The OPI driver */
     private final OpiJovp driver;
 
-    /** Background PsychoEngine item */
+    /** 1 (MONO) or 2 (STEREO) backgrounds */
     private Item[] backgrounds;
-    /** Background PsychoEngine fixation target */
+    /** 1 (MONO) or 2 (STEREO) fixations */
     private Item[] fixations;
-    /** Background PsychoEngine stimulus */
+    /** A single stimulus object that is updated as needed for each presentation */
     private Item stimulus;
-    /** The current index into driver.getStimulus() for presentation */
+
+    /** The current index into driver.getStimulus() for presentation. This steps along the list of stimuli in driver */
     private int stimIndex = -1;
+
+    /** PsychoEngine field of view */
+    private float[] fov;
 
     /** A timer to control, well, you know, er, time? */
     private Timer timer = new Timer();
@@ -95,7 +99,7 @@ public class OpiLogic implements PsychoLogic {
     @Override
     public void init(PsychoEngine psychoEngine) {
         // set size of the background to be the field of view
-        float[] fov = psychoEngine.getFieldOfView();
+        this.fov = psychoEngine.getFieldOfView();
 
         // add perimetry items: background, fixation, and stimulus.
         for (int i = 0; i < backgrounds.length; i++) {
@@ -142,7 +146,7 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void update(PsychoEngine psychoEngine) {
-      float[] fov = psychoEngine.getFieldOfView();
+      fov = psychoEngine.getFieldOfView();
       for (int i = 0; i < backgrounds.length; i++) 
         backgrounds[i].size(fov[0], fov[1]);  // TODO: again, will this work for image backgrounds?
 
@@ -255,7 +259,12 @@ public class OpiLogic implements PsychoLogic {
                 stimulus.update(new Texture(stim.type()));  
 
         stimulus.position(stim.x(), stim.y());
-        stimulus.size(stim.sx(), stim.sy());
+System.out.println(stim.fullFoV());
+        if (stim.fullFoV() != 0) {
+            stimulus.size(this.fov[0], this.fov[1]);
+        } else {
+            stimulus.size(stim.sx(), stim.sy());
+        }
         stimulus.rotation(stim.rotation());
         stimulus.contrast(stim.contrast());
         stimulus.frequency(stim.phase(), stim.frequency());

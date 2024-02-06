@@ -7,16 +7,17 @@
 \item{\code{settings}}{A list containing:
 \itemize{
 \item \code{bgImageFilename} If present, display the image in the background for eye (Optional)
-\item \code{fixShape} Fixation target type for eye.
-\item \code{fixLum} Fixation target luminance for eye.
-\item \code{fixCx} x-coordinate of fixation target (degrees).
-\item \code{fixCy} y-coordinate of fixation target (degrees).
-\item \code{fixCol} Fixation target color for eye.
-\item \code{bgLum} Background luminance for eye (cd/m^2).
+\item \code{fixShape} Fixation target type for eye. (Optional)
+\item \code{fixLum} Fixation target luminance for eye. (Optional)
+\item \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
+\item \code{fixCy} y-coordinate of fixation target (degrees). (Optional)
+\item \code{fixCol} Fixation target color for eye. (Optional)
+\item \code{bgLum} Background luminance for eye (cd/m^2). (Optional)
 \item \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
-\item \code{bgCol} Background color for eye (rgb).
+\item \code{bgCol} Background color for eye (rgb). (Optional)
 \item \code{eye} The eye for which to apply the settings.
-\item \code{fixSx} diameter along major axis of ellipse (degrees).
+\item \code{fixSx} diameter along major axis of ellipse (degrees). 0 to hide
+fixation marker. (Optional)
 \item \code{fixSy} diameter along minor axis of ellipse (degrees). If not
 received, then sy = sx. (Optional)
 \item \code{fixRotation} Angles of rotation of fixation target (degrees). Only
@@ -66,9 +67,7 @@ Elements in \code{bgCol} can take on values in the range \code{[0.0, 1.0]}.
 }
 \examples{
 chooseOpi("ImoVifa")
-result <- opiSetup(settings = list(fixShape = "MALTESE", fixLum = 20.0, fixCx = 0.0, fixCy = 0.0,
-                fixCol = list(0.0, 1.0, 0.0), bgLum = 10.0, bgCol = list(1.0,
-                1.0, 1.0), eye = "BOTH", fixSx = 1.0))
+result <- opiSetup(settings = list(eye = "BOTH"))
 
 }
 \seealso{
