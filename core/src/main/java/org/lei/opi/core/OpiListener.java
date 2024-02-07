@@ -15,9 +15,12 @@ import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.definitions.Packet;
+import org.lei.opi.core.definitions.PacketDeserializer;
+import org.lei.opi.core.definitions.PacketSerializer;
 
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 /**
@@ -68,7 +71,10 @@ public class OpiListener extends Thread {
     private static final String CANNOT_OBTAIN_ADDRESS = "Cannot obtain public address.";
 
     /** to parse JSONs with fromJson method */
-    public static Gson gson = new Gson();
+    public static final GsonBuilder gsonBuilder = new GsonBuilder();
+
+    public static Gson gson;
+
     /** Given a JSON string, return name:value pairs */
     public static HashMap<String, Object> jsonToPairs(String jsonStr) throws JsonSyntaxException {
         return gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
@@ -95,6 +101,10 @@ public class OpiListener extends Thread {
      * @since 0.2.0
      */
     public OpiListener(int port, OpiMachine machine) {
+        gsonBuilder.registerTypeAdapter(Packet.class, new PacketSerializer());
+        gsonBuilder.registerTypeAdapter(Packet.class, new PacketDeserializer());
+        gson = gsonBuilder.create();  
+
         this.machine = machine; 
         this.port = port; 
         this.address = obtainPublicAddress(); // run on localhost
@@ -119,7 +129,7 @@ public class OpiListener extends Thread {
           try {
               pairs = jsonToPairs(jsonStr);
           }  catch (JsonSyntaxException e) {
-              return Packet.error(Packet.BAD_JSON, e);
+              return Packet.error("Cannot get hashmap of pairs from JSON in process()", e);
           }
    
               // Get command
@@ -162,7 +172,7 @@ public class OpiListener extends Thread {
             String inputLine;
             while (this.connected && (inputLine = incoming.readLine()) != null) {
                     Packet pack = process(inputLine);
-                    send(pack.toJson());
+                    send(gson.toJson(pack));
                     if (pack.getClose()) break; // if close requested, break loop
             }
             server.close();

@@ -259,7 +259,6 @@ public class OpiLogic implements PsychoLogic {
                 stimulus.update(new Texture(stim.type()));  
 
         stimulus.position(stim.x(), stim.y());
-System.out.println(stim.fullFoV());
         if (stim.fullFoV() != 0) {
             stimulus.size(this.fov[0], this.fov[1]);
         } else {

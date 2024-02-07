@@ -78,7 +78,7 @@ public class Echo extends OpiMachine {
        for (String k : args.keySet())
             myPrint(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        return new Packet(OpiListener.gson.toJson(args));
+        return new Packet(args);
     }
   
     /**
@@ -93,7 +93,7 @@ public class Echo extends OpiMachine {
         for (String k : args.keySet())
             myPrint(String.format("\t%s = %s\n", k, args.get(k).toString()));
 
-        return new Packet(OpiListener.gson.toJson(args));
+        return new Packet(args);
     }
   
     /**

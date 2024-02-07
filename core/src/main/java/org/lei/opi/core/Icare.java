@@ -142,7 +142,7 @@ public abstract class Icare extends OpiMachine {
             }
             });
 
-        return new Packet(queryResults());
+        return new Packet(queryResults());   // TODO  is this JSON already? if so needs a true param
     };
   
     /**
@@ -160,7 +160,7 @@ public abstract class Icare extends OpiMachine {
           textAreaCommands.appendText("\nOPI Query:\n");
           textAreaCommands.appendText(results.toString());
         });
-      return new Packet(results);
+      return new Packet(results);// TODO  is this JSON already? if so needs a true param
     };
   
     /**
@@ -271,7 +271,7 @@ public abstract class Icare extends OpiMachine {
                       this.send(opiMessage);
                       String res = this.readline(); 
                       updateGUIOnPresent(args);
-                      return new Packet(parseResult(res));
+                      return new Packet(parseResult(res));// TODO  is this JSON already? if so needs a true param
                 } catch (IOException e) {
                       return Packet.error(OPI_PRESENT_FAILED, e);
                 }
@@ -321,7 +321,7 @@ public abstract class Icare extends OpiMachine {
                 textAreaCommands.appendText("\nOPI Closed\n");
                 textAreaCommands.appendText(sb.toString());
             });
-            return new Packet(true, "[" + sb.toString() + "]");
+            return new Packet(true, "[" + sb.toString() + "]"); // TODO this needs to be a serialised object like Query and REsponse
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
             return Packet.error(COULD_NOT_DISCONNECT, e);
         }

@@ -211,7 +211,7 @@ public class O900 extends OpiMachine {
    * @since 0.0.1
    */
   public Packet query() {
-    return new Packet(queryResults());
+    return new Packet(queryResults());  // TODO this needs to be a object with JsonSerialiser/deserialiser
   };
 
   /**
@@ -282,7 +282,7 @@ public class O900 extends OpiMachine {
       }
       if (result.getError()) return Packet.error(OPI_SET_BACKGROUND_FAILED + result);
 
-      return new Packet(queryResults());
+      return new Packet(queryResults());  // TODO need this to be an object with JsonSerialiser/deserialiser like Query and Response
     } catch (ClassCastException | IllegalArgumentException e) {
       return Packet.error(OPI_SETUP_FAILED, e);
     }
@@ -368,12 +368,12 @@ public class O900 extends OpiMachine {
   /**
    * Parse query results
    * 
-   * @return A JSON object with query results
+   * @return A valid JSON object as a string with query results
    *
    * @since 0.0.1
    */
   private String queryResults() {
-    return new StringBuilder("\n \"{\n")
+    return new StringBuilder("\n {\n")
     .append("    \"EYE_RIGHT\": " + EYE_RIGHT + ",\n")
     .append("    \"EYE_LEFT\": " + EYE_LEFT + ",\n")
     .append("    \"EYE_BOTH\": " + EYE_BOTH + ",\n")
@@ -408,7 +408,7 @@ public class O900 extends OpiMachine {
     .append("    \"MET_COL_BLUE_WHITE\": " + MET_COL_BLUE_WHITE + ",\n")
     .append("    \"MET_COL_RED_YELLOW\": " + MET_COL_RED_YELLOW + ",\n")
     .append("    \"MET_COL_WHITE_YELLOW\": " + MET_COL_WHITE_YELLOW)
-    .append("\n  }\"").toString();
+    .append("\n  }").toString();
   };
 
   /**

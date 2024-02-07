@@ -14,6 +14,9 @@ import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.definitions.Eye;
 import es.optocom.jovp.definitions.Paradigm;
 import es.optocom.jovp.definitions.ViewMode;
+import es.optocom.jovp.Monitor;
+import es.optocom.jovp.MonitorDeserializer;
+import es.optocom.jovp.MonitorSerializer;
 
 /**
  * The OPI JOVP server.
@@ -109,6 +112,13 @@ public class OpiJovp extends OpiListener {
     public OpiJovp(int port) { 
         super(port, null);   // do not give a machine to the OpiListener as we override the process() method here and the machine is not needed.
         this.action = null;
+
+        gsonBuilder.registerTypeAdapter(Response.class, new Response());
+        gsonBuilder.registerTypeAdapter(Query.class, new QuerySerializer());
+        gsonBuilder.registerTypeAdapter(Query.class, new QueryDeserializer());
+        gsonBuilder.registerTypeAdapter(Monitor.class, new MonitorSerializer());
+        gsonBuilder.registerTypeAdapter(Monitor.class, new MonitorDeserializer());
+        gson = gsonBuilder.create();
     } 
 
     /**
@@ -166,7 +176,7 @@ public class OpiJovp extends OpiListener {
         try {
             pairs = OpiListener.jsonToPairs(jsonStr);
         } catch (JsonSyntaxException e) {
-            return Packet.error(prefix + Packet.BAD_JSON, e);
+            return Packet.error(prefix + "Bad JSON", e);
         }
 
         if (!pairs.containsKey("command")) // needs a command
@@ -222,7 +232,7 @@ public class OpiJovp extends OpiListener {
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
       configuration.calibration().getMaxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor());
 
-    return new Packet(q.toJson());
+    return new Packet(q);
   }
 
   /**
@@ -261,7 +271,7 @@ public class OpiJovp extends OpiListener {
     /**
      * Present a stimulus by
      *   (1) If 'eye' is specified, check the background relevant to that eye has been `setup`
-     *   (2) Build the array if Stimulus objects
+     *   (2) Build the array of Stimulus objects
      *   (3) Check for unimplemented `type` and `shape`
      *   (4) Trigger the PRESENT action in OpiLogic and spin waiting for a response.
      *
@@ -301,9 +311,9 @@ public class OpiJovp extends OpiListener {
             while (response == null) {
                 Thread.sleep(100);  // wait for response
             }
-            String jsonStr = response.toJson(configuration.tracking());
+            Packet p = new Packet(response);
             response = null;
-            return new Packet(jsonStr);
+            return p;
         } catch (Exception e) {
             return Packet.error(prefix + PRESENT_FAILED, e);
         }
