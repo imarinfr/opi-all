@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require(rjson)
+require(jsonlite)
 
     # environment for this machine in R
 if (exists(".opi_env") && !exists("Maia", where = .opi_env))
@@ -68,13 +68,13 @@ opiInitialise_for_Maia <- function(address) {
     msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$Maia$socket)
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -113,13 +113,13 @@ opiQueryDevice_for_Maia <- function() {
     msg <- list()
     msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$Maia$socket)
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -169,13 +169,13 @@ opiSetup_for_Maia <- function(settings) {
     msg <- list(fixShape = settings$fixShape, fixCx = settings$fixCx, tracking = settings$tracking)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$Maia$socket)
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -242,13 +242,13 @@ opiPresent_for_Maia <- function(stim, ...) {
     msg <- list(t = stim$duration, lum = stim$level, w = stim$responseWindow, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$Maia$socket)
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -290,13 +290,13 @@ opiClose_for_Maia <- function() {
     msg <- list()
     msg <- c(list(command = "close"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$Maia$socket)
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else

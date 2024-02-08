@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require(rjson)
+require(jsonlite)
 
     # environment for this machine in R
 if (exists(".opi_env") && !exists("O900", where = .opi_env))
@@ -63,13 +63,13 @@ opiInitialise_for_O900 <- function(address) {
     msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -108,13 +108,13 @@ opiQueryDevice_for_O900 <- function() {
     msg <- list()
     msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -178,13 +178,13 @@ opiSetup_for_O900 <- function(settings) {
     msg <- list(eye = settings$eye, fixShape = settings$fixShape, pres = settings$pres, resp = settings$resp, fixIntensity = settings$fixIntensity, bgLum = settings$bgLum, bgCol = settings$bgCol)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -260,13 +260,13 @@ opiPresent_for_O900 <- function(stim, ...) {
     msg <- list(size = stim$size, color = stim$color, t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y, type = stim$type)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -305,13 +305,13 @@ opiClose_for_O900 <- function() {
     msg <- list()
     msg <- c(list(command = "close"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$O900$socket)
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else

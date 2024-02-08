@@ -164,61 +164,11 @@ public class JovpParamTest {
   }
 
   /**
-   * Open monitor, send initialise message, get reply, send query, get reply, close.
-   * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.
-   * Note 2 need vulkan and JOVP installed too
-   * @since 0.2.0
-   */
-  
-  public void aTestInitialiseQuery() {
-    OpiJovp server = new OpiJovp(50002);
-    System.out.println("[testInitialiseQuery] " + server);
-
-    Thread t = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        System.out.println("[testInitialiseQuery] Waiting 2 seconds...");
-        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-        try {
-          Display machine = new Display(null);
-          System.out.println("[testInitialiseQuery] " + machine);
-
-          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
-            System.out.println(String.format("[testInitialiseQuery] Cannot connect to %s:%s", server.getIP(), server.getPort()));
-          else
-            System.out.println(String.format("[testInitialiseQuery] Connected to %s:%s", server.getIP(), server.getPort()));
-
-          Packet result = machine.initialize(null);
-          System.out.println(String.format("[testInitialiseQuery] %s", result));
-
-          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-
-          result = machine.query();
-          System.out.println(String.format("[testInitialiseQuery] %s", result));
-
-          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
-
-          result = machine.close(); 
-          System.out.println(String.format("[testInitialiseQuery] %s", result));
-        } catch (InstantiationException e) {
-          System.out.println("Probably couldn't connect Display to JOVP");
-          e.printStackTrace();
-        }
-      }
-    });
-
-    t.start();
-    server.startPsychoEngine();
-    try { t.join(); } catch (InterruptedException ignored) { ; }
-  }
-
-  /**
    * Open monitor, send initialise message, get reply, setup, get reply, close.
    * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
-
   @Test
   public void aTestInitialiseSetup() {
     OpiJovp server = new OpiJovp(50002);
@@ -251,10 +201,62 @@ public class JovpParamTest {
           result = machine.setup(hmap);
           System.out.println(String.format("[testInitialiseSetup] Setup result: %s", result));
 
+          System.out.println("[testInitialiseSetup] sleeping 20s");
           try { Thread.sleep(20000); } catch (InterruptedException ignored) { ; }
 
           result = machine.close(); 
           System.out.println(String.format("[testInitialiseSetup] Close result: %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
+      }
+    });
+
+    t.start();
+    server.startPsychoEngine();
+    try { t.join(); } catch (InterruptedException ignored) { ; }
+  }
+
+  /**
+   * Open monitor, send initialise message, get result from Query
+   * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.
+   * Note 2 need vulkan and JOVP installed too
+   * @since 0.2.0
+   */
+  @Test
+  public void aTestInitialiseQuery() {
+    OpiJovp server = new OpiJovp(50002);
+    System.out.println("[testInitialiseQuery] " + server);
+
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("[testInitialiseQuery] Waiting 2 seconds...");
+        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+        try {
+          Display machine = new Display(null);
+          System.out.println("[testInitialiseQuery] " + machine);
+
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testInitialiseQuery] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testInitialiseQuery] Connected to %s:%s", server.getIP(), server.getPort()));
+          
+          HashMap<String, Object> args = new HashMap<String, Object>(){{ put("screen", 1);}};
+          Packet result = machine.initialize(args);
+          System.out.println(String.format("[testInitialiseQuery] %s", result));
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.query();
+          System.out.println(String.format("[testInitialiseQuery] Query result: %s", result));
+
+          try { Thread.sleep(20000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialiseQuery] Close result: %s", result));
         } catch (InstantiationException e) {
           System.out.println("Probably couldn't connect Display to JOVP");
           e.printStackTrace();

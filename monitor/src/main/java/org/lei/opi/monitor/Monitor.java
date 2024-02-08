@@ -278,7 +278,7 @@ public class Monitor extends Application {
                 .collect(Collectors.joining(","))
             + "}";
 
-        map.put(this.currentMachineChoice, OpiListener.gson.fromJson(jsonString, this.currentSettingsObject.getClass()));
+        map.put(this.currentMachineChoice, OpiMachine.settings_gson.fromJson(jsonString, this.currentSettingsObject.getClass()));
 
         OpiMachine.writeSettingsFile(map);
         this.settingsHaveBeenEdited = false;

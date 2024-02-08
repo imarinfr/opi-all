@@ -64,7 +64,6 @@ public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, d
    * @return The Present record as JSON
    * 
    * @since 0.0.1
-   */
   public String toJson() {
     return new StringBuilder("{\n  \"command\": " + Command.SETUP + ",\n")
       .append("  \"eye\": " + eye.toString() + ",\n")
@@ -82,5 +81,6 @@ public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, d
       .append("  \"bgImageFilename\": " + bgImageFilename)
       .append("\n}").toString();
   }
+   */
 
 }

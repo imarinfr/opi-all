@@ -28,6 +28,8 @@ import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 import org.lei.opi.core.definitions.VFCanvas;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
@@ -152,6 +154,8 @@ public abstract class OpiMachine {
     };
     public abstract Settings getSettings();
 
+    public static final Gson settings_gson = new GsonBuilder().setPrettyPrinting().create();
+
   /**
    * Read in whole settings Json to a HashMap keyed by machine name.
    *
@@ -162,7 +166,7 @@ public abstract class OpiMachine {
         try {
             // Get default settings
             String s = Files.readString(Path.of(fp), StandardCharsets.UTF_8);
-            return OpiListener.gson.fromJson(s, new TypeToken<HashMap<String, Object>>() {}.getType());
+            return settings_gson.fromJson(s, new TypeToken<HashMap<String, Object>>() {}.getType());
         } catch (IOException | AssertionError e) {
             System.out.println("Could not read settings file " + fp);
         }
@@ -178,7 +182,7 @@ public abstract class OpiMachine {
           String fp = System.getProperty("user.dir") + "/" + SETTINGS_FILE;
           try {
               FileWriter fw = new FileWriter(fp);
-              fw.write(OpiListener.gson.toJson(map));
+              fw.write(settings_gson.toJson(map));
               fw.close();
           } catch (IOException e) {
               System.out.println("Could not write settings file.");
@@ -203,10 +207,10 @@ public abstract class OpiMachine {
           return null;
         }
         if (settingsMap.containsKey(machineName)) {
-            String j = OpiListener.gson.toJson(settingsMap.get(machineName));
+            String j = settings_gson.toJson(settingsMap.get(machineName));
             try {
                 Class<?> cls = Class.forName("org.lei.opi.core."  + machineName + "$Settings");
-                return OpiListener.gson.fromJson(j, cls);
+                return settings_gson.fromJson(j, cls);
             } catch (ClassNotFoundException e) {
                 System.out.println("Cannot find class " + "org.lei.opi.core."  + machineName + "$Settings");
                 return null;

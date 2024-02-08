@@ -292,7 +292,7 @@ public class OpiFunction {
         msg <- list(%s)  
         msg <- c(list(command = "%s"), msg)
         msg <- msg[!unlist(lapply(msg, is.null))]
-        msg <- rjson::toJSON(msg)
+        msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
         writeLines(msg, %s$%s$socket)
     """, 
         checkNull.get(), // First check string
@@ -314,7 +314,7 @@ public class OpiFunction {
         res <- readLines(%s$%s$socket, n = 1)
         if (length(res) == 0)
             return(list(error = 5, msg = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
-        res <- rjson::fromJSON(res)
+        res <- jsonlite::parse_json(res)
         if (res$error)
             res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
         else

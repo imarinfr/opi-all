@@ -78,28 +78,4 @@ public class Response extends TypeAdapter<Response> {
         in.endObject();
         return new Response(seen, time, eyex, eyey, eyed, eyet);
     }
-
-  /**
-   * Convert to string to return back to monitor and then R OPI
-   * 
-   * @param tracking Whether to include result of tracking
-   *
-   * @return a JSON with the results of OPI PRESENT
-   * 
-   * @since 0.0.1
-  public String toJson(boolean tracking) {
-    StringBuilder str = new StringBuilder("\n  {\n")
-      .append("    \"seen\": " + seen + ",\n")
-      .append("    \"time\": " + time);
-    if(tracking)
-      str.append(",\n")
-         .append("    \"eyex\": " + eyex + ",\n")
-         .append("    \"eyey\": " + eyey + ",\n")
-         .append("    \"eyed\": " + eyed + ",\n")
-         .append("    \"eyet\": " + eyet + "\n}")
-         .append("    \"eyed\": " + eyed + ",\n}");
-    return str.append("\n  }").toString();
-  }
-   */
-
 }

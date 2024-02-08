@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require(rjson)
+require(jsonlite)
 
     # environment for this machine in R
 if (exists(".opi_env") && !exists("ImoVifa", where = .opi_env))
@@ -63,13 +63,13 @@ opiInitialise_for_ImoVifa <- function(address) {
     msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$ImoVifa$socket)
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -108,13 +108,13 @@ opiQueryDevice_for_ImoVifa <- function() {
     msg <- list()
     msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$ImoVifa$socket)
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -197,13 +197,13 @@ opiSetup_for_ImoVifa <- function(settings) {
     msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$ImoVifa$socket)
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -361,13 +361,13 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
     msg <- list(envSdx = stim$envSdx, lum = stim$lum, envSdy = stim$envSdy, envRotation = stim$envRotation, type = stim$type, stim.length = stim$stim.length, frequency = stim$frequency, color1 = stim$color1, color2 = stim$color2, fullFoV = stim$fullFoV, phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, defocus = stim$defocus, eye = stim$eye, t = stim$t, envType = stim$envType, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$ImoVifa$socket)
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else
@@ -406,13 +406,13 @@ opiClose_for_ImoVifa <- function() {
     msg <- list()
     msg <- c(list(command = "close"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- rjson::toJSON(msg)
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$ImoVifa$socket)
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
         return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- rjson::fromJSON(res)
+    res <- jsonlite::parse_json(res)
     if (res$error)
         res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
     else

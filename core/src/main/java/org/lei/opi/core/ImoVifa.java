@@ -1,19 +1,42 @@
 package org.lei.opi.core;
 
+import java.io.ByteArrayInputStream;
 import java.util.HashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.lei.opi.core.definitions.Packet;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.Node;
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
+import org.opencv.videoio.VideoCapture;
 
 /**
  * Opens up a window wherever the JOVP wants it
  */
 public class ImoVifa extends Jovp {
+
+    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
     
+        // video code taken from https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/src/it/polito/elite/teaching/cv/FXHelloCVController.java
+    // a timer for acquiring the video stream
+	private ScheduledExecutorService timer;
+	// the OpenCV object that realizes the video capture
+	private VideoCapture capture = new VideoCapture();
+	// the id of the camera to be used
+	private static int cameraId = 0;
+
+
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
 
     public ImoVifa(Scene parentScene) throws InstantiationException { 
@@ -107,8 +130,81 @@ public class ImoVifa extends Jovp {
         return super.close();
     }
   
+    
     @FXML
     void initialize() {
         setupJavaFX("ImoVifa");
+System.out.println(Core.NATIVE_LIBRARY_NAME);
+
+        this.capture.open(cameraId);
+        if (this.capture.isOpened()) {
+            // grab a frame every 33 ms (30 frames/sec)
+            Runnable frameGrabber = new Runnable() {
+                @Override
+                public void run() {
+                    // effectively grab and process a single frame
+                    Mat frame = grabFrame();
+                    // convert and show the frame
+                    Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2GRAY);
+                    MatOfByte buffer = new MatOfByte();
+                    Imgcodecs.imencode(".png", frame, buffer);
+                    Image imageToShow = new Image(new ByteArrayInputStream(buffer.toArray()));
+                    Platform.runLater(new Runnable() {
+                        @Override public void run() { imageViewLeft.setImage(imageToShow); }
+                    });
+                }
+            };
+            
+            this.timer = Executors.newSingleThreadScheduledExecutor();
+            this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
+		} else {
+			System.out.println("Impossible to open the camera connection...");
+		}
     }
+
+    /**
+	 * Get a frame from the opened video stream (if any)
+	 *
+	 * @return the {@link Mat} to show
+	 */
+	private Mat grabFrame() {
+		Mat frame = new Mat();
+		
+		if (this.capture.isOpened()) {
+			try {
+				this.capture.read(frame);
+				if (!frame.empty()) {
+					Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2GRAY);
+				}
+			}
+			catch (Exception e) {
+				System.out.println("Exception during the image elaboration: " + e);
+			}
+		}
+		return frame;
+	}
+
+    /**
+	 * Stop the acquisition from the camera and release all the resources
+	 */
+	private void stopAcquisition() {
+		if (this.timer!=null && !this.timer.isShutdown()) {
+			try {
+				// stop the timer
+				this.timer.shutdown();
+				this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
+			}
+			catch (InterruptedException e) {
+				System.out.println("Exception in stopping the frame capture, trying to release the camera now... " + e);
+			}
+		}
+		
+		if (this.capture.isOpened())
+			this.capture.release();
+	}
+
+    /**
+	 * On application close, stop the acquisition from the camera
+	 */
+	protected void setClosed() { this.stopAcquisition(); }
 }

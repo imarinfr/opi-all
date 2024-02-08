@@ -73,7 +73,7 @@ public class OpiListener extends Thread {
     /** to parse JSONs with fromJson method */
     public static final GsonBuilder gsonBuilder = new GsonBuilder();
 
-    public static Gson gson;
+    public static Gson gson = new Gson();
 
     /** Given a JSON string, return name:value pairs */
     public static HashMap<String, Object> jsonToPairs(String jsonStr) throws JsonSyntaxException {

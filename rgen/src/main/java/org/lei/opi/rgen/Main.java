@@ -41,7 +41,7 @@ public class Main {
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require(rjson)
+require(jsonlite)
 
     # environment for this machine in R
 if (exists(".opi_env") && !exists("%s", where = .opi_env))
