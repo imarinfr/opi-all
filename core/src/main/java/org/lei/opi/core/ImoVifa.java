@@ -1,10 +1,9 @@
 package org.lei.opi.core;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.DatagramPacket;
 import java.util.HashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.lei.opi.core.definitions.Packet;
 
@@ -13,29 +12,12 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.Node;
-
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
-import org.opencv.videoio.VideoCapture;
+import javafx.embed.swing.SwingFXUtils;
 
 /**
  * Opens up a window wherever the JOVP wants it
  */
 public class ImoVifa extends Jovp {
-
-    static { System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
-    
-        // video code taken from https://github.com/opencv-java/getting-started/blob/master/FXHelloCV/src/it/polito/elite/teaching/cv/FXHelloCVController.java
-    // a timer for acquiring the video stream
-	private ScheduledExecutorService timer;
-	// the OpenCV object that realizes the video capture
-	private VideoCapture capture = new VideoCapture();
-	// the id of the camera to be used
-	private static int cameraId = 0;
-
 
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
 
@@ -127,6 +109,7 @@ public class ImoVifa extends Jovp {
                 textAreaCommands.appendText("Close received.\n");
         });
         returnToParentScene((Node)textAreaCommands);
+
         return super.close();
     }
   
@@ -134,77 +117,42 @@ public class ImoVifa extends Jovp {
     @FXML
     void initialize() {
         setupJavaFX("ImoVifa");
-System.out.println(Core.NATIVE_LIBRARY_NAME);
 
-        this.capture.open(cameraId);
-        if (this.capture.isOpened()) {
-            // grab a frame every 33 ms (30 frames/sec)
-            Runnable frameGrabber = new Runnable() {
-                @Override
-                public void run() {
-                    // effectively grab and process a single frame
-                    Mat frame = grabFrame();
-                    // convert and show the frame
-                    Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2GRAY);
-                    MatOfByte buffer = new MatOfByte();
-                    Imgcodecs.imencode(".png", frame, buffer);
-                    Image imageToShow = new Image(new ByteArrayInputStream(buffer.toArray()));
-                    Platform.runLater(new Runnable() {
-                        @Override public void run() { imageViewLeft.setImage(imageToShow); }
-                    });
+        // Create a thread that will get UDP packets from udp_socket and put them in imageViewLeft
+        /*
+        Thread t = new Thread() {
+            public void run() { 
+                int image_size = 640 * 480 * 1;
+                byte [] data = new byte[image_size];
+                DatagramPacket p = new DatagramPacket(data, data.length);
+
+                int errorCount = 0;
+
+                boolean isRunning = true;
+                while (isRunning) {
+                    try {
+                        Thread.sleep(20);
+                        udp_socket.receive(p);
+
+                        Image img = new Image(new ByteArrayInputStream(p.getData()));
+                        Platform.runLater(() -> {
+                            imageViewLeft.setImage(img);
+                        });
+                    } catch (InterruptedException e) {
+                        isRunning = false;
+                    } catch (IOException e) {
+                        System.out.println("Error receiving UDP packet from ImoVifa camera");
+                        e.printStackTrace();
+                        errorCount++;
+                        if (errorCount > 20) {
+                            System.out.println("Received more than 20 errors from UDP socket: giving up.");
+                            isRunning = false;
+                        }
+                    }
                 }
-            };
-            
-            this.timer = Executors.newSingleThreadScheduledExecutor();
-            this.timer.scheduleAtFixedRate(frameGrabber, 0, 33, TimeUnit.MILLISECONDS);
-		} else {
-			System.out.println("Impossible to open the camera connection...");
-		}
+            }
+        };
+        t.start();
+        */
     }
-
-    /**
-	 * Get a frame from the opened video stream (if any)
-	 *
-	 * @return the {@link Mat} to show
-	 */
-	private Mat grabFrame() {
-		Mat frame = new Mat();
-		
-		if (this.capture.isOpened()) {
-			try {
-				this.capture.read(frame);
-				if (!frame.empty()) {
-					Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2GRAY);
-				}
-			}
-			catch (Exception e) {
-				System.out.println("Exception during the image elaboration: " + e);
-			}
-		}
-		return frame;
-	}
-
-    /**
-	 * Stop the acquisition from the camera and release all the resources
-	 */
-	private void stopAcquisition() {
-		if (this.timer!=null && !this.timer.isShutdown()) {
-			try {
-				// stop the timer
-				this.timer.shutdown();
-				this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
-			}
-			catch (InterruptedException e) {
-				System.out.println("Exception in stopping the frame capture, trying to release the camera now... " + e);
-			}
-		}
-		
-		if (this.capture.isOpened())
-			this.capture.release();
-	}
-
-    /**
-	 * On application close, stop the acquisition from the camera
-	 */
-	protected void setClosed() { this.stopAcquisition(); }
 }

@@ -153,7 +153,6 @@ public class OpiJovp extends OpiListener {
         if (configuration.fullScreen()) psychoEngine.setFullScreen();
 
         this.action = null; 
-        //psychoEngine.start(configuration.input(), Paradigm.CLICKER, configuration.viewMode());
         psychoEngine.start(configuration.input(), Paradigm.CLICKER);
 
         this.psychoEngine.cleanup();

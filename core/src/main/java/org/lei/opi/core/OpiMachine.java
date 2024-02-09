@@ -8,6 +8,7 @@ import java.io.DataInputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.DatagramSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -136,7 +137,7 @@ public abstract class OpiMachine {
     protected Socket socket;
     protected DataInputStream incoming;
     protected PrintWriter outgoing;
-  
+
     /** 
      * The beginnings of machine specific settings. 
      * 
