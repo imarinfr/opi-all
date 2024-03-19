@@ -9,7 +9,7 @@ import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Texture;
 import es.optocom.jovp.definitions.Command;
-import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.TextureType;
 
@@ -63,8 +63,8 @@ public class OpiLogic implements PsychoLogic {
                 fixations = new Item[] {
                     new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
                 };
-                backgrounds[0].show(Eye.BOTH);
-                fixations[0].show(Eye.BOTH);
+                backgrounds[0].show(ViewEye.BOTH);
+                fixations[0].show(ViewEye.BOTH);
           }
             case STEREO -> {
                 backgrounds = new Item[] {
@@ -75,10 +75,10 @@ public class OpiLogic implements PsychoLogic {
                     new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture()),
                     new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
                 };
-                backgrounds[0].show(Eye.LEFT);
-                backgrounds[1].show(Eye.RIGHT);
-                fixations[0].show(Eye.LEFT);
-                fixations[1].show(Eye.RIGHT);
+                backgrounds[0].show(ViewEye.LEFT);
+                backgrounds[1].show(ViewEye.RIGHT);
+                fixations[0].show(ViewEye.LEFT);
+                fixations[1].show(ViewEye.RIGHT);
             }
         }
 
@@ -86,7 +86,7 @@ public class OpiLogic implements PsychoLogic {
             fixations[i].size(DEFAULT_FIXATION_SIZE);
 
         stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
-        stimulus.show(Eye.NONE);
+        stimulus.show(ViewEye.NONE);
     }
 
     /**
@@ -134,7 +134,7 @@ public class OpiLogic implements PsychoLogic {
       if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
       driver.setResponse(new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255));
       timer.stop();
-      stimulus.show(Eye.NONE);
+      stimulus.show(ViewEye.NONE);
     }
 
     /**
@@ -218,7 +218,7 @@ public class OpiLogic implements PsychoLogic {
                 presentationTime += driver.getStimulus(stimIndex).t();
                 // if presentation time is over for the last element of the array, then hide stimulus
                 if (stimIndex == driver.getStimuliLength() - 1) 
-                    stimulus.show(Eye.NONE);
+                    stimulus.show(ViewEye.NONE);
                 else 
                     updateStimulus(++stimIndex);
             } else if (timer.getElapsedTime() > driver.getStimulus(stimIndex).w()) {

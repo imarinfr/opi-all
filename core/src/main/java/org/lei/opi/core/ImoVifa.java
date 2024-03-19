@@ -1,8 +1,5 @@
 package org.lei.opi.core;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
@@ -10,9 +7,7 @@ import org.lei.opi.core.definitions.Packet;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.Node;
-import javafx.embed.swing.SwingFXUtils;
 
 /**
  * Opens up a window wherever the JOVP wants it

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-m2PATH="/Users/aturpin/.m2/repository/org/*"
+#m2PATH="/Users/aturpin/.m2/repository/org/*"
+m2PATH="/Users/aturpin/.m2/repository/org/lei"
+
+echo $m2PATH
 
 javadoc \
     -d /Users/aturpin/src/opi-all/doc \

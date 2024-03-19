@@ -2,12 +2,9 @@ package org.lei.opi.jovp;
 
 import static org.lei.opi.jovp.JsonProcessor.toDoubleArray;
 
-import java.util.Arrays;
 import java.util.HashMap;
 
-import org.lei.opi.core.OpiListener.Command;
-
-import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.ModelType;
 
 /**
@@ -28,7 +25,7 @@ import es.optocom.jovp.definitions.ModelType;
  *
  * @since 0.0.1
  */
-public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, double[] fixCol, double fixLum,
+public record Setup(ViewEye eye, double[] bgCol, double bgLum, ModelType fixShape, double[] fixCol, double fixLum,
                     double fixCx, double fixCy, double fixSx, double fixSy,
                     double fixRotation, double tracking, String bgImageFilename) {
 
@@ -45,7 +42,7 @@ public record Setup(Eye eye, double[] bgCol, double bgLum, ModelType fixShape, d
    * @since 0.0.1
    */
   public static Setup create2(HashMap<String, Object> args) throws ClassCastException {
-    return new Setup(Eye.valueOf(((String) args.get("eye")).toUpperCase()),
+    return new Setup(ViewEye.valueOf(((String) args.get("eye")).toUpperCase()),
                      toDoubleArray(args.get("bgCol")),
                      (double)(args.get("bgLum")),
                      ModelType.valueOf(((String) args.get("fixShape")).toUpperCase()),

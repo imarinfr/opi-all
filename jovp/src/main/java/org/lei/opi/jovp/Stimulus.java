@@ -8,7 +8,7 @@ import static org.lei.opi.jovp.JsonProcessor.toObjectStream;
 import java.util.HashMap;
 
 import es.optocom.jovp.definitions.EnvelopeType;
-import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.Optotype;
 import es.optocom.jovp.definitions.TextureType;
@@ -44,7 +44,7 @@ import es.optocom.jovp.definitions.TextureType;
 *
 * @since 0.0.1
 */
-public record Stimulus(Eye eye, ModelType shape, TextureType type,
+public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                       double x, double y, double sx, double sy,
                       double lum, 
                       double[] color1, 
@@ -80,7 +80,7 @@ public record Stimulus(Eye eye, ModelType shape, TextureType type,
 
         for (int index = 0 ; index < n ; index++) {
             stimuli[index] = new Stimulus(
-                toObjectStream(args.get("eye"), Eye.class).toArray(Eye[]::new)[index],
+                toObjectStream(args.get("eye"), ViewEye.class).toArray(ViewEye[]::new)[index],
                 toObjectStream(args.get("shape"), ModelType.class).toArray(ModelType[]::new)[index],
                 toObjectStream(args.get("type"), TextureType.class).toArray(TextureType[]::new)[index],
                 toDoubleArray(args.get("x"))[index], 

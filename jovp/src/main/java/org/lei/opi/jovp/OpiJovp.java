@@ -11,7 +11,7 @@ import org.lei.opi.core.definitions.Packet;
 import com.google.gson.JsonSyntaxException;
 
 import es.optocom.jovp.PsychoEngine;
-import es.optocom.jovp.definitions.Eye;
+import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.Paradigm;
 import es.optocom.jovp.definitions.ViewMode;
 import es.optocom.jovp.Monitor;
@@ -248,10 +248,10 @@ public class OpiJovp extends OpiListener {
         return Packet.error("JOVP is not ready yet. Try again or call opiInitialise()");
     try {
       // Get eye for the instruction
-      Eye eye = Eye.valueOf(((String) args.get("eye")).toUpperCase());
-      if(configuration.viewMode() == ViewMode.MONO || eye == Eye.BOTH || eye == Eye.LEFT)
+      ViewEye eye = ViewEye.valueOf(((String) args.get("eye")).toUpperCase());
+      if(configuration.viewMode() == ViewMode.MONO || eye == ViewEye.BOTH || eye == ViewEye.LEFT)
         backgrounds[0] = Setup.create2(args);
-      if(configuration.viewMode() == ViewMode.STEREO && (eye == Eye.BOTH || eye == Eye.RIGHT))
+      if(configuration.viewMode() == ViewMode.STEREO && (eye == ViewEye.BOTH || eye == ViewEye.RIGHT))
         backgrounds[1] = Setup.create2(args);
 
       if (args.containsKey("fixShape")) {
@@ -280,16 +280,16 @@ public class OpiJovp extends OpiListener {
      */
     private Packet present(HashMap<String, Object> args) {
         if (args.containsKey("eye")) {
-            List<Eye> eyes = ((List<String>)args.get("eye"))
+            List<ViewEye> eyes = ((List<String>)args.get("eye"))
                 .stream()
-                .map((String s) -> Eye.valueOf((s).toUpperCase()))
+                .map((String s) -> ViewEye.valueOf((s).toUpperCase()))
                 .toList();
-            for (Eye eye : eyes) {
-                if (eye == Eye.BOTH && backgrounds.length == 1)
+            for (ViewEye eye : eyes) {
+                if (eye == ViewEye.BOTH && backgrounds.length == 1)
                     return Packet.error(prefix + NO_BOTH_IN_MONO);
-                if ((eye == Eye.BOTH || eye == Eye.LEFT) && backgrounds[0] == null)
+                if ((eye == ViewEye.BOTH || eye == ViewEye.LEFT) && backgrounds[0] == null)
                     return Packet.error(prefix + NO_LEFT_BACKGROUND);
-                if ((eye == Eye.BOTH || eye == Eye.RIGHT) && backgrounds[1] == null)
+                if ((eye == ViewEye.BOTH || eye == ViewEye.RIGHT) && backgrounds[1] == null)
                     return Packet.error(prefix + NO_RIGHT_BACKGROUND);
             }
         }
