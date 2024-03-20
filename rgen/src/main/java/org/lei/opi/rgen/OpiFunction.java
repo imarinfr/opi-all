@@ -78,7 +78,7 @@ public class OpiFunction {
     String opiName;            // Name of function used in OPI standard and R code 
     String opiCoreName;        // Name of function used in this java package (opi-core) 
     String opiInputFieldName;  // The input field name in OPI Standard. Can be empty for no param in the OPI standard.
-    String opiReturnTemplate;  // A format string that is valid R with %s for places where return values should be plugged in. eg "list(err=%s")" 
+    String opiReturnTemplate;  // A format string that is valid R with %s for places where return values should be plugged in. eg "list(error=%s")" 
     boolean createSocket;      // True if this function creates a socket
     boolean addOtherParams;    // If true, include '...' in the function signature (eg for opiPresent)
     MethodData methodData;     // details on the @Parameters and @ReturnMsg
@@ -91,7 +91,7 @@ public class OpiFunction {
     * @param opiName Name of function used in OPI standard and R code 
     * @param opiCoreName Name of function used in this java package (opi-core) 
     * @param opiInputFieldName Essential input field name in OPI Standard. Can be empty for no param in the OPI standard.
-    * @param opiReturnTemplate A format string that is valid R with %s for places where return values should be plugged in. eg "list(err=%s")" 
+    * @param opiReturnTemplate A format string that is valid R with %s for places where return values should be plugged in. eg "list(error=%s")" 
     * @param createSocket If true, look for Parameters ipOPI... and portOPI and create a socket for other functions to use.
     * @param addOtherParams If true, include '...' in the function signature (eg for opiPresent)
     */
@@ -218,7 +218,7 @@ public class OpiFunction {
         }
 
         if (all.length() > 0)
-            all = "#' @details " + all;
+            all = "#' @details" + all;
         else
             all = "#'";
         return all;
@@ -331,7 +331,7 @@ public class OpiFunction {
     * 2 Write an R function called this.opiName that takes the Parameters and 
     *   2.1 The initialize function needs to open a socket, the rest just use it
     *   2.3 The header for each is opiInputFieldName = list (.map(Parameters p -> p.name() = NULL))
-    * 3 Returns the ResultMsg fields in the this.opiReturnTemplate 
+    * 3 Returns the ResultMsg fields in the this.opiReturnTemplate (bullshit, seems to be ignored)
     * 4 Don't forget to write the roxygen2 doco as well!
     *   4.1 List possible type/range of each parameter
     *   4.2 Indicate if a parameter is optional
