@@ -35,11 +35,13 @@ if (exists(".opi_env") && !exists("O900", where = .opi_env))
 #'  * \code{ip} IP Address of the OPI Monitor.
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The success or error message.
-#'  * \code{res.error} Error code '0' if all good, something else otherwise.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
 #'
-#' @details 
+
+#'
+#' @details
 #'
 #' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
@@ -68,12 +70,8 @@ opiInitialise_for_O900 <- function(address) {
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -88,9 +86,11 @@ opiInitialise_for_O900 <- function(address) {
 
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The error message or a structure with the following data.
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'
+
 #'
 #'
 #'
@@ -113,12 +113,8 @@ opiQueryDevice_for_O900 <- function() {
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -140,11 +136,13 @@ opiQueryDevice_for_O900 <- function() {
 #'  * \code{bgCol} Background color for eye.
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The error message or a structure with the result of QUERY OPI command.
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
 #'
-#' @details 
+
+#'
+#' @details
 #'
 #' \code{eye} can take on values in the set \code{{"left", "right"}}.
 #'
@@ -183,12 +181,8 @@ opiSetup_for_O900 <- function(settings) {
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -203,29 +197,29 @@ opiSetup_for_O900 <- function(settings) {
 #'  * \code{size} Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
 #'                device has a big wheel)
 #'  * \code{color} Stimulus color (degrees).
-#'  * \code{t} List of Stimulus presentation times (ms). For STATIC, list must
-#'             be of length 1. For KINETIC, it must the same length and 'x' and
-#'             'y' co-ordinates minus 1 (Optional)
 #'  * \code{lum} List of stimuli luminances (cd/m^2).
-#'  * \code{w} Response window for STATIC (ms). (Optional)
 #'  * \code{x} List of x co-ordinates of stimuli (degrees).
 #'  * \code{y} List of y co-ordinates of stimuli (degrees).
-#'  * \code{type} Stimulus type: STATIC or KINETIC.
+#'  * \code{type} Stimulus type: STATIC or KINETIC.#'  * \code{t} List of Stimulus presentation times (ms). For STATIC, list must
+#'             be of length 1. For KINETIC, it must the same length and 'x' and
+#'             'y' co-ordinates minus 1 (Optional)
+#'  * \code{w} Response window for STATIC (ms). (Optional)
 #'
 #' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg.eyey} y co-ordinates of pupil at times eyet (degrees).
-#'  * \code{res.msg.eyex} x co-ordinates of pupil at times eyet (degrees).
-#'  * \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
-#'  * \code{res.msg} Error message or a structure with the following fields.
-#'  * \code{res.error} '0' if success, something else if error.
-#'  * \code{res.msg.seen} '1' if seen, '0' if not.
-#'  * \code{res.msg.x} x co-ordinate when oberver responded (degrees) for KINETIC.
-#'  * \code{res.msg.y} y co-ordinate when oberver responded (degrees) for KINETIC.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is a list of:
+#'    * \code{eyey} y co-ordinates of pupil at times eyet (degrees).
+#'    * \code{eyex} x co-ordinates of pupil at times eyet (degrees).
+#'    * \code{x} x co-ordinate when oberver responded (degrees) for KINETIC.
+#'    * \code{y} y co-ordinate when oberver responded (degrees) for KINETIC.
+#'    * \code{time} Response time from stimulus onset if button pressed (ms).
+#'    * \code{seen} '1' if seen, '0' if not.
+
 #'
-#' @details 
+#' @details
 #'
 #' \code{size} can take on values in the set \code{{"gi", "gii",
 #'       "giii", "giv", "gv", "gvi"}}.
@@ -265,12 +259,8 @@ opiPresent_for_O900 <- function(stim, ...) {
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -285,9 +275,11 @@ opiPresent_for_O900 <- function(stim, ...) {
 
 #'
 #' @return A list containing:
-#'  * \code{res} List of result elements.
-#'  * \code{res.msg} The error message or additional results from the CLOSE command
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'
+
 #'
 #'
 #'
@@ -310,12 +302,8 @@ opiClose_for_O900 <- function() {
 
     res <- readLines(.opi_env$O900$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 

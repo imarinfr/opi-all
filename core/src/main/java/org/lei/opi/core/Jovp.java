@@ -7,7 +7,6 @@ import java.util.HashMap;
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
-import org.lei.opi.core.definitions.ReturnMsg;
 
 import es.optocom.jovp.definitions.ViewMode;
 
@@ -73,7 +72,7 @@ public abstract class Jovp extends OpiMachine {
         try {
             this.send(initConfiguration());
             Packet p = this.receive();
-            return p;
+            return Packet.checkReturnElements(p, this.opiMethods, "initialize");
         } catch (IOException e) {
             return Packet.error(COULD_NOT_INITIALIZE, e);
         }
@@ -92,7 +91,7 @@ public abstract class Jovp extends OpiMachine {
             String q = toJson(Command.QUERY);
             this.send(q);
             Packet rec = this.receive();
-            return rec;
+            return Packet.checkReturnElements(rec, this.opiMethods, "query");
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
             return Packet.error(COULD_NOT_QUERY, e);
         }
@@ -127,8 +126,9 @@ public abstract class Jovp extends OpiMachine {
         Packet p = validateArgs(args, this.opiMethods.get("setup").parameters(), "setup");
           if (p.getError()) 
             return(p);
-        this.send(OpiListener.gson.toJson(args));
-        return this.receive();
+        //this.send(OpiListener.gson.toJson(args));
+        this.send(p.getMsg());
+        return Packet.checkReturnElements(this.receive(), this.opiMethods, "setup");
       } catch (IOException e) {
         return Packet.error(COULD_NOT_SETUP, e);
       }
@@ -170,18 +170,15 @@ public abstract class Jovp extends OpiMachine {
     @Parameter(name = "imageFilename", className = String.class, desc = "If type == IMAGE, the filename on the local filesystem of the machine running JOVP of the image to use", isList = true, optional = true, defaultValue = "[\"x.jpg\"]")
     @Parameter(name = "fullFoV", className = Double.class, desc = "If !0 fullFoV scales image to full field of view and sx/sy are ignored.", isList = true, optional = true, defaultValue = "[0]")
     @Parameter(name = "optotype", className = es.optocom.jovp.definitions.Optotype.class, desc = "If shape == OPTOTYPE, the letter A to Z to use", isList = true, optional = true, defaultValue = "[E]")
-    @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
-    @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
-    @ReturnMsg(name = "res.msg.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
-    @ReturnMsg(name = "res.msg.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
     public Packet present(HashMap<String, Object> args) {
       if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
       try {
         Packet p = validateArgs(args, this.opiMethods.get("present").parameters(), "present");
         if (p.getError()) 
             return(p);
-        this.send(OpiListener.gson.toJson(args));
-        return this.receive();
+        //this.send(OpiListener.gson.toJson(args));
+        this.send(p.getMsg());
+        return Packet.checkReturnElements(this.receive(), this.opiMethods, "present");
       } catch (IOException e) {
         return Packet.error(COULD_NOT_PRESENT, e);
       }

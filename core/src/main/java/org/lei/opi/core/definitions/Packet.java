@@ -2,6 +2,14 @@ package org.lei.opi.core.definitions;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashSet;
+import java.util.HashMap;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
+import org.lei.opi.core.OpiListener;
+import org.lei.opi.core.OpiMachine;
 
 /**
  * A class to hold string messages with attributes attached.
@@ -11,23 +19,25 @@ public class Packet {
     private boolean close;
     /** true if this message packet contains an error msg */
     private boolean error;
-    /** Either a String or a JSON Object */
-    private Object msg;
-    /** The type of the msg which might be needed if want to fromJson to this. null means already JSON */
-    private Class<?> type;
+    /** A valid JSON string */
+    private String msg;
 
-    public Packet(boolean error, boolean close, Object msg, Class<?> type) { this.close = close ; this.msg = msg; this.error = error; this.type = type;}
+    public Packet(boolean error, boolean close, Object o) { 
+        this.error = error; 
+        this.close = close; 
+if (o instanceof String) 
+System.out.println("Packet construct: " + o.toString());
+        this.msg = OpiListener.gson.toJson(o);
+if (o instanceof String) 
+System.out.println("\t => " + this.msg.toString());
+    }
 
-    public Packet() { this(false, false, "\"\"", null);}
-    public Packet(String s) { this(false, false, (Object)s, String.class);}
-    public Packet(Object p) { this(false, false, p, p.getClass());}
-    public Packet(boolean close, String str) { this(false, close, (Object)str, String.class);}
-    public Packet(boolean error, boolean close, String str) {this(error, close, (Object)str, String.class);} 
+    public Packet(Object obj) { this(false, false, obj);}
+    public Packet(boolean close, Object obj) { this(false, close, obj);}
 
-    public boolean  getClose() { return this.close; }
-    public boolean  getError() { return this.error; }
-    public Class<?> getType()  { return this.type; }
-    public Object   getMsg() throws ClassCastException { return this.msg; }
+    public boolean getClose() { return this.close; }
+    public boolean getError() { return this.error; }
+    public String  getMsg() { return this.msg; }
 
     public String toString() { return String.format("Packet\n\tError: %s\n\tClose: %s\n\tMsg: %s\n", error, close, getMsg()); }
 
@@ -56,8 +66,66 @@ public class Packet {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
+        String s = sw.toString(); // stack trace as a string
         pw.close();
 
-        return error(description + "\n\n" + pw.toString());
+        return error(description + "\n\n" + s);
+    }
+
+
+    /**
+     * Create a Packet containing msg if it contains all of the ReturnMsg keys 
+     * for `commandName` of `machineClass`.
+     *
+     * @param msg A valid JSON string 
+     * @param methods The opiMethods hashmap from the OpiMachine class that is creating the packet
+     *
+     * @return New packet that either has error=false and contains msg, or 
+     *         error-true and msg has missing ReturnMsgs.
+     */
+    public static Packet checkReturnElements(String msg, HashMap<String, OpiMachine.MethodData> methods, String commandName) {
+System.out.println("Called Packet.checkReturnElements");
+        assert(methods.containsKey(commandName));
+        HashSet<ReturnMsg> rms = methods.get(commandName).returnMsgs();
+
+        JsonElement je = OpiListener.gson.fromJson(msg, JsonElement.class);
+
+        if (je.isJsonPrimitive() && rms.size() == 0) {
+            return new Packet(false, false, msg);
+        }
+
+        assert(je.isJsonObject());
+        JsonObject jo = je.getAsJsonObject();
+        for (ReturnMsg rm : rms) {
+            if (!jo.has(rm.name()))
+                return new Packet(true, false, 
+                    "Missing return field: " + rm.name() + " for command " + commandName + " in " + msg.getClass().getName());
+        }
+        return new Packet(false, false, msg);
+    }
+
+    public static Packet checkReturnElements(Object obj, HashMap<String, OpiMachine.MethodData> methods, String commandName) {
+        return checkReturnElements(OpiListener.gson.toJson(obj), methods, commandName);
+    }
+
+    /**
+     * Create if Packet.msg contains all of the ReturnMsg keys 
+     * for `commandName` of `machineClass`.
+     *
+     * @param packet A packet to check
+     * @param methods The opiMethods hashmap from the OpiMachine class that is creating the packet
+     *
+     * @return New packet that either has error=false and contains msg, or 
+     *         error-true and msg has missing ReturnMsgs.
+     */
+    public static Packet checkReturnElements(Packet packet, HashMap<String, OpiMachine.MethodData> methods, String commandName) {
+        if (packet.getError())
+            return packet;
+
+        Packet p = checkReturnElements(packet.getMsg(), methods, commandName);
+        if (!p.getError())
+            return packet;
+        else 
+            return p;
     }
 }

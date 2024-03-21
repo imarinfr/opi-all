@@ -6,9 +6,9 @@
 \arguments{
 \item{\code{stim}}{A list containing:
 \itemize{
-\item \code{duration} Presentation time (ms).
-\item \code{level} Stimuli luminance (cd/m^2).
-\item \code{responseWindow} Response window (ms).
+\item \code{t} Presentation time (ms).
+\item \code{lum} Stimuli luminance (cd/m^2).
+\item \code{w} Response window (ms).
 \item \code{x} x co-ordinates of stimulus (degrees).
 \item \code{y} y co-ordinates of stimulus (degrees).
 }}
@@ -18,20 +18,22 @@
 \value{
 A list containing:
 \itemize{
-\item \code{res} JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-\item \code{res.eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
-\item \code{res.eyex} x co-ordinates of pupil at times eyet (pixels).
-\item \code{res.eyey} y co-ordinates of pupil at times eyet (pixels).
-\item \code{res.num_track_events} Number of tracking events that occurred during presentation.
-\item \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
-\item \code{res.eyed} Diameter of pupil at times eyet (mm).
-\item \code{res.time_resp} Time since 'epoch' when stimulus response is
-received, or response window expired (ms).
-\item \code{res.msg} Error message or a structure with the following fields.
-\item \code{res.error} '0' if success, something else if error.
-\item \code{res.msg.seen} '1' if seen, '0' if not.
-\item \code{res.num_motor_fails} Number of times motor could not follow fixation movement during presentation.
-\item \code{res.time_rec} Time since 'epoch' when command was received at Compass or Maia (ms).
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is a list of:
+\itemize{
+\item \code{eyey} y co-ordinates of pupil at times eyet (pixels).
+\item \code{num_motor_fails} Number of times motor could not follow fixation movement during presentation.
+\item \code{eyex} x co-ordinates of pupil at times eyet (pixels).
+\item \code{time} Response time from stimulus onset if button pressed (ms).
+\item \code{eyed} Diameter of pupil at times eyet (mm).
+\item \code{eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
+\item \code{time_resp} Time since 'epoch' when stimulus response is received,
+or response window expired (ms).
+\item \code{num_track_events} Number of tracking events that occurred during presentation.
+\item \code{time_rec} Time since 'epoch' when command was received at Compass or Maia (ms).
+\item \code{seen} '1' if seen, '0' if not.
+}
 }
 }
 \description{
@@ -39,11 +41,11 @@ This is for internal use only. Use \code{\link[=opiPresent]{opiPresent()}} with
 these Arguments and you will get the Value back.
 }
 \details{
-\code{duration} can take on values in the range \code{[200.0, 200.0]}.
+\code{t} can take on values in the range \code{[200.0, 200.0]}.
 
-\code{level} can take on values in the range \code{[0.0, 3183.099]}.
+\code{lum} can take on values in the range \code{[0.0, 3183.099]}.
 
-\code{responseWindow} can take on values in the range \code{[0.0, 2680.0]}.
+\code{w} can take on values in the range \code{[0.0, 2680.0]}.
 
 \code{x} can take on values in the range \code{[-30.0, 30.0]}.
 
@@ -51,7 +53,7 @@ these Arguments and you will get the Value back.
 }
 \examples{
 chooseOpi("Compass")
-result <- opiPresent(stim = list(duration = 200.0, level = 100.0, responseWindow = 1500.0, x = 0.0, y = 0.0))
+result <- opiPresent(stim = list(t = 200.0, lum = 100.0, w = 1500.0, x = 0.0, y = 0.0))
 
 }
 \seealso{

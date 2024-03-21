@@ -8,16 +8,17 @@ No checking is done on the validity of \code{stim}.}
 opiPresent_for_SimYes(stim, ...)
 }
 \arguments{
-\item{stim}{Any stimulus object or list.}
-
-\item{...}{Any other paramters you like, they are ignored.}
+\item{...}{Any parameters you like, they are ignored.}
 }
 \value{
-A list contianing:
+A list with elements:
 \itemize{
-\item err, and error code that is always NULL
-\item seen, which is always TRUE
-\item time, which is always 0
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A list containing
+\itemize{
+\item \code{seen} Always \code{TRUE}.
+\item \code{time} Always \code{NA}.
+}
 }
 }
 \description{

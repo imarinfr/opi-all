@@ -9,14 +9,13 @@
 \item \code{size} Stimulus size (degrees). Can be Goldmann Size I to V (or VI if
 device has a big wheel)
 \item \code{color} Stimulus color (degrees).
-\item \code{t} List of Stimulus presentation times (ms). For STATIC, list must
-be of length 1. For KINETIC, it must the same length and 'x' and
-'y' co-ordinates minus 1 (Optional)
 \item \code{lum} List of stimuli luminances (cd/m^2).
-\item \code{w} Response window for STATIC (ms). (Optional)
 \item \code{x} List of x co-ordinates of stimuli (degrees).
 \item \code{y} List of y co-ordinates of stimuli (degrees).
-\item \code{type} Stimulus type: STATIC or KINETIC.
+\item \code{type} Stimulus type: STATIC or KINETIC.#'  * \code{t} List of Stimulus presentation times (ms). For STATIC, list must
+be of length 1. For KINETIC, it must the same length and 'x' and
+'y' co-ordinates minus 1 (Optional)
+\item \code{w} Response window for STATIC (ms). (Optional)
 }}
 
 \item{\code{...}}{Parameters for other opiPresent implementations that are ignored here.}
@@ -24,15 +23,17 @@ be of length 1. For KINETIC, it must the same length and 'x' and
 \value{
 A list containing:
 \itemize{
-\item \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-\item \code{res.msg.eyey} y co-ordinates of pupil at times eyet (degrees).
-\item \code{res.msg.eyex} x co-ordinates of pupil at times eyet (degrees).
-\item \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
-\item \code{res.msg} Error message or a structure with the following fields.
-\item \code{res.error} '0' if success, something else if error.
-\item \code{res.msg.seen} '1' if seen, '0' if not.
-\item \code{res.msg.x} x co-ordinate when oberver responded (degrees) for KINETIC.
-\item \code{res.msg.y} y co-ordinate when oberver responded (degrees) for KINETIC.
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is a list of:
+\itemize{
+\item \code{eyey} y co-ordinates of pupil at times eyet (degrees).
+\item \code{eyex} x co-ordinates of pupil at times eyet (degrees).
+\item \code{x} x co-ordinate when oberver responded (degrees) for KINETIC.
+\item \code{y} y co-ordinate when oberver responded (degrees) for KINETIC.
+\item \code{time} Response time from stimulus onset if button pressed (ms).
+\item \code{seen} '1' if seen, '0' if not.
+}
 }
 }
 \description{

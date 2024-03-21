@@ -119,7 +119,7 @@ public class OpiListener extends Thread {
      *
      * @param jsonStr A JSON object that at least contains the name 'command'.
      * 
-     * @return JSON-formatted message with feedback
+     * @return Packet with JSON string inside
      * 
      * @since 0.1.0
      */

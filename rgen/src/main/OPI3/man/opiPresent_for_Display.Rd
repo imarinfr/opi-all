@@ -6,18 +6,23 @@
 \arguments{
 \item{\code{stim}}{A list containing:
 \itemize{
-\item \code{envSdx} List of envelope sd in x direction in degrees. Only useful
-if envType != NONE (Optional)
 \item \code{lum} List of stimuli luminances (cd/m^2).
+\item \code{stim.length} The number of elements in this stimuli.
+\item \code{color1} List of stimulus colors for FLAT shapes and patterns.
+\item \code{sx} List of diameters along major axis of ellipse (degrees).
+\item \code{eye} The eye for which to apply the settings.
+\item \code{t} List of stimuli presentation times (ms).
+\item \code{w} Time to wait for response including presentation time (ms).
+\item \code{x} List of x co-ordinates of stimuli (degrees).
+\item \code{y} List of y co-ordinates of stimuli (degrees).#'  * \code{envSdx} List of envelope sd in x direction in degrees. Only useful
+if envType != NONE (Optional)
 \item \code{envSdy} List of envelope sd in y direction in degrees. Only useful
 if envType != NONE (Optional)
 \item \code{envRotation} List of envelope rotations in degrees. Only useful if envType != NONE (Optional)
 \item \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
 SQUARESINE, G1, G2, G3, IMAGE (Optional)
-\item \code{stim.length} The number of elements in this stimuli.
 \item \code{frequency} List of frequencies (in cycles per degrees) for
 generation of spatial patterns. Only useful if type != FLAT (Optional)
-\item \code{color1} List of stimulus colors for FLAT shapes and patterns.
 \item \code{color2} List of second colors for non-FLAT shapes (Optional)
 \item \code{fullFoV} If !0 fullFoV scales image to full field of view and sx/sy
 are ignored. (Optional)
@@ -27,7 +32,6 @@ patterns. Only useful if type != FLAT (Optional)
 filesystem of the machine running JOVP of the image to use (Optional)
 \item \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 SQUARE, OPTOTYPE. (Optional)
-\item \code{sx} List of diameters along major axis of ellipse (degrees).
 \item \code{sy} List of diameters along minor axis of ellipse (degrees). If not
 received, then sy = sx (Optional)
 \item \code{rotation} List of angles of rotation of stimuli (degrees). Only
@@ -35,16 +39,11 @@ useful if sx != sy specified. (Optional)
 \item \code{texRotation} List of angles of rotation of stimuli (degrees). Only
 useful if type != FLAT (Optional)
 \item \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
-\item \code{eye} The eye for which to apply the settings.
-\item \code{t} List of stimuli presentation times (ms).
 \item \code{envType} List of envelope types to apply to the stims). Only useful
 if type != FLAT (Optional)
-\item \code{w} Time to wait for response including presentation time (ms).
 \item \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
 type != FLAT. (Optional)
 \item \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
-\item \code{x} List of x co-ordinates of stimuli (degrees).
-\item \code{y} List of y co-ordinates of stimuli (degrees).
 }}
 
 \item{\code{...}}{Parameters for other opiPresent implementations that are ignored here.}
@@ -52,15 +51,13 @@ type != FLAT. (Optional)
 \value{
 A list containing:
 \itemize{
-\item \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-\item \code{res.msg.eyey} y co-ordinates of pupil at times eyet (degrees).
-\item \code{res.msg.eyex} x co-ordinates of pupil at times eyet (degrees).
-\item \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
-\item \code{res.msg.eyed} Diameter of pupil at times eyet (mm).
-\item \code{res.msg.eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
-\item \code{res.msg} Error message or a structure with the following fields.
-\item \code{res.error} '0' if success, something else if error.
-\item \code{res.msg.seen} '1' if seen, '0' if not.
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is a list of:
+\itemize{
+\item \code{time} Response time from stimulus onset if button pressed (ms).
+\item \code{seen} '1' if seen, '0' if not.
+}
 }
 }
 \description{

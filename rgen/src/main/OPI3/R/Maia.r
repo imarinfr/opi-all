@@ -35,16 +35,17 @@ if (exists(".opi_env") && !exists("Maia", where = .opi_env))
 #'  * \code{ip} IP Address of the OPI Monitor.
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.prly} The y-coordinate of the PRL measured initialisation (pixels).
-#'  * \code{res.onhx} The x-coordinate of the ONH measured initialisation (pixels).
-#'  * \code{res.prlx} The x-coordinate of the PRL measured initialisation (pixels).
-#'  * \code{res.msg} The success or error message.
-#'  * \code{res.error} Error code '0' if all good, something else otherwise.
-#'  * \code{res.onhy} The y-coordinate of the ONH measured initialisation (pixels).
-#'  * \code{res.image} The captured IR image at initialisation (base64 encoded).
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is a list of:
+#'    * \code{image} The captured IR image at initialisation (base64 encoded).
+#'    * \code{onhy} The y-coordinate of the ONH measured initialisation (pixels).
+#'    * \code{prlx} The x-coordinate of the PRL measured initialisation (pixels).
+#'    * \code{prly} The y-coordinate of the PRL measured initialisation (pixels).
+#'    * \code{onhx} The x-coordinate of the ONH measured initialisation (pixels).
+
 #'
-#' @details 
+#' @details
 #'
 #' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
@@ -73,12 +74,8 @@ opiInitialise_for_Maia <- function(address) {
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -93,9 +90,11 @@ opiInitialise_for_Maia <- function(address) {
 
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The error message or a structure with the following data.
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'
+
 #'
 #'
 #'
@@ -118,12 +117,8 @@ opiQueryDevice_for_Maia <- function() {
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -142,11 +137,13 @@ opiQueryDevice_for_Maia <- function() {
 #'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The error message or a structure with the result of QUERY OPI command.
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
 #'
-#' @details 
+
+#'
+#' @details
 #'
 #' \code{fixShape} can take on values in the set \code{{"spot", "square"}}.
 #'
@@ -174,12 +171,8 @@ opiSetup_for_Maia <- function(settings) {
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -191,37 +184,38 @@ opiSetup_for_Maia <- function(settings) {
 #' @usage NULL
 #'
 #' @param \code{stim} A list containing:
-#'  * \code{duration} Presentation time (ms).
-#'  * \code{level} Stimuli luminance (cd/m^2).
-#'  * \code{responseWindow} Response window (ms).
+#'  * \code{t} Presentation time (ms).
+#'  * \code{lum} Stimuli luminance (cd/m^2).
+#'  * \code{w} Response window (ms).
 #'  * \code{x} x co-ordinates of stimulus (degrees).
 #'  * \code{y} y co-ordinates of stimulus (degrees).
 #'
 #' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
 #'
 #' @return A list containing:
-#'  * \code{res} JSON Object with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'  * \code{res.eyex} x co-ordinates of pupil at times eyet (pixels).
-#'  * \code{res.eyey} y co-ordinates of pupil at times eyet (pixels).
-#'  * \code{res.num_track_events} Number of tracking events that occurred during presentation.
-#'  * \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
-#'  * \code{res.eyed} Diameter of pupil at times eyet (mm).
-#'  * \code{res.time_resp} Time since 'epoch' when stimulus response is
-#'                         received, or response window expired (ms).
-#'  * \code{res.msg} Error message or a structure with the following fields.
-#'  * \code{res.error} '0' if success, something else if error.
-#'  * \code{res.msg.seen} '1' if seen, '0' if not.
-#'  * \code{res.num_motor_fails} Number of times motor could not follow fixation movement during presentation.
-#'  * \code{res.time_rec} Time since 'epoch' when command was received at Compass or Maia (ms).
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is a list of:
+#'    * \code{eyey} y co-ordinates of pupil at times eyet (pixels).
+#'    * \code{num_motor_fails} Number of times motor could not follow fixation movement during presentation.
+#'    * \code{eyex} x co-ordinates of pupil at times eyet (pixels).
+#'    * \code{time} Response time from stimulus onset if button pressed (ms).
+#'    * \code{eyed} Diameter of pupil at times eyet (mm).
+#'    * \code{eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
+#'    * \code{time_resp} Time since 'epoch' when stimulus response is received,
+#'                       or response window expired (ms).
+#'    * \code{num_track_events} Number of tracking events that occurred during presentation.
+#'    * \code{time_rec} Time since 'epoch' when command was received at Compass or Maia (ms).
+#'    * \code{seen} '1' if seen, '0' if not.
+
 #'
-#' @details 
+#' @details
 #'
-#' \code{duration} can take on values in the range \code{[200.0, 200.0]}.
+#' \code{t} can take on values in the range \code{[200.0, 200.0]}.
 #'
-#' \code{level} can take on values in the range \code{[0.0, 3183.099]}.
+#' \code{lum} can take on values in the range \code{[0.0, 3183.099]}.
 #'
-#' \code{responseWindow} can take on values in the range \code{[0.0, 2680.0]}.
+#' \code{w} can take on values in the range \code{[0.0, 2680.0]}.
 #'
 #' \code{x} can take on values in the range \code{[-30.0, 30.0]}.
 #'
@@ -229,7 +223,7 @@ opiSetup_for_Maia <- function(settings) {
 #'
 #' @examples
 #' chooseOpi("Maia")
-#' result <- opiPresent(stim = list(duration = 200.0, level = 100.0, responseWindow = 1500.0, x = 0.0, y = 0.0))
+#' result <- opiPresent(stim = list(t = 200.0, lum = 100.0, w = 1500.0, x = 0.0, y = 0.0))
 #'
 #' @seealso [opiPresent()]
 #'
@@ -239,7 +233,7 @@ opiPresent_for_Maia <- function(stim, ...) {
 
     if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
 
-    msg <- list(t = stim$duration, lum = stim$level, w = stim$responseWindow, x = stim$x, y = stim$y)
+    msg <- list(t = stim$t, lum = stim$lum, w = stim$w, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
@@ -247,12 +241,8 @@ opiPresent_for_Maia <- function(stim, ...) {
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -267,12 +257,13 @@ opiPresent_for_Maia <- function(stim, ...) {
 
 #'
 #' @return A list containing:
-#'  * \code{res} List of result elements.
-#'  * \code{res.msg} The error message or additional results from the CLOSE command
-#'  * \code{res.error} '0' if success, something else if error.
-#'  * \code{res.time} The time stamp for fixation data
-#'  * \code{res.x} The time stamp for fixation data
-#'  * \code{res.y} The time stamp for fixation data
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is a list of:
+#'    * \code{x} The time stamp for fixation data
+#'    * \code{y} The time stamp for fixation data
+#'    * \code{time} The time stamp for fixation data
+
 #'
 #'
 #'
@@ -295,12 +286,8 @@ opiClose_for_Maia <- function() {
 
     res <- readLines(.opi_env$Maia$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 

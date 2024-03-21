@@ -2,7 +2,7 @@
 % Please edit documentation in R/SimHenson.r
 \name{opiInitialise_for_SimHenson}
 \alias{opiInitialise_for_SimHenson}
-\title{Simulates reponses using a Frequency of Seeing (FoS) curve.}
+\title{Simulates responses using a Frequency of Seeing (FoS) curve.}
 \usage{
 opiInitialise_for_SimHenson(
   type = "C",
@@ -33,10 +33,14 @@ opiInitialise_for_SimHenson(
 \item{...}{Any other parameters you like, they are ignored.}
 }
 \value{
-NULL on success or a string message otherwise
+A list with elements:
+\itemize{
+\item \code{error} \code{FALSE} if machine initialised, \code{TRUE} otherwise.
+\item \code{msg} A string message.
+}
 }
 \description{
-The FoS is modelled as a cummulative Gaussian function over dB with
+The FoS is modelled as a cumulative Gaussian function over dB with
 standard deviation equal to \code{min(cap, exp( A * t + B))}, where
 t is the threshold/mean of the FoS in dB.
 All values are in dB relative to \code{maxStim}.
@@ -44,7 +48,8 @@ All values are in dB relative to \code{maxStim}.
 \examples{
     # Set up a simple simulation for white-on-white perimetry
 chooseOpi("SimHenson")
-if (!is.null(opiInitialize(type = "C", cap = 6)))
-  stop("opiInitialize failed")
+res <- opiInitialize(type = "C", cap = 6)
+if (res$error)
+  stop(paste("opiInitialize() failed:", res$msg))
 
 }

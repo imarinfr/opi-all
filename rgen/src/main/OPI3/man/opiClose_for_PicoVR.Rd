@@ -9,9 +9,9 @@
 \value{
 A list containing:
 \itemize{
-\item \code{res} List of result elements.
-\item \code{res.msg} The error message or additional results from the CLOSE command
-\item \code{res.error} '0' if success, something else if error.
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is an empty list.
 }
 }
 \description{

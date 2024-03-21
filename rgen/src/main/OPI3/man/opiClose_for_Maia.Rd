@@ -9,12 +9,14 @@
 \value{
 A list containing:
 \itemize{
-\item \code{res} List of result elements.
-\item \code{res.msg} The error message or additional results from the CLOSE command
-\item \code{res.error} '0' if success, something else if error.
-\item \code{res.time} The time stamp for fixation data
-\item \code{res.x} The time stamp for fixation data
-\item \code{res.y} The time stamp for fixation data
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is a list of:
+\itemize{
+\item \code{x} The time stamp for fixation data
+\item \code{y} The time stamp for fixation data
+\item \code{time} The time stamp for fixation data
+}
 }
 }
 \description{

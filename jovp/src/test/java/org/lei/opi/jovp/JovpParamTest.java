@@ -306,8 +306,8 @@ public class JovpParamTest {
             HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
             HashMap<String, Object> stimArgs = getDefaultValues(Command.PRESENT);
             switch(t) {
-                case 1: setupArgs.remove("fixCol");
-                case 2: stimArgs.remove("stim.length");
+                case 1: setupArgs.remove("fixCol"); break;
+                case 2: stimArgs.remove("stim.length"); break;
             }
             result = machine.setup(setupArgs);
             System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));

@@ -35,11 +35,13 @@ if (exists(".opi_env") && !exists("ImoVifa", where = .opi_env))
 #'  * \code{ip} IP Address of the OPI Monitor.
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The success or error message.
-#'  * \code{res.error} Error code '0' if all good, something else otherwise.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
 #'
-#' @details 
+
+#'
+#' @details
 #'
 #' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
@@ -68,12 +70,8 @@ opiInitialise_for_ImoVifa <- function(address) {
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -88,9 +86,11 @@ opiInitialise_for_ImoVifa <- function(address) {
 
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The error message or a structure with the following data.
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'
+
 #'
 #'
 #'
@@ -113,12 +113,8 @@ opiQueryDevice_for_ImoVifa <- function() {
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -130,7 +126,7 @@ opiQueryDevice_for_ImoVifa <- function() {
 #' @usage NULL
 #'
 #' @param \code{settings} A list containing:
-#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
+#'  * \code{eye} The eye for which to apply the settings.#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
 #'  * \code{fixShape} Fixation target type for eye. (Optional)
 #'  * \code{fixLum} Fixation target luminance for eye. (Optional)
 #'  * \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
@@ -139,7 +135,6 @@ opiQueryDevice_for_ImoVifa <- function() {
 #'  * \code{bgLum} Background luminance for eye (cd/m^2). (Optional)
 #'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
 #'  * \code{bgCol} Background color for eye (rgb). (Optional)
-#'  * \code{eye} The eye for which to apply the settings.
 #'  * \code{fixSx} diameter along major axis of ellipse (degrees). 0 to hide
 #'                 fixation marker. (Optional)
 #'  * \code{fixSy} diameter along minor axis of ellipse (degrees). If not
@@ -148,11 +143,13 @@ opiQueryDevice_for_ImoVifa <- function() {
 #'                       useful if sx != sy specified. (Optional)
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg} The error message or a structure with the result of QUERY OPI command.
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
 #'
-#' @details 
+
+#'
+#' @details
 #'
 #' \code{fixShape} can take on values in the set \code{{"triangle",
 #'           "square", "polygon", "hollow_triangle", "hollow_square",
@@ -202,12 +199,8 @@ opiSetup_for_ImoVifa <- function(settings) {
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -219,18 +212,23 @@ opiSetup_for_ImoVifa <- function(settings) {
 #' @usage NULL
 #'
 #' @param \code{stim} A list containing:
-#'  * \code{envSdx} List of envelope sd in x direction in degrees. Only useful
-#'                  if envType != NONE (Optional)
 #'  * \code{lum} List of stimuli luminances (cd/m^2).
+#'  * \code{stim.length} The number of elements in this stimuli.
+#'  * \code{color1} List of stimulus colors for FLAT shapes and patterns.
+#'  * \code{sx} List of diameters along major axis of ellipse (degrees).
+#'  * \code{eye} The eye for which to apply the settings.
+#'  * \code{t} List of stimuli presentation times (ms).
+#'  * \code{w} Time to wait for response including presentation time (ms).
+#'  * \code{x} List of x co-ordinates of stimuli (degrees).
+#'  * \code{y} List of y co-ordinates of stimuli (degrees).#'  * \code{envSdx} List of envelope sd in x direction in degrees. Only useful
+#'                  if envType != NONE (Optional)
 #'  * \code{envSdy} List of envelope sd in y direction in degrees. Only useful
 #'                  if envType != NONE (Optional)
 #'  * \code{envRotation} List of envelope rotations in degrees. Only useful if envType != NONE (Optional)
 #'  * \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
 #'                SQUARESINE, G1, G2, G3, IMAGE (Optional)
-#'  * \code{stim.length} The number of elements in this stimuli.
 #'  * \code{frequency} List of frequencies (in cycles per degrees) for
 #'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
-#'  * \code{color1} List of stimulus colors for FLAT shapes and patterns.
 #'  * \code{color2} List of second colors for non-FLAT shapes (Optional)
 #'  * \code{fullFoV} If !0 fullFoV scales image to full field of view and sx/sy
 #'                   are ignored. (Optional)
@@ -240,7 +238,6 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'                         filesystem of the machine running JOVP of the image to use (Optional)
 #'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 #'                 SQUARE, OPTOTYPE. (Optional)
-#'  * \code{sx} List of diameters along major axis of ellipse (degrees).
 #'  * \code{sy} List of diameters along minor axis of ellipse (degrees). If not
 #'              received, then sy = sx (Optional)
 #'  * \code{rotation} List of angles of rotation of stimuli (degrees). Only
@@ -248,31 +245,23 @@ opiSetup_for_ImoVifa <- function(settings) {
 #'  * \code{texRotation} List of angles of rotation of stimuli (degrees). Only
 #'                       useful if type != FLAT (Optional)
 #'  * \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
-#'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{t} List of stimuli presentation times (ms).
 #'  * \code{envType} List of envelope types to apply to the stims). Only useful
 #'                   if type != FLAT (Optional)
-#'  * \code{w} Time to wait for response including presentation time (ms).
 #'  * \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
 #'                    type != FLAT. (Optional)
 #'  * \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
-#'  * \code{x} List of x co-ordinates of stimuli (degrees).
-#'  * \code{y} List of y co-ordinates of stimuli (degrees).
 #'
 #' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
 #'
 #' @return A list containing:
-#'  * \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-#'  * \code{res.msg.eyey} y co-ordinates of pupil at times eyet (degrees).
-#'  * \code{res.msg.eyex} x co-ordinates of pupil at times eyet (degrees).
-#'  * \code{res.msg.time} Response time from stimulus onset if button pressed (ms).
-#'  * \code{res.msg.eyed} Diameter of pupil at times eyet (mm).
-#'  * \code{res.msg.eyet} Time of (eyex, eyey) pupil from stimulus onset (ms).
-#'  * \code{res.msg} Error message or a structure with the following fields.
-#'  * \code{res.error} '0' if success, something else if error.
-#'  * \code{res.msg.seen} '1' if seen, '0' if not.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is a list of:
+#'    * \code{time} Response time from stimulus onset if button pressed (ms).
+#'    * \code{seen} '1' if seen, '0' if not.
+
 #'
-#' @details 
+#' @details
 #'
 #' Elements in \code{envSdx} can take on values in the
 #'                    range \code{[-1.0E10, 1.0E10]}.
@@ -366,12 +355,8 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 
@@ -386,9 +371,11 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
 
 #'
 #' @return A list containing:
-#'  * \code{res} List of result elements.
-#'  * \code{res.msg} The error message or additional results from the CLOSE command
-#'  * \code{res.error} '0' if success, something else if error.
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'
+
 #'
 #'
 #'
@@ -411,12 +398,8 @@ opiClose_for_ImoVifa <- function() {
 
     res <- readLines(.opi_env$ImoVifa$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = 5, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    if (res$error)
-        res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-    else
-        res <- c(list(err = NULL), res)
     return(res)
 }
 

@@ -2,13 +2,17 @@
 % Please edit documentation in R/SimNo.r
 \name{opiQueryDevice_for_SimNo}
 \alias{opiQueryDevice_for_SimNo}
-\title{Returns a simple list.}
+\title{Returns name of the machine.}
 \usage{
 opiQueryDevice_for_SimNo()
 }
 \value{
-A list with one element \code{machine} that is \code{"SimNo"}.
+A list with elements:
+\itemize{
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A list containing \code{machine} that is set to \code{"SimNo"}.
+}
 }
 \description{
-Returns a simple list.
+Returns name of the machine.
 }

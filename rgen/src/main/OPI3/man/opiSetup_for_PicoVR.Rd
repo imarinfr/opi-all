@@ -6,7 +6,7 @@
 \arguments{
 \item{\code{settings}}{A list containing:
 \itemize{
-\item \code{bgImageFilename} If present, display the image in the background for eye (Optional)
+\item \code{eye} The eye for which to apply the settings.#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
 \item \code{fixShape} Fixation target type for eye. (Optional)
 \item \code{fixLum} Fixation target luminance for eye. (Optional)
 \item \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
@@ -15,7 +15,6 @@
 \item \code{bgLum} Background luminance for eye (cd/m^2). (Optional)
 \item \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
 \item \code{bgCol} Background color for eye (rgb). (Optional)
-\item \code{eye} The eye for which to apply the settings.
 \item \code{fixSx} diameter along major axis of ellipse (degrees). 0 to hide
 fixation marker. (Optional)
 \item \code{fixSy} diameter along minor axis of ellipse (degrees). If not
@@ -27,9 +26,9 @@ useful if sx != sy specified. (Optional)
 \value{
 A list containing:
 \itemize{
-\item \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-\item \code{res.msg} The error message or a structure with the result of QUERY OPI command.
-\item \code{res.error} '0' if success, something else if error.
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is an empty list.
 }
 }
 \description{

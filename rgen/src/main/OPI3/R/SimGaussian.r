@@ -22,29 +22,33 @@
 require(stats)
 
 #'
-#' Simulates reponses using a Frequency of Seeing (FoS) curve.
+#' Simulates responses using a Frequency of Seeing (FoS) curve.
 #'
-#' The FoS is modelled as a cummulative Gaussian function with standard deviation
-#' equal to `sd` as provided and the mean as the true threshold given as `tt` 
+#' The FoS is modelled as a cumulative Gaussian function with standard deviation
+#' equal to `sd` as provided and the mean as the true threshold given as `tt`
 #' [opiPresent].
 #' All values are in dB relative to `maxStim`.
 #'
-#' @param sd Standard deviation of Cummulative Gaussian.
+#' @param sd Standard deviation of Cumulative Gaussian.
 #' @param maxStim The maximum stimuls value (0 dB) in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param ... Any other parameters you like, they are ignored.
 #'
-#' @return NULL on success or a string message otherwise
+#' @return A list with elements:
+#'   * \code{error} \code{FALSE} if machine initialised, \code{TRUE} otherwise.
+#'   * \code{msg} A string message.
+#'
 #' @examples
 #'     # Set up a simple simulation for white-on-white perimetry
 #' chooseOpi("SimGaussian")
-#' if (!is.null(opiInitialize(sd = 2.5)))
-#'   stop("opiInitialize failed")
+#' res <- opiInitialize(sd = 2.5)
+#' if (res$error)
+#'   stop(paste("opiInitialize() failed:", res$msg))
 #'
 opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
     if (!is.numeric(sd) || (sd < 0)) {
         msg <- paste("Invalid standard deviation in opiInitialize for SimGaussian:", sd)
         warning(msg)
-        return(msg)
+        return(list(error = TRUE, msg = msg))
     }
 
     if (exists(".opi_env") && !exists("sim_gaussian", where = .opi_env))
@@ -53,50 +57,51 @@ opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
     assign("sd",      sd,      envir = .opi_env$sim_gaussian)
     assign("maxStim", maxStim, envir = .opi_env$sim_gaussian)
 
-    return(NULL)
+    return(list(error = FALSE, msg = "Initialise OK"))
 }
 
-#' Determine the response to a stimuli by sampling from a cummulative Gaussian
+#' Determine the response to a stimuli by sampling from a cumulative Gaussian
 #' Frequency-of-Seeing (FoS) curve (also known as the psychometric function).
 #'
 #' The FoS has formula
-#' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, pxVar)}
-#' where \eqn{x}{\code{x}} is the stimulus value in dB, and `pxVar` is
-#' \deqn{\min\left(\mbox{cap}, e^{A\times\mbox{tt}+B}\right).}
-#' The ceiling \code{cap} is set with the call to
-#' \code{opiInitialize}, and \code{A} and \code{B} are from Table 1 in Henson
-#' et al (2000), also set in the call to `opiInitiaise` using the \code{type} parameter.
+#' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, \mbox{sd})}
+#' where \eqn{x}{\code{x}} is the stimulus value in dB, and `sd` is
+#' set by \code{opiInitialize} and \code{tt}, \code{fpr} and \code{fnr}
+#' are parameters.
 #'
 #' @param stim A list that contains at least:
 #'   * `lum` which is the stim value in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param fpr false positive rate for the FoS curve (range 0..1).
 #' @param fnr false negative rate for the FoS curve (range 0..1).
-#' @param tt  mean of the assumed FoS curve (cd/\eqn{\mbox{m}^2}{m^2}).
+#' @param tt  mean of the assumed FoS curve in dB.
 #' @param ...  Any other parameters you like, they are ignored.
 #'
-#' @return A list contianing:
-#'   * err, an error msg or NULL if no error.
-#'   * seen, which could be TRUE or FALSE
-#'   * time, which is always 0
+#' @return A list with elements:
+#'   * \code{error} \code{TRUE} if error, \code{FALSE} otherwise.
+#'   * \code{msg} A string if \code{error} is \code{TRUE} else a list containing
+#'     * \code{seen} \code{TRUE} or \code{FALSE}.
+#'     * \code{time} Always \code{NA}.
 #'
 #' @examples
 #'     # Stimulus is Size III white-on-white as in the HFA
 #' chooseOpi("SimGaussian")
-#' if (!is.null(opiInitialize(sd = 1.6)))
-#'   stop("opiInitialize failed")
+#' res <- opiInitialize(sd = 1.6)
+#' if (res$error)
+#'   stop(paste("opiInitialize() failed:", res$msg))
 #'
 #' result <- opiPresent(stim = list(lum = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01)
+#' print(paste("Seen:", result$msg$seen, quote = FALSE))
 #'
-#' if (!is.null(opiClose()))
-#'   warning("opiClose() failed")
+#' res <- opiClose()
+#' if (res$error)
+#'   warning(paste("opiClose() failed:", res$msg))
 #'
 opiPresent_for_SimGaussian <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...) {
-
     if (!exists(".opi_env") || !exists("sim_gaussian", where = .opi_env))
-        return(list(err = "You have not called opiInitialise.", seen = NA, time = NA))
+        return(list(error = TRUE, msg = "You have not called opiInitialise."))
 
     if (is.null(stim) || ! "lum" %in% names(stim))
-        return(list(err = "'stim' should be a list with a name 'lum'. stim$lum is the cd/m^2 to present.", seen = NA, time = NA))
+        return(list(error = TRUE, msg = "'stim' should be a list with a name 'lum'. stim$lum is the cd/m^2 to present."))
 
     px_var <- .opi_env$sim_gaussian$sd
 
@@ -105,28 +110,36 @@ opiPresent_for_SimGaussian <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ..
     pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(level, mean = tt, sd = px_var))
 
     return(list(
-        err = NULL,
-        seen = stats::runif(1) < pr_seeing,
-        time = 0
+        error = FALSE,
+        msg = list(
+            seen = stats::runif(1) < pr_seeing,
+            time = NA
+        )
     ))
 }
 
 #' Does nothing.
 #'
-#' @return NULL
+#' @return A list with elements:
+#'   * \code{error} Always \code{FALSE}.
+#'   * \code{msg} A string "Close OK".
 #'
-opiClose_for_SimGaussian <- function() NULL
+opiClose_for_SimGaussian <- function() list(error = FALSE, msg = "Close OK")
 
 #' Returns a simple list.
 #'
-#' @return A list with one element `machine` that is `"SimHenson"`.
+#' @return A list with elements:
+#'   * \code{error} Always \code{FALSE}.
+#'   * \code{msg} A list containing \code{machine} that is set to `"SimGaussian"`.
 #'
-opiQueryDevice_for_SimGaussian <- function() list(machine = "SimGaussian")
+opiQueryDevice_for_SimGaussian <- function() list(error = FALSE, msg = list(machine = "SimGaussian"))
 
 #' Does nothing.
 #'
 #' @param state Any object you like, it is ignored.
 #'
-#' @return NULL
+#' @return A list with elements:
+#'   * \code{error} Always \code{FALSE}.
+#'   * \code{msg} A string "All setup!"
 #'
-opiSetup_for_SimGaussian <- function(state)  NULL
+opiSetup_for_SimGaussian <- function(...) list(error = FALSE, msg = "All setup!")

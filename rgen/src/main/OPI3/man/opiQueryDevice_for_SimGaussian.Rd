@@ -7,7 +7,11 @@
 opiQueryDevice_for_SimGaussian()
 }
 \value{
-A list with one element \code{machine} that is \code{"SimHenson"}.
+A list with elements:
+\itemize{
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A list containing \code{machine} that is set to \code{"SimGaussian"}.
+}
 }
 \description{
 Returns a simple list.

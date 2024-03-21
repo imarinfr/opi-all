@@ -8,12 +8,12 @@
     "physicalSize": [],
     "pseudoGray": false,
     "fullScreen": true,
-    "distance": 50,
+    "distance": 250,
     "viewMode": "stereo",
     "input": "COM10",
     "tracking": false,
     "gammaFile": "linearGamma8bit.json",
-    "ip": "192.168.4.182",
+    "ip": "192.168.4.110",
     "port": 51234
   },
   "this": {

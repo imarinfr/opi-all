@@ -6,6 +6,13 @@
 \usage{
 opiClose_for_SimNo()
 }
+\value{
+A list with elements:
+\itemize{
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A string "Close OK".
+}
+}
 \description{
 Does nothing.
 }

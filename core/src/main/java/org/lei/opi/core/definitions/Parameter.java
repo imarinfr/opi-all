@@ -22,5 +22,4 @@ public @interface Parameter {
   double min() default -1e10;
   double max() default 1e10;
   String defaultValue() default "\"?\"";   // JSON format. This is present even for non-optional params to give an example for rgen
-  String opiRName() default "";             // For backwards compatibility - used in generating the R code in R gen
 }

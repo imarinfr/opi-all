@@ -13,14 +13,16 @@
 \value{
 A list containing:
 \itemize{
-\item \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-\item \code{res.prly} The y-coordinate of the PRL measured initialisation (pixels).
-\item \code{res.onhx} The x-coordinate of the ONH measured initialisation (pixels).
-\item \code{res.prlx} The x-coordinate of the PRL measured initialisation (pixels).
-\item \code{res.msg} The success or error message.
-\item \code{res.error} Error code '0' if all good, something else otherwise.
-\item \code{res.onhy} The y-coordinate of the ONH measured initialisation (pixels).
-\item \code{res.image} The captured IR image at initialisation (base64 encoded).
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is a list of:
+\itemize{
+\item \code{image} The captured IR image at initialisation (base64 encoded).
+\item \code{onhy} The y-coordinate of the ONH measured initialisation (pixels).
+\item \code{prlx} The x-coordinate of the PRL measured initialisation (pixels).
+\item \code{prly} The y-coordinate of the PRL measured initialisation (pixels).
+\item \code{onhx} The x-coordinate of the ONH measured initialisation (pixels).
+}
 }
 }
 \description{

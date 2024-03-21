@@ -14,7 +14,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 
 /**
- * Octopus O900 client
+ * Octopus O900 client TODO
  *
  * @since 0.0.1
  */
@@ -305,10 +305,10 @@ public class O900 extends OpiMachine {
   @Parameter(name = "color", className = org.lei.opi.core.O900.Color.class, desc = "Stimulus color (degrees).", defaultValue = "white")
   @Parameter(name = "t", className = Double.class, desc = "List of Stimulus presentation times (ms). For STATIC, list must be of length 1. For KINETIC, it must the same length and 'x' and 'y' co-ordinates minus 1", isList = true, optional = true, min = 0, defaultValue = "[200]")
   @Parameter(name = "w", className = Double.class, desc = "Response window for STATIC (ms).", optional = true, min = 0, defaultValue = "1500")
-  @ReturnMsg(name = "res.msg.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
-  @ReturnMsg(name = "res.msg.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
-  @ReturnMsg(name = "res.msg.x", className = Double.class, desc = "x co-ordinate when oberver responded (degrees) for KINETIC.")
-  @ReturnMsg(name = "res.msg.y", className = Double.class, desc = "y co-ordinate when oberver responded (degrees) for KINETIC.")
+  @ReturnMsg(name = "eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
+  @ReturnMsg(name = "eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
+  @ReturnMsg(name = "x", className = Double.class, desc = "x co-ordinate when oberver responded (degrees) for KINETIC.")
+  @ReturnMsg(name = "y", className = Double.class, desc = "y co-ordinate when oberver responded (degrees) for KINETIC.")
   public Packet present(HashMap<String, Object> args) {
     if (this.socket.isClosed()) return Packet.error(DISCONNECTED_FROM_HOST);
     try {

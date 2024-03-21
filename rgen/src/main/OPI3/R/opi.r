@@ -93,7 +93,7 @@ chooseOpi <- chooseOPI
 #' @export
 opiInitialise <- function(...) {
     if (is.null(.opi_env$chosen_machine))
-        stop("you should use chooseOPI() before calling opiInitiaise.")
+        stop("you should use chooseOPI() before calling opiInitialise.")
 
     return(do.call(paste0("opiInitialise_for_", .opi_env$chosen_machine), args = list(...)))
 }

@@ -13,9 +13,9 @@
 \value{
 A list containing:
 \itemize{
-\item \code{res} List with all of the other fields described in @ReturnMsg except 'error'.
-\item \code{res.msg} The success or error message.
-\item \code{res.error} Error code '0' if all good, something else otherwise.
+\item \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+\item \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+If \code{error} is \code{FALSE}, this is an empty list.
 }
 }
 \description{

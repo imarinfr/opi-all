@@ -2,7 +2,7 @@
 % Please edit documentation in R/SimGaussian.r
 \name{opiPresent_for_SimGaussian}
 \alias{opiPresent_for_SimGaussian}
-\title{Determine the response to a stimuli by sampling from a cummulative Gaussian
+\title{Determine the response to a stimuli by sampling from a cumulative Gaussian
 Frequency-of-Seeing (FoS) curve (also known as the psychometric function).}
 \usage{
 opiPresent_for_SimGaussian(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...)
@@ -17,36 +17,40 @@ opiPresent_for_SimGaussian(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...)
 
 \item{fnr}{false negative rate for the FoS curve (range 0..1).}
 
-\item{tt}{mean of the assumed FoS curve (cd/\eqn{\mbox{m}^2}{m^2}).}
+\item{tt}{mean of the assumed FoS curve in dB.}
 
 \item{...}{Any other parameters you like, they are ignored.}
 }
 \value{
-A list contianing:
+A list with elements:
 \itemize{
-\item err, an error msg or NULL if no error.
-\item seen, which could be TRUE or FALSE
-\item time, which is always 0
+\item \code{error} \code{TRUE} if error, \code{FALSE} otherwise.
+\item \code{msg} A string if \code{error} is \code{TRUE} else a list containing
+\itemize{
+\item \code{seen} \code{TRUE} or \code{FALSE}.
+\item \code{time} Always \code{NA}.
+}
 }
 }
 \description{
 The FoS has formula
-\deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, pxVar)}
-where \eqn{x}{\code{x}} is the stimulus value in dB, and \code{pxVar} is
-\deqn{\min\left(\mbox{cap}, e^{A\times\mbox{tt}+B}\right).}
-The ceiling \code{cap} is set with the call to
-\code{opiInitialize}, and \code{A} and \code{B} are from Table 1 in Henson
-et al (2000), also set in the call to \code{opiInitiaise} using the \code{type} parameter.
+\deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, \mbox{sd})}
+where \eqn{x}{\code{x}} is the stimulus value in dB, and \code{sd} is
+set by \code{opiInitialize} and \code{tt}, \code{fpr} and \code{fnr}
+are parameters.
 }
 \examples{
     # Stimulus is Size III white-on-white as in the HFA
 chooseOpi("SimGaussian")
-if (!is.null(opiInitialize(sd = 1.6)))
-  stop("opiInitialize failed")
+res <- opiInitialize(sd = 1.6)
+if (res$error)
+  stop(paste("opiInitialize() failed:", res$msg))
 
 result <- opiPresent(stim = list(lum = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01)
+print(paste("Seen:", result$msg$seen, quote = FALSE))
 
-if (!is.null(opiClose()))
-  warning("opiClose() failed")
+res <- opiClose()
+if (res$error)
+  warning(paste("opiClose() failed:", res$msg))
 
 }

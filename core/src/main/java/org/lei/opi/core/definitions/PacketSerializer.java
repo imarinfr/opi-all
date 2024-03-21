@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
@@ -18,8 +19,14 @@ public class PacketSerializer implements JsonSerializer<Packet> {
 
         jsonObject.add("error", context.serialize(p.getError()));
         jsonObject.add("close", context.serialize(p.getClose()));
-        jsonObject.add("type", context.serialize(p.getType().getName()));
-        jsonObject.add("msg", context.serialize(p.getMsg()));
+System.out.println("PacketSerializer: " + p.getMsg());
+for (int i = 0 ; i < p.getMsg().length() ; i++) {
+    System.out.print(p.getMsg().charAt(i) + " ");
+}
+System.out.println("");
+        JsonElement je = JsonParser.parseString(p.getMsg());
+        jsonObject.add("msg", context.serialize(je));
+System.out.println("\t => " + jsonObject);
 
         return jsonObject;
     }

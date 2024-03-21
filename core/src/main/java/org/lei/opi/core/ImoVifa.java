@@ -3,6 +3,7 @@ package org.lei.opi.core;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
+import org.lei.opi.core.definitions.ReturnMsg;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -26,7 +27,7 @@ public class ImoVifa extends Jovp {
      * opiInitialise: initialize OPI
      * Update GUI, call super.initialize().
      * @param args A map of name:value pairs for Params
-     * @return A JSON object with machine specific initialise information
+     * @return A Package containing a JSON object with machine specific initialise information
      * @since 0.2.0
      */
     public Packet initialize(HashMap<String, Object> args) {
@@ -47,7 +48,7 @@ public class ImoVifa extends Jovp {
     /**
      * opiQuery: Query device
      * call super.query(), update GUI.
-     * @return settings and state machine state
+     * @return A packet containing a JSON object describing settings and machine state
      * @since 0.2.0
      */
     public Packet query() { 
@@ -63,7 +64,7 @@ public class ImoVifa extends Jovp {
      * opiSetup: Change device background and overall settings
      * Update GUI, call super.setup() 
      * @param args pairs of argument name and value
-     * @return A JSON object with return messages
+     * @return A packet containing a JSON object as for `query()`
      * @since 0.2.0
      */
     public Packet setup(HashMap<String, Object> args) {
@@ -81,9 +82,14 @@ public class ImoVifa extends Jovp {
      * opiPresent: Present OPI stimulus in perimeter
      * Update GUI, call super.persent() 
      * @param args pairs of argument name and value
-     * @return A JSON object with return messages
+     * @return A packet containing a JSON object
      * @since 0.2.0
      */
+    //TODO
+    //@ReturnMsg(name = "eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
+    //@ReturnMsg(name = "eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
+    //@ReturnMsg(name = "eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
+    //@ReturnMsg(name = "eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
         return super.present(args);
@@ -94,7 +100,7 @@ public class ImoVifa extends Jovp {
    * 
    * @param args pairs of argument name and value
    *
-   * @return A JSON object with return messages
+   * @return A Packet containing JSON object with return messages
    *
    * @since 0.0.1
    */
@@ -107,7 +113,7 @@ public class ImoVifa extends Jovp {
 
         return super.close();
     }
-  
+ //--------------- FXML stuff
     
     @FXML
     void initialize() {

@@ -9,6 +9,13 @@ opiInitialise_for_SimNo(...)
 \arguments{
 \item{...}{Any object you like, it is ignored.}
 }
+\value{
+A list with elements:
+\itemize{
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A string "Initialise OK"
+}
+}
 \description{
 Does nothing.
 }

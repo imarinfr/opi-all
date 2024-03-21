@@ -8,7 +8,6 @@ import java.io.DataInputStream;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.DatagramSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,6 +21,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.function.Consumer;
+
+import java.lang.annotation.Annotation;
 
 import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
@@ -121,6 +122,8 @@ public abstract class OpiMachine {
     /** {@value GUI_MACHINE_NAME} */
     public static final String GUI_MACHINE_NAME = "this";
   
+    private static Gson gson = new Gson();
+
     /** Scene to which we will return when this object is junked */
     protected Scene parentScene;  // return here when btnClose is clicked on our GUI
 
@@ -228,32 +231,33 @@ public abstract class OpiMachine {
      * @param method An invokable method for one of the 5 OPI commands
      * @param parameters The @Parameter notations for that method (including all superclasses)
      */
-    public record MethodData(Method method, HashSet<Parameter> parameters) {};
+    public record MethodData(Method method, HashSet<Parameter> parameters, HashSet<ReturnMsg> returnMsgs) {};
         /** The methods of the OpiMachine */
     public HashMap<String, MethodData> opiMethods;
 
     /**
-     * Return all @Parameter annotations for method `method` in the 
+     * Return all @Parameter or @ReturnMsg annotations for method `method` in the 
      * chain of classes from c, c.super(), c.super.super.... up to Object.
      * I think...elements in the returned set will not be unique by parameter.name.
      *    (So subclass @Parameters do not overwrite super class @Parameters).
      * 
      * @param c Class at which to begin looking for @Parameter annotations on method
      * @param method Method to look for in c and all superclasses of c
-     * @return HashSet of all @Parameter annotations (unique by name)
+     * @param annotation Type of annotation to get (ParameterType or ReturnMsg)
+     * @return HashSet of all @Parameter and @ReturnMsg annotations (unique by name)
      */
-    public static HashSet<Parameter> getAllParameterAnnotations(Class<?> c, Method method) {
-        HashSet<Parameter> params = new HashSet<Parameter>();
+    public static HashSet<? extends Annotation> getAllAnnotations(Class<?> c, final Method method, final Class<? extends Annotation> annotation) {
+        HashSet<Annotation> annotations = new HashSet<Annotation>();
         while (c != null) {
             for (Method m : c.getMethods()) {
                 if (m.getName() == method.getName()) {
-                    for (Parameter p : m.getAnnotationsByType(Parameter.class))
-                        params.add(p);
+                    for (Annotation p : m.getAnnotationsByType(annotation))
+                        annotations.add(p);
                 }
             }
             c = c.getSuperclass();  // go up to parent
         }
-        return(params);
+        return(annotations);
     }   
 
         /** Enum class : enum values defined in the implementing class */
@@ -283,8 +287,11 @@ public abstract class OpiMachine {
         // Get OpiMachine and machine-dependent parameters through annotations
         opiMethods = new HashMap<String, MethodData>();
         for (Method method : methods) {
-            HashSet<Parameter> params = getAllParameterAnnotations(this.getClass(), method);
-            opiMethods.put(method.getName(), new MethodData(method, params));
+            HashSet<Parameter> ps = (HashSet<Parameter>)getAllAnnotations(this.getClass(), method, Parameter.class);
+            HashSet<ReturnMsg> rms = (HashSet<ReturnMsg>)getAllAnnotations(this.getClass(), method, ReturnMsg.class);
+
+            //HashSet<Parameter> params = getAllParameterAnnotations(this.getClass(), method, Parameter.getAnnotationsByType(Parameter.class));
+            opiMethods.put(method.getName(), new MethodData(method, ps, rms));
         }
 
             // gather all the ENUMS used in Parameter annotations for all methods in this class
@@ -402,7 +409,7 @@ public abstract class OpiMachine {
     }
 
     /**
-     * Map the 'command' to a function, check it has the right parameters, and the call it
+     * Map the 'command' to a function, check it has the right parameters, the call it.
      *
      * @param pairs A list of name:value pairs with at least the name "command"
      * 
@@ -412,7 +419,7 @@ public abstract class OpiMachine {
      */
     public Packet processPairs(HashMap<String, Object> pairs) {
         /*
-         * Processing consist of the following three steps:
+         * Processing consist of the following four steps:
          *    (1) Find the function which is the value of the JSON name "command"
          *    (2) Check that the params for the function are in the JSON (via the @Parameter Annotation)
          *    (3) Then execute corresponding method
@@ -428,7 +435,7 @@ public abstract class OpiMachine {
         if (methodData.parameters != null) {
             Packet p = validateArgs(pairs, methodData.parameters(), funcName);
             if (!p.getError())
-                pairs = (HashMap<String, Object>)p.getMsg();
+                pairs = (HashMap<String, Object>)gson.fromJson(p.getMsg(), new TypeToken<HashMap<String, Object>>() {}.getType());
             else    
                 return(p);
         }
@@ -494,8 +501,7 @@ public abstract class OpiMachine {
         for (Parameter param : parameters) {
                 // mandatory parameter not received
             if (!pairs.containsKey(param.name()) && !param.optional())
-              return Packet.error(String.format(MISSING_PARAMETER, 
-                param.opiRName().length() > 0 ?  param.opiRName() : param.name(), funcName, this.getClass()));
+              return Packet.error(String.format(MISSING_PARAMETER, param.name(), funcName, this.getClass()));
 
                 // Optional parameter not here, add it in and go to next param
                 // (Note stim.length gets turned into a double by fromJSON)
@@ -581,27 +587,21 @@ public abstract class OpiMachine {
      * 
      * @param args A map of name:value pairs for Params
      * 
-     * @return A JSON object with machine specific initialise information
+     * @return A Packet containing a JSON object
      * 
      * @since 0.0.1
      */
     @Parameter(name = "ip", desc = "IP Address of the OPI Monitor.", defaultValue = "localhost")
     @Parameter(name = "port", className = Integer.class, desc = "TCP port of the OPI Monitor.", min = 0, max = 65535, defaultValue = "50001")
-    @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "Error code '0' if all good, something else otherwise.")
-    @ReturnMsg(name = "res.msg", desc = "The success or error message.")
     public abstract Packet initialize(HashMap<String, Object> args);
   
     /**
      * opiQuery: Query device
      * 
-     * @return settings and state machine state
+     * @return A Packet containing a JSON object
      *
      * @since 0.0.1
      */
-    @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
-    @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the following data.")
     public abstract Packet query();
   
     /**
@@ -609,13 +609,10 @@ public abstract class OpiMachine {
      * 
      * @param args pairs of argument name and value
      * 
-     * @return A JSON object with return messages
+     * @return A Packet containing a JSON object
      *
      * @since 0.0.1
      */
-    @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
-    @ReturnMsg(name = "res.msg", desc = "The error message or a structure with the result of QUERY OPI command.")
     public abstract Packet setup(HashMap<String, Object> args);
   
     /**
@@ -627,11 +624,8 @@ public abstract class OpiMachine {
      *
      * @since 0.0.1
      */
-    @ReturnMsg(name = "res", desc = "List with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
-    @ReturnMsg(name = "res.msg", desc = "Error message or a structure with the following fields.")
-    @ReturnMsg(name = "res.msg.seen", className = Integer.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
-    @ReturnMsg(name = "res.msg.time", className = Double.class, desc = "Response time from stimulus onset if button pressed (ms).", min = 0)
+    @ReturnMsg(name = "seen", className = Integer.class, desc = "'1' if seen, '0' if not.", min = 0, max = 1)
+    @ReturnMsg(name = "time", className = Double.class, desc = "Response time from stimulus onset if button pressed (ms).", min = 0)
     public abstract Packet present(HashMap<String, Object> args);
   
     /**
@@ -639,13 +633,10 @@ public abstract class OpiMachine {
      * 
      * @param args pairs of argument name and value
      *
-     * @return A JSON object with return messages
+     * @return A Packet containing a JSON object
      *
      * @since 0.0.1
      */
-    @ReturnMsg(name = "res", desc = "List of result elements.")
-    @ReturnMsg(name = "res.error", desc = "'0' if success, something else if error.")
-    @ReturnMsg(name = "res.msg", desc = "The error message or additional results from the CLOSE command")
     public abstract Packet close();
   
     /**

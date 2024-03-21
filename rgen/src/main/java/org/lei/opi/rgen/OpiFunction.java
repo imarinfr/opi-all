@@ -142,7 +142,7 @@ public class OpiFunction {
             static String example(Parameter p) {
                 try {
                     Object o = OpiMachine.buildDefault(p, 1);
-                    return String.format("%s = %s", p.opiRName().length() > 0 ? p.opiRName() : p.name(), format(o));
+                    return String.format("%s = %s", p.name(), format(o));
                 } catch (ClassNotFoundException ignored) {
                     return "";
                 } catch (JsonSyntaxException ignored) {
@@ -170,11 +170,9 @@ public class OpiFunction {
         return wrapR(s, 10 + this.opiName.length(), true);
     }
 
-   
-
       // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
-        String prefix =  String.format("#'  * \\code{%s} ",p.opiRName().length() > 0 ? p.opiRName() : p.name());
+        String prefix =  String.format("#'  * \\code{%s} ", p.name());
         return prefix + wrapR(p.desc() + (p.optional() ? " (Optional)" : ""), prefix.length(), false);
     };
 
@@ -183,7 +181,7 @@ public class OpiFunction {
         //String prefix = r.name().contains(".") ?
         //    String.format("#'    - \\code{%s} ",r.name().replaceAll("\\.", "\\$")) :
         //    String.format("#'  * \\code{%s} ",r.name());
-        String prefix = String.format("#'  * \\code{%s} ",r.name());
+        String prefix = String.format("#'    * \\code{%s} ",r.name());
         return prefix + wrapR(r.desc(), prefix.length(), false);
     };
 
@@ -191,7 +189,7 @@ public class OpiFunction {
     String makeDetails() {
         String all = "";
         for (Parameter p : methodData.parameters.values()) {
-            String name = p.opiRName().length() > 0 ? p.opiRName() : p.name();
+            String name = p.name();
             String str = "";
             int prefixLen = 0;
             if (p.isList() || p.isListList()) {
@@ -231,16 +229,32 @@ public class OpiFunction {
      */
     private String makeDocumentation() {
         String params = "#' @param \\code{" + this.opiInputFieldName + "} A list containing:\n" + 
-            methodData.parameters.values().stream()
+            methodData.parameters.values().stream()  // non-optional parameters
+            .filter((Parameter p) -> !p.optional())
+            .map(prettyParam)
+            .collect(Collectors.joining("\n")) +
+            methodData.parameters.values().stream()  // optional parameters
+            .filter((Parameter p) -> p.optional())
             .map(prettyParam)
             .collect(Collectors.joining("\n"));
         if (this.addOtherParams)
             params += String.format("\n#'\n#' @param \\code{...} Parameters for other %s implementations that are ignored here.", this.opiName);
 
-        String rets = "#' @return A list containing:\n" + 
+        String returnMsgDoc = 
             methodData.returnMsgs.values().stream()
             .map(prettyReturn)
             .collect(Collectors.joining("\n"));
+
+        String rets = String.format("""
+#' @return A list containing:
+#'  * \\code{error} \\code{TRUE} if there was an error, \\code{FALSE} if not.
+#'  * \\code{msg} If \\code{error} is \\code{TRUE}, then this is a string describing the error. 
+#'                If \\code{error} is \\code{FALSE}, %s
+%s
+""",
+        returnMsgDoc.length() == 0 ? "this is an empty list." : "this is a list of:",
+        returnMsgDoc.length() == 0 ? "#'" : returnMsgDoc
+        );
 
         return String.format("""
 #' Implementation of %s for the %s machine.
@@ -266,7 +280,7 @@ public class OpiFunction {
     this.opiName, machineName, // title
     this.opiName, // Use...
     params.length() > 0 ? params : "#'", // @params
-    rets.length() > 0 ? rets : "#'",     //@return
+    rets,           //@return
     makeDetails(),
     machineName,    // chooseOpi
     this.opiName, //result
@@ -299,7 +313,7 @@ public class OpiFunction {
         methodData.parameters().values().stream()  // non-optional msg list parameters
             .map((Parameter p) -> String.format("%s = %s%s", 
                 p.name(), 
-                this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "", p.opiRName().length() > 0 ? p.opiRName() : p.name()))
+                this.opiInputFieldName.length() > 0 ? this.opiInputFieldName + "$" : "", p.name()))
             .collect(Collectors.joining(", "))
         ,
         this.opiCoreName,  // command = 
@@ -313,12 +327,8 @@ public class OpiFunction {
         return String.format("""
         res <- readLines(%s$%s$socket, n = 1)
         if (length(res) == 0)
-            return(list(error = 5, msg = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
+            return(list(error = TRUE, msg = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
         res <- jsonlite::parse_json(res)
-        if (res$error)
-            res <- c(list(err = res$msg), res)   # add in "err" for backwards compatibility
-        else
-            res <- c(list(err = NULL), res)
         return(res)
     """, 
         opiEnvName, this.machineName);

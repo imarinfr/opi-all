@@ -4,10 +4,17 @@
 \alias{opiSetup_for_SimYes}
 \title{Does nothing.}
 \usage{
-opiSetup_for_SimYes(state)
+opiSetup_for_SimYes(...)
 }
 \arguments{
 \item{state}{Any object you like, it is ignored.}
+}
+\value{
+A list with elements:
+\itemize{
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A string "All setup!"
+}
 }
 \description{
 Does nothing.

@@ -2,13 +2,17 @@
 % Please edit documentation in R/SimHenson.r
 \name{opiQueryDevice_for_SimHenson}
 \alias{opiQueryDevice_for_SimHenson}
-\title{Returns a simple list.}
+\title{Returns name of the machine.}
 \usage{
 opiQueryDevice_for_SimHenson()
 }
 \value{
-A list with one element \code{machine} that is \code{"SimHenson"}.
+A list with elements:
+\itemize{
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A list containing \code{machine} that is set to \code{"SimHenson"}.
+}
 }
 \description{
-Returns a simple list.
+Returns name of the machine.
 }

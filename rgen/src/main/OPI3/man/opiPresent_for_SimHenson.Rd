@@ -2,7 +2,7 @@
 % Please edit documentation in R/SimHenson.r
 \name{opiPresent_for_SimHenson}
 \alias{opiPresent_for_SimHenson}
-\title{Determine the response to a stimuli by sampling from a cummulative Gaussian
+\title{Determine the response to a stimuli by sampling from a cumulative Gaussian
 Frequency-of-Seeing (FoS) curve (also known as the psychometric function).}
 \usage{
 opiPresent_for_SimHenson(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...)
@@ -22,11 +22,14 @@ opiPresent_for_SimHenson(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...)
 \item{...}{Any other parameters you like, they are ignored.}
 }
 \value{
-A list contianing:
+A list with elements:
 \itemize{
-\item err, an error msg or NULL if no error.
-\item seen, which could be TRUE or FALSE
-\item time, which is always 0
+\item \code{error} \code{TRUE} if error, \code{FALSE} otherwise.
+\item \code{msg} A string if \code{error} is \code{TRUE} else a list containing
+\itemize{
+\item \code{seen} \code{TRUE} or \code{FALSE}.
+\item \code{time} Always \code{NA}.
+}
 }
 }
 \description{
@@ -41,12 +44,14 @@ et al (2000), also set in the call to \code{opiInitiaise} using the \code{type} 
 \examples{
     # Stimulus is Size III white-on-white as in the HFA
 chooseOpi("SimHenson")
-if (!is.null(opiInitialize(type = "C", cap = 6)))
-  stop("opiInitialize failed")
+res <- opiInitialize(type = "C", cap = 6)
+if (res$error)
+  stop(paste("opiInitialize() failed:", res$msg))
 
 result <- opiPresent(stim = list(lum = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01)
 
-if (!is.null(opiClose()))
-  warning("opiClose() failed")
+res <- opiClose()
+if (res$error)
+  warning(paste("opiClose() failed:", res$msg))
 
 }

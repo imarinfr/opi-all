@@ -15,19 +15,9 @@ public class PacketDeserializer implements JsonDeserializer<Packet> {
         JsonObject jsonObject = json.getAsJsonObject();
         boolean error = jsonObject.get("error").getAsBoolean();
         boolean close = jsonObject.get("close").getAsBoolean();
-        String type = jsonObject.get("type").getAsString();
 
-        Object msg;
+        Object msg = jsonObject.get("msg");
 
-        if (type.equalsIgnoreCase("java.lang.String"))
-            msg = jsonObject.get("msg").getAsString();
-        else
-            msg = jsonObject.get("msg").getAsJsonObject();
-
-        try {
-            return new Packet(error, close, msg, Class.forName(type));
-        } catch (ClassNotFoundException e) {
-            throw new JsonParseException("Cannot find class for type: " + type);
-        }
+        return new Packet(error, close, msg);
     }
 }

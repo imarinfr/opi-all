@@ -2,25 +2,26 @@
 % Please edit documentation in R/SimNo.r
 \name{opiPresent_for_SimNo}
 \alias{opiPresent_for_SimNo}
-\title{Always respond 'yes' immediately to any parameter.
+\title{Always respond 'not seen' to any parameter.
 No checking is done on the validity of \code{stim}.}
 \usage{
-opiPresent_for_SimNo(stim, ...)
+opiPresent_for_SimNo(...)
 }
 \arguments{
-\item{stim}{Any stimulus object or list.}
-
-\item{...}{Any other paramters you like, they are ignored.}
+\item{...}{Any parameters you like, they are ignored.}
 }
 \value{
-A list contianing:
+A list with elements:
 \itemize{
-\item err, and error code that is always NULL
-\item seen, which is always FALSE
-\item time, which is always 0
+\item \code{error} Always \code{FALSE}.
+\item \code{msg} A list containing
+\itemize{
+\item \code{seen} Always \code{FALSE}.
+\item \code{time} Always \code{NA}.
+}
 }
 }
 \description{
-Always respond 'yes' immediately to any parameter.
+Always respond 'not seen' to any parameter.
 No checking is done on the validity of \code{stim}.
 }

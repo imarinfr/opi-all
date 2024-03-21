@@ -98,11 +98,11 @@ public abstract class Icare extends OpiMachine {
      * 
      * @since 3.0.0
      */
-    @ReturnMsg(name = "res.prlx", desc = "The x-coordinate of the PRL measured initialisation (pixels).")
-    @ReturnMsg(name = "res.prly", desc = "The y-coordinate of the PRL measured initialisation (pixels).")
-    @ReturnMsg(name = "res.onhx", desc = "The x-coordinate of the ONH measured initialisation (pixels).")
-    @ReturnMsg(name = "res.onhy", desc = "The y-coordinate of the ONH measured initialisation (pixels).")
-    @ReturnMsg(name = "res.image", desc = "The captured IR image at initialisation (base64 encoded).")
+    @ReturnMsg(name = "prlx", desc = "The x-coordinate of the PRL measured initialisation (pixels).")
+    @ReturnMsg(name = "prly", desc = "The y-coordinate of the PRL measured initialisation (pixels).")
+    @ReturnMsg(name = "onhx", desc = "The x-coordinate of the ONH measured initialisation (pixels).")
+    @ReturnMsg(name = "onhy", desc = "The y-coordinate of the ONH measured initialisation (pixels).")
+    @ReturnMsg(name = "image", desc = "The captured IR image at initialisation (base64 encoded).")
     public Packet initialize(HashMap<String, Object> args) {
         try {
             this.send(OPI_OPEN);
@@ -142,7 +142,7 @@ public abstract class Icare extends OpiMachine {
             }
             });
 
-        return new Packet(queryResults());   // TODO  is this JSON already? if so needs a true param
+        return Packet.checkReturnElements(queryResults(), this.opiMethods, "initialize");   // TODO  is this JSON already? if so needs a true param
     };
   
     /**
@@ -160,7 +160,7 @@ public abstract class Icare extends OpiMachine {
           textAreaCommands.appendText("\nOPI Query:\n");
           textAreaCommands.appendText(results.toString());
         });
-      return new Packet(results);// TODO  is this JSON already? if so needs a true param
+      return Packet.checkReturnElements(results, this.opiMethods, "query");// TODO  is this JSON already? if so needs a true param
     };
   
     /**
@@ -226,7 +226,7 @@ public abstract class Icare extends OpiMachine {
             textAreaCommands.appendText("\tTracking " + (this.settings.tracking ? "On" : "Off") + "\n");
         });
 
-        return new Packet(queryResults());
+        return Packet.checkReturnElements(queryResults(), this.opiMethods, "setup");
     }
   
     /**
@@ -243,18 +243,17 @@ public abstract class Icare extends OpiMachine {
      */
     @Parameter(name = "x", className = Double.class, desc = "x co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
     @Parameter(name = "y", className = Double.class, desc = "y co-ordinates of stimulus (degrees).", min = -30, max = 30, defaultValue = "0")
-    @Parameter(name = "lum", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100", opiRName = "level")
-    @Parameter(name = "t", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200", opiRName = "duration")
-    @Parameter(name = "w", className = Double.class, desc = "Response window (ms).", min = 0, max = 2680, defaultValue = "1500", opiRName = "responseWindow")
-    @ReturnMsg(name = "res", desc = "JSON Object with all of the other fields described in @ReturnMsg except 'error'.")
-    @ReturnMsg(name = "res.eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (pixels).")
-    @ReturnMsg(name = "res.eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (pixels).")
-    @ReturnMsg(name = "res.eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
-    @ReturnMsg(name = "res.eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
-    @ReturnMsg(name = "res.time_rec", className = Double.class, desc = "Time since 'epoch' when command was received at Compass or Maia (ms).", min = 0)
-    @ReturnMsg(name = "res.time_resp", className = Double.class, desc = "Time since 'epoch' when stimulus response is received, or response window expired (ms).", min = 0)
-    @ReturnMsg(name = "res.num_track_events", className = Double.class, desc = "Number of tracking events that occurred during presentation.", min = 0)
-    @ReturnMsg(name = "res.num_motor_fails", className = Double.class, desc = "Number of times motor could not follow fixation movement during presentation.", min = 0)
+    @Parameter(name = "lum", className = Double.class, desc = "Stimuli luminance (cd/m^2).", min = 0, max = 3183.099, defaultValue = "100")
+    @Parameter(name = "t", className = Double.class, desc = "Presentation time (ms).", min = 200, max = 200, defaultValue = "200")
+    @Parameter(name = "w", className = Double.class, desc = "Response window (ms).", min = 0, max = 2680, defaultValue = "1500")
+    @ReturnMsg(name = "eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (pixels).")
+    @ReturnMsg(name = "eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (pixels).")
+    @ReturnMsg(name = "eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
+    @ReturnMsg(name = "eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
+    @ReturnMsg(name = "time_rec", className = Double.class, desc = "Time since 'epoch' when command was received at Compass or Maia (ms).", min = 0)
+    @ReturnMsg(name = "time_resp", className = Double.class, desc = "Time since 'epoch' when stimulus response is received, or response window expired (ms).", min = 0)
+    @ReturnMsg(name = "num_track_events", className = Double.class, desc = "Number of tracking events that occurred during presentation.", min = 0)
+    @ReturnMsg(name = "num_motor_fails", className = Double.class, desc = "Number of times motor could not follow fixation movement during presentation.", min = 0)
     public Packet present(HashMap<String, Object> args) {
         if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
         try {
@@ -271,7 +270,7 @@ public abstract class Icare extends OpiMachine {
                       this.send(opiMessage);
                       String res = this.readline(); 
                       updateGUIOnPresent(args);
-                      return new Packet(parseResult(res));// TODO  is this JSON already? if so needs a true param
+                      return Packet.checkReturnElements(parseResult(res), this.opiMethods, "present");// TODO  is this JSON already? if so needs a true param
                 } catch (IOException e) {
                       return Packet.error(OPI_PRESENT_FAILED, e);
                 }
@@ -289,9 +288,9 @@ public abstract class Icare extends OpiMachine {
      *
      * @since 3.0.0
      */
-    @ReturnMsg(name = "res.time", desc = "The time stamp for fixation data")
-    @ReturnMsg(name = "res.x", desc = "The time stamp for fixation data")
-    @ReturnMsg(name = "res.y", desc = "The time stamp for fixation data")
+    @ReturnMsg(name = "time", desc = "The time stamp for fixation data")
+    @ReturnMsg(name = "x", desc = "The time stamp for fixation data")
+    @ReturnMsg(name = "y", desc = "The time stamp for fixation data")
     public Packet close() {
         try {
             this.send(OPI_CLOSE);
@@ -321,7 +320,8 @@ public abstract class Icare extends OpiMachine {
                 textAreaCommands.appendText("\nOPI Closed\n");
                 textAreaCommands.appendText(sb.toString());
             });
-            return new Packet(true, "[" + sb.toString() + "]"); // TODO this needs to be a serialised object like Query and REsponse
+            Packet p = new Packet(true, "[" + sb.toString() + "]"); // TODO this needs to be a serialised object like Query and REsponse
+            return Packet.checkReturnElements(p, opiMethods, "close");
         } catch (ClassCastException | IllegalArgumentException | IOException e) {
             return Packet.error(COULD_NOT_DISCONNECT, e);
         }

@@ -1,6 +1,6 @@
 /*
- * A decorator to describe elements that can be returned 
- * over a Communicator as JSON strings.
+ * A decorator to describe elements of the 'msg' object that can be returned 
+ * by the main commands of an OpiMachine.
  * Used to define communication protocol in conjunction with 
  * @Parameter decorator.
  */

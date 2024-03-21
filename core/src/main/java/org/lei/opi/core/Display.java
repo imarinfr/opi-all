@@ -4,8 +4,6 @@ import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
@@ -50,14 +48,7 @@ public class Display extends Jovp {
     public Packet query() { 
         Packet p = super.query();
         if (parentScene != null)
-            Platform.runLater(()-> {
-                try {
-                    JsonElement je = JsonParser.parseString(p.getMsg().toString());
-                    textAreaCommands.appendText(settings_gson.toJson(je));
-                } catch (JsonSyntaxException e) {
-                    textAreaCommands.appendText(p.getMsg().toString());
-                }
-            });
+            Platform.runLater(()-> { textAreaCommands.appendText(p.getMsg()); });
         return p;
     }
   
