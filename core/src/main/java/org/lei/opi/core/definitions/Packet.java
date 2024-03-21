@@ -25,11 +25,7 @@ public class Packet {
     public Packet(boolean error, boolean close, Object o) { 
         this.error = error; 
         this.close = close; 
-if (o instanceof String) 
-System.out.println("Packet construct: " + o.toString());
         this.msg = OpiListener.gson.toJson(o);
-if (o instanceof String) 
-System.out.println("\t => " + this.msg.toString());
     }
 
     public Packet(Object obj) { this(false, false, obj);}
@@ -84,7 +80,6 @@ System.out.println("\t => " + this.msg.toString());
      *         error-true and msg has missing ReturnMsgs.
      */
     public static Packet checkReturnElements(String msg, HashMap<String, OpiMachine.MethodData> methods, String commandName) {
-System.out.println("Called Packet.checkReturnElements");
         assert(methods.containsKey(commandName));
         HashSet<ReturnMsg> rms = methods.get(commandName).returnMsgs();
 
