@@ -91,6 +91,9 @@ public class OpiLogic implements PsychoLogic {
 
     /**
      * Initialize PsychoEngine
+     * Backgrounds are at psychoEngine.distance - 1
+     * Stimuli  are at psychoEngine.distance - 2
+     * Fixation markers  are at psychoEngine.distance - 3
      *
      * @param psychoEngine the psychoEngine
      * 
@@ -187,6 +190,7 @@ public class OpiLogic implements PsychoLogic {
                 double bgLum = input_bg.bgLum();
                 double[] bgCol = input_bg.bgCol();
                 backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
+Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture().getColors()[0]));
 
                 if (input_bg.bgImageFilename().length() > 0) {    // a bit yuck, but rgen needs a default value...
                     backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
@@ -289,5 +293,4 @@ public class OpiLogic implements PsychoLogic {
       double lum[] = Arrays.stream(color).map((double c) -> c * luminance).toArray();
       return gammaLumToColor(lum);
     }
-
 }
