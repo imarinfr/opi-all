@@ -54,6 +54,20 @@ public class OpiLogic implements PsychoLogic {
 
     OpiLogic(OpiJovp driver) {
         this.driver = driver;
+    }
+
+    /**
+     * Initialize PsychoEngine
+     * Backgrounds are at psychoEngine.distance - 1
+     * Stimuli  are at psychoEngine.distance - 2
+     * Fixation markers  are at psychoEngine.distance - 3
+     *
+     * @param psychoEngine the psychoEngine
+     * 
+     * @since 0.0.1
+     */
+    @Override
+    public void init(PsychoEngine psychoEngine) {
         // Init background, fixation depending on whether viewMode is MONO or STEREO
         switch(driver.getConfiguration().viewMode()) {
             case MONO -> {
@@ -82,31 +96,16 @@ public class OpiLogic implements PsychoLogic {
             }
         }
 
-        for (int i = 0; i < fixations.length; i++) 
-            fixations[i].size(DEFAULT_FIXATION_SIZE);
-
         stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
         stimulus.show(ViewEye.NONE);
-    }
 
-    /**
-     * Initialize PsychoEngine
-     * Backgrounds are at psychoEngine.distance - 1
-     * Stimuli  are at psychoEngine.distance - 2
-     * Fixation markers  are at psychoEngine.distance - 3
-     *
-     * @param psychoEngine the psychoEngine
-     * 
-     * @since 0.0.1
-     */
-    @Override
-    public void init(PsychoEngine psychoEngine) {
         // set size of the background to be the field of view
         this.fov = psychoEngine.getFieldOfView();
 
         // add perimetry items: background, fixation, and stimulus.
         for (int i = 0; i < backgrounds.length; i++) {
           fixations[i].position(0.0d, 0.0d);
+          fixations[i].size(DEFAULT_FIXATION_SIZE);
           fixations[i].distance(driver.getConfiguration().distance() - 3);
           view.add(fixations[i]);
 

@@ -21,7 +21,7 @@ public class Calibration {
    
     /** Max luminance in cd/m^2 for [0]=R [1]=G [2]=B */
     double[] maxLum;
-    /** Lum levels (cd/m^2) for color values 1:255 or 1:1024 for [0]=R [1]=G [2]=B */
+    /** Lum levels (cd/m^2) divided by maxLum for color values 1:255 or 1:1024 for [0]=R [1]=G [2]=B */
     double[][] gamma;
     /** color values in range [0,1] for integer lum values in cd/m^2 up to 0:maxLum for [0]=R [1]=G [2]=B */
     double[][] inverseGamma;
