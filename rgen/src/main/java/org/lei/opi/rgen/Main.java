@@ -62,8 +62,6 @@ machineName, machineName);  // environment name
      * @param writer  A {@link PrintWriter} to which output is sent.
      */
     static void makeR(OpiMachine machine, PrintStream writer) {
-        String machineName = machine.getClass().getSimpleName();
-
         OpiFunction[] functions = { 
             new OpiFunction(machine, "opiInitialise", "initialize", "address", "list(err = %s)", true, false),
             new OpiFunction(machine, "opiQueryDevice", "query", "", "list(%s)", false, false),

@@ -6,7 +6,6 @@ import org.lei.opi.core.Display;
 import java.lang.reflect.Method;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.ArrayList;
 
 import org.lei.opi.core.definitions.Parameter;
 
@@ -98,8 +97,8 @@ public class RgenTests {
       .collect(Collectors.joining(","))
      + "]");
 
-     ArrayList<String> b = new ArrayList<String>();
-     Object c = new ArrayList<String>();
+     //ArrayList<String> b = new ArrayList<String>();
+     //Object c = new ArrayList<String>();
      //Class <?> d = Class.forName("ArrayList<String>");
 }
 

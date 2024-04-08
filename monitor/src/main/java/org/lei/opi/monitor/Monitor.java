@@ -226,7 +226,7 @@ public class Monitor extends Application {
     @FXML
     void actionBtnSave(ActionEvent event) {
         if (!this.settingsHaveBeenEdited && !this.myPortHasBeenEdited) {
-            labelMessages.setText("Nothing to save for " + this.currentMachineChoice + "or My Port of My IP Address.");
+            labelMessages.setText("Nothing to save for " + this.currentMachineChoice + " or My Port of My IP Address.");
         } else 
             saveCurrentSettings();
     }

@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.lei.opi.core.Jovp;
@@ -17,7 +16,6 @@ import org.lei.opi.core.Jovp;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.definitions.Paradigm;
 import es.optocom.jovp.definitions.ViewMode;
 

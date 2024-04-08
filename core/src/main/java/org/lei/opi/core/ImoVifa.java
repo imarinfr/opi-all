@@ -3,10 +3,8 @@ package org.lei.opi.core;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 import org.lei.opi.core.definitions.Packet;
-import org.lei.opi.core.definitions.ReturnMsg;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -38,13 +36,13 @@ public class ImoVifa extends Jovp {
             if (textAreaCommands != null)
                 textAreaCommands.appendText("OPI Initialized");
         });    
-            // Make sure screen = 1 and viewMode = "STEREO" is present for ImoVifa
-        if (args == null)
-            args = new HashMap<String, Object>(){{ put("screen", 1);}};
-        else
-            args.put("screen", 1);
 
-        args.put("viewMode", "STEREO");
+            // Make sure screen = 1 and viewMode = "STEREO" is present for ImoVifa
+            // Also it seems the monitor does not report it's correct size...
+        settings.setPhysicalSize(new int[] {121, 68});
+        settings.setScreen(1);
+        settings.setViewMode("STEREO");
+
         return super.initialize(args);
     };
   
@@ -95,15 +93,16 @@ public class ImoVifa extends Jovp {
     //@ReturnMsg(name = "eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
-        double sx[] = Jovp.toDoubleArray(args.get("sx"));
-        double sy[] = Jovp.toDoubleArray(args.get("sy"));
-        double x[] = Jovp.toDoubleArray(args.get("x"));
-        double y[] = Jovp.toDoubleArray(args.get("y"));
-        args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"PIXELS"})));
-        args.put("sx", new ArrayList<Double>(Arrays.stream(sx).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
-        args.put("sy", new ArrayList<Double>(Arrays.stream(sy).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
-        args.put("x", new ArrayList<Double>(Arrays.stream(x).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
-        args.put("y", new ArrayList<Double>(Arrays.stream(y).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
+        args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"ANGLES"})));
+        //double sx[] = Jovp.toDoubleArray(args.get("sx"));
+        //double sy[] = Jovp.toDoubleArray(args.get("sy"));
+        //double x[] = Jovp.toDoubleArray(args.get("x"));
+        //double y[] = Jovp.toDoubleArray(args.get("y"));
+        //args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"PIXELS"})));
+        //args.put("sx", new ArrayList<Double>(Arrays.stream(sx).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
+        //args.put("sy", new ArrayList<Double>(Arrays.stream(sy).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
+        //args.put("x", new ArrayList<Double>(Arrays.stream(x).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
+        //args.put("y", new ArrayList<Double>(Arrays.stream(y).map(d -> 18.34 * d).boxed().collect(Collectors.toList())));
         return super.present(args);
     }
 

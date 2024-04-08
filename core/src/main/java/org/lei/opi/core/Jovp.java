@@ -30,10 +30,12 @@ public abstract class Jovp extends OpiMachine {
         public String gammaFile;
 
         public void setScreen(int screen) { this.screen = screen; }
+        public void setPhysicalSize(int[] psize) { this.physicalSize = psize; }
+        public void setViewMode(String s) { this.viewMode = s; }
     };
 
     /** Settings */
-    private Settings settings;
+    protected Settings settings;
     public Settings getSettings() { return this.settings; }
 
     /**
@@ -68,8 +70,6 @@ public abstract class Jovp extends OpiMachine {
     * @since 0.0.1
     */
     public Packet initialize(HashMap<String, Object> args) {
-        //if (args != null && args.containsKey("screen")) // TODO this is a horrible hack to allow for IMO. 
-        //  settings.setScreen((int)args.get("screen"));
         try {
             this.send(initConfiguration());
             Packet p = this.receive();
