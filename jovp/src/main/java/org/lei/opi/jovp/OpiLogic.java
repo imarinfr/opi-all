@@ -174,12 +174,6 @@ public class OpiLogic implements PsychoLogic {
       driver.setActionToNull();
     }
 
-    /** hide psychoEngine */
-    private void hide(PsychoEngine psychoEngine) {
-      psychoEngine.hide();
-      driver.setActionToNull();
-    }
-
     /** Change background and/or fixation markers */
     private void setup() {
         for (int i = 0; i < backgrounds.length; i++) {
@@ -194,11 +188,16 @@ public class OpiLogic implements PsychoLogic {
                     backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
                 }
 
+                if (input_bg.fixType() == TextureType.IMAGE) {
+                    fixations[i].update(new Texture(input_bg.fixImageFilename()));
+                } else {
+                    fixations[i].update(new Texture(input_bg.fixType()));
+                    fixations[i].setColor(gammaLumToColor(input_bg.fixLum(), input_bg.fixCol()));
+                }
                 fixations[i].update(new Model(input_bg.fixShape()));
                 fixations[i].position(input_bg.fixCx(), input_bg.fixCy());
                 fixations[i].size(input_bg.fixSx(), input_bg.fixSy());
                 fixations[i].rotation(input_bg.fixRotation());
-                fixations[i].setColor(gammaLumToColor(input_bg.fixLum(), input_bg.fixCol()));
             }
         }
         driver.setActionToNull();
@@ -238,7 +237,7 @@ public class OpiLogic implements PsychoLogic {
         Stimulus stim = driver.getStimulus(index);
 
             // for performance, do not regenerate stimulus model and texture unless it has changed
-        boolean newTexture = index == 0;
+        boolean newTexture = index == 0; // first time we want it to be "new", check other times
         boolean newModel = index == 0;
         if (index > 0) {
             Stimulus prevStim = driver.getStimulus(index - 1);

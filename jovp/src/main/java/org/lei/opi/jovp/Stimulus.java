@@ -5,6 +5,8 @@ import static org.lei.opi.jovp.JsonProcessor.toDoubleArray;
 import static org.lei.opi.jovp.JsonProcessor.toStringArray;
 import static org.lei.opi.jovp.JsonProcessor.toObjectStream;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import es.optocom.jovp.definitions.EnvelopeType;
@@ -107,7 +109,7 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                 toDoubleArray(args.get("envSdx"))[index],
                 toDoubleArray(args.get("envSdy"))[index],
                 toDoubleArray(args.get("envRotation"))[index],
-                toObjectStream(args.get("units"), Units.class).toArray(Units[]::new)[index]
+                toObjectStream(args.getOrDefault("units", new ArrayList<String>(Arrays.asList("ANGLES"))), Units.class).toArray(Units[]::new)[index]
             );
         }
         return stimuli;

@@ -9,6 +9,7 @@
 \item \code{eye} The eye for which to apply the settings.#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
 \item \code{fixShape} Fixation target type for eye. (Optional)
 \item \code{fixLum} Fixation target luminance for eye. (Optional)
+\item \code{fixType} Fixation target texture for eye. (Optional)
 \item \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
 \item \code{fixCy} y-coordinate of fixation target (degrees). (Optional)
 \item \code{fixCol} Fixation target color for eye. (Optional)
@@ -21,6 +22,8 @@ fixation marker. (Optional)
 received, then sy = sx. (Optional)
 \item \code{fixRotation} Angles of rotation of fixation target (degrees). Only
 useful if sx != sy specified. (Optional)
+\item \code{fixImageFilename} If fixType == IMAGE, the filename on the local
+filesystem of the machine running JOVP of the image to use (Optional)
 }}
 }
 \value{
@@ -42,6 +45,9 @@ these Arguments and you will get the Value back.
           "optotype", "text", "model"}}.
 
 \code{fixLum} can take on values in the range \code{[0.0, 1.0E10]}.
+
+\code{fixType} can take on values in the set \code{{"flat",
+         "checkerboard", "sine", "squaresine", "g1", "g2", "g3", "text", "image"}}.
 
 \code{fixCx} can take on values in the range \code{[-90.0, 90.0]}.
 

@@ -10,6 +10,7 @@
 \item \code{stim.length} The number of elements in this stimuli.
 \item \code{color1} List of stimulus colors for FLAT shapes and patterns.
 \item \code{sx} List of diameters along major axis of ellipse (degrees).
+\item \code{sy} List of diameters along minor axis of ellipse (degrees).
 \item \code{eye} The eye for which to apply the settings.
 \item \code{t} List of stimuli presentation times (ms).
 \item \code{w} Time to wait for response including presentation time (ms).
@@ -32,8 +33,6 @@ patterns. Only useful if type != FLAT (Optional)
 filesystem of the machine running JOVP of the image to use (Optional)
 \item \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 SQUARE, OPTOTYPE. (Optional)
-\item \code{sy} List of diameters along minor axis of ellipse (degrees). If not
-received, then sy = sx (Optional)
 \item \code{rotation} List of angles of rotation of stimuli (degrees). Only
 useful if sx != sy specified. (Optional)
 \item \code{texRotation} List of angles of rotation of stimuli (degrees). Only
@@ -138,8 +137,8 @@ Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
 \examples{
 chooseOpi("PicoVR")
 result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(0.0,
-                  0.0, 0.0)), sx = list(1.72), eye = list("LEFT"),
-                  t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
+                  0.0, 0.0)), sx = list(1.72), sy = list(1.72),
+                  eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 
 }
 \seealso{

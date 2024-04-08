@@ -113,6 +113,8 @@ public abstract class Jovp extends OpiMachine {
     @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye (rgb).", isList = true, optional = true, min = 0, max = 1, defaultValue = "[1,1,1]")
     @Parameter(name = "bgImageFilename", className = String.class, desc = "If present, display the image in the background for eye", optional = true, defaultValue = "\"\"")
     @Parameter(name = "fixShape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Fixation target type for eye.", optional = true, defaultValue = "MALTESE")
+    @Parameter(name = "fixType", className = es.optocom.jovp.definitions.TextureType.class, desc = "Fixation target texture for eye.", optional = true, defaultValue = "FLAT")
+    @Parameter(name = "fixImageFilename", className = String.class, desc = "If fixType == IMAGE, the filename on the local filesystem of the machine running JOVP of the image to use", optional = true, defaultValue = "x.jpg")
     @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", optional = true, min = 0, defaultValue = "255")
     @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, optional = true, min = 0, max = 1, defaultValue = "[0,1,0]")
     @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees).", optional = true, min = -90, max = 90, defaultValue = "0")

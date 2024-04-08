@@ -170,6 +170,63 @@ public class JovpParamTest {
    * @since 0.2.0
    */
   @Test
+  public void aTestImageFixation() {
+    OpiJovp server = new OpiJovp(50002);
+    System.out.println("[testImageFixation] " + server);
+
+    Thread t = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            System.out.println("[testImageFixation] Waiting 2 seconds...");
+            try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+           
+            try {
+                Display machine = new Display(null);
+                System.out.println("[testImageFixation] " + machine);
+               
+                if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+                    System.out.println(String.format("[testImageFixation] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+                else
+                    System.out.println(String.format("[testImageFixation] Connected to %s:%s", server.getIP(), server.getPort()));
+                
+                HashMap<String, Object> args = new HashMap<String, Object>(){{ put("screen", 1);}};
+                Packet result = machine.initialize(args);
+                System.out.println(String.format("[testImageFixation] %s", result));
+               
+                try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+               
+                HashMap<String, Object> hmap = getDefaultValues(Command.SETUP);
+                hmap.put("fixShape", "CIRCLE");
+                hmap.put("fixType", "IMAGE");
+                hmap.put("fixImageFilename", "../jovp/x.jpg");
+                hmap.put("bgLum", 200.0);
+                result = machine.setup(hmap);
+                System.out.println(String.format("[testImageFixation] Setup result: %s", result));
+               
+                System.out.println("[testImageFixation] sleeping 20s");
+                try { Thread.sleep(20000); } catch (InterruptedException ignored) { ; }
+               
+                result = machine.close(); 
+                System.out.println(String.format("[testImageFixation] Close result: %s", result));
+            } catch (InstantiationException e) {
+                System.out.println("Probably couldn't connect Display to JOVP");
+                e.printStackTrace();
+            }
+        }  
+    });  
+         
+    t.start();
+    server.startPsychoEngine();
+    try { t.join(); } catch (InterruptedException ignored) { ; }
+  }
+
+  /**
+   * Open monitor, send initialise message, get reply, setup, get reply, close.
+   * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.
+   * Note 2 need vulkan and JOVP installed too
+   * @since 0.2.0
+   */
+  @Test
   public void aTestInitialiseSetup() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetup] " + server);

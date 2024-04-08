@@ -129,6 +129,7 @@ opiQueryDevice_for_Display <- function() {
 #'  * \code{eye} The eye for which to apply the settings.#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
 #'  * \code{fixShape} Fixation target type for eye. (Optional)
 #'  * \code{fixLum} Fixation target luminance for eye. (Optional)
+#'  * \code{fixType} Fixation target texture for eye. (Optional)
 #'  * \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
 #'  * \code{fixCy} y-coordinate of fixation target (degrees). (Optional)
 #'  * \code{fixCol} Fixation target color for eye. (Optional)
@@ -141,6 +142,8 @@ opiQueryDevice_for_Display <- function() {
 #'                 received, then sy = sx. (Optional)
 #'  * \code{fixRotation} Angles of rotation of fixation target (degrees). Only
 #'                       useful if sx != sy specified. (Optional)
+#'  * \code{fixImageFilename} If fixType == IMAGE, the filename on the local
+#'                            filesystem of the machine running JOVP of the image to use (Optional)
 #'
 #' @return A list containing:
 #'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
@@ -157,6 +160,9 @@ opiQueryDevice_for_Display <- function() {
 #'           "optotype", "text", "model"}}.
 #'
 #' \code{fixLum} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' \code{fixType} can take on values in the set \code{{"flat",
+#'          "checkerboard", "sine", "squaresine", "g1", "g2", "g3", "text", "image"}}.
 #'
 #' \code{fixCx} can take on values in the range \code{[-90.0, 90.0]}.
 #'
@@ -191,7 +197,7 @@ opiSetup_for_Display <- function(settings) {
 
     if (is.null(settings)) return(list(error = 0 , msg = "Nothing to do in opiSetup."))
 
-    msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation)
+    msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixType = settings$fixType, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixImageFilename = settings$fixImageFilename)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
@@ -216,6 +222,7 @@ opiSetup_for_Display <- function(settings) {
 #'  * \code{stim.length} The number of elements in this stimuli.
 #'  * \code{color1} List of stimulus colors for FLAT shapes and patterns.
 #'  * \code{sx} List of diameters along major axis of ellipse (degrees).
+#'  * \code{sy} List of diameters along minor axis of ellipse (degrees).
 #'  * \code{eye} The eye for which to apply the settings.
 #'  * \code{t} List of stimuli presentation times (ms).
 #'  * \code{w} Time to wait for response including presentation time (ms).
@@ -238,8 +245,6 @@ opiSetup_for_Display <- function(settings) {
 #'                         filesystem of the machine running JOVP of the image to use (Optional)
 #'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
 #'                 SQUARE, OPTOTYPE. (Optional)
-#'  * \code{sy} List of diameters along minor axis of ellipse (degrees). If not
-#'              received, then sy = sx (Optional)
 #'  * \code{rotation} List of angles of rotation of stimuli (degrees). Only
 #'                    useful if sx != sy specified. (Optional)
 #'  * \code{texRotation} List of angles of rotation of stimuli (degrees). Only
@@ -336,8 +341,8 @@ opiSetup_for_Display <- function(settings) {
 #' @examples
 #' chooseOpi("Display")
 #' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(0.0,
-#'                   0.0, 0.0)), sx = list(1.72), eye = list("LEFT"),
-#'                   t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
+#'                   0.0, 0.0)), sx = list(1.72), sy = list(1.72),
+#'                   eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 #'
 #' @seealso [opiPresent()]
 #'
