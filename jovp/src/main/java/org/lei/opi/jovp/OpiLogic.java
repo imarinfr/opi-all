@@ -96,9 +96,6 @@ public class OpiLogic implements PsychoLogic {
             }
         }
 
-        stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
-        stimulus.show(ViewEye.NONE);
-
         // set size of the background to be the field of view
         this.fov = psychoEngine.getFieldOfView();
 
@@ -115,6 +112,8 @@ public class OpiLogic implements PsychoLogic {
           view.add(backgrounds[i]);
         }
 
+        stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
+        stimulus.show(ViewEye.NONE);
         stimulus.position(0, 0);
         stimulus.distance(driver.getConfiguration().distance() - 2);
         view.add(stimulus);
@@ -189,7 +188,7 @@ public class OpiLogic implements PsychoLogic {
                 double bgLum = input_bg.bgLum();
                 double[] bgCol = input_bg.bgCol();
                 backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
-Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture().getColors()[0]));
+//Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture().getColors()[0]));
 
                 if (input_bg.bgImageFilename().length() > 0) {    // a bit yuck, but rgen needs a default value...
                     backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
@@ -207,7 +206,7 @@ Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture
 
     /** Present stimulus upon request */
     private void present() {
-      stimIndex = 0;
+      stimIndex = 0;  // the first element in the stimulus list
       updateStimulus(stimIndex);
       timer.start();
       presentationTime = 0;
@@ -232,7 +231,9 @@ Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture
             };
     }
 
-    /** Update stimulus upon request */
+    /** Update stimulus upon request 
+     * @param index the index of the stimulus in the list of stimuli
+    */
     private void updateStimulus(int index) {
         Stimulus stim = driver.getStimulus(index);
 
@@ -273,9 +274,8 @@ Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture
         stimulus.defocus(stim.defocus());
         stimulus.texRotation(stim.texRotation());
         stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
-
         stimulus.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
-
+        stimulus.units(stim.units());
         stimulus.show(stim.eye());
     }
 

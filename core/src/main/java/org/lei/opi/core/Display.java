@@ -4,10 +4,6 @@ import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
-
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;

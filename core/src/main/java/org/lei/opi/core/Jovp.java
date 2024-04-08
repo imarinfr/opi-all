@@ -2,6 +2,7 @@ package org.lei.opi.core;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lei.opi.core.OpiListener.Command;
@@ -108,11 +109,11 @@ public abstract class Jovp extends OpiMachine {
      * @since 0.0.1
      */
     @Parameter(name = "eye", className = es.optocom.jovp.definitions.ViewEye.class, desc = "The eye for which to apply the settings.", defaultValue = "BOTH")
-    @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye (cd/m^2).", optional = true, min = 0, defaultValue = "10")
+    @Parameter(name = "bgLum", className = Double.class, desc = "Background luminance for eye (cd/m^2).", optional = true, min = 0, defaultValue = "128")
     @Parameter(name = "bgCol", className = Double.class, desc = "Background color for eye (rgb).", isList = true, optional = true, min = 0, max = 1, defaultValue = "[1,1,1]")
     @Parameter(name = "bgImageFilename", className = String.class, desc = "If present, display the image in the background for eye", optional = true, defaultValue = "\"\"")
     @Parameter(name = "fixShape", className = es.optocom.jovp.definitions.ModelType.class, desc = "Fixation target type for eye.", optional = true, defaultValue = "MALTESE")
-    @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", optional = true, min = 0, defaultValue = "20")
+    @Parameter(name = "fixLum", className = Double.class, desc = "Fixation target luminance for eye.", optional = true, min = 0, defaultValue = "255")
     @Parameter(name = "fixCol", className = Double.class, desc = "Fixation target color for eye.", isList = true, optional = true, min = 0, max = 1, defaultValue = "[0,1,0]")
     @Parameter(name = "fixCx", className = Double.class, desc = "x-coordinate of fixation target (degrees).", optional = true, min = -90, max = 90, defaultValue = "0")
     @Parameter(name = "fixCy", className = Double.class, desc = "y-coordinate of fixation target (degrees).", optional = true, min = -90, max = 90, defaultValue = "0")
@@ -149,11 +150,11 @@ public abstract class Jovp extends OpiMachine {
     @Parameter(name = "x", className = Double.class, desc = "List of x co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
     @Parameter(name = "y", className = Double.class, desc = "List of y co-ordinates of stimuli (degrees).", isList = true, min = -90, max = 90, defaultValue = "[0]")
     @Parameter(name = "sx", className = Double.class, desc = "List of diameters along major axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "[1.72]")
+    @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees).", isList = true, min = 0, max = 180, defaultValue = "[1.72]")
     @Parameter(name = "t", className = Double.class, desc = "List of stimuli presentation times (ms).", isList = true, min = 0, defaultValue = "[200]")
     @Parameter(name = "w", className = Double.class, desc = "Time to wait for response including presentation time (ms).", isList = false, min = 0, defaultValue = "1500")
     @Parameter(name = "lum", className = Double.class, desc = "List of stimuli luminances (cd/m^2).", isList = true, min = 0, defaultValue = "[300]")
     @Parameter(name = "color1", className = Double.class, desc = "List of stimulus colors for FLAT shapes and patterns.", isListList = true, min = 0, max = 1, defaultValue = "[[0,0,0]]")
-    @Parameter(name = "sy", className = Double.class, desc = "List of diameters along minor axis of ellipse (degrees). If not received, then sy = sx", isList = true, optional = true, min = 0, max = 180, defaultValue = "[1.72]")
     @Parameter(name = "color2", className = Double.class, desc = "List of second colors for non-FLAT shapes", isListList = true, optional = true, min = 0, max = 1, defaultValue = "[[1,1,1]]")
     @Parameter(name = "rotation", className = Double.class, desc = "List of angles of rotation of stimuli (degrees). Only useful if sx != sy specified.", isList = true, optional = true, min = 0, max = 360, defaultValue = "[0]")
     @Parameter(name = "contrast", className = Double.class, desc = "List of stimulus contrasts (from 0 to 1). Only useful if type != FLAT.", isList = true, optional = true, min = 0, max = 1, defaultValue = "[1]")
@@ -219,5 +220,20 @@ public abstract class Jovp extends OpiMachine {
         .append("  \"tracking\": " + settings.tracking + ",\n")
         .append("  \"gammaFile\": " + settings.gammaFile)
         .append("\n}").toString();
+    }
+
+    /**
+    * Get an array of double values from a suitable list
+    * 
+    * @param list list of objects that can be coerced into doubles
+    * 
+    * @return an array of doubles
+    * 
+    * @throws ClassCastException Cast exception
+    * 
+    * @since 0.0.1
+    */
+    public static double[] toDoubleArray(Object list) throws ClassCastException {
+      return ((ArrayList<?>) list).stream().mapToDouble(Double.class::cast).toArray();
     }
 }  

@@ -12,6 +12,7 @@ import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.Optotype;
 import es.optocom.jovp.definitions.TextureType;
+import es.optocom.jovp.definitions.Units;
 
 /**
 * A record to hold information about one Stimulus
@@ -58,7 +59,8 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                       double fullFoV,
                       Optotype optotype,
                       EnvelopeType envType, 
-                      double envSdx, double envSdy, double envRotation) {
+                      double envSdx, double envSdy, double envRotation,
+                      Units units) {
 
     /**
      * Create an array of stimulus record from R OPI of length `stim.length`
@@ -104,7 +106,8 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                 toObjectStream(args.get("envType"), EnvelopeType.class).toArray(EnvelopeType[]::new)[index],
                 toDoubleArray(args.get("envSdx"))[index],
                 toDoubleArray(args.get("envSdy"))[index],
-                toDoubleArray(args.get("envRotation"))[index]
+                toDoubleArray(args.get("envRotation"))[index],
+                toObjectStream(args.get("units"), Units.class).toArray(Units[]::new)[index]
             );
         }
         return stimuli;

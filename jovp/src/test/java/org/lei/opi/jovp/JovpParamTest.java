@@ -309,8 +309,10 @@ public class JovpParamTest {
                 case 1: setupArgs.remove("fixCol"); break;
                 case 2: stimArgs.remove("stim.length"); break;
             }
-            result = machine.setup(setupArgs);
-            System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
+            if (t == 0) {
+              result = machine.setup(setupArgs);
+              System.out.println(String.format("[testInitialiseSetupPresent] Setup result: %s", result));
+            }
 
             //HashMap stim = makeStimulus();
             ArrayList<String> a = new ArrayList<String>();
@@ -336,6 +338,67 @@ public class JovpParamTest {
     try { t.join(); } catch (InterruptedException ignored) { ; }
   }
 
+  @Test
+  public void aTestPresentPixel() {
+    OpiJovp server = new OpiJovp(50002);
+    System.out.println("[testPresentPixel] " + server);
+
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("[testPresentPixel] Waiting 2 seconds...");
+        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          
+        try {
+            // initialise()
+          Display machine = new Display(null);
+          System.out.println("[testPresentPixel] " + machine);
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[testPresentPixel] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[testPresentPixel] Connected to %s:%s", server.getIP(), server.getPort()));
+
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[testPresentPixel] Initialize result %s", result));
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+            // setup
+          HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
+          result = machine.setup(setupArgs);
+          System.out.println(String.format("[testPresentPixel] Setup result: %s", result));
+
+            // present
+          for (int t = 0 ; t <= 6 ; t++) {
+            System.out.println("\n-------------- Test Number: " + t);
+            HashMap<String, Object> stimArgs = getDefaultValues(Command.PRESENT);
+
+            //HashMap stim = makeStimulus();
+            stimArgs.put("eye", new ArrayList<String>(Arrays.asList(new String[] {"right"})));
+            stimArgs.put("units", new ArrayList<String>(Arrays.asList(new String[] {"PIXELS"})));
+            stimArgs.put("sx", new ArrayList<Double>(Arrays.asList(new Double[] {18.34 * 0.43})));
+            stimArgs.put("sy", new ArrayList<Double>(Arrays.asList(new Double[] {18.34 * 0.43})));
+            stimArgs.put("x", new ArrayList<Double>(Arrays.asList(new Double[] {18.34 * t * 5})));
+            stimArgs.put("y", new ArrayList<Double>(Arrays.asList(new Double[] {18.34 * t * 5})));
+            result = machine.present(stimArgs);
+            System.out.println(String.format("[testPresentPixel] %s", result));
+          }
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.close(); 
+          System.out.println(String.format("[testPresentPixel] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
+      }
+    });
+
+    t.start();
+    server.startPsychoEngine();
+    try { t.join(); } catch (InterruptedException ignored) { ; }
+  }
 
 
   private HashMap<String, Object> makeStimulus() {
@@ -364,7 +427,7 @@ public class JovpParamTest {
     return hmap;
   }
 
-  // get all of the default values from core.Jovp::setup()
+  // get all of the default values from core.Jovp::c()
   public HashMap<String, Object> getDefaultValues(Command c) {
       HashMap<String, Object> hmap = new HashMap<String, Object>();
       hmap.put("command", c.toString());
