@@ -1,7 +1,5 @@
 package org.lei.opi.jovp;
 
-//import org.lwjgl.glfw.GLFWVidMode;  see TODO below
-
 import es.optocom.jovp.Monitor;
 import es.optocom.jovp.definitions.ViewMode;
 

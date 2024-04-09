@@ -78,7 +78,7 @@ public class OpiJovp extends OpiListener {
     private PsychoEngine psychoEngine;
     /** A background array to communicate with OpiLogic. backgrounds[0] is for left eye, [1] for right */
     private Setup[] backgrounds;
-    /** An array of stimulus records that sit here for OpiLogic to interegate */
+    /** An array of stimulus records that sit here for OpiLogic to interrogate */
     private Stimulus[] stimuli;
     /** A record to record the results after a stimulus presentation */
     private Response response = null;
@@ -90,7 +90,7 @@ public class OpiJovp extends OpiListener {
         PRESENT, // begin a presentation
         CLOSE};  // all done
 
-    private Action action;  // set by calls from the server OpiListner thread and acted upon on main thread (and reset to null there)
+    private Action action;  // set by calls from the server OpiListener thread and acted upon on main thread (and reset to null there)
 
     public Configuration getConfiguration() { return configuration; }
     public Action getAction() { return action; }

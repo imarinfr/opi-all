@@ -8,12 +8,12 @@
     "physicalSize": [],
     "pseudoGray": false,
     "fullScreen": true,
-    "distance": 250,
+    "distance": 44,
     "viewMode": "stereo",
     "input": "COM10",
     "tracking": false,
-    "gammaFile": "linearGamma8bit.json",
-    "ip": "192.168.4.110",
+    "gammaFile": "imoGamma.json",
+    "ip": "192.168.4.144",
     "port": 51234
   },
   "this": {
@@ -87,11 +87,11 @@
     "f310": false
   },
   "Display": {
-    "screen": 1.0,
+    "screen": 0.0,
     "physicalSize": [],
     "pseudoGray": false,
     "fullScreen": false,
-    "distance": 50.0,
+    "distance": 150.0,
     "viewMode": "Stereo",
     "input": "mouse",
     "tracking": false,

@@ -62,7 +62,7 @@ public abstract class Jovp extends OpiMachine {
     /**
     * opiInitialise: send initialization code to JOVP on the machine and get results
     * 
-    * @param args A map of name:value pairs for Params these are used to overide any of the default initConfiguration().
+    * @param args A map of name:value pairs for Params these are used to override any of the default initConfiguration().
     * 
     * @return A Packet that is returned from the machine. 
     * SIDE EFFECT: with return JSON object with machine specific initialise information

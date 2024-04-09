@@ -26,7 +26,7 @@ public class QueryDeserializer implements JsonDeserializer<Query> {
         boolean tracking = jsonObject.get("tracking").getAsBoolean();
         double[] maxLum = context.deserialize(jsonObject.get("maxLum"), double[].class);
         String gammaFile = jsonObject.get("gammaFile").getAsString();
-        Monitor monitor = null; // TODO context.deserialize(jsonObject.get("monitor"), Monitor.class);
+        Monitor monitor = context.deserialize(jsonObject.get("monitor"), Monitor.class);
 
         return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, gammaFile, monitor);
     }

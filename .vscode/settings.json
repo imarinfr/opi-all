@@ -11,5 +11,19 @@
       "--add-modules=ALL-MODULE-PATH"
     ]
   },
-  "java.debug.settings.onBuildFailureProceed": true
+  "java.debug.settings.onBuildFailureProceed": true,
+  "cSpell.words": [
+    "defocus",
+    "GLFW",
+    "LISTLIST",
+    "optocom",
+    "OPTOTYPE",
+    "psize",
+    "psychoengine",
+    "rgen",
+    "SQUARESINE",
+    "stim",
+    "stims",
+    "Vals"
+  ]
 }

@@ -197,7 +197,6 @@ public abstract class OpiMachine {
     /**
      * Create a {@link Settings} class cls with values from the {@value SETTINGS_FILE}.
      * 
-     * @param cls A {@link Settings} class to create and return.  TODO delete this
      * @param machineName Short name of an OpiMachine subclass which has a {@link Settings} inner class
      * @return A {@link Settings} object of type cls with values from {@value SETTINGS_FILE}.
       Class<? extends Settings> cls) {
