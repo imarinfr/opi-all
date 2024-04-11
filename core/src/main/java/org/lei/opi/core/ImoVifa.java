@@ -6,7 +6,6 @@ import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
 
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.Node;
@@ -23,6 +22,11 @@ public class ImoVifa extends Jovp {
 
         this.fxmlFileName = String.format("%s_%s.fxml", "stereo", "yes_tracking");
     }
+    public ImoVifa(Scene parentScene, boolean connect) throws InstantiationException { 
+        super(parentScene, connect); 
+
+        this.fxmlFileName = String.format("%s_%s.fxml", "stereo", "yes_tracking");
+    }
 
      /**
      * opiInitialise: initialize OPI
@@ -32,10 +36,7 @@ public class ImoVifa extends Jovp {
      * @since 0.2.0
      */
     public Packet initialize(HashMap<String, Object> args) {
-        Platform.runLater(()-> {
-            if (textAreaCommands != null)
-                textAreaCommands.appendText("OPI Initialized");
-        });    
+        output("OPI Monitor: OPI Initialized");
 
             // Make sure screen = 1 and viewMode = "STEREO" is present for ImoVifa
             // Also it seems the monitor does not report it's correct size...
@@ -54,10 +55,7 @@ public class ImoVifa extends Jovp {
      */
     public Packet query() { 
         Packet p = super.query();
-        Platform.runLater(()-> {
-            if (textAreaCommands != null)
-                textAreaCommands.appendText(p.getMsg().toString());
-        });
+        output("OPI Query result\n" + p.getMsg().toString());
         return p;
     }
   
@@ -69,13 +67,11 @@ public class ImoVifa extends Jovp {
      * @since 0.2.0
      */
     public Packet setup(HashMap<String, Object> args) {
-        Platform.runLater(()-> {
-            if (textAreaCommands != null) {
-                this.textAreaCommands.appendText("Setup:\n");
-                for (String k : args.keySet())
-                    this.textAreaCommands.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
-            }
-        });
+        StringBuffer sb = new StringBuffer();
+        sb.append("Setup:\n");
+        for (String k : args.keySet())
+            sb.append(String.format("\t%s = %s\n", k, args.get(k).toString()));
+        output(sb.toString());
         return super.setup(args);
     }
  
@@ -116,10 +112,7 @@ public class ImoVifa extends Jovp {
    * @since 0.0.1
    */
     public Packet close() {
-        Platform.runLater(() -> {
-            if (textAreaCommands != null) // allows testing without GUI
-                textAreaCommands.appendText("Close received.\n");
-        });
+        output("OPI Monitor: Close received.\n");
         returnToParentScene((Node)textAreaCommands);
 
         return super.close();

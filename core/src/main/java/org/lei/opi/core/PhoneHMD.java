@@ -12,6 +12,9 @@ public class PhoneHMD extends Jovp {
     public PhoneHMD(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
     }
+    public PhoneHMD(Scene parentScene, boolean connect) throws InstantiationException { 
+        super(parentScene, connect); 
+    }
 
     @FXML
     void initialize() {

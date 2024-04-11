@@ -17,9 +17,8 @@ public class Compass extends Icare {
      *
      * @since 0.0.1
      */
-    public Compass(Scene parentScene) {
-        super(parentScene); 
-    }
+    public Compass(Scene parentScene) { super(parentScene); }
+    public Compass(Scene parentScene, boolean connect) { super(parentScene, connect); }
 
     @FXML
     void initialize() {

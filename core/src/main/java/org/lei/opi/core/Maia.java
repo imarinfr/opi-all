@@ -18,9 +18,8 @@ public class Maia extends Icare {
      * @since 0.0.1
      */
 
-    public Maia (Scene parentScene) {
-        super(parentScene);
-    }
+    public Maia (Scene parentScene) { super(parentScene); }
+    public Maia (Scene parentScene, boolean connect) { super(parentScene, connect); }
 
     @FXML
     void initialize() {

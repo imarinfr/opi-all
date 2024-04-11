@@ -13,6 +13,9 @@ public class PicoVR extends Jovp {
     public PicoVR(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
     }
+    public PicoVR(Scene parentScene, boolean connect) throws InstantiationException { 
+        super(parentScene, connect); 
+    }
 
     @FXML
     void initialize() {

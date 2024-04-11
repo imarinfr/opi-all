@@ -34,6 +34,9 @@ public class Echo extends OpiMachine {
         this.parentScene = parentScene;
         this.fxmlFileName = "Echo.fxml";  // a special one with just text.
     }
+    public Echo (Scene parentScene, boolean connect) {
+        this(parentScene);
+    }
   
     void myPrint(String s) {
         if (textArea != null)

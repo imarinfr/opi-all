@@ -392,6 +392,12 @@ public class Monitor extends Application {
         //stage.setHeight(520);
     }
 
+    public static OpiMachine createOpiMachine(String machineName, Scene parentScene) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
+        Class<?> cls = Class.forName("org.lei.opi.core." + machineName);
+        Constructor<?> ctor = cls.getConstructor(new Class[] {Scene.class, boolean.class});
+        return (OpiMachine)ctor.newInstance(parentScene, true);
+    }
+
     /**
      * Action when Connect button is pressed.
      *
@@ -411,16 +417,14 @@ public class Monitor extends Application {
             // (1) create the requested OPIMachine object if possible
         labelMessages.setText("Trying to open connection to " + this.currentMachineChoice);
 
-        OpiMachine opiMachine = null;
+        OpiMachine opiMachine;
         try {
-            Class<?> cls = Class.forName("org.lei.opi.core." + this.currentMachineChoice);
-            Constructor<?> ctor = cls.getConstructor(Scene.class);
-            opiMachine = (OpiMachine)ctor.newInstance(source.getScene());
+            opiMachine = createOpiMachine(this.currentMachineChoice, source.getScene());
         } catch (ClassNotFoundException e) {
             String msg = "Problem: cannot find class for " + this.currentMachineChoice;
             System.out.println(msg);
             labelMessages.setText(msg);
-            return;
+            return; 
         } catch (NoSuchMethodException e) {
             String msg = "Problem: cannot run constructor for " + this.currentMachineChoice;
             System.out.println(msg);
@@ -500,8 +504,77 @@ public class Monitor extends Application {
         System.exit(0);
     }
 
-    // should not be called directly from command line.
+    private static void usage() {
+        System.err.println("Usage: Monitor [--cli <port number> <machine name>] [--setting <name> <value> ...]");
+        System.err.println("       eg java ... Monitor --cli 50001 Echo --setting port 50002 ip localhost");
+        System.exit(-1);
+    }
+            
+    private static void runCommandLineMode(String[] args) {
+        System.out.println("CLI mode");
+
+            // store the supplied port and localhost IP address
+        int i = Arrays.asList(args).indexOf("--cli");
+        if (i + 1 > args.length - 1) {
+            System.err.println("Missing port number");
+            usage();
+        }
+        if (i + 2 > args.length - 1) {
+            System.err.println("Missing machine");
+            usage();
+        }
+
+        String port = args[i + 1];
+        String machine = args[i + 2];
+        String ip = OpiListener.obtainPublicAddress().getHostAddress();  // localhost ip address
+
+            // get the supplied machine and create its object
+        OpiMachine opiMachine = null;
+        try {
+            opiMachine = Monitor.createOpiMachine(machine, null);
+        } catch (ClassNotFoundException e) {
+            String msg = "Problem: cannot find class for " + machine;
+            System.out.println(msg);
+            usage();
+        } catch (NoSuchMethodException e) {
+            String msg = "Problem: cannot run constructor for " + machine;
+            System.out.println(msg);
+            usage();
+        } catch (IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            String msg = "Problem: cannot create an instance of " + machine + " with current settings.";
+            System.out.println(msg);
+            e.printStackTrace();
+            usage();
+            return;
+        }
+
+        if (Arrays.asList(args).contains("--settings")) {
+            System.out.println("I am really sorry, I haven't done '--settings' yet. Edit them with GUI."); // TODO
+            usage();
+            // Need to read each name value pair in the args and edit opiMachine.settings accordingly
+            //opiMachine.getSettings();
+        }
+        
+            // Finally kick off a thread that will listen for commands from the client
+            // and wait for it to finish
+        OpiListener listener = new OpiListener(Integer.parseInt(port), opiMachine);
+        System.out.println("Ready for OPI commands for " + machine + " on port " + port + " at " + ip);
+        try {
+            listener.join();
+        } catch (InterruptedException e) {
+            System.exit(-1);
+        }
+        System.exit(0);
+    }
+
+    // Should not be executed directly from command line. (JavaFx has a fit)
+    // See Main.main
     public static void main(String[] args) {
-       launch(); 
+        if (Arrays.asList(args).contains("--cli")) {
+            runCommandLineMode(args);
+        } else {
+            System.out.println("GUI mode");
+            launch(); 
+        }
     }
 }

@@ -116,6 +116,9 @@ public class O900 extends OpiMachine {
     this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
     this.parentScene = parentScene;
   }
+  public O900(Scene parentScene, boolean connect) throws RuntimeException {
+    this(parentScene);
+  }
 
   /**
    * Get constants

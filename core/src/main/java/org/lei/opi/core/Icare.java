@@ -84,9 +84,10 @@ public abstract class Icare extends OpiMachine {
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
 
         setVFCanvas(true, settings.tracking);
-
-        if (parentScene != null)
-          this.connect(settings.ip, settings.port);
+    }
+    public Icare(Scene parentScene, boolean connect) {
+        this(parentScene);
+        this.connect(settings.ip, settings.port);
     }
   
     /**

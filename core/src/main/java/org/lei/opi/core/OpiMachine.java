@@ -397,13 +397,16 @@ public abstract class OpiMachine {
      * @param currentSource is a Node in current scene
      */
     protected void returnToParentScene(Node currentSource) {
-        Platform.runLater(new Runnable() {
-          public void run() {
-            final Stage stage = (Stage) currentSource.getScene().getWindow();
+        if (this.parentScene == null)
+            return;
 
-            stage.setScene(parentScene);
-            stage.show();
-          }
+        Platform.runLater(new Runnable() {
+            public void run() {
+                final Stage stage = (Stage) currentSource.getScene().getWindow();
+
+                stage.setScene(parentScene);
+                stage.show();
+            }
         });
     }
 
@@ -755,7 +758,19 @@ public abstract class OpiMachine {
             canvasVFModelRight = new VFCanvas();
             updateCanvas.get("both").accept(new CanvasTriple(0, 0, ""));
         }
-     }
+    }
+
+    /*
+     ** Write s to GUI textAreaCommands and to System.out
+     ** @param s string to print/write to GUI
+     */
+    public void output(String s) {
+        System.out.println(s);
+        Platform.runLater(()-> {
+            if (textAreaCommands != null)
+                textAreaCommands.appendText(s);
+        });
+    }
             
     /**
      * Update both the textArea with the present details
@@ -764,14 +779,14 @@ public abstract class OpiMachine {
      * @param args The @Param pairs. Should contain keys x, y, lum, eye.
      */
     protected void updateGUIOnPresent(HashMap<String, Object> args) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("Present:\n");
+        for (String k : args.keySet())
+            sb.append(String.format("\t%s = %s\n", k, args.get(k).toString()));
+        output(sb.toString());
+
         if (this.parentScene == null)
             return;
-
-        Platform.runLater(()-> {
-            textAreaCommands.appendText("Present:\n");
-            for (String k : args.keySet())
-                textAreaCommands.appendText(String.format("\t%s = %s\n", k, args.get(k).toString()));
-        });
 
         Platform.runLater(() -> {
             if (!args.containsKey("x") || !args.containsKey("y") || !args.containsKey("lum")) {

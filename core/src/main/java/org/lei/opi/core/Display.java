@@ -19,6 +19,9 @@ public class Display extends Jovp {
     public Display(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
     }
+    public Display(Scene parentScene, boolean connect) throws InstantiationException { 
+        super(parentScene, connect); 
+    }
 
      /**
      * opiInitialise: initialize OPI

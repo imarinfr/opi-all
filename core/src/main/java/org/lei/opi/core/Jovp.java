@@ -39,24 +39,25 @@ public abstract class Jovp extends OpiMachine {
     public Settings getSettings() { return this.settings; }
 
     /**
+     * NOTE: Does not create connection to actual machine via settings-> ip:port
      * @param parentScene The Scene to return to when this object is closed.
-     *                    If null, then do not create a connection. (Used for GUI to probe class.)
      * @throws InstantiationException if cannot connect to JOVP server
      */
     public Jovp(javafx.scene.Scene parentScene) throws InstantiationException {
         super(parentScene);
         this.settings = (Settings) OpiMachine.fillSettings(this.getClass().getSimpleName());
-
+       
         setVFCanvas(
           settings.viewMode.toLowerCase().equals(ViewMode.MONO.toString().toLowerCase()),
           settings.tracking
         );
+    }
 
-        if (parentScene != null) {
-            if (!this.connect(settings.ip, settings.port)) {
-              throw new InstantiationException(String.format("Cannot connect to %s:%s", settings.ip, settings.port));
-            }
-        }
+    // create instance AND open connection to settings-> ip port
+    public Jovp(javafx.scene.Scene parentScene, boolean createConnection) throws InstantiationException {
+        this(parentScene);
+        if (!this.connect(settings.ip, settings.port))
+            throw new InstantiationException(String.format("Cannot connect to %s:%s", settings.ip, settings.port));
     }
 
     /**
@@ -174,17 +175,17 @@ public abstract class Jovp extends OpiMachine {
     @Parameter(name = "fullFoV", className = Double.class, desc = "If !0 fullFoV scales image to full field of view and sx/sy are ignored.", isList = true, optional = true, defaultValue = "[0]")
     @Parameter(name = "optotype", className = es.optocom.jovp.definitions.Optotype.class, desc = "If shape == OPTOTYPE, the letter A to Z to use", isList = true, optional = true, defaultValue = "[E]")
     public Packet present(HashMap<String, Object> args) {
-      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
-      try {
-        Packet p = validateArgs(args, this.opiMethods.get("present").parameters(), "present");
-        if (p.getError()) 
-            return(p);
-        //this.send(OpiListener.gson.toJson(args));
-        this.send(p.getMsg());
-        return Packet.checkReturnElements(this.receive(), this.opiMethods, "present");
-      } catch (IOException e) {
-        return Packet.error(COULD_NOT_PRESENT, e);
-      }
+        if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
+        try {
+            Packet p = validateArgs(args, this.opiMethods.get("present").parameters(), "present");
+            if (p.getError()) 
+                return(p);
+            //this.send(OpiListener.gson.toJson(args));
+            this.send(p.getMsg());
+            return Packet.checkReturnElements(this.receive(), this.opiMethods, "present");
+        } catch (IOException e) {
+            return Packet.error(COULD_NOT_PRESENT, e);
+        }
     }
 
     /**
@@ -197,15 +198,15 @@ public abstract class Jovp extends OpiMachine {
     * @since 0.0.1
     */
     public Packet close() {
-      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
-
-      try {
-          this.send(toJson(Command.CLOSE));   // this will close the server, so no messages coming back
-          this.closeSocket();
-      } catch (IOException e) {
-          return Packet.error(COULD_NOT_CLOSE, e);
-      }
-      return new Packet(true, DISCONNECTED_FROM_HOST);
+        if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
+       
+        try {
+            this.send(toJson(Command.CLOSE));   // this will close the server, so no messages coming back
+            this.closeSocket();
+        } catch (IOException e) {
+            return Packet.error(COULD_NOT_CLOSE, e);
+        }
+        return new Packet(true, DISCONNECTED_FROM_HOST);
     }
 
     /** This is what the JOVP Server/Machine is expecting for the Initialize Command */
@@ -236,6 +237,6 @@ public abstract class Jovp extends OpiMachine {
     * @since 0.0.1
     */
     public static double[] toDoubleArray(Object list) throws ClassCastException {
-      return ((ArrayList<?>) list).stream().mapToDouble(Double.class::cast).toArray();
+        return ((ArrayList<?>) list).stream().mapToDouble(Double.class::cast).toArray();
     }
 }  
