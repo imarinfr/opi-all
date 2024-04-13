@@ -60,11 +60,6 @@
       <artifactId>javafx-fxml</artifactId>
       <version>${openjfx.version}</version>
     </dependency>
-    <dependency>
-        <groupId>com.anaptecs.jeaf.owalibs</groupId>
-        <artifactId>org.apache.commons.cli</artifactId>
-        <version>4.3.1</version>
-    </dependency>
      <dependency>
       <groupId>org.lei.opi</groupId>
       <artifactId>core</artifactId>

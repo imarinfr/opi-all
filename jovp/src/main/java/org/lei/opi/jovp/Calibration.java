@@ -12,6 +12,8 @@ import java.util.Arrays;
 public class Calibration {
     /** {@value WRONG_MAX_LUMINANCE} */
     private static final String WRONG_MAX_LUMINANCE = "Maximum luminance for the gamma functions cannot be negative";
+    /** {@value WRONG_MAX_PIXEL} */
+    private static final String WRONG_MAX_PIXEL = "Maximum pixel for the gamma functions cannot be negative";
     /** {@value WRONG_GAMMA_SIZE} */
     private static final String INCONSISTENT_GAMMA_SIZES = "Inconsistent lengths for the gamma functions. Lengths for R, G, and B where %s, %s, and %s, respectively";
     /** {@value UNSORTED_GAMMA_FUNCTION} */
@@ -21,9 +23,11 @@ public class Calibration {
    
     /** Max luminance in cd/m^2 for [0]=R [1]=G [2]=B */
     double[] maxLum;
-    /** Lum levels (cd/m^2) divided by maxLum for color values 1:255 or 1:1024 for [0]=R [1]=G [2]=B */
+    /** Max pixel value for channels [0]=R [1]=G [2]=B */
+    double[] maxPixel;
+    /** For channels [0]=R [1]=G [2]=B, for each pixel levels [0, maxPixel), the luminance divided by maxLum  */
     double[][] gamma;
-    /** color values in range [0,1] for integer lum values in cd/m^2 up to 0:maxLum for [0]=R [1]=G [2]=B */
+    /** For channels [0]=R [1]=G [2]=B, color values (ie pixel value / maxPixeL) in range [0,1] for integer lum values in cd/m^2 up to 0:maxLum */
     double[][] inverseGamma;
 
     /**
@@ -40,9 +44,16 @@ public class Calibration {
      *
      * @since 0.0.1
      */
-    public Calibration(double RmaxLum, double GmaxLum, double BmaxLum, double[] Rgamma, double[] Ggamma, double[] Bgamma) {
+    public Calibration(
+        double RmaxLum, double GmaxLum, double BmaxLum, 
+        double RmaxPixel, double GmaxPixel, double BmaxPixel, 
+        double[] Rgamma, double[] Ggamma, double[] Bgamma) {
+
         if (RmaxLum < 0 || GmaxLum < 0 || BmaxLum < 0)
             throw new IllegalArgumentException(String.format(WRONG_MAX_LUMINANCE));
+
+        if (RmaxPixel < 0 || RmaxPixel < 0 || RmaxPixel < 0)
+            throw new IllegalArgumentException(String.format(WRONG_MAX_PIXEL));
       
         if (Rgamma.length != Ggamma.length || Rgamma.length != Bgamma.length)
             throw new IllegalArgumentException(String.format(INCONSISTENT_GAMMA_SIZES, Rgamma.length, Ggamma.length, Bgamma.length));
@@ -58,6 +69,7 @@ public class Calibration {
             throw new IllegalArgumentException(WRONG_GAMMA_VALUE);
 
         this.maxLum = new double[] {RmaxLum, GmaxLum, BmaxLum};
+        this.maxPixel = new double[] {RmaxPixel, GmaxPixel, BmaxPixel};
         this.gamma = new double[][] {Rgamma, Ggamma, Bgamma};
         calculateInverse();
     }
@@ -66,6 +78,7 @@ public class Calibration {
 
     /**
      * Fill in this.inverseGamma from this.gamma.
+     * inverseGamma[.][lum] = gamma[.][closest gamma value to lum/maxLum]
      *
      * @since 0.0.1
      */
@@ -81,13 +94,13 @@ public class Calibration {
                    && (Math.abs(lum / maxLum[rgb] - gamma[rgb][gammaIndex + 1]) < Math.abs(lum / maxLum[rgb] - gamma[rgb][gammaIndex])))
                     gammaIndex++;
 
-                this.inverseGamma[rgb][lum] = this.gamma[rgb][gammaIndex];
+                this.inverseGamma[rgb][lum] = (double)gammaIndex / this.maxPixel[rgb];
             }
         }
     }
   
     /**
-     * Obtain pixel level from luminance in cd/m^2 from gamma function
+     * Obtain pixel level (0:1) from luminance in cd/m^2 from the inverse gamma function
      *
      * @param luminances The [0]=R [1]=G [2]=B luminances value in cd/m^2
      * 
@@ -108,6 +121,7 @@ public class Calibration {
                 1 : 
                 this.inverseGamma[rgb][(int)Math.round(luminances[rgb])]);
 
+System.out.println("getColorValues: " + Arrays.toString(luminances) + " -> " + Arrays.toString(color));
       return color;
     }
   

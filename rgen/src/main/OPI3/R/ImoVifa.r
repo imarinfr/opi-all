@@ -350,7 +350,7 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
     if(!exists(".opi_env") || !exists("ImoVifa", envir = .opi_env) || !("socket" %in% names(.opi_env$ImoVifa)) || is.null(.opi_env$ImoVifa$socket))
         return(list(error = 3, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
 
-    if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
+    if (is.null(stim)) return(list(error = 0, msg = "Nothing to do in opiPresent."))
 
     msg <- list(envSdx = stim$envSdx, lum = stim$lum, envSdy = stim$envSdy, envRotation = stim$envRotation, type = stim$type, stim.length = stim$stim.length, frequency = stim$frequency, color1 = stim$color1, color2 = stim$color2, fullFoV = stim$fullFoV, phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, defocus = stim$defocus, eye = stim$eye, t = stim$t, envType = stim$envType, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)

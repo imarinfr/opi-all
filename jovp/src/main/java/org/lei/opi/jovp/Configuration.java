@@ -110,7 +110,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
 
         Gson gson = new Gson();
         String jsonStr;
-        System.out.println("attempting to load gamma file from path " + gammaFile + "...");
+        System.out.println("Attempting to load gamma file from path " + gammaFile + "...");
         // Get calibration from a path or from resources
         try(InputStream inputStream = new FileInputStream(gammaFile)) {
             jsonStr = calibrationFromPath(gammaFile);
@@ -130,8 +130,10 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
         double[] gammaRed = ((ArrayList<?>) pairs.get("gammaRed")).stream().mapToDouble(Double.class::cast).toArray();
         double[] gammaGreen = ((ArrayList<?>) pairs.get("gammaGreen")).stream().mapToDouble(Double.class::cast).toArray();
         double[] gammaBlue = ((ArrayList<?>) pairs.get("gammaBlue")).stream().mapToDouble(Double.class::cast).toArray();
-        return new Calibration((double) pairs.get("maxRed"), (double) pairs.get("maxGreen"),
-                               (double) pairs.get("maxBlue"), gammaRed, gammaGreen, gammaBlue);
+        return new Calibration(
+          (double) pairs.get("maxRedLum"), (double) pairs.get("maxGreenLum"), (double) pairs.get("maxBlueLum"), 
+          (double) pairs.get("maxRedPixel"), (double) pairs.get("maxGreenPixel"), (double) pairs.get("maxBluePixel"), 
+          gammaRed, gammaGreen, gammaBlue);
     }
 
     /**

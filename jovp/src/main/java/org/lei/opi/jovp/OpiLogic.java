@@ -276,7 +276,7 @@ public class OpiLogic implements PsychoLogic {
         stimulus.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
         stimulus.units(stim.units());
         stimulus.show(stim.eye());
-System.out.println(Arrays.toString(gammaLumToColor(stim.lum(), stim.color1())));
+System.out.println("color = " + Arrays.toString(gammaLumToColor(stim.lum(), stim.color1())) + gammaLumToColor(stim.lum(), stim.color1())[0] * 255);
     }
 
     /** 
