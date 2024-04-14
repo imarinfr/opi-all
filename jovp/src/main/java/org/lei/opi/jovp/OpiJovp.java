@@ -229,7 +229,8 @@ public class OpiJovp extends OpiListener {
 
     Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
       configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
-      configuration.calibration().getMaxLum(), configuration.gammaFile(), psychoEngine.getWindow().getMonitor());
+      configuration.calibration().getMaxLum(), configuration.calibration().getMaxPixel(), configuration.calibration().getLumPrecision(),
+      configuration.invGammaFile(), psychoEngine.getWindow().getMonitor());
 
     return new Packet(q);
   }

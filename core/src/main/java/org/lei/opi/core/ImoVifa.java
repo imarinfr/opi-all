@@ -1,9 +1,7 @@
 package org.lei.opi.core;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.stream.Stream;
 
 import org.lei.opi.core.definitions.Packet;
 
@@ -73,12 +71,6 @@ public class ImoVifa extends Jovp {
         for (String k : args.keySet())
             sb.append(String.format("\t%s = %s\n", k, args.get(k).toString()));
         output(sb.toString());
-
-        if (args.containsKey("bgLum"))
-            args.put("bgLum", scale_lum(args.get("bgLum")));
-        if (args.containsKey("fixLum"))
-            args.put("fixLum", scale_lum(args.get("fixLum")));
-
         return super.setup(args);
     }
  
@@ -95,9 +87,6 @@ public class ImoVifa extends Jovp {
     //@ReturnMsg(name = "eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
     //@ReturnMsg(name = "eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
     public Packet present(HashMap<String, Object> args) {
-        if (args.containsKey("lum"))
-            args.put("lum", (Object)scale_lum(args.get("lum")));
-
         updateGUIOnPresent(args);
         //args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"ANGLES"})));
         //double sx[] = Jovp.toDoubleArray(args.get("sx"));
@@ -126,20 +115,6 @@ public class ImoVifa extends Jovp {
         returnToParentScene((Node)textAreaCommands);
 
         return super.close();
-    }
-
-    /**
-     * @param lum Could be a double or an array of doubles
-     * @return A double or an array of doubles that is lum * 10
-     */
-    private Object scale_lum(Object lum) {
-        if (lum instanceof Double)
-            return (Double)lum * 10.0;
-        else if (lum instanceof ArrayList) {
-            return new ArrayList<Double>(((ArrayList<Double>)lum).stream().map((Double d) -> d * 10.0).toList());
-        } else
-            System.out.println("PANIC!!!");
-        return null;
     }
 
  //--------------- FXML stuff

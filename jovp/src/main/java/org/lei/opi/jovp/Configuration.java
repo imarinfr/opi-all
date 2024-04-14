@@ -31,13 +31,13 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param viewMode viewing mode: MONO or STEREO
  * @param input Either 'mouse', 'keypad', or the name of a suitable USB controller
  * @param tracking whether device allows eye tracking
- * @param gammaFile path of the display-specific calibration file of R, G, B gamma functions
+ * @param invGammaFile path of the display-specific calibration file of R, G, B inv gamma functions
  * @param calibration the RGB calibration data
  *
  * @since 0.0.1
  */
 public record Configuration(Machine machine, int screen, int[] physicalSize, boolean pseudoGray, boolean fullScreen, int distance,
-                           ViewMode viewMode, String input, boolean tracking, String gammaFile, Calibration calibration) {
+                           ViewMode viewMode, String input, boolean tracking, String invGammaFile, Calibration calibration) {
 
     /** Implemented display-based machines */
     enum Machine {IMOVIFA, PICOVR, PHONEHMD, DISPLAY}
@@ -86,17 +86,17 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
 
         ViewMode viewMode = ViewMode.valueOf(args.get("viewMode").toString().toUpperCase());
 
-        String gammaFile = args.get("gammaFile").toString();
+        String invGammaFile = args.get("gammaFile").toString();
 
         return new Configuration(machine, screen, physicalSize, (boolean) args.get("pseudoGray"), (boolean) args.get("fullScreen"),
                                  distance, viewMode, args.get("input").toString().toUpperCase(),
-                                 (boolean) args.get("tracking"), gammaFile, loadCalibration(gammaFile));
+                                 (boolean) args.get("tracking"), invGammaFile, loadCalibration(invGammaFile));
     }
 
     /**
-     * Fill the R, G, and B gamma functions
+     * Fill the R, G, and B invgamma functions
      * 
-     * @param gammaFile resource file or path with display-specific calibration of R, G, B gamma functions
+     * @param invGammaFile resource file or path with display-specific calibration of R, G, B inverse gamma functions
      * 
      * @throws IllegalArgumentException Illegal argument for screen, distance, or depth
      * @throws ClassCastException Cast exception
@@ -104,42 +104,44 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
      *
      * @since 0.0.1
      */
-    private static Calibration loadCalibration(String gammaFile) throws IllegalArgumentException, ClassCastException, IOException {
+    private static Calibration loadCalibration(String invGammaFile) throws IllegalArgumentException, ClassCastException, IOException {
         //List<String> files = IOUtils.readLines(Jovp.class.getResourceAsStream("."), StandardCharsets.UTF_8);
         //System.out.println("resources: " + files);
 
         Gson gson = new Gson();
         String jsonStr;
-        System.out.println("Attempting to load gamma file from path " + gammaFile + "...");
+        System.out.println("Attempting to load inverse gamma file from path " + invGammaFile + "...");
         // Get calibration from a path or from resources
-        try(InputStream inputStream = new FileInputStream(gammaFile)) {
-            jsonStr = calibrationFromPath(gammaFile);
-        } catch (IOException e) { // if gamma not path, then see if it is in resources
-            System.out.println("\tCannot load gamma file from path " + gammaFile + " trying core/resources");
+        try(InputStream inputStream = new FileInputStream(invGammaFile)) {
+            jsonStr = calibrationFromPath(invGammaFile);
+        } catch (IOException e) { // if inv gamma not path, then see if it is in resources
+            System.out.println("\tCannot load inverse gamma file from path " + invGammaFile + " trying core/resources");
             try {
-              jsonStr = calibrationFromResources(gammaFile);
+              jsonStr = calibrationFromResources(invGammaFile);
             } catch (Exception e2) {
-              System.out.println("\tCannot load gamma file from resources either. Giving up.");
-              // if gamma not path and not a resource file, then throw IOException
+              System.out.println("\tCannot load inverse gamma file from resources either. Giving up.");
+              // if inv gamma not path and not a resource file, then throw IOException
               throw e2;
             }
         }
         System.out.println("Success");
 
         HashMap<String, Object> pairs = gson.fromJson(jsonStr, new TypeToken<HashMap<String, Object>>() {}.getType());
-        double[] gammaRed = ((ArrayList<?>) pairs.get("gammaRed")).stream().mapToDouble(Double.class::cast).toArray();
-        double[] gammaGreen = ((ArrayList<?>) pairs.get("gammaGreen")).stream().mapToDouble(Double.class::cast).toArray();
-        double[] gammaBlue = ((ArrayList<?>) pairs.get("gammaBlue")).stream().mapToDouble(Double.class::cast).toArray();
+
+        double[] invGammaRed = ((ArrayList<?>) pairs.get("invGammaRed")).stream().mapToDouble(Double.class::cast).toArray();
+        double[] invGammaGreen = ((ArrayList<?>) pairs.get("invGammaGreen")).stream().mapToDouble(Double.class::cast).toArray();
+        double[] invGammaBlue = ((ArrayList<?>) pairs.get("invGammaBlue")).stream().mapToDouble(Double.class::cast).toArray();
         return new Calibration(
-          (double) pairs.get("maxRedLum"), (double) pairs.get("maxGreenLum"), (double) pairs.get("maxBlueLum"), 
-          (double) pairs.get("maxRedPixel"), (double) pairs.get("maxGreenPixel"), (double) pairs.get("maxBluePixel"), 
-          gammaRed, gammaGreen, gammaBlue);
+          (double)pairs.get("lumPrecision"),
+          (double)pairs.get("maxLum"),
+          (int)Math.round((double)pairs.get("maxPixel")),
+          invGammaRed, invGammaGreen, invGammaBlue);
     }
 
     /**
      * Get calibration from Core resources
      * 
-     * @param file resource file for display-specific calibration file of R, G, B gamma functions
+     * @param file resource file for display-specific calibration file of R, G, B inv gamma functions
      *
      * @throws IOException
      *
@@ -153,7 +155,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
     /**
      * Get calibration from a path
      * 
-     * @param file path to a file with display-specific calibration of R, G, B gamma functions
+     * @param file path to a file with display-specific calibration of R, G, B inv gamma functions
      *
      * @throws IOException
      *

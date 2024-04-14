@@ -24,10 +24,12 @@ public class QueryDeserializer implements JsonDeserializer<Query> {
         boolean pseudoGray = jsonObject.get("pseudoGray").getAsBoolean();
         boolean fullScreen = jsonObject.get("fullScreen").getAsBoolean();
         boolean tracking = jsonObject.get("tracking").getAsBoolean();
-        double[] maxLum = context.deserialize(jsonObject.get("maxLum"), double[].class);
-        String gammaFile = jsonObject.get("gammaFile").getAsString();
+        double maxLum = context.deserialize(jsonObject.get("maxLum"), double.class);
+        int maxPixel = context.deserialize(jsonObject.get("maxPixel"), int.class);
+        double lumPrecision = context.deserialize(jsonObject.get("lumPrecision"), double.class);
+        String invGammaFile = jsonObject.get("invGammaFile").getAsString();
         Monitor monitor = context.deserialize(jsonObject.get("monitor"), Monitor.class);
 
-        return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, gammaFile, monitor);
+        return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, maxPixel, lumPrecision, invGammaFile, monitor);
     }
 }

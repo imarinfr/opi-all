@@ -14,11 +14,13 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param fullScreen whether JOVP machine is running on full screen mode
  * @param tracking  whether JOVP machine is able to do eye tracking
  * @param maxLum maximum luminance on the R, G, and B channels (cd/m^2)
- * @param gammaFile the path of the gamma file
+ * @param maxPixel maximum pixel (eg 255, 1024)
+ * @param lumPrecision Number of decimal places for luminance in cd/m^2 in inversegamma function
+ * @param invGammaFile the path of the inverse gamma file
  * @param monitor display of the OPI JOVP machine
  * @since 0.0.1
  */
 public record Query(int distance, float[] fov, ViewMode viewMode, String input, boolean pseudoGray,
-                    boolean fullScreen, boolean tracking, double[] maxLum, String gammaFile, Monitor monitor) {
+                    boolean fullScreen, boolean tracking, double maxLum, int maxPixel, double lumPrecision, String invGammaFile, Monitor monitor) {
 
 }

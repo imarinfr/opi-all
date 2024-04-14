@@ -23,7 +23,9 @@ public class QuerySerializer implements JsonSerializer<Query> {
         jsonObject.add("fullScreen", context.serialize(q.fullScreen()));
         jsonObject.add("tracking", context.serialize(q.tracking()));
         jsonObject.add("maxLum", context.serialize(q.maxLum()));
-        jsonObject.add("gammaFile", context.serialize(q.gammaFile()));
+        jsonObject.add("maxPixel", context.serialize(q.maxPixel()));
+        jsonObject.add("lumPrecision", context.serialize(q.lumPrecision()));
+        jsonObject.add("gammaFile", context.serialize(q.invGammaFile()));
         jsonObject.add("monitor", context.serialize(q.monitor()));
 
         return jsonObject;
