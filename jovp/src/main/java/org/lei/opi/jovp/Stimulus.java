@@ -8,6 +8,7 @@ import static org.lei.opi.jovp.JsonProcessor.toObjectStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.stream.IntStream;
 
 import es.optocom.jovp.definitions.EnvelopeType;
 import es.optocom.jovp.definitions.ViewEye;
@@ -81,6 +82,14 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
     public static Stimulus[] create(HashMap<String, Object> args) throws ClassCastException, IllegalArgumentException, NoSuchMethodException, SecurityException {
         int n = Number.class.cast((Double)args.get("stim.length")).intValue() ;
         Stimulus[] stimuli = new Stimulus[n];
+                
+        if (!args.containsKey("units")) {
+            ArrayList<String> a = new ArrayList<String>();
+            for (int i = 0; i < n; i++) {
+                a.add("ANGLES");
+            }
+            args.put("units", a);
+        }
 
         for (int index = 0 ; index < n ; index++) {
             stimuli[index] = new Stimulus(
@@ -109,7 +118,7 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                 toDoubleArray(args.get("envSdx"))[index],
                 toDoubleArray(args.get("envSdy"))[index],
                 toDoubleArray(args.get("envRotation"))[index],
-                toObjectStream(args.getOrDefault("units", new ArrayList<String>(Arrays.asList("ANGLES"))), Units.class).toArray(Units[]::new)[index]
+                toObjectStream(args.get("units"), Units.class).toArray(Units[]::new)[index]
             );
         }
         return stimuli;

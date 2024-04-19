@@ -182,7 +182,6 @@ public class OpiLogic implements PsychoLogic {
                 double bgLum = input_bg.bgLum();
                 double[] bgCol = input_bg.bgCol();
                 backgrounds[i].setColors(gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol));
-//Arrays.asList(backgrounds).forEach((Item bg) -> System.out.println(bg.getTexture().getColors()[0]));
 
                 if (input_bg.bgImageFilename().length() > 0) {    // a bit yuck, but rgen needs a default value...
                     backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
@@ -276,7 +275,6 @@ public class OpiLogic implements PsychoLogic {
         stimulus.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
         stimulus.units(stim.units());
         stimulus.show(stim.eye());
-System.out.println("color = " + Arrays.toString(gammaLumToColor(stim.lum(), stim.color1())) + gammaLumToColor(stim.lum(), stim.color1())[0] * 255);
     }
 
     /** 
