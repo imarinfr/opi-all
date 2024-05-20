@@ -12,6 +12,7 @@ import es.optocom.jovp.definitions.Command;
 import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.TextureType;
+import es.optocom.jovp.definitions.Units;
 
 /**
  * Logic for the PsychoEngine
@@ -103,19 +104,20 @@ public class OpiLogic implements PsychoLogic {
         for (int i = 0; i < backgrounds.length; i++) {
           fixations[i].position(0.0d, 0.0d);
           fixations[i].size(DEFAULT_FIXATION_SIZE);
-          fixations[i].distance(driver.getConfiguration().distance() - 3);
+          fixations[i].depth(driver.getConfiguration().distance() - 3);
           view.add(fixations[i]);
 
           backgrounds[i].position(0.0d, 0.0d);
-          backgrounds[i].distance(driver.getConfiguration().distance() - 1);
+          backgrounds[i].depth(driver.getConfiguration().distance() - 1);
           backgrounds[i].size(fov[0], fov[1]);    // TODO: Will this work for Images?
           view.add(backgrounds[i]);
         }
 
-        stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture());
+            // stimulus is always in units ANGLES for OPI (for now 20/5/2024)
+        stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture(), Units.ANGLES);
         stimulus.show(ViewEye.NONE);
         stimulus.position(0, 0);
-        stimulus.distance(driver.getConfiguration().distance() - 2);
+        stimulus.depth(driver.getConfiguration().distance() - 2);
         view.add(stimulus);
 
         driver.setActionToNull(); // Action is over
@@ -273,7 +275,6 @@ public class OpiLogic implements PsychoLogic {
         stimulus.texRotation(stim.texRotation());
         stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
         stimulus.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
-        stimulus.units(stim.units());
         stimulus.show(stim.eye());
     }
 

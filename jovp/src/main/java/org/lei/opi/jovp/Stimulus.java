@@ -15,7 +15,6 @@ import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.ModelType;
 import es.optocom.jovp.definitions.Optotype;
 import es.optocom.jovp.definitions.TextureType;
-import es.optocom.jovp.definitions.Units;
 
 /**
 * A record to hold information about one Stimulus
@@ -62,8 +61,7 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                       double fullFoV,
                       Optotype optotype,
                       EnvelopeType envType, 
-                      double envSdx, double envSdy, double envRotation,
-                      Units units) {
+                      double envSdx, double envSdy, double envRotation) {
 
     /**
      * Create an array of stimulus record from R OPI of length `stim.length`
@@ -83,14 +81,6 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
         int n = Number.class.cast((Double)args.get("stim.length")).intValue() ;
         Stimulus[] stimuli = new Stimulus[n];
                 
-        if (!args.containsKey("units")) {
-            ArrayList<String> a = new ArrayList<String>();
-            for (int i = 0; i < n; i++) {
-                a.add("ANGLES");
-            }
-            args.put("units", a);
-        }
-
         for (int index = 0 ; index < n ; index++) {
             stimuli[index] = new Stimulus(
                 toObjectStream(args.get("eye"), ViewEye.class).toArray(ViewEye[]::new)[index],
@@ -117,8 +107,7 @@ public record Stimulus(ViewEye eye, ModelType shape, TextureType type,
                 toObjectStream(args.get("envType"), EnvelopeType.class).toArray(EnvelopeType[]::new)[index],
                 toDoubleArray(args.get("envSdx"))[index],
                 toDoubleArray(args.get("envSdy"))[index],
-                toDoubleArray(args.get("envRotation"))[index],
-                toObjectStream(args.get("units"), Units.class).toArray(Units[]::new)[index]
+                toDoubleArray(args.get("envRotation"))[index]
             );
         }
         return stimuli;
