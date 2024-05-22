@@ -1,6 +1,5 @@
 package org.lei.opi.core;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;

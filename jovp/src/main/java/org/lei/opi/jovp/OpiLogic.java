@@ -104,11 +104,11 @@ public class OpiLogic implements PsychoLogic {
         for (int i = 0; i < backgrounds.length; i++) {
           fixations[i].position(0.0d, 0.0d);
           fixations[i].size(DEFAULT_FIXATION_SIZE);
-          fixations[i].depth(driver.getConfiguration().distance() - 3);
+          fixations[i].depth((driver.getConfiguration().distance() - 3) / 1000.0f);
           view.add(fixations[i]);
 
           backgrounds[i].position(0.0d, 0.0d);
-          backgrounds[i].depth(driver.getConfiguration().distance() - 1);
+          backgrounds[i].depth((driver.getConfiguration().distance() - 1) / 1000.0f);
           backgrounds[i].size(fov[0], fov[1]);    // TODO: Will this work for Images?
           view.add(backgrounds[i]);
         }
@@ -117,7 +117,7 @@ public class OpiLogic implements PsychoLogic {
         stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture(), Units.ANGLES);
         stimulus.show(ViewEye.NONE);
         stimulus.position(0, 0);
-        stimulus.depth(driver.getConfiguration().distance() - 2);
+        stimulus.depth((driver.getConfiguration().distance() - 2) / 1000.0f);
         view.add(stimulus);
 
         driver.setActionToNull(); // Action is over

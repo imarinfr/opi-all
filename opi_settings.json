@@ -4,17 +4,17 @@
     "port": 52525.0
   },
   "ImoVifa": {
-    "screen": 1,
+    "screen": 1.0,
     "physicalSize": [],
     "pseudoGray": false,
     "fullScreen": true,
-    "distance": 44,
+    "distance": 44.0,
     "viewMode": "stereo",
     "input": "COM10",
     "tracking": false,
-    "gammaFile": "imoGamma.json",
-    "ip": "192.168.4.144",
-    "port": 51234
+    "gammaFile": "imo_invGamma.json",
+    "ip": "169.254.48.11",
+    "port": 51234.0
   },
   "this": {
     "port": 50001.0
@@ -87,16 +87,16 @@
     "f310": false
   },
   "Display": {
-    "screen": 0.0,
+    "screen": 0,
     "physicalSize": [],
     "pseudoGray": false,
     "fullScreen": false,
-    "distance": 150.0,
+    "distance": 440,
     "viewMode": "Stereo",
     "input": "mouse",
     "tracking": false,
-    "gammaFile": "linearGamma8bit.json",
-    "ip": "127.0.0.1",
-    "port": 51234.0
+    "gammaFile": "linear8bit_invGamma.json",
+    "ip": "localhost",
+    "port": 51234
   }
 }

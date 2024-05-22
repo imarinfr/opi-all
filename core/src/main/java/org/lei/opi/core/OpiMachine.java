@@ -766,10 +766,10 @@ public abstract class OpiMachine {
      */
     public void output(String s) {
         System.out.println(s);
-        Platform.runLater(()-> {
-            if (textAreaCommands != null)
+        if (textAreaCommands != null)
+            Platform.runLater(()-> {
                 textAreaCommands.appendText(s);
-        });
+            });
     }
             
     /**

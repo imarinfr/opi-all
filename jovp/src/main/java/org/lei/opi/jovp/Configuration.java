@@ -27,7 +27,7 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param physicalSize the physical size of the display (in case it is necessary to input it manually) or empty.
  * @param pseudoGray whether to use bit-stealing during stimulus presentation (for 24-bit machines to be able to show 1786 shades of gray)
  * @param fullScreen whether to run in full screen or windowed mode
- * @param distance viewing distance
+ * @param distance viewing distance in mm
  * @param viewMode viewing mode: MONO or STEREO
  * @param input Either 'mouse', 'keypad', or the name of a suitable USB controller
  * @param tracking whether device allows eye tracking

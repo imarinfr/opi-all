@@ -246,15 +246,12 @@ public class JovpParamTest {
           else
             System.out.println(String.format("[testInitialiseSetup] Connected to %s:%s", server.getIP(), server.getPort()));
           
-          HashMap<String, Object> args = new HashMap<String, Object>(){{ put("screen", 1);}};
-          Packet result = machine.initialize(args);
+          Packet result = machine.initialize(null);
           System.out.println(String.format("[testInitialiseSetup] %s", result));
 
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
           HashMap<String, Object> hmap = getDefaultValues(Command.SETUP);
-          hmap.put("fixShape", "MALTESE");
-          hmap.put("bgLum", 200.0);
           result = machine.setup(hmap);
           System.out.println(String.format("[testInitialiseSetup] Setup result: %s", result));
 
@@ -362,6 +359,8 @@ public class JovpParamTest {
             System.out.println("\n-------------- Test Number: " + t);
             HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
             HashMap<String, Object> stimArgs = getDefaultValues(Command.PRESENT);
+            stimArgs.replace("sx", new ArrayList<Double>(Arrays.asList(0.43)));
+            stimArgs.replace("sy", new ArrayList<Double>(Arrays.asList(0.43)));
             switch(t) {
                 case 1: setupArgs.remove("fixCol"); break;
                 case 2: stimArgs.remove("stim.length"); break;
