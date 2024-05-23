@@ -15,34 +15,35 @@
 \item \code{t} List of stimuli presentation times (ms).
 \item \code{w} Time to wait for response including presentation time (ms).
 \item \code{x} List of x co-ordinates of stimuli (degrees).
-\item \code{y} List of y co-ordinates of stimuli (degrees).#'  * \code{envSdx} List of envelope sd in x direction in degrees. Only useful
-if envType != NONE (Optional)
-\item \code{envSdy} List of envelope sd in y direction in degrees. Only useful
-if envType != NONE (Optional)
-\item \code{envRotation} List of envelope rotations in degrees. Only useful if envType != NONE (Optional)
-\item \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
-SQUARESINE, G1, G2, G3, IMAGE (Optional)
-\item \code{frequency} List of frequencies (in cycles per degrees) for
-generation of spatial patterns. Only useful if type != FLAT (Optional)
-\item \code{color2} List of second colors for non-FLAT shapes (Optional)
-\item \code{fullFoV} If !0 fullFoV scales image to full field of view and sx/sy
-are ignored. (Optional)
-\item \code{phase} List of phases (in degrees) for generation of spatial
-patterns. Only useful if type != FLAT (Optional)
-\item \code{imageFilename} If type == IMAGE, the filename on the local
-filesystem of the machine running JOVP of the image to use (Optional)
-\item \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
-SQUARE, OPTOTYPE. (Optional)
-\item \code{rotation} List of angles of rotation of stimuli (degrees). Only
-useful if sx != sy specified. (Optional)
-\item \code{texRotation} List of angles of rotation of stimuli (degrees). Only
-useful if type != FLAT (Optional)
-\item \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
-\item \code{envType} List of envelope types to apply to the stims). Only useful
-if type != FLAT (Optional)
-\item \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
-type != FLAT. (Optional)
-\item \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
+\item \code{y} List of y co-ordinates of stimuli (degrees).
+\item \code{envSdx} (Optional) List of envelope sd in x direction in degrees.
+Only useful if envType != NONE
+\item \code{envSdy} (Optional) List of envelope sd in y direction in degrees.
+Only useful if envType != NONE
+\item \code{envRotation} (Optional) List of envelope rotations in degrees. Only useful if envType != NONE
+\item \code{type} (Optional) Stimulus type. Values include FLAT, SINE,
+CHECKERBOARD, SQUARESINE, G1, G2, G3, IMAGE
+\item \code{frequency} (Optional) List of frequencies (in cycles per degrees)
+for generation of spatial patterns. Only useful if type != FLAT
+\item \code{color2} (Optional) List of second colors for non-FLAT shapes
+\item \code{fullFoV} (Optional) If !0 fullFoV scales image to full field of view
+and sx/sy are ignored.
+\item \code{phase} (Optional) List of phases (in degrees) for generation of
+spatial patterns. Only useful if type != FLAT
+\item \code{imageFilename} (Optional) If type == IMAGE, the filename on the
+local filesystem of the machine running JOVP of the image to use
+\item \code{shape} (Optional) Stimulus shape. Values include CROSS, TRIANGLE,
+CIRCLE, SQUARE, OPTOTYPE.
+\item \code{rotation} (Optional) List of angles of rotation of stimuli
+(degrees). Only useful if sx != sy specified.
+\item \code{texRotation} (Optional) List of angles of rotation of stimuli
+(degrees). Only useful if type != FLAT
+\item \code{defocus} (Optional) List of defocus values in Diopters for stimulus post-processing.
+\item \code{envType} (Optional) List of envelope types to apply to the stims).
+Only useful if type != FLAT
+\item \code{contrast} (Optional) List of stimulus contrasts (from 0 to 1). Only
+useful if type != FLAT.
+\item \code{optotype} (Optional) If shape == OPTOTYPE, the letter A to Z to use
 }}
 
 \item{\code{...}}{Parameters for other opiPresent implementations that are ignored here.}
@@ -64,80 +65,78 @@ This is for internal use only. Use \code{\link[=opiPresent]{opiPresent()}} with
 these Arguments and you will get the Value back.
 }
 \details{
-Elements in \code{envSdx} can take on values in the
-range \code{[-1.0E10, 1.0E10]}.
-
 Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
-
-Elements in \code{envSdy} can take on values in the
-range \code{[-1.0E10, 1.0E10]}.
-
-Elements in \code{envRotation} can take on values
-in the range \code{[-1.0E10, 1.0E10]}.
-
-Elements in \code{type} can take on values in the set
-\code{{"flat", "checkerboard", "sine", "squaresine", "g1",
-                 "g2", "g3", "text", "image"}}.
 
 \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
 
-Elements in \code{frequency} can take on values in
-the range \code{[0.0, 300.0]}.
-
 Elements in \code{color1} can take on values in the range \code{[0.0, 1.0]}.
-
-Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
-
-Elements in \code{fullFoV} can take on values in the
-range \code{[-1.0E10, 1.0E10]}.
-
-Elements in \code{phase} can take on values in the range
-\code{[0.0, 1.0E10]}.
-
-Elements in \code{shape} can take on values in the set
-\code{{"triangle", "square", "polygon", "hollow_triangle",
-                  "hollow_square", "hollow_polygon", "cross", "maltese",
-                  "circle", "annulus", "optotype", "text", "model"}}.
 
 Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
 
 Elements in \code{sy} can take on values in the range \code{[0.0, 180.0]}.
-
-Elements in \code{rotation} can take on values in the
-range \code{[0.0, 360.0]}.
-
-Elements in \code{texRotation} can take on values
-in the range \code{[0.0, 360.0]}.
-
-Elements in \code{defocus} can take on values in the
-range \code{[0.0, 1.0E10]}.
 
 Elements in \code{eye} can take on values in the set
 \code{{"left", "right", "both", "none"}}.
 
 Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
 
-Elements in \code{envType} can take on values in the
-set \code{{"none", "square", "circle", "gaussian"}}.
-
 \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
 
-Elements in \code{contrast} can take on values in the
-range \code{[0.0, 1.0]}.
+Elements in \code{x} can take on values in the range \code{[-90.0, 90.0]}.
+
+Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
+
+Elements in \code{envSdx} can take on values in the range
+\code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{envSdy} can take on values in the range
+\code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{envRotation} can take on values in
+the range \code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{type} can take on values in the set
+\code{{"flat", "checkerboard", "sine", "squaresine", "g1",
+                 "g2", "g3", "text", "image"}}.
+
+Elements in \code{frequency} can take on values in the
+range \code{[0.0, 300.0]}.
+
+Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
+
+Elements in \code{fullFoV} can take on values in the
+range \code{[-1.0E10, 1.0E10]}.
+
+Elements in \code{phase} can take on values in the range \code{[0.0, 1.0E10]}.
+
+Elements in \code{shape} can take on values in the set
+\code{{"triangle", "square", "polygon", "hollow_triangle",
+                  "hollow_square", "hollow_polygon", "cross", "maltese",
+                  "circle", "annulus", "optotype", "text", "model"}}.
+
+Elements in \code{rotation} can take on values in the range \code{[0.0, 360.0]}.
+
+Elements in \code{texRotation} can take on values in
+the range \code{[0.0, 360.0]}.
+
+Elements in \code{defocus} can take on values in the range \code{[0.0, 1.0E10]}.
+
+Elements in \code{envType} can take on values in the set
+\code{{"none", "square", "circle", "gaussian"}}.
+
+Elements in \code{contrast} can take on values in the range \code{[0.0, 1.0]}.
 
 Elements in \code{optotype} can take on values in the
 set \code{{"a", "b", "c", "d", "e", "f", "g", "h", "i",
                      "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
                      "u", "v", "w", "x", "y", "z"}}.
-
-Elements in \code{x} can take on values in the range \code{[-90.0, 90.0]}.
-
-Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
 }
 \examples{
-chooseOpi("PhoneHMD")
-result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(0.0,
-                  0.0, 0.0)), sx = list(1.72), sy = list(1.72),
+chooseOpi(PhoneHMD)
+opiInitialise(port = 50001, ip = "localhost")
+opiSetup(eye = "BOTH")
+result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(1.0,
+                  1.0, 1.0)), sx = list(1.72), sy = list(1.72),
                   eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 
 }

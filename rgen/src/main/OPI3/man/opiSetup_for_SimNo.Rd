@@ -7,7 +7,7 @@
 opiSetup_for_SimNo(...)
 }
 \arguments{
-\item{state}{Any object you like, it is ignored.}
+\item{...}{Any object you like, it is ignored.}
 }
 \value{
 A list with elements:

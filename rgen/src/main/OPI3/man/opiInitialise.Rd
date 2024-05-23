@@ -19,9 +19,8 @@ Specific paramters and return values can be seen in the machine specific version
 listed below in the ’See Also’.
 }
 \seealso{
-\code{\link[=opiInitialise_for_Compass]{opiInitialise_for_Compass()}}, \code{\link[=opiInitialise_for_ImoVifa]{opiInitialise_for_ImoVifa()}},
+\code{\link[=opiInitialise_for_ImoVifa]{opiInitialise_for_ImoVifa()}},
 \code{\link[=opiInitialise_for_PhoneHMD]{opiInitialise_for_PhoneHMD()}}, \code{\link[=opiInitialise_for_Display]{opiInitialise_for_Display()}}, \code{\link[=opiInitialise_for_PicoVR]{opiInitialise_for_PicoVR()}},
-\code{\link[=opiInitialise_for_O900]{opiInitialise_for_O900()}},
 \code{\link[=opiInitialise_for_SimNo]{opiInitialise_for_SimNo()}}, \code{\link[=opiInitialise_for_SimYes]{opiInitialise_for_SimYes()}}, \code{\link[=opiInitialise_for_SimHenson]{opiInitialise_for_SimHenson()}},
 \code{\link[=opiInitialise_for_SimGaussian]{opiInitialise_for_SimGaussian()}}
 }

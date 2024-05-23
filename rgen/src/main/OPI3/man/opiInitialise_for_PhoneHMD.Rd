@@ -26,7 +26,7 @@ these Arguments and you will get the Value back.
 \code{port} can take on values in the range \code{[0, 65535]}.
 }
 \examples{
-chooseOpi("PhoneHMD")
+chooseOpi(PhoneHMD)
 result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
 
 }

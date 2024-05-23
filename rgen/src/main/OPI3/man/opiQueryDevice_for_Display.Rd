@@ -19,7 +19,9 @@ This is for internal use only. Use \code{\link[=opiQueryDevice]{opiQueryDevice()
 these Arguments and you will get the Value back.
 }
 \examples{
-chooseOpi("Display")
+chooseOpi(Display)
+opiInitialise(port = 50001, ip = "localhost")
+opiSetup(eye = "BOTH")
 result <- opiQueryDevice()
 
 }

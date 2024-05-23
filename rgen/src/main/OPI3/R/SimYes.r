@@ -46,7 +46,7 @@ opiInitialise_for_SimYes <- function(...) list(error = FALSE, msg = "Initialise 
 
 #' Does nothing.
 #'
-#' @param state Any object you like, it is ignored.
+#' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:
 #'   * \code{error} Always \code{FALSE}.
@@ -55,7 +55,6 @@ opiInitialise_for_SimYes <- function(...) list(error = FALSE, msg = "Initialise 
 opiSetup_for_SimYes <- function(...) list(error = FALSE, msg = "All setup!")
 
 #' Always respond 'yes' immediately to any parameter.
-#' No checking is done on the validity of `stim`.
 #'
 #' @param ... Any parameters you like, they are ignored.
 #'
@@ -65,4 +64,4 @@ opiSetup_for_SimYes <- function(...) list(error = FALSE, msg = "All setup!")
 #'     * \code{seen} Always \code{TRUE}.
 #'     * \code{time} Always \code{NA}.
 #'
-opiPresent_for_SimYes <- function(stim, ...) list(error = FALSE, msg = list(seen = TRUE, time = NA))
+opiPresent_for_SimYes <- function(...) list(error = FALSE, msg = list(seen = TRUE, time = NA))

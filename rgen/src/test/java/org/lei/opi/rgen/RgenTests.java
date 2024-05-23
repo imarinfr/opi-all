@@ -2,6 +2,7 @@ package org.lei.opi.rgen;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.core.Display;
+import org.lei.opi.core.ImoVifa;
 
 import java.lang.reflect.Method;
 import java.util.stream.Collectors;
@@ -33,40 +34,52 @@ public class RgenTests {
   }
 
   @Test
-  public void opiFunctionTest1() {
+  public void opiDisplayInit1() {
     try {
       OpiFunction f = new OpiFunction(new Display(null), "opiInitialise", "initialize", "", "list(err = %s)", true, true);
-      f.generateR(System.out);
+      f.generateR(System.out, null, null);
     } catch (InstantiationException e) {
       e.printStackTrace();
     }
   }
 
   @Test
-  public void opiFunctionTest2() {
+  public void opiDisplayInit2() {
     try {
       OpiFunction f = new OpiFunction(new Display(null), "opiInitializzze", "initialize", "", "list(err = %s)", true, false);
-      f.generateR(System.out);
+      f.generateR(System.out, null, null);
     } catch (InstantiationException e) {
       e.printStackTrace();
     }
   }
 
   @Test
-  public void opiFunctionTest3() {
+  public void opiDisplayPresent1() {
     try {
       OpiFunction f = new OpiFunction(new Display(null), "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false, true);
-      f.generateR(System.out);
+      f.generateR(System.out, "ip=..., port=...", "blah blah");
     } catch (InstantiationException e) {
       e.printStackTrace();
     }
   }
 
   @Test
-  public void opiFunctionTest4() {
+  public void opiDisplaySetup1() {
     try {
       OpiFunction f = new OpiFunction(new Display(null), "opiSetup",   "setup", "settings", "list(err=%s, seen=%s, time=%s", false, false);
-      f.generateR(System.out);
+      f.generateR(System.out, "blah blah", null);
+    } catch (InstantiationException e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Test
+  public void opiImoVifaPresent1() {
+    try {
+      OpiFunction init = new OpiFunction(new ImoVifa(null), "opiInitialise",   "initialize", "", "list(err=%s", true, true);
+      OpiFunction setup = new OpiFunction(new ImoVifa(null), "opiSetup",   "setup", "", "list(err=%s", false, false);
+      OpiFunction f = new OpiFunction(new ImoVifa(null), "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false, true);
+      f.generateR(System.out, init.callingExample, setup.callingExample);
     } catch (InstantiationException e) {
       e.printStackTrace();
     }

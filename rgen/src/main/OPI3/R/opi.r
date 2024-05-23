@@ -27,11 +27,11 @@ assign("machine_list", list(
     # "Jovp",  Not needed as a standalone, use subclasses: Display, ...
     #"Icare",  Not needed as a standalone, use subclasses: O900, O600
     # "O600",  Never really supported?
-    "Compass",
+    #"Compass",  TODO
     "ImoVifa",
     # "Kowa",   TODO
-    "Maia",
-    "O900",
+    #"Maia",  TODO
+    #"O900",  TODO
     "SimNo",
     "SimYes",
     "SimHenson",
@@ -84,9 +84,11 @@ chooseOpi <- chooseOPI
 #'
 #' @param ... Parameters specific to each machine as described in the 'See Also' functions.
 #'
-#' @seealso [opiInitialise_for_Compass()], [opiInitialise_for_ImoVifa()],
+#' @seealso 
+#' [opiInitialise_for_ImoVifa()],
 #' [opiInitialise_for_PhoneHMD()], [opiInitialise_for_Display()], [opiInitialise_for_PicoVR()],
-#' [opiInitialise_for_O900()], 
+# [opiInitialise_for_O900()], 
+# [opiInitialise_for_Compass()], 
 # [opiInitialise_for_Kowa()], [opiInitialise_for_O900()],
 #' [opiInitialise_for_SimNo()], [opiInitialise_for_SimYes()], [opiInitialise_for_SimHenson()],
 #' [opiInitialise_for_SimGaussian()]
@@ -108,8 +110,9 @@ opiInitialize <- opiInitialise
 #' Specific paramters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
-#' @seealso [opiQueryDevice_for_Compass()], [opiQueryDevice_for_ImoVifa()],
-#' [opiQueryDevice_for_O900()], 
+#' @seealso [opiQueryDevice_for_ImoVifa()],
+# [opiQueryDevice_for_Compass()], 
+# [opiQueryDevice_for_O900()], 
 # [opiQueryDevice_for_Kowa()], [opiQueryDevice_for_O600()],
 #' [opiQueryDevice_for_PhoneHMD()], [opiQueryDevice_for_Display()], [opiQueryDevice_for_PicoVR()],
 #' [opiQueryDevice_for_SimNo()], [opiQueryDevice_for_SimYes()], [opiQueryDevice_for_SimHenson()],
@@ -130,9 +133,11 @@ opiQueryDevice <- function() {
 #'
 #' @param settings A list containing the same names as that returned by {@link opi_queryDevice}.
 #'
-#' @seealso [opiSetup_for_Compass()], [opiSetup_for_ImoVifa()],
-#' [opiSetup_for_O900()], 
+#' @seealso 
+# [opiSetup_for_Compass()],
+# [opiSetup_for_O900()],
 # [opiSetup_for_Kowa()], [opiSetup_for_O600()],
+#' [opiSetup_for_ImoVifa()],
 #' [opiSetup_for_PhoneHMD()], [opiSetup_for_Display()], [opiSetup_for_PicoVR()],
 #' [opiSetup_for_SimNo()], [opiSetup_for_SimYes()], [opiSetup_for_SimHenson()],
 #' [opiSetup_for_SimGaussian()]
@@ -150,8 +155,10 @@ opiSetup <- function(settings) {
 #' Specific paramters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
-#' @seealso [opiClose_for_Compass()], [opiClose_for_ImoVifa()],
-#' [opiClose_for_O900()],
+#' @seealso 
+# [opiClose_for_Compass()], 
+# [opiClose_for_O900()],
+#' [opiClose_for_ImoVifa()],
 # [opiClose_for_Kowa()], [opiClose_for_O600()],
 #' [opiClose_for_PhoneHMD()], [opiClose_for_Display()], [opiClose_for_PicoVR()],
 #' [opiClose_for_SimNo()], [opiClose_for_SimYes()], [opiClose_for_SimHenson()],
@@ -173,9 +180,11 @@ opiClose <- function() {
 #' @param stim A stimulus object or list as described for each machine in the 'See Also' methods.
 #' @param ...  Other arguments that might be needed by each machine in the 'See Also' methods.
 #'
-#' @seealso [opiPresent_for_Compass()], [opiPresent_for_ImoVifa()],
-#' [opiPresent_for_O900()], 
+#' @seealso 
+# [opiPresent_for_Compass()],
+# [opiPresent_for_O900()],
 # [opiPresent_for_Kowa()], [opiPresent_for_O600()],
+#' [opiPresent_for_ImoVifa()],
 #' [opiPresent_for_PhoneHMD()], [opiPresent_for_Display()], [opiPresent_for_PicoVR()],
 #' [opiPresent_for_SimNo()], [opiPresent_for_SimYes()], [opiPresent_for_SimHenson()],
 #' [opiPresent_for_SimGaussian()]

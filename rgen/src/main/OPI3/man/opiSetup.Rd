@@ -15,8 +15,7 @@ Specific paramters and return values can be seen in the machine specific version
 listed below in the ’See Also’.
 }
 \seealso{
-\code{\link[=opiSetup_for_Compass]{opiSetup_for_Compass()}}, \code{\link[=opiSetup_for_ImoVifa]{opiSetup_for_ImoVifa()}},
-\code{\link[=opiSetup_for_O900]{opiSetup_for_O900()}},
+\code{\link[=opiSetup_for_ImoVifa]{opiSetup_for_ImoVifa()}},
 \code{\link[=opiSetup_for_PhoneHMD]{opiSetup_for_PhoneHMD()}}, \code{\link[=opiSetup_for_Display]{opiSetup_for_Display()}}, \code{\link[=opiSetup_for_PicoVR]{opiSetup_for_PicoVR()}},
 \code{\link[=opiSetup_for_SimNo]{opiSetup_for_SimNo()}}, \code{\link[=opiSetup_for_SimYes]{opiSetup_for_SimYes()}}, \code{\link[=opiSetup_for_SimHenson]{opiSetup_for_SimHenson()}},
 \code{\link[=opiSetup_for_SimGaussian]{opiSetup_for_SimGaussian()}}

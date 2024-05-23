@@ -62,18 +62,22 @@ machineName, machineName);  // environment name
      * @param writer  A {@link PrintWriter} to which output is sent.
      */
     static void makeR(OpiMachine machine, PrintStream writer) {
+            // This order is important because need opiInitialise and opiSeup calling example for the 
+            // following calling examples
         OpiFunction[] functions = { 
             new OpiFunction(machine, "opiInitialise", "initialize", "address", "list(err = %s)", true, false),
-            new OpiFunction(machine, "opiQueryDevice", "query", "", "list(%s)", false, false),
             new OpiFunction(machine, "opiSetup", "setup", "settings", "%s", false, false),
+            new OpiFunction(machine, "opiQueryDevice", "query", "", "list(%s)", false, false),
             new OpiFunction(machine, "opiPresent",   "present", "stim", "list(err=%s, seen=%s, time=%s", false, true),
             new OpiFunction(machine, "opiClose", "close", "", "%s", false, false)
         };
 
         writer.println(Main.makeHeader(machine.getClass().getSimpleName()));
 
-        for (OpiFunction f : functions) 
-            f.generateR(writer);
+        for (int i = 0 ; i < functions.length ; i++)
+            functions[i].generateR(writer, 
+                i < 1 ? null : functions[0].callingExample,    // no opiInitialise call before itself!
+                i < 2 ? null : functions[1].callingExample);   // no opiSetup call before opiInitialise or opiSetup.
     } 
   
     public static void main(String args[]) {

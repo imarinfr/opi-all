@@ -12,8 +12,7 @@ Specific paramters and return values can be seen in the machine specific version
 listed below in the ’See Also’.
 }
 \seealso{
-\code{\link[=opiClose_for_Compass]{opiClose_for_Compass()}}, \code{\link[=opiClose_for_ImoVifa]{opiClose_for_ImoVifa()}},
-\code{\link[=opiClose_for_O900]{opiClose_for_O900()}},
+\code{\link[=opiClose_for_ImoVifa]{opiClose_for_ImoVifa()}},
 \code{\link[=opiClose_for_PhoneHMD]{opiClose_for_PhoneHMD()}}, \code{\link[=opiClose_for_Display]{opiClose_for_Display()}}, \code{\link[=opiClose_for_PicoVR]{opiClose_for_PicoVR()}},
 \code{\link[=opiClose_for_SimNo]{opiClose_for_SimNo()}}, \code{\link[=opiClose_for_SimYes]{opiClose_for_SimYes()}}, \code{\link[=opiClose_for_SimHenson]{opiClose_for_SimHenson()}},
 \code{\link[=opiClose_for_SimGaussian]{opiClose_for_SimGaussian()}}

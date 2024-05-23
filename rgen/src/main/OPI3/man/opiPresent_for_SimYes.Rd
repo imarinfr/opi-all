@@ -2,10 +2,9 @@
 % Please edit documentation in R/SimYes.r
 \name{opiPresent_for_SimYes}
 \alias{opiPresent_for_SimYes}
-\title{Always respond 'yes' immediately to any parameter.
-No checking is done on the validity of \code{stim}.}
+\title{Always respond 'yes' immediately to any parameter.}
 \usage{
-opiPresent_for_SimYes(stim, ...)
+opiPresent_for_SimYes(...)
 }
 \arguments{
 \item{...}{Any parameters you like, they are ignored.}
@@ -23,5 +22,4 @@ A list with elements:
 }
 \description{
 Always respond 'yes' immediately to any parameter.
-No checking is done on the validity of \code{stim}.
 }

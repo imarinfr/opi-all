@@ -118,7 +118,8 @@ public abstract class OpiMachine {
     static final String SETTINGS_FILE = "opi_settings.json";
   
     /** {@value MACHINES} */
-    public static final String[] MACHINES = {"Echo", "Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
+    //public static final String[] MACHINES = {"Echo", "Compass", "Maia", "O900", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
+    public static final String[] MACHINES = {"Echo", "ImoVifa", "Display", "PhoneHMD", "PicoVR"};
     /** {@value GUI_MACHINE_NAME} */
     public static final String GUI_MACHINE_NAME = "this";
   

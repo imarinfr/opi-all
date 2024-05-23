@@ -6,10 +6,12 @@ import java.io.PrintWriter;
 import java.lang.reflect.Method;
 
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.HashMap;
 import java.util.List;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 
 import com.google.gson.JsonSyntaxException;
@@ -173,7 +175,7 @@ public class OpiFunction {
       // generate roxygen2 string for parameter p
     private static Function<Parameter, String> prettyParam = (Parameter p) -> {
         String prefix =  String.format("#'  * \\code{%s} ", p.name());
-        return prefix + wrapR(p.desc() + (p.optional() ? " (Optional)" : ""), prefix.length(), false);
+        return prefix + wrapR((p.optional() ? "(Optional) " : "") + p.desc(), prefix.length(), false);
     };
 
       // generate roxygen2 string for return value r
@@ -185,35 +187,48 @@ public class OpiFunction {
         return prefix + wrapR(r.desc(), prefix.length(), false);
     };
 
-      // generate roxygen2 details text for parameter p
-    String makeDetails() {
-        String all = "";
-        for (Parameter p : methodData.parameters.values()) {
-            String name = p.name();
-            String str = "";
-            int prefixLen = 0;
-            if (p.isList() || p.isListList()) {
-                str = String.format("#' Elements in \\code{%s} can take on values in ", name);
-                prefixLen = 16 + name.length();
-            } else {
-                str = String.format("#' \\code{%s} can take on values in ", name);
-                prefixLen = 5 + name.length();
-            }
-
-            if (p.className() == Double.class) {
-                str += String.format("the range \\code{[%s, %s]}.", p.min(), p.max());
-            } else if (p.className() == Integer.class) {
-                str += String.format("the range \\code{[%s, %s]}.", (int)p.min(), (int)p.max());
-            } else if (p.className().isEnum()) {
-                List<String> values = machine.enums.get(p.className().getName());
-                str += String.format("the set \\code{{%s}}.", String.join(", ",values.stream().map((String s) -> "\"" + s + "\"").toList()));
-            } else {
-                str = "";
-            }
-
-            if (str.length() > 0)
-                all += "\n#'\n" + wrapR(str, prefixLen, false);
+    /* 
+     * @param p Parameter to generate details for
+     * @return String: several lines of roxygen2 "details" text for parameter p
+    */
+    private String prettyDetails(Parameter p) {
+        String name = p.name();
+        String str = "";
+        int prefixLen = 0;
+        if (p.isList() || p.isListList()) {
+            str = String.format("Elements in \\code{%s} can take on values in ", name);
+            prefixLen = 16 + name.length();
+        } else {
+            str = String.format("\\code{%s} can take on values in ", name);
+            prefixLen = 5 + name.length();
         }
+
+        if (p.className() == Double.class) {
+            str += String.format("the range \\code{[%s, %s]}.", p.min(), p.max());
+        } else if (p.className() == Integer.class) {
+            str += String.format("the range \\code{[%s, %s]}.", (int)p.min(), (int)p.max());
+        } else if (p.className().isEnum()) {
+            List<String> values = machine.enums.get(p.className().getName());
+            str += String.format("the set \\code{{%s}}.", String.join(", ",values.stream().map((String s) -> "\"" + s + "\"").toList()));
+        } else {
+            str = "";
+        }
+
+        if (str.length() > 0)
+            str = "\n#'\n#' " + wrapR(str, prefixLen, false);
+
+        return str;
+    }
+
+        // apply prettyDetails to each param optional first, then non-optional (same order as makeDocumentation)
+    String makeDetails() {
+        String all = Stream.concat(
+            methodData.parameters.values().stream()  // non-optional parameters
+            .filter((Parameter p) -> !p.optional()),
+            methodData.parameters.values().stream()  // optional parameters
+            .filter((Parameter p) -> p.optional()))
+        .map(p -> prettyDetails(p))
+        .collect(Collectors.joining(""));
 
         if (all.length() > 0)
             all = "#' @details" + all;
@@ -227,12 +242,13 @@ public class OpiFunction {
     *   - List possible type/range of each parameter
     *   - Indicate if a parameter is optional
      */
-    private String makeDocumentation() {
+    private String makeDocumentation(String opiInitialiseCallingExample, String opiSetupCallingExample) {
         String params = "#' @param \\code{" + this.opiInputFieldName + "} A list containing:\n" + 
             methodData.parameters.values().stream()  // non-optional parameters
             .filter((Parameter p) -> !p.optional())
             .map(prettyParam)
             .collect(Collectors.joining("\n")) +
+            "\n" +
             methodData.parameters.values().stream()  // optional parameters
             .filter((Parameter p) -> p.optional())
             .map(prettyParam)
@@ -256,6 +272,13 @@ public class OpiFunction {
         returnMsgDoc.length() == 0 ? "#'" : returnMsgDoc
         );
 
+            // might need chooseOpi, opiInitialise and opiSetup
+        String examplePreamble = String.format("#' chooseOpi(%s)", machineName);
+        if (opiInitialiseCallingExample != null) 
+            examplePreamble += String.format("\n#' opiInitialise(%s)", opiInitialiseCallingExample);
+        if (opiSetupCallingExample != null) 
+            examplePreamble += String.format("\n#' opiSetup(%s)", opiSetupCallingExample);
+
         return String.format("""
 #' Implementation of %s for the %s machine.
 #'
@@ -271,7 +294,7 @@ public class OpiFunction {
 %s
 #'
 #' @examples
-#' chooseOpi("%s")
+%s
 #' result <- %s(%s)
 #'
 #' @seealso [%s()]
@@ -282,8 +305,8 @@ public class OpiFunction {
     params.length() > 0 ? params : "#'", // @params
     rets,           //@return
     makeDetails(),
-    machineName,    // chooseOpi
-    this.opiName, //result
+    examplePreamble,    
+    this.opiName, //calling this function in example
     this.opiInputFieldName.length() > 0 ? String.format("%s = list(%s)", this.opiInputFieldName, this.callingExample) : this.callingExample,
     this.opiName   // seealso
         );
@@ -347,8 +370,10 @@ public class OpiFunction {
     *   4.2 Indicate if a parameter is optional
     *
     * @param writer {@link PrintWriter} to which to write output.
+    * @param opiInitialiseCallingExample String that is R code for calling opiInitialise (could be null)
+    * @param opiSetupCallingExample String that is R code for calling opiSetup (could be null)
     */
-    public void generateR(PrintStream writer) {
+    public void generateR(PrintStream writer, String opiInitialiseCallingExample, String opiSetupCallingExample) {
         //Stream.of(mData.parameters).map((Parameter p) -> p.className().getSimpleName()).forEach(System.out::println);
         //Stream.of(mData.returnMsgs).map((ReturnMsg p) -> p.name()).forEach(System.out::println);
 
@@ -399,7 +424,7 @@ public class OpiFunction {
             //    - returns it as returnMsg format
         // something here about returnmsg???
 
-        writer.print(makeDocumentation());
+        writer.print(makeDocumentation(opiInitialiseCallingExample, opiSetupCallingExample));
         writer.print(funcSignature);
         writer.println(" {");
         writer.println(socketCode);

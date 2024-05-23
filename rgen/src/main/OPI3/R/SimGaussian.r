@@ -136,7 +136,7 @@ opiQueryDevice_for_SimGaussian <- function() list(error = FALSE, msg = list(mach
 
 #' Does nothing.
 #'
-#' @param state Any object you like, it is ignored.
+#' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:
 #'   * \code{error} Always \code{FALSE}.

@@ -19,7 +19,9 @@ This is for internal use only. Use \code{\link[=opiClose]{opiClose()}} with
 these Arguments and you will get the Value back.
 }
 \examples{
-chooseOpi("PicoVR")
+chooseOpi(PicoVR)
+opiInitialise(port = 50001, ip = "localhost")
+opiSetup(eye = "BOTH")
 result <- opiClose()
 
 }

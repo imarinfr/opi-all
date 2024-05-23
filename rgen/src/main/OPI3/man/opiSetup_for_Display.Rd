@@ -6,24 +6,25 @@
 \arguments{
 \item{\code{settings}}{A list containing:
 \itemize{
-\item \code{eye} The eye for which to apply the settings.#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
-\item \code{fixShape} Fixation target type for eye. (Optional)
-\item \code{fixLum} Fixation target luminance for eye. (Optional)
-\item \code{fixType} Fixation target texture for eye. (Optional)
-\item \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
-\item \code{fixCy} y-coordinate of fixation target (degrees). (Optional)
-\item \code{fixCol} Fixation target color for eye. (Optional)
-\item \code{bgLum} Background luminance for eye (cd/m^2). (Optional)
-\item \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
-\item \code{bgCol} Background color for eye (rgb). (Optional)
-\item \code{fixSx} diameter along major axis of ellipse (degrees). 0 to hide
-fixation marker. (Optional)
-\item \code{fixSy} diameter along minor axis of ellipse (degrees). If not
-received, then sy = sx. (Optional)
-\item \code{fixRotation} Angles of rotation of fixation target (degrees). Only
-useful if sx != sy specified. (Optional)
-\item \code{fixImageFilename} If fixType == IMAGE, the filename on the local
-filesystem of the machine running JOVP of the image to use (Optional)
+\item \code{eye} The eye for which to apply the settings.
+\item \code{bgImageFilename} (Optional) If present, display the image in the background for eye
+\item \code{fixShape} (Optional) Fixation target type for eye.
+\item \code{fixLum} (Optional) Fixation target luminance for eye.
+\item \code{fixType} (Optional) Fixation target texture for eye.
+\item \code{fixCx} (Optional) x-coordinate of fixation target (degrees).
+\item \code{fixCy} (Optional) y-coordinate of fixation target (degrees).
+\item \code{fixCol} (Optional) Fixation target color for eye.
+\item \code{bgLum} (Optional) Background luminance for eye (cd/m^2).
+\item \code{tracking} (Optional) Whether to correct stimulus location based on eye position.
+\item \code{bgCol} (Optional) Background color for eye (rgb).
+\item \code{fixSx} (Optional) diameter along major axis of ellipse (degrees). 0
+to hide fixation marker.
+\item \code{fixSy} (Optional) diameter along minor axis of ellipse (degrees). If
+not received, then sy = sx.
+\item \code{fixRotation} (Optional) Angles of rotation of fixation target
+(degrees). Only useful if sx != sy specified.
+\item \code{fixImageFilename} (Optional) If fixType == IMAGE, the filename on
+the local filesystem of the machine running JOVP of the image to use
 }}
 }
 \value{
@@ -39,6 +40,9 @@ This is for internal use only. Use \code{\link[=opiSetup]{opiSetup()}} with
 these Arguments and you will get the Value back.
 }
 \details{
+\code{eye} can take on values in the set \code{{"left", "right", "both",
+     "none"}}.
+
 \code{fixShape} can take on values in the set \code{{"triangle",
           "square", "polygon", "hollow_triangle", "hollow_square",
           "hollow_polygon", "cross", "maltese", "circle", "annulus",
@@ -61,9 +65,6 @@ Elements in \code{fixCol} can take on values in the range \code{[0.0, 1.0]}.
 
 Elements in \code{bgCol} can take on values in the range \code{[0.0, 1.0]}.
 
-\code{eye} can take on values in the set \code{{"left", "right",
-     "both", "none"}}.
-
 \code{fixSx} can take on values in the range \code{[0.0, 1.0E10]}.
 
 \code{fixSy} can take on values in the range \code{[0.0, 1.0E10]}.
@@ -71,7 +72,8 @@ Elements in \code{bgCol} can take on values in the range \code{[0.0, 1.0]}.
 \code{fixRotation} can take on values in the range \code{[0.0, 360.0]}.
 }
 \examples{
-chooseOpi("Display")
+chooseOpi(Display)
+opiInitialise(port = 50001, ip = "localhost")
 result <- opiSetup(settings = list(eye = "BOTH"))
 
 }

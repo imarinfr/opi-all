@@ -33,6 +33,7 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 #' @param \code{address} A list containing:
 #'  * \code{port} TCP port of the OPI Monitor.
 #'  * \code{ip} IP Address of the OPI Monitor.
+
 #'
 #' @return A list containing:
 #'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
@@ -46,7 +47,7 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 #' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
 #' @examples
-#' chooseOpi("PicoVR")
+#' chooseOpi(PicoVR)
 #' result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
 #'
 #' @seealso [opiInitialise()]
@@ -75,49 +76,6 @@ opiInitialise_for_PicoVR <- function(address) {
     return(res)
 }
 
-#' Implementation of opiQueryDevice for the PicoVR machine.
-#'
-#' This is for internal use only. Use [opiQueryDevice()] with
-#' these Arguments and you will get the Value back.
-#'
-#' @usage NULL
-#'
-#' @param \code{} A list containing:
-
-#'
-#' @return A list containing:
-#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
-#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
-#'                If \code{error} is \code{FALSE}, this is an empty list.
-#'
-
-#'
-#'
-#'
-#' @examples
-#' chooseOpi("PicoVR")
-#' result <- opiQueryDevice()
-#'
-#' @seealso [opiQueryDevice()]
-#'
-opiQueryDevice_for_PicoVR <- function() {
-    if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
-        return(list(error = 3, msg = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
-
-    
-    msg <- list()
-    msg <- c(list(command = "query"), msg)
-    msg <- msg[!unlist(lapply(msg, is.null))]
-    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
-    writeLines(msg, .opi_env$PicoVR$socket)
-
-    res <- readLines(.opi_env$PicoVR$socket, n = 1)
-    if (length(res) == 0)
-        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
-    res <- jsonlite::parse_json(res)
-    return(res)
-}
-
 #' Implementation of opiSetup for the PicoVR machine.
 #'
 #' This is for internal use only. Use [opiSetup()] with
@@ -126,24 +84,25 @@ opiQueryDevice_for_PicoVR <- function() {
 #' @usage NULL
 #'
 #' @param \code{settings} A list containing:
-#'  * \code{eye} The eye for which to apply the settings.#'  * \code{bgImageFilename} If present, display the image in the background for eye (Optional)
-#'  * \code{fixShape} Fixation target type for eye. (Optional)
-#'  * \code{fixLum} Fixation target luminance for eye. (Optional)
-#'  * \code{fixType} Fixation target texture for eye. (Optional)
-#'  * \code{fixCx} x-coordinate of fixation target (degrees). (Optional)
-#'  * \code{fixCy} y-coordinate of fixation target (degrees). (Optional)
-#'  * \code{fixCol} Fixation target color for eye. (Optional)
-#'  * \code{bgLum} Background luminance for eye (cd/m^2). (Optional)
-#'  * \code{tracking} Whether to correct stimulus location based on eye position. (Optional)
-#'  * \code{bgCol} Background color for eye (rgb). (Optional)
-#'  * \code{fixSx} diameter along major axis of ellipse (degrees). 0 to hide
-#'                 fixation marker. (Optional)
-#'  * \code{fixSy} diameter along minor axis of ellipse (degrees). If not
-#'                 received, then sy = sx. (Optional)
-#'  * \code{fixRotation} Angles of rotation of fixation target (degrees). Only
-#'                       useful if sx != sy specified. (Optional)
-#'  * \code{fixImageFilename} If fixType == IMAGE, the filename on the local
-#'                            filesystem of the machine running JOVP of the image to use (Optional)
+#'  * \code{eye} The eye for which to apply the settings.
+#'  * \code{bgImageFilename} (Optional) If present, display the image in the background for eye
+#'  * \code{fixShape} (Optional) Fixation target type for eye.
+#'  * \code{fixLum} (Optional) Fixation target luminance for eye.
+#'  * \code{fixType} (Optional) Fixation target texture for eye.
+#'  * \code{fixCx} (Optional) x-coordinate of fixation target (degrees).
+#'  * \code{fixCy} (Optional) y-coordinate of fixation target (degrees).
+#'  * \code{fixCol} (Optional) Fixation target color for eye.
+#'  * \code{bgLum} (Optional) Background luminance for eye (cd/m^2).
+#'  * \code{tracking} (Optional) Whether to correct stimulus location based on eye position.
+#'  * \code{bgCol} (Optional) Background color for eye (rgb).
+#'  * \code{fixSx} (Optional) diameter along major axis of ellipse (degrees). 0
+#'                 to hide fixation marker.
+#'  * \code{fixSy} (Optional) diameter along minor axis of ellipse (degrees). If
+#'                 not received, then sy = sx.
+#'  * \code{fixRotation} (Optional) Angles of rotation of fixation target
+#'                       (degrees). Only useful if sx != sy specified.
+#'  * \code{fixImageFilename} (Optional) If fixType == IMAGE, the filename on
+#'                            the local filesystem of the machine running JOVP of the image to use
 #'
 #' @return A list containing:
 #'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
@@ -153,6 +112,9 @@ opiQueryDevice_for_PicoVR <- function() {
 
 #'
 #' @details
+#'
+#' \code{eye} can take on values in the set \code{{"left", "right", "both",
+#'      "none"}}.
 #'
 #' \code{fixShape} can take on values in the set \code{{"triangle",
 #'           "square", "polygon", "hollow_triangle", "hollow_square",
@@ -176,9 +138,6 @@ opiQueryDevice_for_PicoVR <- function() {
 #'
 #' Elements in \code{bgCol} can take on values in the range \code{[0.0, 1.0]}.
 #'
-#' \code{eye} can take on values in the set \code{{"left", "right",
-#'      "both", "none"}}.
-#'
 #' \code{fixSx} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
 #' \code{fixSy} can take on values in the range \code{[0.0, 1.0E10]}.
@@ -186,7 +145,8 @@ opiQueryDevice_for_PicoVR <- function() {
 #' \code{fixRotation} can take on values in the range \code{[0.0, 360.0]}.
 #'
 #' @examples
-#' chooseOpi("PicoVR")
+#' chooseOpi(PicoVR)
+#' opiInitialise(port = 50001, ip = "localhost")
 #' result <- opiSetup(settings = list(eye = "BOTH"))
 #'
 #' @seealso [opiSetup()]
@@ -199,6 +159,52 @@ opiSetup_for_PicoVR <- function(settings) {
 
     msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixType = settings$fixType, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixImageFilename = settings$fixImageFilename)
     msg <- c(list(command = "setup"), msg)
+    msg <- msg[!unlist(lapply(msg, is.null))]
+    msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
+    writeLines(msg, .opi_env$PicoVR$socket)
+
+    res <- readLines(.opi_env$PicoVR$socket, n = 1)
+    if (length(res) == 0)
+        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+    res <- jsonlite::parse_json(res)
+    return(res)
+}
+
+#' Implementation of opiQueryDevice for the PicoVR machine.
+#'
+#' This is for internal use only. Use [opiQueryDevice()] with
+#' these Arguments and you will get the Value back.
+#'
+#' @usage NULL
+#'
+#' @param \code{} A list containing:
+
+
+#'
+#' @return A list containing:
+#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
+#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
+#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'
+
+#'
+#'
+#'
+#' @examples
+#' chooseOpi(PicoVR)
+#' opiInitialise(port = 50001, ip = "localhost")
+#' opiSetup(eye = "BOTH")
+#' result <- opiQueryDevice()
+#'
+#' @seealso [opiQueryDevice()]
+#'
+opiQueryDevice_for_PicoVR <- function() {
+    if(!exists(".opi_env") || !exists("PicoVR", envir = .opi_env) || !("socket" %in% names(.opi_env$PicoVR)) || is.null(.opi_env$PicoVR$socket))
+        return(list(error = 3, msg = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
+
+    
+    msg <- list()
+    msg <- c(list(command = "query"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
     writeLines(msg, .opi_env$PicoVR$socket)
@@ -227,34 +233,35 @@ opiSetup_for_PicoVR <- function(settings) {
 #'  * \code{t} List of stimuli presentation times (ms).
 #'  * \code{w} Time to wait for response including presentation time (ms).
 #'  * \code{x} List of x co-ordinates of stimuli (degrees).
-#'  * \code{y} List of y co-ordinates of stimuli (degrees).#'  * \code{envSdx} List of envelope sd in x direction in degrees. Only useful
-#'                  if envType != NONE (Optional)
-#'  * \code{envSdy} List of envelope sd in y direction in degrees. Only useful
-#'                  if envType != NONE (Optional)
-#'  * \code{envRotation} List of envelope rotations in degrees. Only useful if envType != NONE (Optional)
-#'  * \code{type} Stimulus type. Values include FLAT, SINE, CHECKERBOARD,
-#'                SQUARESINE, G1, G2, G3, IMAGE (Optional)
-#'  * \code{frequency} List of frequencies (in cycles per degrees) for
-#'                     generation of spatial patterns. Only useful if type != FLAT (Optional)
-#'  * \code{color2} List of second colors for non-FLAT shapes (Optional)
-#'  * \code{fullFoV} If !0 fullFoV scales image to full field of view and sx/sy
-#'                   are ignored. (Optional)
-#'  * \code{phase} List of phases (in degrees) for generation of spatial
-#'                 patterns. Only useful if type != FLAT (Optional)
-#'  * \code{imageFilename} If type == IMAGE, the filename on the local
-#'                         filesystem of the machine running JOVP of the image to use (Optional)
-#'  * \code{shape} Stimulus shape. Values include CROSS, TRIANGLE, CIRCLE,
-#'                 SQUARE, OPTOTYPE. (Optional)
-#'  * \code{rotation} List of angles of rotation of stimuli (degrees). Only
-#'                    useful if sx != sy specified. (Optional)
-#'  * \code{texRotation} List of angles of rotation of stimuli (degrees). Only
-#'                       useful if type != FLAT (Optional)
-#'  * \code{defocus} List of defocus values in Diopters for stimulus post-processing. (Optional)
-#'  * \code{envType} List of envelope types to apply to the stims). Only useful
-#'                   if type != FLAT (Optional)
-#'  * \code{contrast} List of stimulus contrasts (from 0 to 1). Only useful if
-#'                    type != FLAT. (Optional)
-#'  * \code{optotype} If shape == OPTOTYPE, the letter A to Z to use (Optional)
+#'  * \code{y} List of y co-ordinates of stimuli (degrees).
+#'  * \code{envSdx} (Optional) List of envelope sd in x direction in degrees.
+#'                  Only useful if envType != NONE
+#'  * \code{envSdy} (Optional) List of envelope sd in y direction in degrees.
+#'                  Only useful if envType != NONE
+#'  * \code{envRotation} (Optional) List of envelope rotations in degrees. Only useful if envType != NONE
+#'  * \code{type} (Optional) Stimulus type. Values include FLAT, SINE,
+#'                CHECKERBOARD, SQUARESINE, G1, G2, G3, IMAGE
+#'  * \code{frequency} (Optional) List of frequencies (in cycles per degrees)
+#'                     for generation of spatial patterns. Only useful if type != FLAT
+#'  * \code{color2} (Optional) List of second colors for non-FLAT shapes
+#'  * \code{fullFoV} (Optional) If !0 fullFoV scales image to full field of view
+#'                   and sx/sy are ignored.
+#'  * \code{phase} (Optional) List of phases (in degrees) for generation of
+#'                 spatial patterns. Only useful if type != FLAT
+#'  * \code{imageFilename} (Optional) If type == IMAGE, the filename on the
+#'                         local filesystem of the machine running JOVP of the image to use
+#'  * \code{shape} (Optional) Stimulus shape. Values include CROSS, TRIANGLE,
+#'                 CIRCLE, SQUARE, OPTOTYPE.
+#'  * \code{rotation} (Optional) List of angles of rotation of stimuli
+#'                    (degrees). Only useful if sx != sy specified.
+#'  * \code{texRotation} (Optional) List of angles of rotation of stimuli
+#'                       (degrees). Only useful if type != FLAT
+#'  * \code{defocus} (Optional) List of defocus values in Diopters for stimulus post-processing.
+#'  * \code{envType} (Optional) List of envelope types to apply to the stims).
+#'                   Only useful if type != FLAT
+#'  * \code{contrast} (Optional) List of stimulus contrasts (from 0 to 1). Only
+#'                    useful if type != FLAT.
+#'  * \code{optotype} (Optional) If shape == OPTOTYPE, the letter A to Z to use
 #'
 #' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
 #'
@@ -268,80 +275,78 @@ opiSetup_for_PicoVR <- function(settings) {
 #'
 #' @details
 #'
-#' Elements in \code{envSdx} can take on values in the
-#'                    range \code{[-1.0E10, 1.0E10]}.
-#'
 #' Elements in \code{lum} can take on values in the range \code{[0.0, 1.0E10]}.
-#'
-#' Elements in \code{envSdy} can take on values in the
-#'                    range \code{[-1.0E10, 1.0E10]}.
-#'
-#' Elements in \code{envRotation} can take on values
-#'                         in the range \code{[-1.0E10, 1.0E10]}.
-#'
-#' Elements in \code{type} can take on values in the set
-#'                  \code{{"flat", "checkerboard", "sine", "squaresine", "g1",
-#'                  "g2", "g3", "text", "image"}}.
 #'
 #' \code{stim.length} can take on values in the range \code{[1, 2147483647]}.
 #'
-#' Elements in \code{frequency} can take on values in
-#'                       the range \code{[0.0, 300.0]}.
-#'
 #' Elements in \code{color1} can take on values in the range \code{[0.0, 1.0]}.
-#'
-#' Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
-#'
-#' Elements in \code{fullFoV} can take on values in the
-#'                     range \code{[-1.0E10, 1.0E10]}.
-#'
-#' Elements in \code{phase} can take on values in the range
-#'                   \code{[0.0, 1.0E10]}.
-#'
-#' Elements in \code{shape} can take on values in the set
-#'                   \code{{"triangle", "square", "polygon", "hollow_triangle",
-#'                   "hollow_square", "hollow_polygon", "cross", "maltese",
-#'                   "circle", "annulus", "optotype", "text", "model"}}.
 #'
 #' Elements in \code{sx} can take on values in the range \code{[0.0, 180.0]}.
 #'
 #' Elements in \code{sy} can take on values in the range \code{[0.0, 180.0]}.
-#'
-#' Elements in \code{rotation} can take on values in the
-#'                      range \code{[0.0, 360.0]}.
-#'
-#' Elements in \code{texRotation} can take on values
-#'                         in the range \code{[0.0, 360.0]}.
-#'
-#' Elements in \code{defocus} can take on values in the
-#'                     range \code{[0.0, 1.0E10]}.
 #'
 #' Elements in \code{eye} can take on values in the set
 #'                 \code{{"left", "right", "both", "none"}}.
 #'
 #' Elements in \code{t} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
-#' Elements in \code{envType} can take on values in the
-#'                     set \code{{"none", "square", "circle", "gaussian"}}.
-#'
 #' \code{w} can take on values in the range \code{[0.0, 1.0E10]}.
 #'
-#' Elements in \code{contrast} can take on values in the
-#'                      range \code{[0.0, 1.0]}.
+#' Elements in \code{x} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
+#'
+#' Elements in \code{envSdx} can take on values in the range
+#'                    \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{envSdy} can take on values in the range
+#'                    \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{envRotation} can take on values in
+#'                         the range \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{type} can take on values in the set
+#'                  \code{{"flat", "checkerboard", "sine", "squaresine", "g1",
+#'                  "g2", "g3", "text", "image"}}.
+#'
+#' Elements in \code{frequency} can take on values in the
+#'                       range \code{[0.0, 300.0]}.
+#'
+#' Elements in \code{color2} can take on values in the range \code{[0.0, 1.0]}.
+#'
+#' Elements in \code{fullFoV} can take on values in the
+#'                     range \code{[-1.0E10, 1.0E10]}.
+#'
+#' Elements in \code{phase} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{shape} can take on values in the set
+#'                   \code{{"triangle", "square", "polygon", "hollow_triangle",
+#'                   "hollow_square", "hollow_polygon", "cross", "maltese",
+#'                   "circle", "annulus", "optotype", "text", "model"}}.
+#'
+#' Elements in \code{rotation} can take on values in the range \code{[0.0, 360.0]}.
+#'
+#' Elements in \code{texRotation} can take on values in
+#'                         the range \code{[0.0, 360.0]}.
+#'
+#' Elements in \code{defocus} can take on values in the range \code{[0.0, 1.0E10]}.
+#'
+#' Elements in \code{envType} can take on values in the set
+#'                     \code{{"none", "square", "circle", "gaussian"}}.
+#'
+#' Elements in \code{contrast} can take on values in the range \code{[0.0, 1.0]}.
 #'
 #' Elements in \code{optotype} can take on values in the
 #'                      set \code{{"a", "b", "c", "d", "e", "f", "g", "h", "i",
 #'                      "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
 #'                      "u", "v", "w", "x", "y", "z"}}.
 #'
-#' Elements in \code{x} can take on values in the range \code{[-90.0, 90.0]}.
-#'
-#' Elements in \code{y} can take on values in the range \code{[-90.0, 90.0]}.
-#'
 #' @examples
-#' chooseOpi("PicoVR")
-#' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(0.0,
-#'                   0.0, 0.0)), sx = list(1.72), sy = list(1.72),
+#' chooseOpi(PicoVR)
+#' opiInitialise(port = 50001, ip = "localhost")
+#' opiSetup(eye = "BOTH")
+#' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(1.0,
+#'                   1.0, 1.0)), sx = list(1.72), sy = list(1.72),
 #'                   eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
 #'
 #' @seealso [opiPresent()]
@@ -374,6 +379,7 @@ opiPresent_for_PicoVR <- function(stim, ...) {
 #'
 #' @param \code{} A list containing:
 
+
 #'
 #' @return A list containing:
 #'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
@@ -385,7 +391,9 @@ opiPresent_for_PicoVR <- function(stim, ...) {
 #'
 #'
 #' @examples
-#' chooseOpi("PicoVR")
+#' chooseOpi(PicoVR)
+#' opiInitialise(port = 50001, ip = "localhost")
+#' opiSetup(eye = "BOTH")
 #' result <- opiClose()
 #'
 #' @seealso [opiClose()]

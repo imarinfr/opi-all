@@ -109,7 +109,7 @@ opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 
 
 #' Does nothing.
 #'
-#' @param settings Any object you like, it is ignored.
+#' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:
 #'   * \code{error} Always \code{FALSE}.

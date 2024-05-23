@@ -7,7 +7,7 @@
 opiSetup_for_SimHenson(...)
 }
 \arguments{
-\item{settings}{Any object you like, it is ignored.}
+\item{...}{Any object you like, it is ignored.}
 }
 \value{
 A list with elements:
