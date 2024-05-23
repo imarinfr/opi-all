@@ -132,7 +132,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
         double[] invGammaGreen = ((ArrayList<?>) pairs.get("invGammaGreen")).stream().mapToDouble(Double.class::cast).toArray();
         double[] invGammaBlue = ((ArrayList<?>) pairs.get("invGammaBlue")).stream().mapToDouble(Double.class::cast).toArray();
         return new Calibration(
-          (double)pairs.get("lumPrecision"),
+          (int)Math.round((double)pairs.get("lumPrecision")),
           (double)pairs.get("maxLum"),
           (int)Math.round((double)pairs.get("maxPixel")),
           invGammaRed, invGammaGreen, invGammaBlue);

@@ -1,9 +1,11 @@
 package org.lei.opi.core;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
 
+import es.optocom.jovp.Controller;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.Node;
@@ -29,7 +31,7 @@ public class ImoVifa extends Jovp {
      /**
      * opiInitialise: initialize OPI
      * Update GUI, call super.initialize().
-     * @param args A map of name:value pairs for Params
+     * @param args A map of name:value pairs for Params (ignored)
      * @return A Package containing a JSON object with machine specific initialise information
      * @since 0.2.0
      */
@@ -42,7 +44,14 @@ public class ImoVifa extends Jovp {
         settings.setScreen(1);
         settings.setViewMode("STEREO");
 
-        return super.initialize(args);
+        String [] comPorts = Controller.getSuitableControllers();
+        if (!Arrays.asList(comPorts).contains(settings.input)) 
+            return(Packet.error(new StringBuilder("OPI Settings has ")
+                .append(settings.input)
+                .append(" as the clicker port which is not in the avilable ports: ")
+                .append(Arrays.toString(comPorts))
+                .toString()));
+        return super.initialize(null);
     };
   
     /**

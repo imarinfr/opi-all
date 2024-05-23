@@ -9,6 +9,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.lang.reflect.Method;
 
 import org.lei.opi.core.Display;
+import org.lei.opi.core.ImoVifa;
 import org.lei.opi.core.Jovp;
 import org.lei.opi.core.OpiMachine;
 import org.lei.opi.core.OpiListener.Command;
@@ -342,7 +343,8 @@ public class JovpParamTest {
           
         try {
             // initialise()
-          Display machine = new Display(null);
+          //Display machine = new Display(null);
+          ImoVifa machine = new ImoVifa(null);
           System.out.println("[testInitialiseSetupPresent] " + machine);
           if (machine != null && !machine.connect(server.getIP(), server.getPort()))
             System.out.println(String.format("[testInitialiseSetupPresent] Cannot connect to %s:%s", server.getIP(), server.getPort()));
@@ -361,6 +363,9 @@ public class JovpParamTest {
             HashMap<String, Object> stimArgs = getDefaultValues(Command.PRESENT);
             stimArgs.replace("sx", new ArrayList<Double>(Arrays.asList(0.43)));
             stimArgs.replace("sy", new ArrayList<Double>(Arrays.asList(0.43)));
+            stimArgs.replace("lum", new ArrayList<Double>(Arrays.asList(3000.0)));
+            stimArgs.replace("t", new ArrayList<Double>(Arrays.asList(10000.0)));
+            stimArgs.replace("w", 10600.0);
             switch(t) {
                 case 1: setupArgs.remove("fixCol"); break;
                 case 2: stimArgs.remove("stim.length"); break;

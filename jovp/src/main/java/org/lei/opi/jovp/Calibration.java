@@ -21,7 +21,7 @@ public class Calibration {
     private static final String ILLEGAL_GAMMA_FUNCTION = "The inverse gamma arrays should not contain numbers in [0, maxPixel]";
 
     /** Number of decimal places for luminance in cd/m^2 */
-    double lumPrecision;
+    int lumPrecision;
     /** Max color over all 3 channels [0]=R [1]=G [2]=B (eg 255, 1024) */
     int maxPixel;
     /** Max luminance in cd/m^2 */
@@ -47,7 +47,7 @@ public class Calibration {
      * @since 0.0.1
      */
     public Calibration(
-        double lumPrecision,
+        int lumPrecision,
         double maxLum,
         int maxPixel,
         double[] RinvGamma, double[] GinvGamma, double[] BinvGamma) {
@@ -55,6 +55,7 @@ public class Calibration {
         if (maxLum < 0)
             throw new IllegalArgumentException(String.format(WRONG_MAX_LUMINANCE));
 
+        this.lumPrecision = lumPrecision;
         this.scale = Math.pow(10, lumPrecision);
         this.maxPixel = maxPixel;
         this.maxLum = maxLum;

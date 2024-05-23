@@ -7,6 +7,7 @@ import es.optocom.jovp.PsychoLogic;
 import es.optocom.jovp.Timer;
 import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
+import es.optocom.jovp.rendering.Observer;
 import es.optocom.jovp.rendering.Texture;
 import es.optocom.jovp.definitions.Command;
 import es.optocom.jovp.definitions.ViewEye;
@@ -104,11 +105,13 @@ public class OpiLogic implements PsychoLogic {
         for (int i = 0; i < backgrounds.length; i++) {
           fixations[i].position(0.0d, 0.0d);
           fixations[i].size(DEFAULT_FIXATION_SIZE);
-          fixations[i].depth((driver.getConfiguration().distance() - 3) / 1000.0f);
+          //fixations[i].depth((driver.getConfiguration().distance() - 3) / 1000.0f);
+          fixations[i].depth(Observer.ZFAR - 3.0);
           view.add(fixations[i]);
 
           backgrounds[i].position(0.0d, 0.0d);
-          backgrounds[i].depth((driver.getConfiguration().distance() - 1) / 1000.0f);
+          //backgrounds[i].depth((driver.getConfiguration().distance() - 1) / 1000.0f);
+          backgrounds[i].depth(Observer.ZFAR - 1.0);
           backgrounds[i].size(fov[0], fov[1]);    // TODO: Will this work for Images?
           view.add(backgrounds[i]);
         }
@@ -117,7 +120,8 @@ public class OpiLogic implements PsychoLogic {
         stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture(), Units.ANGLES);
         stimulus.show(ViewEye.NONE);
         stimulus.position(0, 0);
-        stimulus.depth((driver.getConfiguration().distance() - 2) / 1000.0f);
+        //stimulus.depth((driver.getConfiguration().distance() - 2) / 1000.0f);
+        stimulus.depth(Observer.ZFAR - 2.0);
         view.add(stimulus);
 
         driver.setActionToNull(); // Action is over
