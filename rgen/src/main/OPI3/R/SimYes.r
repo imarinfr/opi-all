@@ -18,22 +18,27 @@
 # limitations under the License.
 #
 
-#' Does nothing.
+#' @title opiClose_for_SimYes
+#' @description Does nothing.
 #' @usage NULL
 #' @return A list with elements:
 #'   * \code{err} Always \code{NULL}.
 #'
 opiClose_for_SimYes <- function() list(err = NULL)
 
+#' @title opiQueryDevice_for_SimYes
+#' @description
 #' Returns name of the machine.
 #'
 #' @usage NULL
 #' @return A list with elements:
-#'   * \code{err} Always \code{NULL}.
+#'   * \code{isSim} Always \code{TRUE}.
 #'   * \code{machine} that is set to `"SimYes"`.
 #'
-opiQueryDevice_for_SimYes <- function() list(err = NULL, machine = "SimYes")
+opiQueryDevice_for_SimYes <- function() list(isSim = TRUE, machine = "SimYes")
 
+#' @title opiInitialise_for_SimYes
+#' @description
 #' Does nothing.
 #'
 #' @usage NULL
@@ -44,19 +49,24 @@ opiQueryDevice_for_SimYes <- function() list(err = NULL, machine = "SimYes")
 #'
 opiInitialise_for_SimYes <- function(...) list(err = NULL)
 
+#' @title opiSetup_for_SimYes
+#' @description
 #' Does nothing.
 #'
 #' @usage NULL
-#' @param ... Any object you like, it is ignored.
+#' @param settings Any object you like, it is ignored.
 #'
 #' @return A list with elements:
 #'   * \code{err} Always \code{NULL}.
 #'
-opiSetup_for_SimYes <- function(...) list(err = NULL)
+opiSetup_for_SimYes <- function(settings) list(err = NULL)
 
+#' @title opiPresent_for_SimYes
+#' @description
 #' Always respond 'yes' immediately to any parameter.
 #'
 #' @usage NULL
+#' @param stim Anything you like, it is ignored.
 #' @param ... Any parameters you like, they are ignored.
 #'
 #' @return A list with elements:
@@ -64,4 +74,4 @@ opiSetup_for_SimYes <- function(...) list(err = NULL)
 #'   * \code{seen} Always \code{TRUE}.
 #'   * \code{time} Always \code{NA}.
 #'
-opiPresent_for_SimYes <- function(...) list(err = NULL, seen = TRUE, time = NA)
+opiPresent_for_SimYes <- function(stim, ...) list(err = NULL, seen = TRUE, time = NA)

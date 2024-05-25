@@ -1,9 +1,10 @@
 test_that("Sims", {
-    for (m in c("SimYes", "SimNo", "SimGaussian", "SimHenson"))
-        expect_equal(
-            do.call(paste0("opiQueryDevice_for_", m), args = list()),
-            list(err = NULL, machine = m),
-            label = m)
+    for (m in c("SimYes", "SimNo", "SimGaussian", "SimHenson")) {
+        a <- do.call(paste0("opiQueryDevice_for_", m), args = list())
+        expect_named(a, c("isSim", "machine"), label = m)
+        expect_equal(a$isSim, TRUE, label = m)
+        expect_equal(a$machine, m, label = m)
+    }
 })
 
 test_that("Machines", {

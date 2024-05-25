@@ -189,7 +189,7 @@ combvec <- function(ListM){
 #'
 #' @examples
 #' chooseOpi("SimHenson")
-#' if(!is.null(opiInitialize(type="C", cap=6)))
+#' if(!is.null(opiInitialize(type="C", cap=6)$err))
 #'     stop("opiInitialize failed")
 #'
 #' #########################################################
@@ -249,13 +249,13 @@ combvec <- function(ListM){
 #'        pch = c(16, 16, 16), pt.cex = c(0, 0, 1),
 #'        horiz = TRUE, xpd = TRUE, xjust = 0)
 #'
-#' if (!is.null(opiClose()))
+#' if (!is.null(opiClose()$err))
 #'   warning("opiClose() failed")
 #'
 #'
 #'
 #' chooseOpi("SimHenson")
-#' if(!is.null(opiInitialize(type="C", cap=6)))
+#' if(!is.null(opiInitialize(type="C", cap=6)$err))
 #'     stop("opiInitialize failed")
 #'
 #' ######################################################################
@@ -322,12 +322,12 @@ combvec <- function(ListM){
 #'        horiz = FALSE, xpd = TRUE, xjust = 0)
 #' abline(v = loc$threshold, lty = "dashed")
 #'
-#' if (!is.null(opiClose()))
+#' if (!is.null(opiClose()$err))
 #'   warning("opiClose() failed")
 #'
 #'
 #' chooseOpi("SimHenson")
-#' if(!is.null(opiInitialize(type="C", cap=6)))
+#' if(!is.null(opiInitialize(type="C", cap=6)$err))
 #'   stop("opiInitialize failed")
 #'
 #' #########################################################
@@ -385,6 +385,7 @@ combvec <- function(ListM){
 #' }
 #'
 #'
+#' \dontrun{
 #' set.seed(111)
 #' #QUEST+ - takes some time to calculate likelihoods
 #' QP <- QUESTP(Fun = pSeen,
@@ -397,7 +398,6 @@ combvec <- function(ListM){
 #'              ttHelper=ttHelper_SS(loc), tt = 30,
 #'              fpr=loc$fpr, fnr=loc$fnr,
 #'              verbose = 2)
-#'
 #' #Stimulus sizes
 #' G <- log10(c(pi*(0.1/2)^2, pi*(0.21/2)^2, pi*(0.43/2)^2, pi*(0.86/2)^2, pi*(1.72/2)^2));
 #' SizesP <- seq(min(G), max(G), .05)
@@ -417,7 +417,8 @@ combvec <- function(ListM){
 #'        pch = c(16, 16, 16), pt.cex = c(0, 0, 1),
 #'        horiz = TRUE, xpd = TRUE, xjust = 0)
 #'
-#' if (!is.null(opiClose()))
+#' }
+#' if (!is.null(opiClose()$err))
 #'   warning("opiClose() failed")
 #'
 #' @export

@@ -85,7 +85,7 @@ if (exists(".opi_env") && !exists("Compass", where = .opi_env)) {
 #'   if (is.null(result$err))
 #'     print(result$prl)
 #' }
-opiInitialize_for_Compass <- function(ip = "192.168.1.2", port = 44965) {
+opiInitialise_for_Compass <- function(ip = "192.168.1.2", port = 44965) {
     cat("Looking for server... ")
     suppressWarnings(tryCatch(
         v <- socketConnection(host = ip, port,
@@ -133,7 +133,7 @@ opiInitialize_for_Compass <- function(ip = "192.168.1.2", port = 44965) {
 #'
 #' @usage NULL
 #'
-#' @param \code{stim} A list of stimulus parameters (see Details).
+#' @param stim A list of stimulus parameters (see Details).
 #' @param nextStim Unused - included for compliance with OPI standard.
 #'
 #' @return A list containing:
@@ -254,7 +254,7 @@ opiPresent_for_Compass <- function(stim, nextStim = NULL) {
 #'
 #' @usage NULL
 #'
-#' @param \code{fixation} \code{c(x,y,t)} where
+#' @param fixation \code{c(x,y,t)} where
 #'   * \code{x} is one of -20, -6, -3, 0, 3, 6, 20 degrees.
 #'   * \code{y} is 0 degrees.
 #'   * \code{t} is 0 for a spot fixation marker at \code{c(x,y)}, or 1 for a

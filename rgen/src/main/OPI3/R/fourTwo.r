@@ -100,7 +100,7 @@ require(utils)
 #'   return(s)
 #' }
 #' chooseOpi("SimHenson")
-#' if (!is.null(opiInitialize(type="C", cap=6)))
+#' if (!is.null(opiInitialize(type="C", cap=6)$err))
 #'   stop("opiInitialize failed")
 #'
 #' ##############################################
@@ -137,7 +137,7 @@ require(utils)
 #'       cat(sprintf("has threshold %4.2f\n", finals[[i]]))
 #' }
 #'
-#' if (!is.null(opiClose()))
+#' if (!is.null(opiClose()$err))
 #'   warning("opiClose() failed")
 #' @export
 fourTwo.start <- function(est = 25, instRange = c(0,40), verbose = FALSE, makeStim, ...) {

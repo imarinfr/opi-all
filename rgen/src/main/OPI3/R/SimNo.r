@@ -17,6 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#' @title opiClose_for_SimNo
+#' @description
 #' Does nothing.
 #' @usage NULL
 #' @return A list with elements:
@@ -25,15 +27,19 @@
 #'
 opiClose_for_SimNo <- function() list(err = NULL)
 
+#' @title opiQueryDevice_for_SimNo
+#' @description
 #' Returns name of the machine.
 #' @usage NULL
 #'
 #' @return A list with elements:
-#'   * \code{err} Always \code{NULL}.
 #'   * \code{machine} that is set to `"SimNo"`.
+#'   * \code{isSim} that is set to TRUE.
 #'
-opiQueryDevice_for_SimNo <- function() list(err = NULL, machine = "SimNo")
+opiQueryDevice_for_SimNo <- function() list(isSim = TRUE, machine = "SimNo")
 
+#' @title opiInitialise_for_SimNo
+#' @description
 #' Does nothing.
 #'
 #' @usage NULL
@@ -44,20 +50,25 @@ opiQueryDevice_for_SimNo <- function() list(err = NULL, machine = "SimNo")
 #'
 opiInitialise_for_SimNo <- function(...) list(err = NULL)
 
+#' @title opiSetup_for_SimNo
+#' @description
 #' Does nothing.
 #'
 #' @usage NULL
-#' @param ... Any object you like, it is ignored.
+#' @param settings Anything you like, it is ignored.
 #'
 #' @return A list with elements:
 #'   * \code{err} Always \code{NULL}.
 #'
-opiSetup_for_SimNo <- function(...) list(err = NULL)
+opiSetup_for_SimNo <- function(settings) list(err = NULL)
 
+#' @title opiPresent_for_SimNo
+#' @description
 #' Always respond 'not seen' to any parameter.
 #' No checking is done on the validity of `stim`.
 #'
 #' @usage NULL
+#' @param stim Anything you like, it is ignored.
 #' @param ... Any parameters you like, they are ignored.
 #'
 #' @return A list with elements:
@@ -65,4 +76,4 @@ opiSetup_for_SimNo <- function(...) list(err = NULL)
 #    * \code{seen} Always \code{FALSE}.
 #'   * \code{time} Always \code{NA}.
 #'
-opiPresent_for_SimNo <- function(...) list(err = NULL, seen = FALSE, time = NA)
+opiPresent_for_SimNo <- function(stim, ...) list(err = NULL, seen = FALSE, time = NA)

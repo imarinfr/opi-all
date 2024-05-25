@@ -21,7 +21,8 @@
 
 require(stats)
 
-#'
+#' @title opiInitialize_for_SimGaussian
+#' @description
 #' Simulates responses using a Frequency of Seeing (FoS) curve.
 #'
 #' The FoS is modelled as a cumulative Gaussian function with standard deviation
@@ -62,6 +63,8 @@ opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
     return(list(err = NULL))
 }
 
+#' @title opiPresent_for_SimGaussian
+#' @description
 #' Determine the response to a stimuli by sampling from a cumulative Gaussian
 #' Frequency-of-Seeing (FoS) curve (also known as the psychometric function).
 #'
@@ -72,6 +75,7 @@ opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
 #' are parameters.
 #'
 #' This is for internal use only, use [opiPresent()].
+#'
 #' @usage NULL
 #'
 #' @param stim A list that contains at least:
@@ -120,7 +124,8 @@ opiPresent_for_SimGaussian <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ..
     ))
 }
 
-#' Does nothing.
+#' @title opiClose_for_SimGaussian
+#' @description Does nothing.
 #' @usage NULL
 #'
 #' @return A list with elements:
@@ -129,17 +134,20 @@ opiPresent_for_SimGaussian <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ..
 #'
 opiClose_for_SimGaussian <- function() list(err = NULL)
 
-#' Returns a simple list.
+#' @title opiQueryDevice_for_SimGaussian
+#' @description Returns a simple list.
 #' @usage NULL
 #'
 #' @return A list with elements:
 #'   * \code{err} Always \code{NULL}
 #'   * \code{machine} that is set to `"SimGaussian"`.
 #'
-opiQueryDevice_for_SimGaussian <- function() list(err = NULL, machine = "SimGaussian")
+opiQueryDevice_for_SimGaussian <- function() list(isSim = TRUE, machine = "SimGaussian")
 
-#' Does nothing.
+#' @title opiSetup_for_SimGaussian
+#' @description Does nothing.
 #'
+#' @usage NULL
 #' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:

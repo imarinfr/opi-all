@@ -25,12 +25,12 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 
 #' Implementation of opiInitialise for the PicoVR machine.
 #'
-#' This is for internal use only. Use [opiInitialise()] with
-#' these Arguments and you will get the Value back.
+#' This is for internal use only. Use [opiInitialise()] after
+#' \code{chooseOPI("PicoVR")} to call this function.
 #'
 #' @usage NULL
 #'
-#' @param \code{address} A list containing:
+#' @param address A list containing:
 #'  * \code{port} TCP port of the OPI Monitor.
 #'  * \code{ip} IP Address of the OPI Monitor.
 
@@ -45,7 +45,7 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 #' \code{port} can take on values in the range \code{[0, 65535]}.
 #'
 #' @examples
-#' chooseOpi(PicoVR)
+#' chooseOpi("PicoVR")
 #' result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
 #'
 #' @seealso [opiInitialise()]
@@ -91,12 +91,12 @@ opiInitialise_for_PicoVR <- function(address) {
 
 #' Implementation of opiSetup for the PicoVR machine.
 #'
-#' This is for internal use only. Use [opiSetup()] with
-#' these Arguments and you will get the Value back.
+#' This is for internal use only. Use [opiSetup()] after
+#' \code{chooseOPI("PicoVR")} to call this function.
 #'
 #' @usage NULL
 #'
-#' @param \code{settings} A list containing:
+#' @param settings A list containing:
 #'  * \code{eye} The eye for which to apply the settings.
 #'  * \code{bgImageFilename} (Optional) If present, display the image in the background for eye
 #'  * \code{fixShape} (Optional) Fixation target type for eye.
@@ -156,8 +156,8 @@ opiInitialise_for_PicoVR <- function(address) {
 #' \code{fixRotation} can take on values in the range \code{[0.0, 360.0]}.
 #'
 #' @examples
-#' chooseOpi(PicoVR)
-#' opiInitialise(port = 50001, ip = "localhost")
+#' chooseOpi("PicoVR")
+#' opiInitialise(list(port = 50001, ip = "localhost"))
 #' result <- opiSetup(settings = list(eye = "BOTH"))
 #'
 #' @seealso [opiSetup()]
@@ -198,14 +198,12 @@ opiSetup_for_PicoVR <- function(settings) {
 
 #' Implementation of opiQueryDevice for the PicoVR machine.
 #'
-#' This is for internal use only. Use [opiQueryDevice()] with
-#' these Arguments and you will get the Value back.
+#' This is for internal use only. Use [opiQueryDevice()] after
+#' \code{chooseOPI("PicoVR")} to call this function.
 #'
 #' @usage NULL
 #'
-#' @param \code{} A list containing:
-
-
+#'
 #'
 #' @return A list containing:
 #'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
@@ -215,9 +213,9 @@ opiSetup_for_PicoVR <- function(settings) {
 #'
 #'
 #' @examples
-#' chooseOpi(PicoVR)
-#' opiInitialise(port = 50001, ip = "localhost")
-#' opiSetup(eye = "BOTH")
+#' chooseOpi("PicoVR")
+#' opiInitialise(list(port = 50001, ip = "localhost"))
+#' opiSetup(list(eye = "BOTH"))
 #' result <- opiQueryDevice()
 #'
 #' @seealso [opiQueryDevice()]
@@ -257,12 +255,12 @@ opiQueryDevice_for_PicoVR <- function() {
 
 #' Implementation of opiPresent for the PicoVR machine.
 #'
-#' This is for internal use only. Use [opiPresent()] with
-#' these Arguments and you will get the Value back.
+#' This is for internal use only. Use [opiPresent()] after
+#' \code{chooseOPI("PicoVR")} to call this function.
 #'
 #' @usage NULL
 #'
-#' @param \code{stim} A list containing:
+#' @param stim A list containing:
 #'  * \code{lum} List of stimuli luminances (cd/m^2).
 #'  * \code{stim.length} The number of elements in this stimuli.
 #'  * \code{color1} List of stimulus colors for FLAT shapes and patterns.
@@ -302,7 +300,7 @@ opiQueryDevice_for_PicoVR <- function() {
 #'                    useful if type != FLAT.
 #'  * \code{optotype} (Optional) If shape == OPTOTYPE, the letter A to Z to use
 #'
-#' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
+#' @param ... Parameters for other opiPresent implementations that are ignored here.
 #'
 #' @return A list containing:
 #'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
@@ -379,9 +377,9 @@ opiQueryDevice_for_PicoVR <- function() {
 #'                      "u", "v", "w", "x", "y", "z"}}.
 #'
 #' @examples
-#' chooseOpi(PicoVR)
-#' opiInitialise(port = 50001, ip = "localhost")
-#' opiSetup(eye = "BOTH")
+#' chooseOpi("PicoVR")
+#' opiInitialise(list(port = 50001, ip = "localhost"))
+#' opiSetup(list(eye = "BOTH"))
 #' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(1.0,
 #'                   1.0, 1.0)), sx = list(1.72), sy = list(1.72),
 #'                   eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
@@ -424,14 +422,12 @@ opiPresent_for_PicoVR <- function(stim, ...) {
 
 #' Implementation of opiClose for the PicoVR machine.
 #'
-#' This is for internal use only. Use [opiClose()] with
-#' these Arguments and you will get the Value back.
+#' This is for internal use only. Use [opiClose()] after
+#' \code{chooseOPI("PicoVR")} to call this function.
 #'
 #' @usage NULL
 #'
-#' @param \code{} A list containing:
-
-
+#'
 #'
 #' @return A list containing:
 #'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
@@ -441,9 +437,9 @@ opiPresent_for_PicoVR <- function(stim, ...) {
 #'
 #'
 #' @examples
-#' chooseOpi(PicoVR)
-#' opiInitialise(port = 50001, ip = "localhost")
-#' opiSetup(eye = "BOTH")
+#' chooseOpi("PicoVR")
+#' opiInitialise(list(port = 50001, ip = "localhost"))
+#' opiSetup(list(eye = "BOTH"))
 #' result <- opiClose()
 #'
 #' @seealso [opiClose()]

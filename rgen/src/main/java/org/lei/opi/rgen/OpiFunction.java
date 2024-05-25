@@ -243,18 +243,21 @@ public class OpiFunction {
     *   - Indicate if a parameter is optional
      */
     private String makeDocumentation(String opiInitialiseCallingExample, String opiSetupCallingExample) {
-        String params = "#' @param \\code{" + this.opiInputFieldName + "} A list containing:\n" + 
-            methodData.parameters.values().stream()  // non-optional parameters
-            .filter((Parameter p) -> !p.optional())
-            .map(prettyParam)
-            .collect(Collectors.joining("\n")) +
-            "\n" +
-            methodData.parameters.values().stream()  // optional parameters
-            .filter((Parameter p) -> p.optional())
-            .map(prettyParam)
-            .collect(Collectors.joining("\n"));
-        if (this.addOtherParams)
-            params += String.format("\n#'\n#' @param \\code{...} Parameters for other %s implementations that are ignored here.", this.opiName);
+        String params = "";
+        if (methodData.parameters().size() > 0) {
+            params = "#' @param " + this.opiInputFieldName + " A list containing:\n" + 
+                methodData.parameters.values().stream()  // non-optional parameters
+                .filter((Parameter p) -> !p.optional())
+                .map(prettyParam)
+                .collect(Collectors.joining("\n")) +
+                "\n" +
+                methodData.parameters.values().stream()  // optional parameters
+                .filter((Parameter p) -> p.optional())
+                .map(prettyParam)
+                .collect(Collectors.joining("\n"));
+            if (this.addOtherParams)
+                params += String.format("\n#'\n#' @param ... Parameters for other %s implementations that are ignored here.", this.opiName);
+        }
 
         String returnMsgDoc = 
             methodData.returnMsgs.values().stream()
@@ -270,17 +273,17 @@ public class OpiFunction {
         );
 
             // might need chooseOpi, opiInitialise and opiSetup
-        String examplePreamble = String.format("#' chooseOpi(%s)", machineName);
+        String examplePreamble = String.format("#' chooseOpi(\"%s\")", machineName);
         if (opiInitialiseCallingExample != null) 
-            examplePreamble += String.format("\n#' opiInitialise(%s)", opiInitialiseCallingExample);
+            examplePreamble += String.format("\n#' opiInitialise(list(%s))", opiInitialiseCallingExample);
         if (opiSetupCallingExample != null) 
-            examplePreamble += String.format("\n#' opiSetup(%s)", opiSetupCallingExample);
+            examplePreamble += String.format("\n#' opiSetup(list(%s))", opiSetupCallingExample);
 
         return String.format("""
 #' Implementation of %s for the %s machine.
 #'
-#' This is for internal use only. Use [%s()] with
-#' these Arguments and you will get the Value back.
+#' This is for internal use only. Use [%s()] after
+#' \\code{chooseOPI("%s")} to call this function.
 #'
 #' @usage NULL
 #'
@@ -298,7 +301,7 @@ public class OpiFunction {
 #'
     """,
     this.opiName, machineName, // title
-    this.opiName, // Use...
+    this.opiName, machineName, // Use...
     params.length() > 0 ? params : "#'", // @params
     rets,           //@return
     makeDetails(),

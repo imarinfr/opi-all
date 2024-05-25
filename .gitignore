@@ -4,3 +4,5 @@ target
 doc
 OPI_3.0.0.tar.gz
 rgen/src/main/OPI3.Rcheck
+rgen/src/main/OPI3/man
+rgen/src/main/OPI3_3.0.0.tar.gz

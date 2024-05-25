@@ -75,8 +75,8 @@ public abstract class OpiMachine {
     static final String BAD_TYPE2 = "I cannot convert the value for parameter '%s' in %s to the class %s in %s.";
     /** {@value NOT_LIST} */
     static final String NOT_LIST = "Parameter '%s' should be a non-empty list but it is not for function '%s' in %s.";
-    /** {@value NOT_LISTLIST} */
-    static final String NOT_LISTLIST = "Parameter '%s' should be a non-empty list of non-empty lists but it is not for function '%s' in %s.";
+    /** {@value NOT_LIST_OF_LIST} */
+    static final String NOT_LIST_OF_LIST = "Parameter '%s' should be a non-empty list of non-empty lists but it is not for function '%s' in %s.";
     /** {@value YES_LIST} */
     static final String YES_LIST = "Parameter '%s' should not be a list but it is for function '%s' in %s.";
     /** {@value NOT_IN_ENUM} */
@@ -530,7 +530,7 @@ public abstract class OpiMachine {
                 return Packet.error(String.format(YES_LIST, param.name(), funcName, this.getClass()));
             if (param.isListList() &&
                 ((ArrayList<?>) valueObj).stream().anyMatch(val -> !(val instanceof ArrayList) || ((ArrayList<?>) val).size() == 0))
-                    return Packet.error(String.format(NOT_LISTLIST, param.name(), funcName, this.getClass()));
+                    return Packet.error(String.format(NOT_LIST_OF_LIST, param.name(), funcName, this.getClass()));
 
                 // For convenience, let's stick all types (list, listlist, not) into a simple list.
                 // so we can just iterate over it to check each element.

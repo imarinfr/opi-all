@@ -11,7 +11,7 @@ test_that("Machines", {
     }
 
     assign("socket", file(nullfile()), envir = .opi_env$O900)
-    expect_equal(opiClose_for_Octopus900(), NULL)
+    expect_equal(opiClose_for_Octopus900(), list(err = NULL), label = "Octopus900")
 
     #assign("socket", file(nullfile(), raw = TRUE), envir = .opi_env$Compass)
     #expect_warning(a <- opiClose_for_Compass())

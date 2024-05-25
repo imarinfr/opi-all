@@ -27,11 +27,11 @@ assign("machine_list", list(
     # "Jovp",  Not needed as a standalone, use subclasses: Display, ...
     #"Icare",  Not needed as a standalone, use subclasses: O900, O600
     # "O600",  Never really supported?
-    #"Compass",  TODO
+    "Compass",
     "ImoVifa",
     # "Kowa",   TODO
-    #"Maia",  TODO
-    #"O900",  TODO
+    #"Maia",  TODO?
+    "Octopus900",
     "SimNo",
     "SimYes",
     "SimHenson",
@@ -77,21 +77,21 @@ chooseOpi <- chooseOPI
 
 #' opiInitialise that calls opiInitialise_for_MACHINE as appropriate.
 #'
-#' Establishes connection with the deivce and a Monitor (aka Server) if appropriate.
-#' Sends any startup prameters that might be needed by the machine.
-#' Specific paramters and return values can be seen in the machine specific versions
+#' Establishes connection with the device and a Monitor (aka Server) if appropriate.
+#' Sends any startup parameters that might be needed by the machine.
+#' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
 #' @param ... Parameters specific to each machine as described in the 'See Also' functions.
 #'
-#' @seealso 
+#' @seealso
 #' [opiInitialise_for_ImoVifa()],
 #' [opiInitialise_for_PhoneHMD()], [opiInitialise_for_Display()], [opiInitialise_for_PicoVR()],
-# [opiInitialise_for_O900()], 
-# [opiInitialise_for_Compass()], 
-# [opiInitialise_for_Kowa()], [opiInitialise_for_O900()],
+#' [opiInitialise_for_Octopus900()],
+#' [opiInitialise_for_Compass()],
 #' [opiInitialise_for_SimNo()], [opiInitialise_for_SimYes()], [opiInitialise_for_SimHenson()],
 #' [opiInitialise_for_SimGaussian()]
+#  [opiInitialise_for_Kowa()],
 #' @export
 opiInitialise <- function(...) {
     if (is.null(.opi_env$chosen_machine))
@@ -107,12 +107,12 @@ opiInitialize <- opiInitialise
 #' opiQueryDevice that calls opiQueryDevice_for_MACHINE as appropriate.
 #'
 #' Returns a list that describes the current state of the machine.
-#' Specific paramters and return values can be seen in the machine specific versions
+#' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
 #' @seealso [opiQueryDevice_for_ImoVifa()],
-# [opiQueryDevice_for_Compass()], 
-# [opiQueryDevice_for_O900()], 
+#' [opiQueryDevice_for_Compass()],
+#' [opiQueryDevice_for_Octopus900()],
 # [opiQueryDevice_for_Kowa()], [opiQueryDevice_for_O600()],
 #' [opiQueryDevice_for_PhoneHMD()], [opiQueryDevice_for_Display()], [opiQueryDevice_for_PicoVR()],
 #' [opiQueryDevice_for_SimNo()], [opiQueryDevice_for_SimYes()], [opiQueryDevice_for_SimHenson()],
@@ -128,14 +128,14 @@ opiQueryDevice <- function() {
 #' opiSetup that calls opiSetup_for_MACHINE as appropriate.
 #'
 #' Returns a JSON object that describes the current state of the machine.
-#' Specific paramters and return values can be seen in the machine specific versions
+#' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
 #' @param settings A list containing the same names as that returned by {@link opi_queryDevice}.
 #'
 #' @seealso 
-# [opiSetup_for_Compass()],
-# [opiSetup_for_O900()],
+#' [opiSetup_for_Compass()],
+#' [opiSetup_for_Octopus900()],
 # [opiSetup_for_Kowa()], [opiSetup_for_O600()],
 #' [opiSetup_for_ImoVifa()],
 #' [opiSetup_for_PhoneHMD()], [opiSetup_for_Display()], [opiSetup_for_PicoVR()],
@@ -149,20 +149,20 @@ opiSetup <- function(settings) {
     return(do.call(paste0("opiSetup_for_", .opi_env$chosen_machine), list(settings)))
 }
 
-#' opiClose that calls opiSetup_for_MACHINE as appropriate.
+#' opiClose that calls opiClose_for_MACHINE as appropriate.
 #'
 #' Returns a JSON object that describes the current state of the machine.
-#' Specific paramters and return values can be seen in the machine specific versions
+#' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
 #' @seealso 
-# [opiClose_for_Compass()], 
-# [opiClose_for_O900()],
+#' [opiClose_for_Compass()],
+#' [opiClose_for_Octopus900()],
 #' [opiClose_for_ImoVifa()],
-# [opiClose_for_Kowa()], [opiClose_for_O600()],
 #' [opiClose_for_PhoneHMD()], [opiClose_for_Display()], [opiClose_for_PicoVR()],
 #' [opiClose_for_SimNo()], [opiClose_for_SimYes()], [opiClose_for_SimHenson()],
 #' [opiClose_for_SimGaussian()]
+# [opiClose_for_Kowa()], [opiClose_for_O600()],
 #' @export
 opiClose <- function() {
     if (is.null(.opi_env$chosen_machine))
@@ -181,13 +181,13 @@ opiClose <- function() {
 #' @param ...  Other arguments that might be needed by each machine in the 'See Also' methods.
 #'
 #' @seealso 
-# [opiPresent_for_Compass()],
-# [opiPresent_for_O900()],
-# [opiPresent_for_Kowa()], [opiPresent_for_O600()],
+#' [opiPresent_for_Compass()],
+#' [opiPresent_for_Octopus900()],
 #' [opiPresent_for_ImoVifa()],
 #' [opiPresent_for_PhoneHMD()], [opiPresent_for_Display()], [opiPresent_for_PicoVR()],
 #' [opiPresent_for_SimNo()], [opiPresent_for_SimYes()], [opiPresent_for_SimHenson()],
 #' [opiPresent_for_SimGaussian()]
+# [opiPresent_for_Kowa()], [opiPresent_for_O600()],
 #' @export
 opiPresent <- function(stim, ...) {
     if (is.null(.opi_env$chosen_machine))
@@ -210,7 +210,8 @@ opiSetBackground <- function(...) {
 }
 
 #'
-#' Open a socket on ip and port. 
+#' @title Open a socket on ip and port.
+#' @description Internal use only.
 #'
 #' @param ip IP address of socket
 #' @param port TCP port of socket

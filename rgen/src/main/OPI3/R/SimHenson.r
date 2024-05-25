@@ -21,24 +21,30 @@
 
 require(stats)
 
-#' Does nothing.
+#' @title opiClose_for_SimHenson
+#' @description Does nothing.
 #' @usage NULL
 #' @return A list with elements:
 #'   * \code{err} Always \code{NULL}.
 #'
 opiClose_for_SimHenson <- function() list(err = NULL)
 
+#' @title opiQueryDevice_for_SimHenson
+#' @description
 #' Returns name of the machine.
 #' @usage NULL
 #'
 #' @return A list with elements:
-#'   * \code{err} Always \code{NULL}.
+#'   * \code{isSim} Always \code{TRUE}.
 #'   * \code{machine} that is set to `"SimHenson"`.
 #'
-opiQueryDevice_for_SimHenson <- function() list(err = NULL, machine = "SimHenson")
+opiQueryDevice_for_SimHenson <- function() list(isSim = TRUE, machine = "SimHenson")
 
-#'
+#' @title opiInitialise_for_SimHenson
+#' @description
 #' Simulates responses using a Frequency of Seeing (FoS) curve.
+#'
+#' For internal use only, use `opiInitialize()`.
 #'
 #' The FoS is modelled as a cumulative Gaussian function over dB with
 #' standard deviation equal to `min(cap, exp( A * t + B))`, where
@@ -46,6 +52,7 @@ opiQueryDevice_for_SimHenson <- function() list(err = NULL, machine = "SimHenson
 #' All values are in dB relative to `maxStim`.
 #'
 #' @usage NULL
+#'
 #' @param type A single character that is:
 #'   *  `N` for using the A and B values from the Normals in Henson et al (2000)
 #'   *  `G` for using the A and B values from the Glaucomas in Henson et al (2000)
@@ -107,7 +114,10 @@ opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 
     return(list(err = NULL))
 }
 
+#' @title opiSetup_for_SimHenson
+#' @description
 #' Does nothing.
+#' For internal use only, use `opiSetup()`.
 #' @usage NULL
 #'
 #' @param ... Any object you like, it is ignored.
@@ -117,8 +127,12 @@ opiInitialise_for_SimHenson <- function(type = "C", A = -0.081, B = 3.27, cap = 
 #'
 opiSetup_for_SimHenson <- function(...) list(err = NULL)
 
+#' @title opiPresent_for_SimHenson
+#' @description
 #' Determine the response to a stimuli by sampling from a cumulative Gaussian
 #' Frequency-of-Seeing (FoS) curve (also known as the psychometric function).
+#'
+#' For internal use only, use `opiPresent()`.
 #'
 #' The FoS formula is
 #' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, \mbox{pxVar})}

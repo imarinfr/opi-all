@@ -26,9 +26,10 @@
 
 
 #' @rdname KTPsi
-#' @title KTPsi
-#' @description An implementation of
-#'     Kontsevich and Tyler (Vis Res 39 (1999) pages 2729--2737
+#' @title An implementation of Kontsevich and Tyler \eqn{\Psi} algorithm.
+#'
+#' @description
+#' An implementation of Kontsevich and Tyler (Vis Res 39 (1999) pages 2729--2737
 #' default parameterised for Standard Automated Perimetry.
 #' based on
 #'     A. Turpin, D. Jankovic and A.M. McKendrick,
@@ -47,6 +48,8 @@
 #'  \item{\code{fps}: The prior probability vector for \code{domains$fps}.}
 #'  \item{\code{fns}: The prior probability vector for \code{domains$fns}.}
 #' }
+#'   Each prior should the same length as its `domains` counterpart and sum to 1.
+#'
 #' @param stimValues Vector of allowable stimulus values.
 #' @param stopType \code{N}, for number of presentations and \code{H}, for the entropy  of the pdf.
 #' @param stopValue Value for number of presentations (\code{stopType=N}), or Entropy (\code{stopType=H}).
@@ -57,10 +60,19 @@
 #' @param maxInterStimInterval \code{minInterStimInterval}.
 #' @param verbose \code{verbose=0} does nothing, \code{verbose=1} stores pdfs for returning,
 #'   and \code{verbose=2} stores pdfs and also prints each presentation.
-#' @param makeStim A function that takes a dB value and numPresentations and returns an OPI datatype
+#' @param makeStim A function that takes a stimulus value and numPresentations and returns an OPI datatype
 #' ready for passing to opiPresent. See examples.
 #' @param ... Extra parameters to pass to the opiPresent function
+#'
 #' @details
+#' The assumed psychometric function is the cumulative Gaussian:
+#' \deqn{\mbox{fp}+(1-\mbox{fp}-\mbox{fn})(1-\mbox{pnorm}(x, \mbox{threshold}, \mbox{slope})}
+#' hence `domain$slopes` are standard deviations and `domain$thresholds` are the mean.
+#'
+#' While it is assumed that `domains$thresholds` and `stimValues` are in dB, this need not be the case.
+#' As long as the `makeStim` function converts `stimValues` into cd/\eqn{\mbox{m}^2}{m^2}
+#' for the `opiPresent` function, then any units should work.
+#'
 #' The \code{checkFixationOK} function is called (if present in stim made from \code{makeStim})
 #' after each presentation, and if it returns FALSE, the pdf for that state is not changed
 #' (ie the presentation is ignored), but the stim, number of presentations etc is recorded in
@@ -71,6 +83,7 @@
 #' the state of the KTPsi after each presentation, and should be used. If only a single KTPsi is
 #' required, then the simpler \code{KTPsi} function can be used, which is a wrapper for the four functions
 #' that maintain state. See examples below.
+#'
 #' @return
 #' \subsection{Single location}{
 #'   \code{KTPsi} returns a list containing
@@ -101,7 +114,7 @@
 #'               for the domain index \code{domain_index}.}
 #'     \item{labels:}{ A text representation of \code{psi[domain_index, ]}, or the the
 #'               psychometric function for the domain index \code{domain_index}.}
-#'     \item{pdf:}{ Current pdf: vector of probabilities the same length as product of lengths of 
+#'     \item{pdf:}{ Current pdf: vector of probabilities the same length as product of lengths of
 #'          \code{domain} elements.}
 #'     \item{numPresentations:}{ The number of times \code{KTPsi.step} has been called on this state.}
 #'     \item{stimuli:}{ A vector containing the stimuli used at each call of \code{KTPsi.step}.}
@@ -119,7 +132,7 @@
 #'   }
 #'   \code{KTPsi.stop} returns \code{TRUE} if the KTPsi has reached its stopping criteria, and
 #'     \code{FALSE} otherwise.
-#'   \code{KTPsi.final} returns an estimate of threshold based on state based on its paramter. 
+#'   \code{KTPsi.final} returns an estimate of threshold based on state based on its parameter.
 #' }
 #' @references
 #' Kontsevich and Tyler. Vision Research 39 (1999) pages 2729--2737.
@@ -131,13 +144,14 @@
 #' A. Turpin, P.H. Artes and A.M. McKendrick "The Open Perimetry Interface: An enabling tool for
 #' clinical visual psychophysics", Journal of Vision 12(11) 2012.
 #' @seealso \code{\link{dbTocd}}, \code{\link{opiPresent}}
+#'
 #' @examples
 #' chooseOpi("SimGaussian")
 #' if(!is.null(opiInitialize(sd = 2)$err))
 #'   stop("opiInitialize failed")
 #'
-#' # This section is for single location KTPsi
-#' # Stimulus is Size III white-on-white as in the HFA
+#'      # This section is for single location KTPsi
+#'      # Stimulus is Size III white-on-white as in the HFA
 #' makeStim <- function(db, n) {
 #'   s <- list(x=9, y=9, level=dbTocd(db), size=0.43, color="white",
 #'             duration=200, responseWindow=1500, checkFixationOK=NULL)
@@ -146,7 +160,17 @@
 #' }
 #'
 #' KTPsi(makeStim = makeStim, stopType="H", stopValue=  3, tt=30, fpr=0.03)
-#' KTPsi(makeStim = makeStim, stopType="N", stopValue= 27, verbose = 2, tt=30, fpr=0.03)
+#' KTPsi(makeStim = makeStim, stopType="N", stopValue= 27, verbose = 0, tt=30, fpr=0.03)
+#'
+#'      # For multiple locations...
+#' states <- lapply(1:10, function(loc) KTPsi.start(makeStim = makeStim))
+#' unfinished <- 1:10
+#' while (length(unfinished) > 0) {
+#'      loc <- unfinished[[1]]
+#'      states[[loc]] <- KTPsi.step(states[[loc]])$state
+#'      if (KTPsi.stop(states[[loc]]))
+#'          unfinished <- unfinished[-1]
+#' }
 #'
 #' @export
 KTPsi <- function(
@@ -235,7 +259,7 @@ KTPsi.start <- function(
         if (!n %in% names(priors))
             stop(sprintf("KTPsi priors list parameter does not contain %s", n))
         if (length(domains[[n]]) != length(priors[[n]]))
-            stop(sprintf("KTPsi parameter priors$%s (%s) is not the same length as domains$%s (%s)", 
+            stop(sprintf("KTPsi parameter priors$%s (%s) is not the same length as domains$%s (%s)",
                 n, length(priors[[n]]), n, length(domains[[n]])))
     }
 
@@ -284,10 +308,9 @@ KTPsi.start <- function(
 
 
 #' @rdname KTPsi
-#' @param state Current state of the KTPsi as returned by \code{KTPsi.start}.
-#' @param nextStim A valid object for \code{opiPresent} to use as its \code{nextStim}.
-#' @param fixedStimValue A number in \code{state$stimValues} that, is \code{!is.na}, will 
-#'                       be used as the stimulus value overriding all logic and restrictions.
+#' @param state Current state of the KTPsi as returned by (eg) \code{KTPsi.start}.
+#' @param nextStim The next stimulus to present in a suitable format for passing to \code{\link{opiPresent}}
+#' @param fixedStimValue Currently ignored.
 #' @export
 KTPsi.step <- function(state, nextStim = NULL, fixedStimValue = NA) {
         # calculate prob of a "yes" to any x \in 1:length(state$stimValues)
@@ -356,17 +379,8 @@ KTPsi.step <- function(state, nextStim = NULL, fixedStimValue = NA) {
 }
 
 #' @rdname KTPsi
-#'
-#' @param state Current state of the KTPsi as returned by \code{KTPsi.start}.
-#' @param method Can be:\itemize{
-#'     \item{\code{expectiation}}{ Final esitmate is the expected value of \code{state$domain}.}
-#'     \item{\code{MAP}}{ Final estimate is the mode (Maximum A Posteriori} of \code{state$domain} 
-#'          with smallest index taken in a tie.}
-#'
-#' @return A list containing:\itemize{
-#'     \item{res:}{ The index into \code{state$domain} that is the estimated result}
-#'     \item{desc:}{ The element of \code{state$label} corresponding to \code{res}.}
-#'   }
+#' @param state Current state of the KTPsi as returned by (eg) \code{KTPsi.start}.
+#' @param method Either \code{"expectation"} or \code{"MAP"}.
 #' @export
 KTPsi.final <- function(state, method = "expectation") {
     if (method == "expectation") {
@@ -381,6 +395,8 @@ KTPsi.final <- function(state, method = "expectation") {
 }
 
 #' @rdname KTPsi
+#' @param state Current state of the KTPsi as returned by (eg) \code{KTPsi.start}.
+#' @return TRUE if the `state` has reached its stopping criteria, and FALSE otherwise.
 #' @export
 KTPsi.stop <- function(state) {
     (state$stopType == "N" && state$numPresentations >= state$stopValue) ||
@@ -405,7 +421,7 @@ KTPsi.stop <- function(state) {
 ###
 ###res <- list()
 ###for (true_s in 1:9) {
-###    if (!is.null(opiInitialize(sd = true_s))) stop("opiInitialize failed")
+###    if (!is.null(opiInitialize(sd = true_s)$err)) stop("opiInitialize failed")
 ###
 ###    #pdf("kt_debug.pdf")
 ###    #KTPsi(makeStim = makeStim, verbose = 2, stopValue = 27, tt = 30, fnr = 0.13)
