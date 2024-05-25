@@ -29,26 +29,28 @@ require(stats)
 #' [opiPresent].
 #' All values are in dB relative to `maxStim`.
 #'
+#' This is for internal use only, use [opiInitialize()].
+#' @usage NULL
+#'
 #' @param sd Standard deviation of Cumulative Gaussian.
 #' @param maxStim The maximum stimuls value (0 dB) in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param ... Any other parameters you like, they are ignored.
 #'
 #' @return A list with elements:
-#'   * \code{error} \code{FALSE} if machine initialised, \code{TRUE} otherwise.
-#'   * \code{msg} A string message.
+#'   * \code{err} NULL if initialised, a message otherwise
 #'
 #' @examples
 #'     # Set up a simple simulation for white-on-white perimetry
 #' chooseOpi("SimGaussian")
 #' res <- opiInitialize(sd = 2.5)
-#' if (res$error)
+#' if (!is.null(res$err))
 #'   stop(paste("opiInitialize() failed:", res$msg))
 #'
 opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
     if (!is.numeric(sd) || (sd < 0)) {
         msg <- paste("Invalid standard deviation in opiInitialize for SimGaussian:", sd)
         warning(msg)
-        return(list(error = TRUE, msg = msg))
+        return(list(err = msg))
     }
 
     if (exists(".opi_env") && !exists("sim_gaussian", where = .opi_env))
@@ -57,7 +59,7 @@ opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
     assign("sd",      sd,      envir = .opi_env$sim_gaussian)
     assign("maxStim", maxStim, envir = .opi_env$sim_gaussian)
 
-    return(list(error = FALSE, msg = "Initialise OK"))
+    return(list(err = NULL))
 }
 
 #' Determine the response to a stimuli by sampling from a cumulative Gaussian
@@ -69,77 +71,78 @@ opiInitialise_for_SimGaussian <- function(sd = 1.0, maxStim = 10000 / pi, ...) {
 #' set by \code{opiInitialize} and \code{tt}, \code{fpr} and \code{fnr}
 #' are parameters.
 #'
+#' This is for internal use only, use [opiPresent()].
+#' @usage NULL
+#'
 #' @param stim A list that contains at least:
-#'   * `lum` which is the stim value in cd/\eqn{\mbox{m}^2}{m^2}.
+#'   * `level` which is the stim value in cd/\eqn{\mbox{m}^2}{m^2}.
 #' @param fpr false positive rate for the FoS curve (range 0..1).
 #' @param fnr false negative rate for the FoS curve (range 0..1).
 #' @param tt  mean of the assumed FoS curve in dB.
 #' @param ...  Any other parameters you like, they are ignored.
 #'
 #' @return A list with elements:
-#'   * \code{error} \code{TRUE} if error, \code{FALSE} otherwise.
-#'   * \code{msg} A string if \code{error} is \code{TRUE} else a list containing
-#'     * \code{seen} \code{TRUE} or \code{FALSE}.
-#'     * \code{time} Always \code{NA}.
+#'   * \code{err} \code{NULL} if no error, a string message otherwise.
+#'   * \code{seen} \code{TRUE} or \code{FALSE}.
+#'   * \code{time} Always \code{NA}.
 #'
 #' @examples
 #'     # Stimulus is Size III white-on-white as in the HFA
 #' chooseOpi("SimGaussian")
 #' res <- opiInitialize(sd = 1.6)
-#' if (res$error)
-#'   stop(paste("opiInitialize() failed:", res$msg))
+#' if (!is.null(res$err))
+#'   stop(paste("opiInitialize() failed:", res$err))
 #'
-#' result <- opiPresent(stim = list(lum = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01)
-#' print(paste("Seen:", result$msg$seen, quote = FALSE))
+#' result <- opiPresent(stim = list(level = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01)
+#' print(paste("Seen:", result$seen, quote = FALSE))
 #'
 #' res <- opiClose()
-#' if (res$error)
-#'   warning(paste("opiClose() failed:", res$msg))
+#' if (!is.null(res$err))
+#'   warning(paste("opiClose() failed:", res$err))
 #'
 opiPresent_for_SimGaussian <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, ...) {
     if (!exists(".opi_env") || !exists("sim_gaussian", where = .opi_env))
-        return(list(error = TRUE, msg = "You have not called opiInitialise."))
+        return(list(err = "You have not called opiInitialise."))
 
-    if (is.null(stim) || ! "lum" %in% names(stim))
-        return(list(error = TRUE, msg = "'stim' should be a list with a name 'lum'. stim$lum is the cd/m^2 to present."))
+    if (is.null(stim) || ! "level" %in% names(stim))
+        return(list(err = "'stim' should be a list with a name 'level'. stim$level is the cd/m^2 to present."))
 
     px_var <- .opi_env$sim_gaussian$sd
 
-    level <- cdTodb(stim$lum, .opi_env$sim_gaussian$maxStim)
+    level <- cdTodb(stim$level, .opi_env$sim_gaussian$maxStim)
 
     pr_seeing <- fpr + (1 - fpr - fnr) * (1 - stats::pnorm(level, mean = tt, sd = px_var))
 
     return(list(
-        error = FALSE,
-        msg = list(
-            seen = stats::runif(1) < pr_seeing,
-            time = NA
-        )
+        err = NULL,
+        seen = stats::runif(1) < pr_seeing,
+        time = NA
     ))
 }
 
 #' Does nothing.
+#' @usage NULL
 #'
 #' @return A list with elements:
 #'   * \code{error} Always \code{FALSE}.
 #'   * \code{msg} A string "Close OK".
 #'
-opiClose_for_SimGaussian <- function() list(error = FALSE, msg = "Close OK")
+opiClose_for_SimGaussian <- function() list(err = NULL)
 
 #' Returns a simple list.
+#' @usage NULL
 #'
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A list containing \code{machine} that is set to `"SimGaussian"`.
+#'   * \code{err} Always \code{NULL}
+#'   * \code{machine} that is set to `"SimGaussian"`.
 #'
-opiQueryDevice_for_SimGaussian <- function() list(error = FALSE, msg = list(machine = "SimGaussian"))
+opiQueryDevice_for_SimGaussian <- function() list(err = NULL, machine = "SimGaussian")
 
 #' Does nothing.
 #'
 #' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A string "All setup!"
+#'   * \code{err} Always \code{NULL}.
 #'
-opiSetup_for_SimGaussian <- function(...) list(error = FALSE, msg = "All setup!")
+opiSetup_for_SimGaussian <- function(...) list(err = NULL)

@@ -36,9 +36,7 @@ if (exists(".opi_env") && !exists("Display", where = .opi_env))
 
 #'
 #' @return A list containing:
-#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
-#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
-#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
 #'
 
 #'
@@ -56,12 +54,12 @@ opiInitialise_for_Display <- function(address) {
     if (!exists("socket", where = .opi_env$Display))
         assign("socket", open_socket(address$ip, address$port), .opi_env$Display)
     else
-        return(list(error = 4, msg = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
+        return(list(err = "Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R."))
 
     if (is.null(.opi_env$Display$socket))
-        return(list(error = 2, msg = sprintf("Cannot Cannot find a server at %s on port %s", address$ip, address$port)))
+        return(list(err = sprintf("Cannot Cannot find a server at %s on port %s", address$ip, address$port)))
 
-    if (is.null(address)) return(list(error = 0 , msg = "Nothing to do in opiInitialise."))
+    if (is.null(address)) return(list(err = "Nothing to do in opiInitialise."))
 
     msg <- list(port = address$port, ip = address$ip)
     msg <- c(list(command = "initialize"), msg)
@@ -71,9 +69,24 @@ opiInitialise_for_Display <- function(address) {
 
     res <- readLines(.opi_env$Display$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(err = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    return(res)
+
+        # flatten (error, msg[1:n]) into [err, msg[[1]], ..., msg[[n]]]
+        #
+    if (!"error" %in% names(res))
+        return(list(err = "Server did not return a list with element 'error' in opiInitialise"))
+    if (!"msg" %in% names(res))
+        return(list(err = "Server did not return a list with element 'msg' in opiInitialise"))
+
+    opiRes <- list()
+    if (res$error)
+        opiRes$err <- res$msg
+    else {
+        opiRes$err <- NULL
+        opiRes <- c(opiRes, res$msg)
+    }
+    return(opiRes)
 }
 
 #' Implementation of opiSetup for the Display machine.
@@ -105,9 +118,7 @@ opiInitialise_for_Display <- function(address) {
 #'                            the local filesystem of the machine running JOVP of the image to use
 #'
 #' @return A list containing:
-#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
-#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
-#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
 #'
 
 #'
@@ -153,9 +164,9 @@ opiInitialise_for_Display <- function(address) {
 #'
 opiSetup_for_Display <- function(settings) {
     if(!exists(".opi_env") || !exists("Display", envir = .opi_env) || !("socket" %in% names(.opi_env$Display)) || is.null(.opi_env$Display$socket))
-        return(list(error = 3, msg = "Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?."))
+        return(list(err = "Cannot call opiSetup without an open socket to Monitor. Did you call opiInitialise()?."))
 
-    if (is.null(settings)) return(list(error = 0 , msg = "Nothing to do in opiSetup."))
+    if (is.null(settings)) return(list(err = "Nothing to do in opiSetup."))
 
     msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixType = settings$fixType, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixImageFilename = settings$fixImageFilename)
     msg <- c(list(command = "setup"), msg)
@@ -165,9 +176,24 @@ opiSetup_for_Display <- function(settings) {
 
     res <- readLines(.opi_env$Display$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(err = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    return(res)
+
+        # flatten (error, msg[1:n]) into [err, msg[[1]], ..., msg[[n]]]
+        #
+    if (!"error" %in% names(res))
+        return(list(err = "Server did not return a list with element 'error' in opiSetup"))
+    if (!"msg" %in% names(res))
+        return(list(err = "Server did not return a list with element 'msg' in opiSetup"))
+
+    opiRes <- list()
+    if (res$error)
+        opiRes$err <- res$msg
+    else {
+        opiRes$err <- NULL
+        opiRes <- c(opiRes, res$msg)
+    }
+    return(opiRes)
 }
 
 #' Implementation of opiQueryDevice for the Display machine.
@@ -182,9 +208,7 @@ opiSetup_for_Display <- function(settings) {
 
 #'
 #' @return A list containing:
-#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
-#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
-#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
 #'
 
 #'
@@ -200,7 +224,7 @@ opiSetup_for_Display <- function(settings) {
 #'
 opiQueryDevice_for_Display <- function() {
     if(!exists(".opi_env") || !exists("Display", envir = .opi_env) || !("socket" %in% names(.opi_env$Display)) || is.null(.opi_env$Display$socket))
-        return(list(error = 3, msg = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
+        return(list(err = "Cannot call opiQueryDevice without an open socket to Monitor. Did you call opiInitialise()?."))
 
     
     msg <- list()
@@ -211,9 +235,24 @@ opiQueryDevice_for_Display <- function() {
 
     res <- readLines(.opi_env$Display$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(err = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    return(res)
+
+        # flatten (error, msg[1:n]) into [err, msg[[1]], ..., msg[[n]]]
+        #
+    if (!"error" %in% names(res))
+        return(list(err = "Server did not return a list with element 'error' in opiQueryDevice"))
+    if (!"msg" %in% names(res))
+        return(list(err = "Server did not return a list with element 'msg' in opiQueryDevice"))
+
+    opiRes <- list()
+    if (res$error)
+        opiRes$err <- res$msg
+    else {
+        opiRes$err <- NULL
+        opiRes <- c(opiRes, res$msg)
+    }
+    return(opiRes)
 }
 
 #' Implementation of opiPresent for the Display machine.
@@ -266,11 +305,9 @@ opiQueryDevice_for_Display <- function() {
 #' @param \code{...} Parameters for other opiPresent implementations that are ignored here.
 #'
 #' @return A list containing:
-#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
-#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
-#'                If \code{error} is \code{FALSE}, this is a list of:
-#'    * \code{time} Response time from stimulus onset if button pressed (ms).
-#'    * \code{seen} '1' if seen, '0' if not.
+#'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
+#'  * \code{time} Response time from stimulus onset if button pressed (ms).
+#'  * \code{seen} '1' if seen, '0' if not.
 
 #'
 #' @details
@@ -353,9 +390,9 @@ opiQueryDevice_for_Display <- function() {
 #'
 opiPresent_for_Display <- function(stim, ...) {
     if(!exists(".opi_env") || !exists("Display", envir = .opi_env) || !("socket" %in% names(.opi_env$Display)) || is.null(.opi_env$Display$socket))
-        return(list(error = 3, msg = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
+        return(list(err = "Cannot call opiPresent without an open socket to Monitor. Did you call opiInitialise()?."))
 
-    if (is.null(stim)) return(list(error = 0 , msg = "Nothing to do in opiPresent."))
+    if (is.null(stim)) return(list(err = "Nothing to do in opiPresent."))
 
     msg <- list(envSdx = stim$envSdx, lum = stim$lum, envSdy = stim$envSdy, envRotation = stim$envRotation, type = stim$type, stim.length = stim$stim.length, frequency = stim$frequency, color1 = stim$color1, color2 = stim$color2, fullFoV = stim$fullFoV, phase = stim$phase, imageFilename = stim$imageFilename, shape = stim$shape, sx = stim$sx, sy = stim$sy, rotation = stim$rotation, texRotation = stim$texRotation, defocus = stim$defocus, eye = stim$eye, t = stim$t, envType = stim$envType, w = stim$w, contrast = stim$contrast, optotype = stim$optotype, x = stim$x, y = stim$y)
     msg <- c(list(command = "present"), msg)
@@ -365,9 +402,24 @@ opiPresent_for_Display <- function(stim, ...) {
 
     res <- readLines(.opi_env$Display$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(err = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    return(res)
+
+        # flatten (error, msg[1:n]) into [err, msg[[1]], ..., msg[[n]]]
+        #
+    if (!"error" %in% names(res))
+        return(list(err = "Server did not return a list with element 'error' in opiPresent"))
+    if (!"msg" %in% names(res))
+        return(list(err = "Server did not return a list with element 'msg' in opiPresent"))
+
+    opiRes <- list()
+    if (res$error)
+        opiRes$err <- res$msg
+    else {
+        opiRes$err <- NULL
+        opiRes <- c(opiRes, res$msg)
+    }
+    return(opiRes)
 }
 
 #' Implementation of opiClose for the Display machine.
@@ -382,9 +434,7 @@ opiPresent_for_Display <- function(stim, ...) {
 
 #'
 #' @return A list containing:
-#'  * \code{error} \code{TRUE} if there was an error, \code{FALSE} if not.
-#'  * \code{msg} If \code{error} is \code{TRUE}, then this is a string describing the error.
-#'                If \code{error} is \code{FALSE}, this is an empty list.
+#'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
 #'
 
 #'
@@ -400,7 +450,7 @@ opiPresent_for_Display <- function(stim, ...) {
 #'
 opiClose_for_Display <- function() {
     if(!exists(".opi_env") || !exists("Display", envir = .opi_env) || !("socket" %in% names(.opi_env$Display)) || is.null(.opi_env$Display$socket))
-        return(list(error = 3, msg = "Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?."))
+        return(list(err = "Cannot call opiClose without an open socket to Monitor. Did you call opiInitialise()?."))
 
     
     msg <- list()
@@ -411,8 +461,23 @@ opiClose_for_Display <- function() {
 
     res <- readLines(.opi_env$Display$socket, n = 1)
     if (length(res) == 0)
-        return(list(error = TRUE, msg = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
+        return(list(err = "Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor."))
     res <- jsonlite::parse_json(res)
-    return(res)
+
+        # flatten (error, msg[1:n]) into [err, msg[[1]], ..., msg[[n]]]
+        #
+    if (!"error" %in% names(res))
+        return(list(err = "Server did not return a list with element 'error' in opiClose"))
+    if (!"msg" %in% names(res))
+        return(list(err = "Server did not return a list with element 'msg' in opiClose"))
+
+    opiRes <- list()
+    if (res$error)
+        opiRes$err <- res$msg
+    else {
+        opiRes$err <- NULL
+        opiRes <- c(opiRes, res$msg)
+    }
+    return(opiRes)
 }
 

@@ -34,7 +34,7 @@
 #'     A. Turpin, D. Jankovic and A.M. McKendrick,
 #'     "Identifying Steep Psychometric Function Slope Quickly in Clinical Applications",
 #'     Vision Research, 50(23). November 2010. Pages 2476-2485
-#' 
+#'
 #' @param domains A list of 4 vectors: \itemize{
 #'  \item{\code{slopes}: The valid slopes in the domain of psychometric functions.}
 #'  \item{\code{thresholds}: The valid thresholds in the domain of psychometric functions.}
@@ -133,7 +133,7 @@
 #' @seealso \code{\link{dbTocd}}, \code{\link{opiPresent}}
 #' @examples
 #' chooseOpi("SimGaussian")
-#' if(!is.null(opiInitialize(sd = 2)))
+#' if(!is.null(opiInitialize(sd = 2)$err))
 #'   stop("opiInitialize failed")
 #'
 #' # This section is for single location KTPsi

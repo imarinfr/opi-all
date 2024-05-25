@@ -73,7 +73,7 @@ public class Packet {
      * Create a Packet containing msg if it contains all of the ReturnMsg keys 
      * for `commandName` of `machineClass`.
      *
-     * @param msg A valid JSON string 
+     * @param msg A valid JSON string representing an Object (presumably a OpiMachine subclass that gave rise to `methods`  )
      * @param methods The opiMethods hashmap from the OpiMachine class that is creating the packet
      *
      * @return New packet that either has error=false and contains msg, or 

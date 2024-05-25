@@ -2,7 +2,7 @@
 # 4-2 staircase with 2 reversals.
 # See comments in full_threshold.r.
 # This does not initiate a second staircase.
-# This returns averge of last two presentations as threshold.
+# This returns avenge of last two presentations as threshold.
 #
 # Includes
 #     fourTwo.start    # initialise list state
@@ -12,7 +12,7 @@
 #
 # Author: Andrew Turpin
 # Date: December 2014
-# Modified Tue 21 Mar 2023: changed licence from gnu to Apache 2.0 
+# Modified Tue 21 Mar 2023: changed licence from gnu to Apache 2.0
 #
 # Copyright [2022] [Andrew Turpin, Ivan Marin-Franch]
 #
@@ -48,35 +48,35 @@ require(utils)
 #' the first reversal, and 2dB until the next reversal. The mean of the last
 #' two presentations is taken as the threshold value. Note this function will
 #' repeatedly call \code{opiPresent} for a stimulus until \code{opiPresent}
-#' returns \code{NULL} (ie no error occured). If more than one fourTwo is to
+#' returns \code{NULL} (ie no error occurred). If more than one fourTwo is to
 #' be interleaved (for example, testing multiple locations), then the
 #' \code{fourTwo.start}, \code{fourTwo.step}, \code{fourTwo.stop} and
 #' \code{fourTwo.final} calls can maintain the state of the fourTwo after
 #' each presentation, and should be used. See examples below.
 #' @return
-#' \subsection{Multilple locations}{
+#' \subsection{Multiple locations}{
 #'   \code{fourTwo.start} returns a list that can be passed to \code{fourTwo.step},
 #'   \code{fourTwo.stop}, and \code{fourTwo.final}. It represents the state of a fourTwo
 #'   at a single location at a point in time and contains the following.
 #'   \itemize{
 #'     \item{name:}{\code{ fourTwo}}
-#'     \item{}{ A copy of all of the parameters supplied to fourTwo.start: 
+#'     \item{}{ A copy of all of the parameters supplied to fourTwo.start:
 #'       \code{startingEstimate=est}, \code{minStimulus=instRange[1]},
 #'       \code{maxStimulus=instRange[2]}, \code{makeStim}, and \code{opiParams=list(...)}}
 #'     \item{currentLevel:}{ The next stimulus to present.}
 #'     \item{lastSeen:}{ The last seen stimulus.}
 #'     \item{lastResponse:}{ The last response given.}
 #'     \item{stairResult:}{ The final result if finished (initially \code{NA}).}
-#'     \item{finished:}{ \code{"Not"} if staircae has not finished, or one of
-#'       \code{"Rev"} (finished due to 2 reversas), \code{"Max"} (finished due to 2
+#'     \item{finished:}{ \code{"Not"} if staircase has not finished, or one of
+#'       \code{"Rev"} (finished due to 2 reversals), \code{"Max"} (finished due to 2
 #'       \code{maxStimulus} seen), \code{"Min"} (finished due to 2 \code{minStimulus} not seen)}
 #'     \item{numberOfReversals:}{ Number of reversals so far.}
 #'     \item{currSeenLimit:}{ Number of times \code{maxStimulus} has been seen.}
 #'     \item{currNotSeenLimit:}{ Number of times \code{minStimulus} not seen.}
 #'     \item{numPresentations:}{ Number of presentations so far.}
 #'     \item{stimuli:}{ Vector of stimuli shown at each call to \code{fourTwo.step}.}
-#'     \item{responses:}{ Vector of responses received (1 seen, 0 not) receieved at each call to \code{fourTwo.step}.}
-#'     \item{responseTimes:}{ Vector of response times receieved at each call to \code{fourTwo.step}.}
+#'     \item{responses:}{ Vector of responses received (1 seen, 0 not) received at each call to \code{fourTwo.step}.}
+#'     \item{responseTimes:}{ Vector of response times received at each call to \code{fourTwo.step}.}
 #'   }
 #'   \code{fourTwo.step} returns a list containing
 #'   \itemize{
@@ -86,7 +86,7 @@ require(utils)
 #'   \code{fourTwo.stop} returns \code{TRUE} if the staircase is finished (2 reversals, or \code{maxStimulus}
 #'     is seen twice or \code{minStimulus} is not seen twice).
 #'
-#'   \code{fourTwo.final} returns the final estimate of threshold (mena of last
+#'   \code{fourTwo.final} returns the final estimate of threshold (mean of last
 #'     two reversals). This issues a warning if called before the staircase has
 #'     finished, but still returns a value.
 #' }
@@ -117,7 +117,7 @@ require(utils)
 #' }
 #' # List of (x, y, true threshold) triples
 #' locations <- list(c(9,9,30), c(-9,-9,32), c(9,-9,31), c(-9,9,33))
-#' 
+#'
 #' # Setup starting states for each location
 #' states <- lapply(locations, function(loc) {
 #'   fourTwo.start(makeStim=makeStimHelper(db,n,loc[1],loc[2]),
@@ -125,7 +125,7 @@ require(utils)
 #'
 #' # Loop through until all states are "stop"
 #' while(!all(st <- unlist(lapply(states, fourTwo.stop)))) {
-#'   i <- which(!st)                         # choose a random, 
+#'   i <- which(!st)                         # choose a random,
 #'   i <- i[runif(1, min=1, max=length(i))]  # unstopped state
 #'   r <- fourTwo.step(states[[i]])               # step it
 #'   states[[i]] <- r$state                  # update the states
@@ -140,29 +140,29 @@ require(utils)
 #' if (!is.null(opiClose()))
 #'   warning("opiClose() failed")
 #' @export
-fourTwo.start <- function(est=25, instRange=c(0,40), verbose=FALSE, makeStim, ...) {
+fourTwo.start <- function(est = 25, instRange = c(0,40), verbose = FALSE, makeStim, ...) {
     if (est < instRange[1] || est > instRange[2])
         stop("fourTwo.start: est must be in the range of instRange")
 
-    return(list(name="fourTwo",
-        startingEstimate=est,
-        currentLevel=est,
-        minStimulus=instRange[1],
-        maxStimulus=instRange[2],
-        makeStim=makeStim,
-        lastSeen=NA,
-        lastResponse=NA,
-        stairResult=NA,
-        finished="Not",                     # "Not", or one of "Max", "Min", "Rev"
-        verbose=verbose,
-        numberOfReversals=0,
-        currSeenLimit=0,                    # number of times maxStimulus seen
-        currNotSeenLimit=0,                 # number of times minStimulus not seen
-        numPresentations=0,                 # number of presentations so far
-        stimuli=NULL,                       # vector of stims shown
-        responses=NULL,                     # vector of responses (1 seen, 0 not)
-        responseTimes=NULL,                 # vector of response times
-        opiParams=list(...)                 # the extra params
+    return(list(name = "fourTwo",
+        startingEstimate = est,
+        currentLevel = est,
+        minStimulus = instRange[1],
+        maxStimulus = instRange[2],
+        makeStim = makeStim,
+        lastSeen = NA,
+        lastResponse = NA,
+        stairResult = NA,
+        finished = "Not",                     # "Not", or one of "Max", "Min", "Rev"
+        verbose = verbose,
+        numberOfReversals = 0,
+        currSeenLimit = 0,                    # number of times maxStimulus seen
+        currNotSeenLimit = 0,                 # number of times minStimulus not seen
+        numPresentations = 0,                 # number of presentations so far
+        stimuli = NULL,                       # vector of stims shown
+        responses = NULL,                     # vector of responses (1 seen, 0 not)
+        responseTimes = NULL,                 # vector of response times
+        opiParams = list(...)                 # the extra params
     ))
 }# fourTwo.start()
 
@@ -172,13 +172,13 @@ fourTwo.start <- function(est=25, instRange=c(0,40), verbose=FALSE, makeStim, ..
 #' @param nextStim A valid object for \code{opiPresent} to
 #' use as its \code{nextStim}.
 #' @export
-fourTwo.step <- function(state, nextStim=NULL) {
+fourTwo.step <- function(state, nextStim = NULL) {
     if (state$finished != "Not")
         warning("fourTwo.step: stepping fourTwo staircase when it has already terminated")
     if (is.null(state$opiParams))
-        params <- list(stim=state$makeStim(state$currentLevel, state$numPresentations), nextStim=nextStim)
+        params <- list(stim = state$makeStim(state$currentLevel, state$numPresentations), nextStim = nextStim)
     else
-        params <- c(list(stim=state$makeStim(state$currentLevel, state$numPresentations), nextStim=nextStim), state$opiParams)
+        params <- c(list(stim = state$makeStim(state$currentLevel, state$numPresentations), nextStim = nextStim), state$opiParams)
     opiResp <- do.call(opiPresent, params)
     while (!is.null(opiResp$err))
         opiResp <- do.call(opiPresent, params)
@@ -193,7 +193,7 @@ fourTwo.step <- function(state, nextStim=NULL) {
         cat(sprintf("dB= %2d repsonse=%s\n", state$currentLevel, opiResp$seen))
     }
 
-    if (opiResp$seen) 
+    if (opiResp$seen)
         state$lastSeen <- state$currentLevel
 
         # check for seeing min
@@ -206,7 +206,7 @@ fourTwo.step <- function(state, nextStim=NULL) {
 
         # check for reversals
     if (state$numPresentations > 1 && opiResp$seen != state$lastResponse)
-        state$numberOfReversals <- state$numberOfReversals + 1 
+        state$numberOfReversals <- state$numberOfReversals + 1
 
     state$lastResponse <- opiResp$seen
 
@@ -224,9 +224,9 @@ fourTwo.step <- function(state, nextStim=NULL) {
             # update stimulus for next presentation
         delta <- ifelse(state$numberOfReversals == 0, 4, 2) * ifelse(opiResp$seen, +1, -1)
         state$currentLevel <- min(state$maxStimulus, max(state$minStimulus, state$currentLevel + delta))
-    } 
+    }
 
-    return(list(state=state, resp=opiResp))
+    return(list(state = state, resp = opiResp))
 }#fourTwo.step()
 
 #' @rdname fourTwo
@@ -252,14 +252,14 @@ fourTwo.final <- function(state) {
 ### #chooseOpi("SimYes")
 ### #chooseOpi("SimNo")
 ### opiInitialize()
-### makeStim <- function(db, n) { 
+### makeStim <- function(db, n) {
 ###     s <- list(x=9, y=9, level=dbTocd(db), size=0.43, color="white",
 ###              duration=1200, responseWindow=500)
 ###     class(s) <- "opiStaticStimulus"
-### 
+###
 ###     return(s)
 ### }
-### 
+###
 ### res <- lapply(0:40, function(tt) {
 ###     lapply(1:1000, function(i) {
 ###         s <- fourTwo.start(makeStim=makeStim, tt=tt, fpr=0.15, fnr=0.3)

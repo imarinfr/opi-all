@@ -200,12 +200,14 @@ opiPresent <- function(stim, ...) {
     return(do.call(paste0("opiPresent_for_", .opi_env$chosen_machine), list(stim = stim, ...)))
 }
 
-#' Set background color and luminance in both eyes. 
+#' It used to set background color and luminance in both eyes.
 #' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
 #' @usage NULL
 #' @seealso [opiSetup()]
 #' @export
-opiSetBackground <- function(lum, color, ...) {return("Deprecated. Use opiSetup()")}
+opiSetBackground <- function(...) {
+    stop("opiSetBackground is deprecated. Use opiSetup()")
+}
 
 #'
 #' Open a socket on ip and port. 
@@ -233,3 +235,10 @@ open_socket <- function(ip, port, machineName) {
 
     return(socket)
 }
+
+#' For backwards compatibility. Used by Octopus900 and KowaAP7000.
+opiStaticStimulus <- function() NULL
+#' For backwards compatibility. Used by Octopus900 and KowaAP7000.
+opiKineticStimulus <- function() NULL
+#' For backwards compatibility. Used by Octopus900 and KowaAP7000.
+opiTemporalStimulus <- function() NULL

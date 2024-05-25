@@ -183,7 +183,7 @@ public class OpiFunction {
         //String prefix = r.name().contains(".") ?
         //    String.format("#'    - \\code{%s} ",r.name().replaceAll("\\.", "\\$")) :
         //    String.format("#'  * \\code{%s} ",r.name());
-        String prefix = String.format("#'    * \\code{%s} ",r.name());
+        String prefix = String.format("#'  * \\code{%s} ",r.name());
         return prefix + wrapR(r.desc(), prefix.length(), false);
     };
 
@@ -263,12 +263,9 @@ public class OpiFunction {
 
         String rets = String.format("""
 #' @return A list containing:
-#'  * \\code{error} \\code{TRUE} if there was an error, \\code{FALSE} if not.
-#'  * \\code{msg} If \\code{error} is \\code{TRUE}, then this is a string describing the error. 
-#'                If \\code{error} is \\code{FALSE}, %s
+#'  * \\code{err} \\code{NULL} if there was no error, a string message if there is an error.
 %s
 """,
-        returnMsgDoc.length() == 0 ? "this is an empty list." : "this is a list of:",
         returnMsgDoc.length() == 0 ? "#'" : returnMsgDoc
         );
 
@@ -318,7 +315,7 @@ public class OpiFunction {
     private final String sendMessage() {
         Supplier<String> checkNull = () -> {
             if (this.opiInputFieldName.length() > 0)
-                return String.format("if (is.null(%s)) return(list(error = 0 , msg = \"Nothing to do in %s.\"))\n", this.opiInputFieldName, this.opiName);
+                return String.format("if (is.null(%s)) return(list(err = \"Nothing to do in %s.\"))\n", this.opiInputFieldName, this.opiName);
             else
                 return "";
         };
@@ -350,11 +347,29 @@ public class OpiFunction {
         return String.format("""
         res <- readLines(%s$%s$socket, n = 1)
         if (length(res) == 0)
-            return(list(error = TRUE, msg = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
+            return(list(err = \"Monitor server exists but a connection was not closed properly using opiClose() last time it was used. Restart Monitor.\"))
         res <- jsonlite::parse_json(res)
-        return(res)
+        
+            # flatten (error, msg[1:n]) into [err, msg[[1]], ..., msg[[n]]]
+            #
+        if (!"error" %%in%% names(res))
+            return(list(err = "Server did not return a list with element 'error' in %s"))
+        if (!"msg" %%in%% names(res))
+            return(list(err = "Server did not return a list with element 'msg' in %s"))
+
+        opiRes <- list()
+        if (res$error)
+            opiRes$err <- res$msg
+        else {
+            opiRes$err <- NULL
+            opiRes <- c(opiRes, res$msg)
+        }
+        return(opiRes)
     """, 
-        opiEnvName, this.machineName);
+        opiEnvName, this.machineName,
+        this.opiName,  // for error message when 'error' is missing in res
+        this.opiName   // for error message when 'msg' is missing in res
+        );
     }
 
     /**
@@ -396,10 +411,10 @@ public class OpiFunction {
                         if (!exists(\"socket\", where = %s$%s))
                             assign(\"socket\", open_socket(%s$%s, %s$%s), %s$%s) 
                         else
-                            return(list(error = 4, msg = \"Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R.\"))
+                            return(list(err = \"Socket connection to Monitor already exists. Perhaps not closed properly last time? Restart Monitor and R.\"))
 
                         if (is.null(%s$%s$socket))
-                            return(list(error = 2, msg = sprintf(\"Cannot Cannot find a server at %%s on port %%s\", %s$%s, %s$%s)))
+                            return(list(err = sprintf(\"Cannot Cannot find a server at %%s on port %%s\", %s$%s, %s$%s)))
                     """,
                     opiEnvName, this.machineName,                                  // if exists
                     this.opiInputFieldName, parameterForIp, this.opiInputFieldName, parameterForPort, opiEnvName, this.machineName, // assign
@@ -409,7 +424,7 @@ public class OpiFunction {
         } else {
             socketCode = String.format("""
                     if(!exists("%s") || !exists("%s", envir = %s) || !("socket" %%in%% names(%s$%s)) || is.null(%s$%s$socket))
-                        return(list(error = 3, msg = \"Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.\"))
+                        return(list(err = \"Cannot call %s without an open socket to Monitor. Did you call opiInitialise()?.\"))
                 """, opiEnvName, //exists
                 this.machineName, opiEnvName, // !exists
                 opiEnvName, this.machineName,  // socket

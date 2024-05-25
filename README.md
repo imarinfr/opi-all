@@ -1,18 +1,18 @@
 ---
-title: "OPI Server 3.0"
+title: "OPI-JOVP Server"
 output:
   html_document:
     toc: true
     number_sections: true
 ---
 
-# OPI Server 3.0
+# OPI-JOVP Server
 
 Created by Iv&aacute;n Mar&iacute;n-Franch and Andrew Turpin commencing October 2022.
 
 ## Description
 
-This is a complete re-write of the <a href="https://perimetry.org/opi">Open Perimetry Interface</a> 
+This is a new <a href="https://perimetry.org/opi">Open Perimetry Interface</a> 
 middleware (or "OPI server") and some associated changes
 to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a> 
 to allow for use on screen-based devices such as phones, 
@@ -21,15 +21,15 @@ makes use of the
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> written by Iv&aacute;n Mar&iacute;n-Franch which in turn
 is built upon the Vulkan platform.
 
-Some of the old implementations of the OPI Server (Octopus 900, Kowa AP7000 and iCare Compass)
-will remain the same for the short term, but will eventually be incorporated into this 
-framework (planned February 2023 for implementation in late 2023).
+Some of the old implementations of the OPI Server (Octopus 900, Kowa AP7000 and iCare Compass/MAIA)
+will remain the same for now, but perhaps they could eventually be incorporated into this 
+framework.
 
 ## Overall architecture
 
-The system works using TCP/IP sockets to connect this code (the OPI SERVER II)
+The system works using TCP/IP sockets to connect this code (the OPI-JOVP SERVER)
 with both a controlling *client* (for example, R code that uses the OPI R package)
-and a target *machine* (for example, an Octopus 900 perimeter or an Android Phone).
+and a target *machine* (for example, a Tempo perimeter or an Android Phone).
 Messages are sent in JSON format according to the protocol specified as part of the 
 core code using the `@Parameter` annotator.
 
@@ -39,6 +39,9 @@ core code using the `@Parameter` annotator.
 | (eg OPI R package) |<------>|  Monitor  |<------>| (Display Device |
 |                    | TCP/IP |           | TCP/IP |  or Perimeter)  |
 +--------------------+        +-----------+        +-----------------+
+
+                           |------------- OPI-JOVP Sever ---------------|
+
 </pre>
 
 Both the client connection and machine connection are handled 
@@ -85,9 +88,9 @@ Machine specific parameters that make up the format of JSON messages that machin
 the protocol) are defined by `@Parameter` and `@ReturnMsg` annotations on each of the 5 methods in the 
 machine's subclass of `OpiMachine`.
 
-### jovp 
+### JOVP 
 
-This executable package implements the Jovp Machine that in turn calls the 
+This executable package implements the JOVP Machine that in turn calls the 
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> library written by Iv&aacute;n Mar&iacute;n-Franch.
 This library allows display of psychophysical stimuli on display devices.
 This repo implements the left hand box in this JOVP machine diagram.
@@ -99,7 +102,7 @@ This repo implements the left hand box in this JOVP machine diagram.
            |                     Physical Device             |
            |                     (eg PicoVR, imoVifa, ...)   |
       JSON |  +---------+       +-------------------------+  |
-     <-----+->|  jovp   |<----->|  +---------+            |  |
+     <-----+->|  JOVP   |<----->|  +---------+            |  |
            |  | package |       |  |  JOVP   |  Native    |  |
            +  +---------|       |  | Library |  Software  |  |
            |                    |  +---------+            |  |
@@ -126,9 +129,48 @@ and Iv&aacute;n Mar&iacute;n-Franch, and is distributed
 under the Apache 2.0 license. Please read the license information in the attached file
 
 ## Future Work
-* Write a doclet to format @Parmeters Annotaion nicely in javadoc.
+* Write a doclet to format @Parameters Annotation nicely in javadoc.
 * Modularise OpiMachine.process() so Enum, Double and List are all handled consistently.
 
-* Add eye tracking to GUI if availabl
+* Add eye tracking to GUI if available
 
-* Far future: incorporate O900 into this framework
+* Far future: incorporate Compass, O900, etc into this framework
+
+
+# OPI R package v3.*
+
+This is an updated version of the OPI R package to allow for the
+increased functionality of screen based perimeters over projection
+based perimeters. For example, screen based perimeters make no hardware
+distinction between static, kinetic and temporal stimuli; nor do they
+have arbitrary restrictions on stimuli size or colors.
+
+Backwards compatibility with previous OPI versions
+is maintained.
+
+There are three main changes.
+
+  1. Calling of opi functions internally. Each machine now has
+  its own set of OPI functions called `opiX_for_machine()` rather
+  than  the previous `machine.opiX()` functions (which were not 
+  exposed/exported to the user). This should not affect backwards 
+  compatibility and makes no change from a user point of view who 
+  still just calls `opiX()` after `chooseOPI()`. This change will 
+  generate help pages for each `opiX_for_machine()`, hopefully
+  making the help easier to read.
+
+  2. Deprecation of `opiSetBackground` replaced with `opiSetup`. The
+  screen based perimeters have a lot more options other than
+  background and fixation and might want those options changed
+  frequently, unlike in the projection perimeters where they are
+  usually set once at the beginning of the test. As a result, this
+  change limits `opiInitialise` specifically to establishing a
+  connection with the machine.
+
+  3. New OPI machines have been added for screen-based perimeters
+  that rely on the The Java Open Visual Psychophysics (JOVP) library:
+  `Display`, `ImoVifa`, `PhoneHMD`, `PivoVR`. For these to function, one
+  needs the external OPI-JOVP server and JOVP Java packages.
+  Note that code for these machines is automatically generated as per above.
+  These machines have slightly different calls for `opiX()` functions than in 
+  the previous standard.

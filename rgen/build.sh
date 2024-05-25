@@ -11,4 +11,4 @@ R CMD BUILD OPI3
 R CMD INSTALL OPI3
 )
 
-#(cd ./src/main ; R CMD check -for-cran OPI3_1.0.0.tar.gz)
+#(cd ./src/main ; R CMD check --as-cran OPI3_3.0.0.tar.gz)

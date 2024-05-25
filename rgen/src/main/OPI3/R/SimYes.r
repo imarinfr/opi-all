@@ -19,49 +19,49 @@
 #
 
 #' Does nothing.
-#'
+#' @usage NULL
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A string "Close OK".
+#'   * \code{err} Always \code{NULL}.
 #'
-opiClose_for_SimYes <- function() list(error = FALSE, msg = "Close OK")
+opiClose_for_SimYes <- function() list(err = NULL)
 
 #' Returns name of the machine.
 #'
+#' @usage NULL
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A list containing \code{machine} that is set to `"SimYes"`.
+#'   * \code{err} Always \code{NULL}.
+#'   * \code{machine} that is set to `"SimYes"`.
 #'
-opiQueryDevice_for_SimYes <- function() list(error = FALSE, msg = list(machine = "SimYes"))
+opiQueryDevice_for_SimYes <- function() list(err = NULL, machine = "SimYes")
 
 #' Does nothing.
 #'
+#' @usage NULL
 #' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A string "Initialise OK"
+#'   * \code{err} Always \code{NULL}.
 #'
-opiInitialise_for_SimYes <- function(...) list(error = FALSE, msg = "Initialise OK")
+opiInitialise_for_SimYes <- function(...) list(err = NULL)
 
 #' Does nothing.
 #'
+#' @usage NULL
 #' @param ... Any object you like, it is ignored.
 #'
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A string "All setup!"
+#'   * \code{err} Always \code{NULL}.
 #'
-opiSetup_for_SimYes <- function(...) list(error = FALSE, msg = "All setup!")
+opiSetup_for_SimYes <- function(...) list(err = NULL)
 
 #' Always respond 'yes' immediately to any parameter.
 #'
+#' @usage NULL
 #' @param ... Any parameters you like, they are ignored.
 #'
 #' @return A list with elements:
-#'   * \code{error} Always \code{FALSE}.
-#'   * \code{msg} A list containing
-#'     * \code{seen} Always \code{TRUE}.
-#'     * \code{time} Always \code{NA}.
+#'   * \code{err} Always \code{FALSE}.
+#'   * \code{seen} Always \code{TRUE}.
+#'   * \code{time} Always \code{NA}.
 #'
-opiPresent_for_SimYes <- function(...) list(error = FALSE, msg = list(seen = TRUE, time = NA))
+opiPresent_for_SimYes <- function(...) list(err = NULL, seen = TRUE, time = NA)

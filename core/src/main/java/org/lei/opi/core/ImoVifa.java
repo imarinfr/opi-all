@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
+import org.lei.opi.core.definitions.ReturnMsg;
 
 import es.optocom.jovp.Controller;
 import javafx.fxml.FXML;
@@ -90,10 +91,10 @@ public class ImoVifa extends Jovp {
      * @since 0.2.0
      */
     //TODO
-    //@ReturnMsg(name = "eyex", className = Double.class, desc = "x co-ordinates of pupil at times eyet (degrees).")
-    //@ReturnMsg(name = "eyey", className = Double.class, desc = "y co-ordinates of pupil at times eyet (degrees).")
     //@ReturnMsg(name = "eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
     //@ReturnMsg(name = "eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
+    @ReturnMsg(name = "eyex", className = Double.class, desc = "x co-ordinates of pupil at ??? (degrees).")
+    @ReturnMsg(name = "eyey", className = Double.class, desc = "y co-ordinates of pupil at ??? (degrees).")
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
         //args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"ANGLES"})));
