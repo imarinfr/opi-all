@@ -84,6 +84,9 @@ chooseOpi <- chooseOPI
 #'
 #' @param ... Parameters specific to each machine as described in the 'See Also' functions.
 #'
+#' @return A list containing at least the following elements:
+#'   * \code{err} \code{NULL} if no error, otherwise a string describing the error.
+#'
 #' @seealso
 #' [opiInitialise_for_ImoVifa()],
 #' [opiInitialise_for_PhoneHMD()], [opiInitialise_for_Display()], [opiInitialise_for_PicoVR()],
@@ -100,15 +103,26 @@ opiInitialise <- function(...) {
     return(do.call(paste0("opiInitialise_for_", .opi_env$chosen_machine), args = list(...)))
 }
 
-#' @rdname opiInitialise
+#' @title Calls opiInitialse_for_MACHINE as appropriate.
+#'
+#' @description
+#' Specific parameters and return values can be seen in the machine specific versions
+#' listed below in the ’See Also’.
+#'
+#' @return Each implementation should(!) return a list with at least the following elements:
+#'   * \code{err} \code{NULL} if no error, otherwise a string describing the error.
+#'
 #' @export
 opiInitialize <- opiInitialise
 
-#' opiQueryDevice that calls opiQueryDevice_for_MACHINE as appropriate.
+#' @title Calls opiQueryDevice_for_MACHINE as appropriate.
+#' @description
 #'
 #' Returns a list that describes the current state of the machine.
 #' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
+#'
+#' @return A list specific to each machine.
 #'
 #' @seealso [opiQueryDevice_for_ImoVifa()],
 #' [opiQueryDevice_for_Compass()],
@@ -125,13 +139,16 @@ opiQueryDevice <- function() {
     return(do.call(paste0("opiQueryDevice_for_", .opi_env$chosen_machine), args = list()))
 }
 
-#' opiSetup that calls opiSetup_for_MACHINE as appropriate.
+#' @title Calls opiSetup_for_MACHINE as appropriate.
+#' @description
 #'
-#' Returns a JSON object that describes the current state of the machine.
 #' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
 #' @param settings A list containing the same names as that returned by {@link opi_queryDevice}.
+#'
+#' @return Each implementation should(!) return a list with at least the following elements:
+#'   * \code{err} \code{NULL} if no error, otherwise a string describing the error.
 #'
 #' @seealso 
 #' [opiSetup_for_Compass()],
@@ -149,11 +166,14 @@ opiSetup <- function(settings) {
     return(do.call(paste0("opiSetup_for_", .opi_env$chosen_machine), list(settings)))
 }
 
-#' opiClose that calls opiClose_for_MACHINE as appropriate.
+#' @title Calls opiClose_for_MACHINE as appropriate.
+#' @description
 #'
-#' Returns a JSON object that describes the current state of the machine.
 #' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
+#'
+#' @return Each implementation should(!) return a list with at least the following elements:
+#'   * \code{err} \code{NULL} if no error, otherwise a string describing the error.
 #'
 #' @seealso 
 #' [opiClose_for_Compass()],
@@ -171,14 +191,19 @@ opiClose <- function() {
     return(do.call(paste0("opiClose_for_", .opi_env$chosen_machine), args = list()))
 }
 
-#' opiPresent that calls opiPresent_for_MACHINE as appropriate.
+#' @title Calls opiPresent_for_MACHINE as appropriate.
+#' @description
 #'
-#' Returns a JSON object that describes the current state of the machine.
-#' Specific paramters and return values can be seen in the machine specific versions
+#' Specific parameters and return values can be seen in the machine specific versions
 #' listed below in the ’See Also’.
 #'
 #' @param stim A stimulus object or list as described for each machine in the 'See Also' methods.
 #' @param ...  Other arguments that might be needed by each machine in the 'See Also' methods.
+#'
+#' @return Each implementation should(!) return a list with at least the following elements:
+#'   * \code{err} \code{NULL} if no error, otherwise a string describing the error.
+#'   * \code{seen} \code{TRUE} if stimulus seen, \code{FALSE} otherwise
+#'   * \code{time} Response time from onset of stimulus in milliseconds.
 #'
 #' @seealso 
 #' [opiPresent_for_Compass()],
@@ -200,13 +225,16 @@ opiPresent <- function(stim, ...) {
     return(do.call(paste0("opiPresent_for_", .opi_env$chosen_machine), list(stim = stim, ...)))
 }
 
-#' It used to set background color and luminance in both eyes.
+#' @title Deprecated. Use [opiSetup()].
+#' @description
+#' In older OPIs it set background color and luminance in both eyes.
 #' Deprecated for OPI >= v3.0.0 and replaced with [opiSetup()].
 #' @usage NULL
 #' @seealso [opiSetup()]
 #' @export
 opiSetBackground <- function(...) {
-    stop("opiSetBackground is deprecated. Use opiSetup()")
+    warning("opiSetBackground is deprecated. Use opiSetup()")
+    opiSetup(...)
 }
 
 #'

@@ -360,12 +360,13 @@ public class OpiFunction {
         if (!"msg" %%in%% names(res))
             return(list(err = "Server did not return a list with element 'msg' in %s"))
 
-        opiRes <- list()
-        if (res$error)
-            opiRes$err <- res$msg
-        else {
-            opiRes$err <- NULL
-            opiRes <- c(opiRes, res$msg)
+        if (res$error) {
+            opiRes <- list(err = res$msg)
+        } else {
+            if (is.list(res$msg))
+                opiRes <- res$msg
+            else
+                opiRes <- list(msg = res$msg)
         }
         return(opiRes)
     """, 

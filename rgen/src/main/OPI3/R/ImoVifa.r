@@ -79,12 +79,13 @@ opiInitialise_for_ImoVifa <- function(address) {
     if (!"msg" %in% names(res))
         return(list(err = "Server did not return a list with element 'msg' in opiInitialise"))
 
-    opiRes <- list()
-    if (res$error)
-        opiRes$err <- res$msg
-    else {
-        opiRes$err <- NULL
-        opiRes <- c(opiRes, res$msg)
+    if (res$error) {
+        opiRes <- list(err = res$msg)
+    } else {
+        if (is.list(res$msg))
+            opiRes <- res$msg
+        else
+            opiRes <- list(msg = res$msg)
     }
     return(opiRes)
 }
@@ -186,12 +187,13 @@ opiSetup_for_ImoVifa <- function(settings) {
     if (!"msg" %in% names(res))
         return(list(err = "Server did not return a list with element 'msg' in opiSetup"))
 
-    opiRes <- list()
-    if (res$error)
-        opiRes$err <- res$msg
-    else {
-        opiRes$err <- NULL
-        opiRes <- c(opiRes, res$msg)
+    if (res$error) {
+        opiRes <- list(err = res$msg)
+    } else {
+        if (is.list(res$msg))
+            opiRes <- res$msg
+        else
+            opiRes <- list(msg = res$msg)
     }
     return(opiRes)
 }
@@ -243,12 +245,13 @@ opiQueryDevice_for_ImoVifa <- function() {
     if (!"msg" %in% names(res))
         return(list(err = "Server did not return a list with element 'msg' in opiQueryDevice"))
 
-    opiRes <- list()
-    if (res$error)
-        opiRes$err <- res$msg
-    else {
-        opiRes$err <- NULL
-        opiRes <- c(opiRes, res$msg)
+    if (res$error) {
+        opiRes <- list(err = res$msg)
+    } else {
+        if (is.list(res$msg))
+            opiRes <- res$msg
+        else
+            opiRes <- list(msg = res$msg)
     }
     return(opiRes)
 }
@@ -412,12 +415,13 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
     if (!"msg" %in% names(res))
         return(list(err = "Server did not return a list with element 'msg' in opiPresent"))
 
-    opiRes <- list()
-    if (res$error)
-        opiRes$err <- res$msg
-    else {
-        opiRes$err <- NULL
-        opiRes <- c(opiRes, res$msg)
+    if (res$error) {
+        opiRes <- list(err = res$msg)
+    } else {
+        if (is.list(res$msg))
+            opiRes <- res$msg
+        else
+            opiRes <- list(msg = res$msg)
     }
     return(opiRes)
 }
@@ -469,12 +473,13 @@ opiClose_for_ImoVifa <- function() {
     if (!"msg" %in% names(res))
         return(list(err = "Server did not return a list with element 'msg' in opiClose"))
 
-    opiRes <- list()
-    if (res$error)
-        opiRes$err <- res$msg
-    else {
-        opiRes$err <- NULL
-        opiRes <- c(opiRes, res$msg)
+    if (res$error) {
+        opiRes <- list(err = res$msg)
+    } else {
+        if (is.list(res$msg))
+            opiRes <- res$msg
+        else
+            opiRes <- list(msg = res$msg)
     }
     return(opiRes)
 }

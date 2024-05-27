@@ -299,26 +299,26 @@ MOCS <- function(params = NA,
         }
 
         if (responseWindowMeth == "forceKey")
-          ret <- keyHandler(mocs[i, 6], ret)
+          res <- keyHandler(mocs[i, 6], res)
 
-        if (is.null(ret$err)) {
-            if (ret$seen)
+        if (is.null(res$err)) {
+            if (res$seen)
                 beep_function('correct')
             else
                 beep_function('incorrect')
 
-            if (ret$seen && responseWindowMeth == "speed")
-                respTimeHistory <- c(utils::tail(respTimeHistory, -1), ret$time)
+            if (res$seen && responseWindowMeth == "speed")
+                respTimeHistory <- c(utils::tail(respTimeHistory, -1), res$time)
         } else {
             warning("Opi Present return error in MOCS")
             error_count <- error_count + 1
         }
 
-        cat(sprintf(',%g,%g\n', ret$seen,  ret$time))
+        cat(sprintf(',%g,%g\n', res$seen,  res$time))
 
         Sys.sleep(stats::runif(1, min = interStimMin, max = interStimMax)/1000)
 
-        results <- rbind(results, c(mocs[i, 1:5], all_fixations_good, mocs[i, 6:ncol(mocs)], ret))
+        results <- rbind(results, c(mocs[i, 1:5], all_fixations_good, mocs[i, 6:ncol(mocs)], res))
     }
 
     if (error_count > 0)
