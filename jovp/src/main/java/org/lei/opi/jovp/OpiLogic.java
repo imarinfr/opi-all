@@ -178,7 +178,7 @@ public class OpiLogic implements PsychoLogic {
                 if (input_bg.bgImageFilename().length() > 0) {    // a bit yuck, but rgen needs a default value...
                     backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
                 } else {
-                    backgrounds[i].update(new Texture());
+                    backgrounds[i].update(new Texture(TextureType.FLAT, gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol)));
                 }
 
                 if (input_bg.fixType() == TextureType.IMAGE) {
