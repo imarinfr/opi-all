@@ -5,7 +5,10 @@
   },
   "ImoVifa": {
     "screen": 1.0,
-    "physicalSize": [121,68],
+    "physicalSize": [
+      121.0,
+      68.0
+    ],
     "pseudoGray": false,
     "fullScreen": true,
     "distance": 44.0,
@@ -50,11 +53,11 @@
     "physicalSize": [],
     "pseudoGray": false,
     "fullScreen": false,
-    "distance": 440,
+    "distance": 44,
     "viewMode": "Stereo",
     "input": "mouse",
     "tracking": false,
-    "gammaFile": "linear8bit_invGamma.json",
+    "gammaFile": "imo_invGamma.json",
     "ip": "localhost",
     "port": 51234
   }

@@ -1,6 +1,8 @@
 package org.lei.opi.jovp;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
@@ -33,17 +35,29 @@ public class OpiLogic implements PsychoLogic {
     /** {@value MINIMUM_TIME_FROM_ONSET} */
     private static final double MINIMUM_TIME_FROM_ONSET = 80;
 
+    /** Depth of background from screen */
+    private static float BACK_DEPTH = Observer.ZFAR - 1;
+    /** Depth of stimuli from screen */
+    private static float STIM_DEPTH = Observer.ZFAR - 2;
+    /** Depth of fixation from screen */
+    private static float FIX_DEPTH = Observer.ZFAR - 3;
+
     /** The OPI driver */
     private final OpiJovp driver;
 
-    /** 1 (MONO) or 2 (STEREO) backgrounds */
+    /** Always 2 backgrounds, but second is unused for MONO */
     private Item[] backgrounds;
-    /** 1 (MONO) or 2 (STEREO) fixations */
+    /** Always 2 fixations, but second is unused for MONO */
     private Item[] fixations;
-    /** A single stimulus object that is updated as needed for each presentation */
-    private Item stimulus;
+    /** The stim on the screen. 
+      * Assumes that stimulus[0] and stimulus[1,2,...] (if it exists) are will be shown for the same duration
+    */
+    private List<Item> stimulusItems;
 
-    /** The current index into driver.getStimulus() for presentation. This steps along the list of stimuli in driver */
+    /** Current stim being shown */
+    private List<Stimulus> currentStim;
+
+    /** The current index into driver.getStimulus() for presentation. This steps along the list of stimuli in driver. */
     private int stimIndex = -1;
 
     /** PsychoEngine field of view */
@@ -60,9 +74,6 @@ public class OpiLogic implements PsychoLogic {
 
     /**
      * Initialize PsychoEngine
-     * Backgrounds are at psychoEngine.distance - 1
-     * Stimuli  are at psychoEngine.distance - 2
-     * Fixation markers  are at psychoEngine.distance - 3
      *
      * @param psychoEngine the psychoEngine
      * 
@@ -70,59 +81,37 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void init(PsychoEngine psychoEngine) {
-        // Init background, fixation depending on whether viewMode is MONO or STEREO
-        switch(driver.getConfiguration().viewMode()) {
-            case MONO -> {
-                backgrounds = new Item[] {
-                    new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture())
-                };
-                fixations = new Item[] {
-                    new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
-                };
-                backgrounds[0].show(ViewEye.BOTH);
-                fixations[0].show(ViewEye.BOTH);
-          }
-            case STEREO -> {
-                backgrounds = new Item[] {
-                    new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture()),
-                    new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture())
-                };
-                fixations = new Item[] {
-                    new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture()),
-                    new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
-                };
-                backgrounds[0].show(ViewEye.LEFT);
-                backgrounds[1].show(ViewEye.RIGHT);
-                fixations[0].show(ViewEye.LEFT);
-                fixations[1].show(ViewEye.RIGHT);
-            }
-        }
+        backgrounds = new Item[] {
+            new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture()),
+            new Item(new Model(DEFAULT_BACKGROUND_SHAPE), new Texture())
+        };
+        fixations = new Item[] {
+            new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture()),
+            new Item(new Model(DEFAULT_FIXATION_SHAPE), new Texture())
+        };
+
+        backgrounds[0].show(ViewEye.LEFT);
+        backgrounds[1].show(ViewEye.RIGHT);
+        fixations[0].show(ViewEye.LEFT);
+        fixations[1].show(ViewEye.RIGHT);
 
         // set size of the background to be the field of view
         this.fov = psychoEngine.getFieldOfView();
 
         // add perimetry items: background, fixation, and stimulus.
         for (int i = 0; i < backgrounds.length; i++) {
-          fixations[i].position(0.0d, 0.0d);
-          fixations[i].size(DEFAULT_FIXATION_SIZE);
-          //fixations[i].depth((driver.getConfiguration().distance() - 3) / 1000.0f);
-          fixations[i].depth(Observer.ZFAR - 3.0);
-          view.add(fixations[i]);
+            fixations[i].position(0.0d, 0.0d);
+            backgrounds[i].position(0.0d, 0.0d);
 
-          backgrounds[i].position(0.0d, 0.0d);
-          //backgrounds[i].depth((driver.getConfiguration().distance() - 1) / 1000.0f);
-          backgrounds[i].depth(Observer.ZFAR - 1.0);
-          backgrounds[i].size(fov[0], fov[1]);    // TODO: Will this work for Images?
-          view.add(backgrounds[i]);
+            fixations[i].size(DEFAULT_FIXATION_SIZE);
+            backgrounds[i].size(fov[0], fov[1]);    // TODO: Will this work for Images?
+
+            fixations[i].depth(FIX_DEPTH);
+            backgrounds[i].depth(BACK_DEPTH);
+
+            view.add(fixations[i]);
+            view.add(backgrounds[i]);
         }
-
-            // stimulus is always in units ANGLES for OPI (for now 20/5/2024)
-        stimulus = new Item(new Model(DEFAULT_STIMULUS_SHAPE), new Texture(), Units.ANGLES);
-        stimulus.show(ViewEye.NONE);
-        stimulus.position(0, 0);
-        //stimulus.depth((driver.getConfiguration().distance() - 2) / 1000.0f);
-        stimulus.depth(Observer.ZFAR - 2.0);
-        view.add(stimulus);
 
         driver.setActionToNull(); // Action is over
     }
@@ -136,12 +125,13 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void input(PsychoEngine psychoEngine, Command command) {
-      if (command == Command.NONE) return;
-      // if no response or response is too early, do nothing
-      if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
-      driver.setResponse(new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255));
-      timer.stop();
-      stimulus.show(ViewEye.NONE);
+        if (command == Command.NONE) return;
+        // if no response or response is too early, do nothing
+        if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
+        driver.setResponse(new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255));
+        timer.stop();
+        for (Item s : stimulusItems) 
+            s.show(ViewEye.NONE);
     }
 
     /**
@@ -153,26 +143,22 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void update(PsychoEngine psychoEngine) {
-      fov = psychoEngine.getFieldOfView();
-      for (int i = 0; i < backgrounds.length; i++) 
-        backgrounds[i].size(fov[0], fov[1]);  // TODO: again, will this work for image backgrounds?
-
-      // Instructions are always given by the OpiDriver.
-      // OpiLogic sets action back to null once instruction is carried out,
-      // except when presenting, where the OpiDriver waits for a response.
-      //if (driver.action != null) System.out.println(driver.action);
-      if (driver.getAction() == null) 
-        checkAction();
-      else switch(driver.getAction()) {
-          case SHOW -> show(psychoEngine);
-          case SETUP -> setup();
-          case PRESENT -> present();
-          case CLOSE -> {
-            psychoEngine.finish();
-            System.exit(0);
-          }
+        // Instructions are always given by the OpiDriver.
+        // OpiLogic sets action back to null once instruction is carried out,
+        // except when presenting, where the OpiDriver waits for a response.
+        //if (driver.action != null) System.out.println(driver.action);
+        if (driver.getAction() == null) 
+            checkAction();
+        else switch(driver.getAction()) {
+            case SHOW -> show(psychoEngine);
+            case SETUP -> setup();
+            case PRESENT -> present();
+            case CLOSE -> {
+              psychoEngine.finish();
+              System.exit(0);
+            }
         }
-      }
+    }
 
     /** Show psychoEngine */
     private void show(PsychoEngine psychoEngine) {
@@ -212,24 +198,30 @@ public class OpiLogic implements PsychoLogic {
 
     /** Present stimulus upon request */
     private void present() {
-      stimIndex = 0;  // the first element in the stimulus list
-      updateStimulus(stimIndex);
-      timer.start();
-      presentationTime = 0;
-      driver.setActionToNull();
+        stimIndex = 0;  // the first element in the stimulus list
+        createStimuli();
+        timer.start();
+        presentationTime = 0;
+        driver.setActionToNull();
     }
 
     /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
     private void checkAction() {
         if (timer.getElapsedTime() > 0) // if timer is active, we are presenting
-            if (stimulus.showing() && timer.getElapsedTime() > presentationTime + driver.getStimulus(stimIndex).t()) {
-                presentationTime += driver.getStimulus(stimIndex).t();
-                // if presentation time is over for the last element of the array, then hide stimulus
-                if (stimIndex == driver.getStimuliLength() - 1) 
-                    stimulus.show(ViewEye.NONE);
-                else 
-                    updateStimulus(++stimIndex);
-            } else if (timer.getElapsedTime() > driver.getStimulus(stimIndex).w()) {
+            if (stimulusItems.get(0).showing()) {
+                double t = currentStim.get(currentStim.size() - 1).t();
+                if (timer.getElapsedTime() > presentationTime + t) {
+                    presentationTime += t;
+                    // if presentation time is over for the last element of the array, then hide stimulus
+                    if (stimIndex == driver.getStimuliLength() - 1) 
+                        for (Item s : stimulusItems)
+                            s.show(ViewEye.NONE);
+                    else {
+                        stimIndex++;
+                        updateStimulus();
+                    }
+                }
+            } else if (timer.getElapsedTime() > currentStim.get(currentStim.size() - 1).w()) {
                 // if no response, reset timer and send negative response
                 timer.stop();
                     // TODO tracking results need to be put in response
@@ -237,51 +229,159 @@ public class OpiLogic implements PsychoLogic {
             };
     }
 
-    /** Update stimulus upon request 
-     * @param index the index of the stimulus in the list of stimuli
+    /** Create a new item from Stimulus stim */
+    private Item createStimItem(Stimulus stim) {
+        Model m;
+        if (stim.shape() == ModelType.OPTOTYPE)
+            m = new Model(stim.optotype());  // give it the optotype
+        else
+            m = new Model(stim.shape());
+
+        Texture t;
+        if (stim.type() == TextureType.IMAGE)
+            t = new Texture(stim.imageFilename());  // give it the string filename
+        else
+            t = new Texture(stim.type());  
+
+            // units is always in ANGLES for now
+        return new Item(m, t, Units.ANGLES);
+    }
+
+    /** Create stims from the list driver.getStimulus[stimIndex, ...]
+     * Elements are taken from driver while t == 0 (ie duration is 0)
+     * All taken elements are put into currentStim list.
+     * For each one, an Item is created an put into stimulusItems list.
     */
-    private void updateStimulus(int index) {
-        Stimulus stim = driver.getStimulus(index);
-
-            // for performance, do not regenerate stimulus model and texture unless it has changed
-        boolean newTexture = index == 0; // first time we want it to be "new", check other times
-        boolean newModel = index == 0;
-        if (index > 0) {
-            Stimulus prevStim = driver.getStimulus(index - 1);
-            if(stim.shape() != prevStim.shape()
-            || (stim.shape() == ModelType.OPTOTYPE && prevStim.shape() == ModelType.OPTOTYPE && !stim.optotype().equals(prevStim.optotype())))
-                newModel = true;
-
-            if ((stim.type() != prevStim.type())
-            || (stim.type() == TextureType.IMAGE && prevStim.type() == TextureType.IMAGE && !stim.imageFilename().equals(prevStim.imageFilename())))
-                newTexture = true;
-        }
-
-        if (newModel)
-            if (stim.shape() == ModelType.OPTOTYPE)
-                stimulus.update(new Model(stim.optotype()));  // give it the optotype
-            else
-                stimulus.update(new Model(stim.shape()));
-        if (newTexture)
-            if (stim.type() == TextureType.IMAGE)
-                stimulus.update(new Texture(stim.imageFilename()));  // give it the string filename
-            else
-                stimulus.update(new Texture(stim.type()));  
-
-        stimulus.position(stim.x(), stim.y());
-        if (stim.fullFoV() != 0) {
-            stimulus.size(this.fov[0], this.fov[1]);
+    private void createStimuli() {
+        if (currentStim == null || stimulusItems == null) {
+            currentStim = new ArrayList<Stimulus>();
+            stimulusItems = new ArrayList<Item>();
         } else {
-            stimulus.size(stim.sx(), stim.sy());
+            currentStim.clear();
+            stimulusItems.clear();
         }
-        stimulus.rotation(stim.rotation());
-        stimulus.contrast(stim.contrast());
-        stimulus.frequency(stim.phase(), stim.frequency());
-        stimulus.defocus(stim.defocus());
-        stimulus.texRotation(stim.texRotation());
-        stimulus.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
-        stimulus.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
-        stimulus.show(stim.eye());
+
+        Stimulus stim = driver.getStimulus(stimIndex);
+        for(;;) {
+            currentStim.add(stim);
+
+            Item stimItem = createStimItem(stim);
+
+            stimItem.position(stim.x(), stim.y());
+            if (stim.fullFoV() != 0) {
+                stimItem.size(this.fov[0], this.fov[1]);
+            } else {
+                stimItem.size(stim.sx(), stim.sy());
+            }
+            stimItem.rotation(stim.rotation());
+            stimItem.contrast(stim.contrast());
+            stimItem.frequency(stim.phase(), stim.frequency());
+            stimItem.defocus(stim.defocus());
+            stimItem.texRotation(stim.texRotation());
+            stimItem.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
+            stimItem.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
+            stimItem.show(stim.eye());
+
+            stimItem.depth(STIM_DEPTH);
+            view.add(stimItem);
+
+            stimulusItems.add(stimItem);
+
+            if (stim.t() == 0) {
+                stimIndex++;
+                stim = driver.getStimulus(stimIndex);
+            } else {
+                break;
+            }
+        }
+    }
+
+    /** Update stimulus upon request 
+      * Only create new Items if the stim has new components (ie t == 0)
+      * Only create new Models or Textures in existing Items if really needed
+    */
+    private void updateStimulus() {
+        if (stimulusItems.size() == 0) { // first time, create the lot
+            createStimuli();
+            return;
+        }
+
+            // Check each driver.getStimulus(stimIndex) against currentStim[index] to see if
+            //   (a) It exists (ie new stim has more items than currentStim)
+            //   (a) OR it should not exist (ie is first or pre t == 0)
+            //   (b) OR the model or texture should be updated
+            // ASSERT stimulusItems.len >= currentStim
+        int itemIndex = 0; // index into stimulusItems (and the prefix of currentStim)
+        for(;;) {
+            Stimulus stim = driver.getStimulus(stimIndex);
+            
+            if (itemIndex >= stimulusItems.size()) {
+                stimulusItems.add(createStimItem(stim));
+            } else {
+                boolean newModel = false;
+                boolean newTexture = false;
+
+                if (itemIndex >= currentStim.size()) { // there is no previous stim available
+                    newModel = true;
+                    newTexture = true;
+                } else {
+                    Stimulus prev = currentStim.get(itemIndex);
+
+                    newModel = stim.shape() != prev.shape();
+                    newModel |= stim.shape() == ModelType.OPTOTYPE && prev.shape() == ModelType.OPTOTYPE && !stim.optotype().equals(prev.optotype());
+
+                    newTexture = stim.type() != prev.type();
+                    newTexture |= stim.type() == TextureType.IMAGE && prev.type() == TextureType.IMAGE && !stim.imageFilename().equals(prev.imageFilename());
+                }
+
+                if (newModel)
+                    if (stim.shape() == ModelType.OPTOTYPE)
+                        stimulusItems.get(itemIndex).update(new Model(stim.optotype()));  // give it the optotype
+                    else
+                        stimulusItems.get(itemIndex).update(new Model(stim.shape()));
+
+                if (newTexture)
+                    if (stim.type() == TextureType.IMAGE)
+                        stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // give it the string filename
+                    else
+                        stimulusItems.get(itemIndex).update(new Texture(stim.type()));  
+
+                stimulusItems.get(itemIndex).position(stim.x(), stim.y());
+                if (stim.fullFoV() != 0) {
+                    stimulusItems.get(itemIndex).size(this.fov[0], this.fov[1]);
+                } else {
+                    stimulusItems.get(itemIndex).size(stim.sx(), stim.sy());
+                }
+                stimulusItems.get(itemIndex).rotation(stim.rotation());
+                stimulusItems.get(itemIndex).contrast(stim.contrast());
+                stimulusItems.get(itemIndex).frequency(stim.phase(), stim.frequency());
+                stimulusItems.get(itemIndex).defocus(stim.defocus());
+                stimulusItems.get(itemIndex).texRotation(stim.texRotation());
+                stimulusItems.get(itemIndex).setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
+                stimulusItems.get(itemIndex).envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
+                stimulusItems.get(itemIndex).show(stim.eye());
+            }
+
+                // record the new currentStim
+            if (itemIndex >= currentStim.size())
+                currentStim.add(stim);
+            else
+                currentStim.set(itemIndex, stim);
+
+                // see if we need some more items
+            if (stim.t() == 0) {
+                itemIndex++;  // local
+                stimIndex++;  // global
+            } else 
+                break;
+        }
+
+            // If we get to the end and currentStim is too long, remove the excess
+        if (currentStim.size() > itemIndex)
+            for (int i = itemIndex; i < currentStim.size(); i++)
+                currentStim.remove(i);
+
+            // Any excess in stimulusItems is left (with View.NONE) for late use.
     }
 
     /** 

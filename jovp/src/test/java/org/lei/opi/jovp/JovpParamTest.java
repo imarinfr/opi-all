@@ -253,6 +253,7 @@ public class JovpParamTest {
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
           HashMap<String, Object> hmap = getDefaultValues(Command.SETUP);
+          hmap.replace("bgCol", new ArrayList<>(Arrays.asList(1.0, 0.0, 0.0)));
           result = machine.setup(hmap);
           System.out.println(String.format("[testInitialiseSetup] Setup result: %s", result));
 
@@ -342,9 +343,8 @@ public class JovpParamTest {
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
           
         try {
-            // initialise()
-          //Display machine = new Display(null);
-          ImoVifa machine = new ImoVifa(null);
+          Display machine = new Display(null);
+          //ImoVifa machine = new ImoVifa(null);
           System.out.println("[testInitialiseSetupPresent] " + machine);
           if (machine != null && !machine.connect(server.getIP(), server.getPort()))
             System.out.println(String.format("[testInitialiseSetupPresent] Cannot connect to %s:%s", server.getIP(), server.getPort()));

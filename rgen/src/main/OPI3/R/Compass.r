@@ -64,6 +64,7 @@ if (exists(".opi_env") && !exists("Compass", where = .opi_env)) {
 #' @usage NULL
 #' @param ip IP address on which server is listening as a string
 #' @param port Port number on which server is listening
+#' @param ... Could be used for fake compass, simulations, etc
 #'
 #' @return A list with elements:
 #'  * \code{err} NULL if successful, not otherwise.
@@ -85,34 +86,39 @@ if (exists(".opi_env") && !exists("Compass", where = .opi_env)) {
 #'   if (is.null(result$err))
 #'     print(result$prl)
 #' }
-opiInitialise_for_Compass <- function(ip = "192.168.1.2", port = 44965) {
-    cat("Looking for server... ")
-    suppressWarnings(tryCatch(
-        v <- socketConnection(host = ip, port,
-                      blocking = TRUE, open = "w+b",
-                      timeout = 10)
-        , error = function(e) {
-            stop(paste(" cannot find a server at", ip, "on port", port))
-        }
-    ))
-    close(v)
+opiInitialise_for_Compass <- function(ip = "192.168.1.2", port = 44965, ...) {
+    if ("socket" %in% ls(envir = .opi_env$Compass))
+        return(list(err = "Compass already connected. Did you opiClose()?", prl = NULL, onh = NULL, image = NULL))
 
-    cat("found server at", ip, port, ":)\n")
+    tries <- 1
+    while (tries < 5) {
+        cat("\nLooking for server ", tries, "... ")
+        socket <- tryCatch(
+            socketConnection(host = ip, port, open = "w+b", blocking = TRUE, timeout = 1000),
+            error = function(e) stop(paste("Cannot connect to Compass at", ip, "on port", port))
+        )
+        cat("found at", ip, port, ":)\n")
 
-    socket <- tryCatch(
-        socketConnection(host = ip, port, open = "w+b", blocking = TRUE, timeout = 1000),
-        error = function(e) stop(paste("Cannot connect to Compass at", ip, "on port", port))
-    )
+        assign("socket", socket, envir = .opi_env$Compass)
 
-    assign("socket", socket, envir = .opi_env$Compass)
+        msg <- "OPI-OPEN"
+        writeLines(msg, socket)
+        n <- readBin(socket, "integer", size = 4, endian = .opi_env$Compass$endian)
 
-    msg <- "OPI-OPEN"
-    writeLines(msg, socket)
+        print(paste("opiInitialize expecting", n, "bytes"))
 
-    n <- readBin(socket, "integer", size = 4, endian = .opi_env$Compass$endian)
+        if (length(n) > 0)
+            break
 
-    if (length(n) == 0) {    # Compass was not happy with that OPEN, try until it is (AHT: Sep 2018)
-        warning("Compass did not like the OPEN command. Suggest closeAllConnections() and try again")
+        closeAllConnections()
+        tries <- tries + 1
+        Sys.sleep(0.3)
+    }
+
+    if (length(n) == 0) {
+        warning("Compass did get the answer it expected from the OPEN command.(5 times!) Suggest closeAllConnections() and try again")
+        close(socket)
+        rm("socket", envir = .opi_env$Compass)
         return(list(err = "Bad open", prl = NULL, onh = NULL, image = NULL))
     } else {
         #print(paste("opiInitialize read: ", n))
@@ -120,7 +126,7 @@ opiInitialise_for_Compass <- function(ip = "192.168.1.2", port = 44965) {
         prly <- readBin(socket, "double", size = 4, endian = .opi_env$Compass$endian)
         onhx <- readBin(socket, "double", size = 4, endian = .opi_env$Compass$endian)
         onhy <- readBin(socket, "double", size = 4, endian = .opi_env$Compass$endian)
-        im <- readBin(socket, "raw", n = (n - 16), size = 1, endian = .opi_env$Compass$endian)
+        im <- openssl::base64_encode(readBin(socket, "raw", n = (n - 16), size = 1, endian = .opi_env$Compass$endian))
 
         return(list(err = NULL, prl = c(prlx, prly), onh = c(onhx, onhy), image = im))
     }
@@ -254,67 +260,69 @@ opiPresent_for_Compass <- function(stim, nextStim = NULL) {
 #'
 #' @usage NULL
 #'
-#' @param fixation \code{c(x,y,t)} where
-#'   * \code{x} is one of -20, -6, -3, 0, 3, 6, 20 degrees.
-#'   * \code{y} is 0 degrees.
-#'   * \code{t} is 0 for a spot fixation marker at \code{c(x,y)}, or 1 for a
-#'               square centred on one of \code{(-3,0)}, \code{(0,0)}, \code{(+3,0)}.
-#'
-#' @param tracking_on \code{TRUE} for tracking on, \code{FALSE} for off
+#' @param settings is a list that could contain:
+#'   * \code{fixation} \code{c(x,y,t)} where
+#'     * \code{x} is one of -20, -6, -3, 0, 3, 6, 20 degrees.
+#'     * \code{y} is 0 degrees.
+#'     * \code{t} is 0 for a spot fixation marker at \code{c(x,y)}, or 1 for a
+#'                 square centred on one of \code{(-3,0)}, \code{(0,0)}, \code{(+3,0)}.
+#'   * \code{tracking_on} \code{TRUE} for tracking on, \code{FALSE} for off
 #'
 #' @return
-#'   A list containing \code{error} which is \code{NULL} for success, or some string description for fail.
+#'   A list containing \code{err} which is \code{NULL} for success, or some string description for fail.
 #'
 #' @details
 #'   Note: tracking will be relative to the PRL established with the fixation
 #'   marker used at setup (call to OPI-OPEN), so when tracking is on you should
 #'   use the same fixation location as in the setup.
 #'
-opiSetup_for_Compass <- function(fixation = NA, tracking_on = NA) {
-    if (!is.na(tracking_on)) {
+opiSetup_for_Compass <- function(settings) {
+    if ("tracking_on" %in% names(settings)) {
+        tracking_on <- settings$tracking_on
         if (tracking_on) {
             writeLines("OPI-SET-TRACKING 1", .opi_env$Compass$socket)
             res <- readLines(.opi_env$Compass$socket, n = 1)
             s <- strsplit(res, " ", fixed = TRUE)[[1]]
             if (s[1] != 0) {
-                return(list(error = paste("opiSetBackground: failed turn tracking on ", s[1])))
+                return(list(err = paste("opiSetup: failed turn tracking on ", s[1])))
             }
         } else {
             writeLines("OPI-SET-TRACKING 0", .opi_env$Compass$socket)
             res <- readLines(.opi_env$Compass$socket, n = 1)
             s <- strsplit(res, " ", fixed = TRUE)[[1]]
             if (s[1] != 0) {
-                return(list(error = paste("opiSetBackground: failed turn tracking off ", s[1])))
+                return(list(err = paste("opiSetup: failed turn tracking off ", s[1])))
             }
         }
     }
 
-    if (length(fixation) > 1 || !is.na(fixation)) {
+    if ("fixation" %in% settings) {
+        fixation <- settings$fixation
         if (length(fixation) != 3) {
-            return(list(error = "opiSetBackground: fixation parameter must have 3 fields c(x,y,t)"))
+            return(list(err = "opiSetup: fixation parameter must have 3 fields c(x,y,t)"))
         }
         x <- fixation[1]
         y <- fixation[2]
         t <- fixation[3]
 
         if (!(x %in% c(-20, -6, -3, 0, 3, 6, 20))) {
-            return(list(error = "opiSetBackground: fixation x must be in c(-20, -6, -3, 0, 3, 6, 20)"))
+            return(list(err = "opiSetup: fixation x must be in c(-20, -6, -3, 0, 3, 6, 20)"))
         }
         if (y != 0) {
-            return(list(error = "opiSetBackground: fixation y must be 0"))
+            return(list(err = "opiSetup: fixation y must be 0"))
         }
         if (t == 1 && (!(x %in% c(-3, 0, 3)))) {
-            return(list(error = "opiSetBackground: fixation type 1 can only be at ({-3,0,+3}, 0)"))
+            return(list(err = "opiSetup: fixation type 1 can only be at ({-3,0,+3}, 0)"))
         }
         writeLines(paste("OPI-SET-FIXATION",x,y,t), .opi_env$Compass$socket)
         res <- readLines(.opi_env$Compass$socket, n = 1)
         s <- strsplit(res, " ", fixed = TRUE)[[1]]
         if (s[1] != 0) {
-            return(list(error = paste("opiSetBackground: failed to set fixation: ", s[1])))
+            return(list(err = paste("opiSetBackground: failed to set fixation: ", s[1])))
         }
     }
 
-    return(list(error = NULL))
+    return(list(err = NULL))
 }
 
 ###########################################################################
@@ -346,8 +354,10 @@ opiClose_for_Compass <- function() {
     print(paste("Num bytes", num_bytes))
 
     if (num_bytes == 0) {
-        warning("opiClose() returned no bytes - perhaps you forgot opiInitialise")
-        return(list(err = "No Bytes"))
+        warning("opiClose() returned no bytes, dunno what that means")
+        close(.opi_env$Compass$socket)
+        rm("socket", envir = .opi_env$Compass)
+        return(list(err = "No Bytes, connection closed."))
     }
 
     num_triples <- num_bytes / 12
@@ -358,6 +368,7 @@ opiClose_for_Compass <- function() {
     }
 
     close(.opi_env$Compass$socket)
+    rm("socket", envir = .opi_env$Compass)
 
     return(list(err = NULL, fixations = fixations))
 }

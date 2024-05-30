@@ -29,6 +29,7 @@ assign("machine_list", list(
     # "O600",  Never really supported?
     "Compass",
     "ImoVifa",
+    "Tempo",
     # "Kowa",   TODO
     #"Maia",  TODO?
     "Octopus900",
@@ -63,10 +64,8 @@ chooseOPI <- function(machine = NULL) {
         return(unlist(.opi_env$machine_list))
     }
 
-    #if (machine == "PicoVR") machine <- "Jovp"
-    #if (machine == "Display") machine <- "Jovp"
-    #if (machine == "PhoneHMD") machine <- "Jovp"
-    #if (machine == "ImoVifa") machine <- "Jovp"
+    if (machine == "Tempo") machine <- "ImoVifa"
+
     assign("chosen_machine", machine, .opi_env)
     return(NULL)
 }
@@ -234,7 +233,7 @@ opiPresent <- function(stim, ...) {
 #' @export
 opiSetBackground <- function(...) {
     warning("opiSetBackground is deprecated. Use opiSetup()")
-    opiSetup(...)
+    opiSetup(list(...))
 }
 
 #'
