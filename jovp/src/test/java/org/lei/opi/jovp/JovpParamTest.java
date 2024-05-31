@@ -19,6 +19,7 @@ import org.lei.opi.core.definitions.Parameter;
 import org.junit.jupiter.api.Test;
 
 import es.optocom.jovp.Controller;
+import es.optocom.jovp.definitions.ViewEye;
 
 /**
  *
@@ -325,6 +326,81 @@ public class JovpParamTest {
     try { t.join(); } catch (InterruptedException ignored) { ; }
   }
 
+  /**
+   * Open monitor, send initialise message, setup, present 2item stim, close.
+   * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.
+   * Note 2 need vulkan and JOVP installed too
+   * @since 0.2.0
+   */
+  @Test
+  public void aTestPresent2() {
+    OpiJovp server = new OpiJovp(50002);
+    System.out.println("[aTestPresent2] " + server);
+
+    Thread t = new Thread(new Runnable() {
+      @Override
+      public void run() {
+        System.out.println("[aTestPresent2] Waiting 2 seconds...");
+        try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+          
+        try {
+          Display machine = new Display(null);
+          //ImoVifa machine = new ImoVifa(null);
+          System.out.println("[aTestPresent2] " + machine);
+          if (machine != null && !machine.connect(server.getIP(), server.getPort()))
+            System.out.println(String.format("[aTestPresent2] Cannot connect to %s:%s", server.getIP(), server.getPort()));
+          else
+            System.out.println(String.format("[aTestPresent2] Connected to %s:%s", server.getIP(), server.getPort()));
+
+          Packet result = machine.initialize(null);
+          System.out.println(String.format("[aTestPresent2] Initialize result %s", result));
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
+          result = machine.setup(setupArgs);
+          System.out.println(String.format("[aTestPresent2] Setup result: %s", result));
+
+          ArrayList<ArrayList<Double>> cols = new ArrayList<ArrayList<Double>>(
+            Arrays.asList(
+              new ArrayList<Double>(Arrays.asList(1.0, 0.0, 1.0)),
+              new ArrayList<Double>(Arrays.asList(0.0, 1.0, 0.0))
+            )
+          );
+
+          HashMap<String, Object> stimArgs = new HashMap<String, Object>();
+          stimArgs.put("stim.length", 2.0);
+          stimArgs.put("eye", new ArrayList<String>(Arrays.asList("left", "right")));
+          stimArgs.put("x", new ArrayList<Double>(Arrays.asList(1.0, -10.0)));
+          stimArgs.put("y", new ArrayList<Double>(Arrays.asList(1.0, 10.0)));
+          stimArgs.put("sx", new ArrayList<Double>(Arrays.asList(1.0, 1.0)));
+          stimArgs.put("sy", new ArrayList<Double>(Arrays.asList(1.0, 1.0)));
+          stimArgs.put("lum", new ArrayList<Double>(Arrays.asList(255.0, 255.0)));
+          stimArgs.put("color1", cols);
+          stimArgs.put("t", new ArrayList<Double>(Arrays.asList(0.0, 1000.0)));
+          stimArgs.put("w", 1005.0);
+          stimArgs.put("command", "present");
+
+          for (int i = 0 ; i < 5 ; i++) {
+            result = machine.present(stimArgs);
+            System.out.println(String.format("[aTestPresent2] %s", result));
+          }
+
+          try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
+
+          result = machine.close(); 
+          System.out.println(String.format("[testInitialiseSetupPresent] %s", result));
+        } catch (InstantiationException e) {
+          System.out.println("Probably couldn't connect Display to JOVP");
+          e.printStackTrace();
+        }
+      }
+    });
+
+    t.start();
+    server.startPsychoEngine();
+    try { t.join(); } catch (InterruptedException ignored) { ; }
+  }
   /**
    * Open monitor, send initialise message, get reply, setup, get reply, close.
    * Note 1 need opi_settings.json visible in the jovp root dir for this test to run.

@@ -57,7 +57,7 @@
     "viewMode": "Stereo",
     "input": "mouse",
     "tracking": false,
-    "gammaFile": "imo_invGamma.json",
+    "gammaFile": "linear8bit_invGamma.json",
     "ip": "localhost",
     "port": 51234
   }
