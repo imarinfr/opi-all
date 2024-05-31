@@ -321,12 +321,11 @@ public class OpiLogic implements PsychoLogic {
                 boolean newModel = false;
                 boolean newTexture = false;
 
+                Stimulus prev = currentStim.get(itemIndex);
                 if (itemIndex >= currentStim.size()) { // there is no previous stim available
                     newModel = true;
                     newTexture = true;
                 } else {
-                    Stimulus prev = currentStim.get(itemIndex);
-
                     newModel = stim.shape() != prev.shape();
                     newModel |= stim.shape() == ModelType.OPTOTYPE && prev.shape() == ModelType.OPTOTYPE && !stim.optotype().equals(prev.optotype());
 
@@ -341,9 +340,12 @@ public class OpiLogic implements PsychoLogic {
                         stimulusItems.get(itemIndex).update(new Model(stim.shape()));
 
                 if (newTexture)
-                    if (stim.type() == TextureType.IMAGE)
-                        stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // give it the string filename
-                    else
+                    if (stim.type() == TextureType.IMAGE) {
+                        if (prev.type() == TextureType.IMAGE)
+                            stimulusItems.get(itemIndex).getTexture().updateImage(stim.imageFilename());  // update, string filename
+                        else
+                            stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // new, string filename
+                    } else
                         stimulusItems.get(itemIndex).update(new Texture(stim.type()));  
 
                 stimulusItems.get(itemIndex).position(stim.x(), stim.y());
