@@ -141,7 +141,10 @@ setupBackgroundConstants <- function() {
 #' @examples
 #' \dontrun{
 #'   chooseOpi("Octopus900")
-#'   res <- opiInitialize(eyeSuiteSettingsLocation="C:/ProgramData/Haag-Streit/EyeSuite/", eye="left")
+#'   res <- opiInitialize(serverPort = 50001,
+#'                        eyeSuiteSettingsLocation = "C:/ProgramData/Haag-Streit/EyeSuite/",
+#'                        eye = "", gazeFeed = "", bigWheel = FALSE,
+#'                        pres_buzzer = 0, resp_buzzer = 0, zero_dB_is_10000_asb = TRUE)
 #'   if (!is.null(res$err))
 #'       stop("opiInitialize failed")
 #' }

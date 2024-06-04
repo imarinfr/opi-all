@@ -17,8 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require(jsonlite)
-
     # environment for this machine in R
 if (exists(".opi_env") && !exists("Display", where = .opi_env))
     assign("Display", new.env(), envir = .opi_env)
@@ -99,7 +97,8 @@ opiInitialise_for_Display <- function(address) {
 #'
 #' @param settings A list containing:
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{bgImageFilename} (Optional) If present, display the image in the background for eye
+#'  * \code{bgImageFilename} (Optional) If present, display the image in the
+#'                           background for eye (scaled to fill fov, bgLum and bgCol ignored)
 #'  * \code{fixShape} (Optional) Fixation target type for eye.
 #'  * \code{fixLum} (Optional) Fixation target luminance for eye.
 #'  * \code{fixType} (Optional) Fixation target texture for eye.
@@ -270,7 +269,8 @@ opiQueryDevice_for_Display <- function() {
 #'  * \code{sx} List of diameters along major axis of ellipse (degrees).
 #'  * \code{sy} List of diameters along minor axis of ellipse (degrees).
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{t} List of stimuli presentation times (ms).
+#'  * \code{t} List of stimuli presentation times (ms). If 0, then the next stim
+#'             list element will be shown simultaneously.
 #'  * \code{w} Time to wait for response including presentation time (ms).
 #'  * \code{x} List of x co-ordinates of stimuli (degrees).
 #'  * \code{y} List of y co-ordinates of stimuli (degrees).

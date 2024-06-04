@@ -26,8 +26,6 @@
 # limitations under the License.
 #
 #
-require(stats)
-require(utils)
 
 ##########################
 # little helper functions

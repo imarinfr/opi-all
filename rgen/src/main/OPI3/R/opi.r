@@ -102,15 +102,7 @@ opiInitialise <- function(...) {
     return(do.call(paste0("opiInitialise_for_", .opi_env$chosen_machine), args = list(...)))
 }
 
-#' @title Calls opiInitialse_for_MACHINE as appropriate.
-#'
-#' @description
-#' Specific parameters and return values can be seen in the machine specific versions
-#' listed below in the ’See Also’.
-#'
-#' @return Each implementation should(!) return a list with at least the following elements:
-#'   * \code{err} \code{NULL} if no error, otherwise a string describing the error.
-#'
+#' @rdname opiInitialise
 #' @export
 opiInitialize <- opiInitialise
 
@@ -218,8 +210,11 @@ opiPresent <- function(stim, ...) {
         stop("you should use chooseOPI() before calling opiPresent.")
 
         # for backwards compatability for version < OPI 3.0
-    if ("level" %in% names(stim) && !("lum" %in% names(stim)))
+    if ("level" %in% names(stim) && !("lum" %in% names(stim))) {
+        cc <- class(stim)
         stim <- c(stim, lum = stim$level)
+        class(stim) <- cc   # preserve and opiStatic/Temporal/KineticStimulus classes
+    }
 
     return(do.call(paste0("opiPresent_for_", .opi_env$chosen_machine), list(stim = stim, ...)))
 }

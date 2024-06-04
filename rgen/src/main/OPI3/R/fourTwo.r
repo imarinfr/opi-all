@@ -29,7 +29,6 @@
 # limitations under the License.
 #
 #
-require(utils)
 
 #' @rdname fourTwo
 #' @title 4-2 Staircase

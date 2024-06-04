@@ -19,8 +19,6 @@
 # limitations under the License.
 #
 
-require(stats)
-
 #' @title opiClose_for_SimHenson
 #' @description Does nothing.
 #' @usage NULL

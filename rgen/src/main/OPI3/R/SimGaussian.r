@@ -19,8 +19,6 @@
 # limitations under the License.
 #
 
-require(stats)
-
 #' @title opiInitialize_for_SimGaussian
 #' @description
 #' Simulates responses using a Frequency of Seeing (FoS) curve.

@@ -21,9 +21,6 @@
 # limitations under the License.
 #
 
-require(stats)
-require(utils)
-
 #' @rdname MOCS
 #' @title Method of Constant Stimuli (MOCS)
 #' @description MOCS performs either a yes/no or n-interval-forced-choice Method of
