@@ -198,8 +198,12 @@ public class OpiLogic implements PsychoLogic {
 
     /** Present stimulus upon request */
     private void present() {
+        if (currentStim == null || stimulusItems == null) {
+            currentStim = new ArrayList<Stimulus>();
+            stimulusItems = new ArrayList<Item>();
+        } 
         stimIndex = 0;  // the first element in the stimulus list
-        createStimuli();
+        updateStimuli();
         timer.start();
         presentationTime = 0;
         driver.setActionToNull();
@@ -218,7 +222,7 @@ public class OpiLogic implements PsychoLogic {
                             s.show(ViewEye.NONE);
                     else {
                         stimIndex++;
-                        updateStimulus();
+                        updateStimuli();
                     }
                 }
             } else if (timer.getElapsedTime() > currentStim.get(currentStim.size() - 1).w()) {
@@ -250,16 +254,11 @@ public class OpiLogic implements PsychoLogic {
     /** Create stims from the list driver.getStimulus[stimIndex, ...]
      * Elements are taken from driver while t == 0 (ie duration is 0)
      * All taken elements are put into currentStim list.
-     * For each one, an Item is created an put into stimulusItems list.
+     * For each one, an Item is created and put into stimulusItems list.
     */
     private void createStimuli() {
-        if (currentStim == null || stimulusItems == null) {
-            currentStim = new ArrayList<Stimulus>();
-            stimulusItems = new ArrayList<Item>();
-        } else {
-            currentStim.clear();
-            stimulusItems.clear();
-        }
+        currentStim.clear();
+        stimulusItems.clear();
 
         Stimulus stim = driver.getStimulus(stimIndex);
         for(;;) {
@@ -296,17 +295,18 @@ public class OpiLogic implements PsychoLogic {
         }
     }
 
-    /** Update stimulus upon request 
+    /** Update stimulusItems to match the next section of driver.getStimulus(index).
+     * Try and reuse existing Items as much as possible.
       * Only create new Items if the stim has new components (ie t == 0)
       * Only create new Models or Textures in existing Items if really needed
     */
-    private void updateStimulus() {
+    private void updateStimuli() {
         if (stimulusItems.size() == 0) { // first time, create the lot
             createStimuli();
             return;
         }
 
-            // Check each driver.getStimulus(stimIndex) against currentStim[index] to see if
+            // Check each driver.getStimulus(stimIndex) against currentStim[itemIndex] to see if
             //   (a) It exists (ie new stim has more items than currentStim)
             //   (a) OR it should not exist (ie is first or pre t == 0)
             //   (b) OR the model or texture should be updated
@@ -319,18 +319,20 @@ public class OpiLogic implements PsychoLogic {
                 stimulusItems.add(createStimItem(stim));
             } else {
                 boolean newModel = false;
-                boolean newTexture = false;
+                int newTexture = 0;  // 0 = no new texture, 1 = new texture, 2 = update image of existing texture
 
-                Stimulus prev = currentStim.get(itemIndex);
                 if (itemIndex >= currentStim.size()) { // there is no previous stim available
                     newModel = true;
-                    newTexture = true;
+                    newTexture = 1;
                 } else {
+                    Stimulus prev = currentStim.get(itemIndex);
                     newModel = stim.shape() != prev.shape();
                     newModel |= stim.shape() == ModelType.OPTOTYPE && prev.shape() == ModelType.OPTOTYPE && !stim.optotype().equals(prev.optotype());
 
-                    newTexture = stim.type() != prev.type();
-                    newTexture |= stim.type() == TextureType.IMAGE && prev.type() == TextureType.IMAGE && !stim.imageFilename().equals(prev.imageFilename());
+                    if (stim.type() != prev.type())
+                        newTexture = 1;
+                    else if (stim.type() == TextureType.IMAGE && prev.type() == TextureType.IMAGE && !stim.imageFilename().equals(prev.imageFilename()))
+                        newTexture = 2;
                 }
 
                 if (newModel)
@@ -339,14 +341,16 @@ public class OpiLogic implements PsychoLogic {
                     else
                         stimulusItems.get(itemIndex).update(new Model(stim.shape()));
 
-                if (newTexture)
-                    if (stim.type() == TextureType.IMAGE) {
-                        if (prev.type() == TextureType.IMAGE)
-                            stimulusItems.get(itemIndex).getTexture().updateImage(stim.imageFilename());  // update, string filename
-                        else
-                            stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // new, string filename
-                    } else
+                if (newTexture == 1) {
+                    if (stim.type() == TextureType.IMAGE) 
+                        stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // new, string filename
+                    else
                         stimulusItems.get(itemIndex).update(new Texture(stim.type()));  
+                } else if (newTexture == 2) {
+                    Texture t = stimulusItems.get(itemIndex).getTexture();
+                    t.updateImage(stim.imageFilename());     // update the texture
+                    stimulusItems.get(itemIndex).update(t);  // trigger update of the Item
+                }
 
                 stimulusItems.get(itemIndex).position(stim.x(), stim.y());
                 if (stim.fullFoV() != 0) {
@@ -372,18 +376,13 @@ public class OpiLogic implements PsychoLogic {
 
                 // see if we need some more items
             if (stim.t() == 0) {
-                itemIndex++;  // local
-                stimIndex++;  // global
+                itemIndex++;  // local step through stimulusItems and currentStim
+                stimIndex++;  // global step through driver
             } else 
                 break;
         }
 
-            // If we get to the end and currentStim is too long, remove the excess
-        if (currentStim.size() > itemIndex)
-            for (int i = itemIndex; i < currentStim.size(); i++)
-                currentStim.remove(i);
-
-            // Any excess in stimulusItems is left (with View.NONE) for late use.
+        // Any excess in stimulusItems or currentStim are left (with View.NONE) for later use.
     }
 
     /** 
