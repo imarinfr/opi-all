@@ -26,6 +26,7 @@
 		          <mainClass>org.lei.opi.monitor.Monitor</mainClass>
 	      </configuration>
     </plugin>
+    <!--
     <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
@@ -46,6 +47,7 @@
             </execution>
             </executions>
     </plugin>
+    -->
 </plugins>
 </build>
 
