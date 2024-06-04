@@ -306,7 +306,7 @@ public class OpiLogic implements PsychoLogic {
             return;
         }
 
-            // Check each driver.getStimulus(stimIndex) against currentStim[index] to see if
+            // Check each driver.getStimulus(stimIndex) against currentStim[itemIndex] to see if
             //   (a) It exists (ie new stim has more items than currentStim)
             //   (a) OR it should not exist (ie is first or pre t == 0)
             //   (b) OR the model or texture should be updated
@@ -346,8 +346,11 @@ public class OpiLogic implements PsychoLogic {
                         stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // new, string filename
                     else
                         stimulusItems.get(itemIndex).update(new Texture(stim.type()));  
-                } else if (newTexture == 2)
-                        stimulusItems.get(itemIndex).getTexture().updateImage(stim.imageFilename());  // update, string filename
+                } else if (newTexture == 2) {
+                    Texture t = stimulusItems.get(itemIndex).getTexture();
+                    t.updateImage(stim.imageFilename());     // update the texture
+                    stimulusItems.get(itemIndex).update(t);  // trigger update of the Item
+                }
 
                 stimulusItems.get(itemIndex).position(stim.x(), stim.y());
                 if (stim.fullFoV() != 0) {
@@ -373,17 +376,13 @@ public class OpiLogic implements PsychoLogic {
 
                 // see if we need some more items
             if (stim.t() == 0) {
-                itemIndex++;  // local
-                stimIndex++;  // global
+                itemIndex++;  // local step through stimulusItems and currentStim
+                stimIndex++;  // global step through driver
             } else 
                 break;
         }
 
-            // If we get to the end and currentStim is too long, remove the excess
-            for (int i = itemIndex; i < currentStim.size() - 1; i++)
-                currentStim.remove(i);
-
-            // Any excess in stimulusItems is left (with View.NONE) for late use.
+        // Any excess in stimulusItems or currentStim are left (with View.NONE) for later use.
     }
 
     /** 
