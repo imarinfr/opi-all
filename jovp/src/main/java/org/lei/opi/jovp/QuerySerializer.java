@@ -27,6 +27,7 @@ public class QuerySerializer implements JsonSerializer<Query> {
         jsonObject.add("lumPrecision", context.serialize(q.lumPrecision()));
         jsonObject.add("gammaFile", context.serialize(q.invGammaFile()));
         jsonObject.add("monitor", context.serialize(q.monitor()));
+        jsonObject.add("webcam", context.serialize(q.webcam()));
 
         return jsonObject;
     }
