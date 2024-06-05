@@ -1,0 +1,20 @@
+{
+    "cSpell.words": [
+        "Goldmann",
+        "Jankovic",
+        "prlx",
+        "prly",
+        "stim"
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive",
+        "maven.view": "hierarchical",
+        "java.dependency.syncWithFolderExplorer": true,
+        "java.dependency.packagePresentation": "hierarchical",
+        "java.test.config": {
+          "name" : "config",
+           //"vmArgs": ["-Djava.library.path=lwjgl"] // Windows
+           "vmArgs": ["-XstartOnFirstThread", "-Dorg.lwjgl.vulkan.libname=${env:VULKAN_SDK}/lib/libvulkan.dylib"] // Not Windows
+        },
+        "java.test.defaultConfig" : "config",
+        "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx8G -Xms100m -Xlog:disable",
+}

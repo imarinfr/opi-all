@@ -190,7 +190,6 @@ opiInitialise_for_Compass <- function(ip = "192.168.1.2", port = 44965, ...) {
 #'        s <- list(x = x, y = y, level = dbTocd(db, 10000 / pi),
 #'            size = ifelse(size == 3, 0.43, 1.77),
 #'            duration = 200, responseWindow = 1500)
-#'        class(s) <- "opiStaticStimulus"
 #'        return(s)
 #'    }
 #'
