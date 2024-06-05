@@ -16,6 +16,8 @@
     "input": "COM4",
     "tracking": false,
     "gammaFile": "imo_invGamma.json",
+    "deviceNumberCameraLeft": 1,
+    "deviceNumberCameraRight": 2,
     "ip": "169.254.48.11",
     "port": 51234.0
   },

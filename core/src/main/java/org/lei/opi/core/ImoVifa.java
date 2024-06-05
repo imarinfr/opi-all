@@ -1,23 +1,17 @@
 package org.lei.opi.core;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
+import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
 import es.optocom.jovp.Controller;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.scene.Node;
-
-import org.bytedeco.javacv.FrameGrabber;
-import org.bytedeco.javacv.JavaFXFrameConverter;
-import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.bytedeco.javacv.OpenCVFrameGrabber;
-import org.bytedeco.javacv.CanvasFrame;
-import org.bytedeco.javacv.Frame;
 
 /**
  * Opens up a window wherever the JOVP wants it
@@ -25,12 +19,6 @@ import org.bytedeco.javacv.Frame;
 public class ImoVifa extends Jovp {
 
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
-
-    private FrameGrabber grabberLeft, grabberRght;
-    private JavaFXFrameConverter frameConverter;
-
-    private CanvasFrame frameLeft;  //temp
-    private CanvasFrame frameRght;  //temp
 
     public ImoVifa(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
@@ -50,6 +38,9 @@ public class ImoVifa extends Jovp {
      * @return A Package containing a JSON object with machine specific initialise information
      * @since 0.2.0
      */
+    @Parameter(name = "eyeStreamIP", desc = "Destination IP address to which eye images are streamed. No streaming if empty string (default).", className = String.class, isList = false, defaultValue = "")
+    @Parameter(name = "eyeStreamPortLeft", desc = "Destination UDP Port to which left eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50600")
+    @Parameter(name = "eyeStreamPortRight", desc = "Destination UDP Port to which right eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50601")
     public Packet initialize(HashMap<String, Object> args) {
         output("OPI Monitor: OPI Initialized");
 
@@ -59,6 +50,7 @@ public class ImoVifa extends Jovp {
         settings.setScreen(1);
         settings.setViewMode("STEREO");
 
+            // Check that the settings.input port is in the list of available comm ports
         String [] comPorts = Controller.getSuitableControllers();
         if (!Arrays.asList(comPorts).contains(settings.input)) 
             return(Packet.error(new StringBuilder("OPI Settings has ")
@@ -67,20 +59,10 @@ public class ImoVifa extends Jovp {
                 .append(Arrays.toString(comPorts))
                 .toString()));
 
-        try {
-            this.grabberLeft = new OpenCVFrameGrabber(0);
-            this.grabberRght = new OpenCVFrameGrabber(1);
-            this.frameConverter = new JavaFXFrameConverter();
-            this.grabberLeft.start();
-            this.grabberRght.start();
-        } catch (FrameGrabber.Exception e) {
-            System.out.println("Cannot start frame grabber in ImoVifa");
-            e.printStackTrace();
-        }
+            // add in the device numbers of the left and right eye cameras
+         args.put("deviceNumberCameraLeft", settings.deviceNumberCameraLeft);
+         args.put("deviceNumberCameraRight", settings.deviceNumberCameraLeft);
 
-        this.frameLeft = new CanvasFrame("eyes"); // temp
-        this.frameRght = new CanvasFrame("eyes"); // temp
-        
         return super.initialize(null);
     };
   
@@ -109,6 +91,7 @@ public class ImoVifa extends Jovp {
         for (String k : args.keySet())
             sb.append(String.format("\t%s = %s\n", k, args.get(k).toString()));
         output(sb.toString());
+        
         return super.setup(args);
     }
  
@@ -127,8 +110,6 @@ public class ImoVifa extends Jovp {
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
 
-        frameLeft.showImage(getFrame(this.grabberLeft));
-        frameRght.showImage(getFrame(this.grabberLeft));
         //System.out.println(img.getWidth() + " x " + img.getHeight());
         //args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"ANGLES"})));
         //double sx[] = Jovp.toDoubleArray(args.get("sx"));
@@ -157,24 +138,6 @@ public class ImoVifa extends Jovp {
         returnToParentScene((Node)textAreaCommands);
 
         return super.close();
-    }
-
-    /**
-     * Get a frame from the camera
-     * @return An Image object representing the frame (or null if there was an error)
-     */
-    private Frame getFrame(FrameGrabber grabber) {
-        //Image im = null;
-        Frame frame = null;
-        try {
-            frame = grabber.grab();
-
-            //im = frameConverter.convert(frame);
-        } catch (FrameGrabber.Exception e) {
-            System.out.println("Error trying to grab a frame in ImoVifa");
-            e.printStackTrace();
-        }
-        return frame;
     }
 
  //--------------- FXML stuff

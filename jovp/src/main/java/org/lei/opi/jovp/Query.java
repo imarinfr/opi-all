@@ -18,9 +18,11 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param lumPrecision Number of decimal places for luminance in cd/m^2 in inversegamma function
  * @param invGammaFile the path of the inverse gamma file
  * @param monitor display of the OPI JOVP machine
+ * @param webcam String representation of WebCamConfiguration
  * @since 0.0.1
  */
 public record Query(int distance, float[] fov, ViewMode viewMode, String input, boolean pseudoGray,
-                    boolean fullScreen, boolean tracking, double maxLum, int maxPixel, double lumPrecision, String invGammaFile, Monitor monitor) {
+                    boolean fullScreen, boolean tracking, double maxLum, int maxPixel, double lumPrecision, String invGammaFile, Monitor monitor,
+                    String webcam) {
 
 }

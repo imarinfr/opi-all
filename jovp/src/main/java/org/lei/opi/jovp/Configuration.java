@@ -33,11 +33,13 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param tracking whether device allows eye tracking
  * @param invGammaFile path of the display-specific calibration file of R, G, B inv gamma functions
  * @param calibration the RGB calibration data
+ * @param webcam Information about eye monitoring cameras and where they should be streamed 
  *
  * @since 0.0.1
  */
 public record Configuration(Machine machine, int screen, int[] physicalSize, boolean pseudoGray, boolean fullScreen, int distance,
-                           ViewMode viewMode, String input, boolean tracking, String invGammaFile, Calibration calibration) {
+                           ViewMode viewMode, String input, boolean tracking, String invGammaFile, Calibration calibration,
+                           WebCamConfiguration webcam) {
 
     /** Implemented display-based machines */
     enum Machine {IMOVIFA, PICOVR, PHONEHMD, DISPLAY}
@@ -90,7 +92,8 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
 
         return new Configuration(machine, screen, physicalSize, (boolean) args.get("pseudoGray"), (boolean) args.get("fullScreen"),
                                  distance, viewMode, args.get("input").toString().toUpperCase(),
-                                 (boolean) args.get("tracking"), invGammaFile, loadCalibration(invGammaFile));
+                                 (boolean) args.get("tracking"), invGammaFile, loadCalibration(invGammaFile), 
+                                 WebCamConfiguration.set(args));
     }
 
     /**

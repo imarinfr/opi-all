@@ -28,6 +28,8 @@ public abstract class Jovp extends OpiMachine {
         public String input;
         public boolean tracking;
         public String gammaFile;
+        public int deviceNumberCameraLeft;   // for eye tracking if present
+        public int deviceNumberCameraRight;  // for eye tracking if present
 
         public void setScreen(int screen) { this.screen = screen; }
         public void setPhysicalSize(int[] psize) { this.physicalSize = psize; }
