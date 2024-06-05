@@ -50,6 +50,7 @@ public class WebCamConfiguration {
                     rightCS = new CameraStreamer(destIP, destPortRight, srcDeviceRight);
             } catch(IOException e) {
                 System.out.println("Could not start eye tracking cameras in OpiJovp.");
+                e.printStackTrace();
                 this.use = false;
             }
     }
@@ -62,29 +63,30 @@ public class WebCamConfiguration {
      * @return new WebCamConfiguration object
      */
     public static WebCamConfiguration set(HashMap<String, Object> args) {
+System.out.println(args.keySet());
         if (!args.containsKey("eyeStreamIP")
         ||  !args.containsKey("eyeStreamPortLeft")
         ||  !args.containsKey("eyeStreamPortRight")
-        ||  !args.containsKey("srcDeviceLeft")
-        ||  !args.containsKey("srcDeviceRight"))
+        ||  !args.containsKey("deviceNumberCameraLeft")
+        ||  !args.containsKey("deviceNumberCameraRight"))
             return new WebCamConfiguration("", 0, 0, 0, 0);
 
         return new WebCamConfiguration(
           args.get("eyeStreamIP").toString(), 
           ((Double) args.get("eyeStreamPortLeft")).intValue(),
           ((Double) args.get("eyeStreamPortRight")).intValue(),
-          ((Double) args.get("srcDeviceLeft")).intValue(), 
-          ((Double) args.get("srcDeviceRight")).intValue());
+          ((Double) args.get("deviceNumberCameraLeft")).intValue(), 
+          ((Double) args.get("deviceNumberCameraRight")).intValue());
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder("Webcam: ");
         if (this.use)
             return sb.append("destIP: ").append(destIP)
-            .append("destPortLeft: ").append(destPortLeft)
-            .append("destPortRight: ").append(destPortRight)
-            .append("srcDeviceLeft: ").append(srcDeviceLeft)
-            .append("srcDeviceRight: ").append(srcDeviceRight)
+            .append(" destPortLeft: ").append(destPortLeft)
+            .append(" destPortRight: ").append(destPortRight)
+            .append(" srcDeviceLeft: ").append(srcDeviceLeft)
+            .append(" srcDeviceRight: ").append(srcDeviceRight)
             .toString();
         else
             return "Webcam: not active";

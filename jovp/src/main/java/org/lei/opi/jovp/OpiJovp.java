@@ -262,6 +262,7 @@ public class OpiJovp extends OpiListener {
                 return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", fs, "setup()"));
         }
 
+System.out.println("About to check for webcam in opijovp::setup()");
             // update the web cam config if it is here
         if (args.containsKey("eyeStreamIP"))
             configuration = configuration.withWebCam(WebCamConfiguration.set(args));

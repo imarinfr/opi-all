@@ -170,6 +170,8 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
     }
     
     public Configuration withWebCam(WebCamConfiguration webcam) {
+System.out.println("adding webcam to confguration");
+System.out.println(webcam.toString());
         return new Configuration(
             machine(), screen(), physicalSize(), pseudoGray(), fullScreen(), distance(),
             viewMode(), input(), tracking(), invGammaFile(), calibration(),
