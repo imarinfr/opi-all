@@ -29,7 +29,8 @@ public class QueryDeserializer implements JsonDeserializer<Query> {
         double lumPrecision = context.deserialize(jsonObject.get("lumPrecision"), double.class);
         String invGammaFile = jsonObject.get("invGammaFile").getAsString();
         Monitor monitor = context.deserialize(jsonObject.get("monitor"), Monitor.class);
+        String webcam = jsonObject.get("webcam").getAsString();
 
-        return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, maxPixel, lumPrecision, invGammaFile, monitor);
+        return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, maxPixel, lumPrecision, invGammaFile, monitor, webcam);
     }
 }
