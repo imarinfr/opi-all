@@ -56,10 +56,19 @@ public class WebCamConfiguration {
 
     /**
      * Create WebCamConfiguration object from a map of parameters.
-     * @param args OPiJovp key-value pairs for web cam configuration
+     * If any of the params are missing, just return a non-functioning WebCamConfiguration object.
+     * 
+     * @param args OpiJovp key-value pairs for web cam configuration
      * @return new WebCamConfiguration object
      */
     public static WebCamConfiguration set(HashMap<String, Object> args) {
+        if (!args.containsKey("eyeStreamIP")
+        ||  !args.containsKey("eyeStreamPortLeft")
+        ||  !args.containsKey("eyeStreamPortRight")
+        ||  !args.containsKey("srcDeviceLeft")
+        ||  !args.containsKey("srcDeviceRight"))
+            return new WebCamConfiguration("", 0, 0, 0, 0);
+
         return new WebCamConfiguration(
           args.get("eyeStreamIP").toString(), 
           ((Double) args.get("eyeStreamPortLeft")).intValue(),

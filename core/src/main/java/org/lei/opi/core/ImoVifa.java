@@ -38,9 +38,6 @@ public class ImoVifa extends Jovp {
      * @return A Package containing a JSON object with machine specific initialise information
      * @since 0.2.0
      */
-    @Parameter(name = "eyeStreamIP", desc = "Destination IP address to which eye images are streamed. No streaming if empty string (default).", className = String.class, isList = false, defaultValue = "")
-    @Parameter(name = "eyeStreamPortLeft", desc = "Destination UDP Port to which left eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50600")
-    @Parameter(name = "eyeStreamPortRight", desc = "Destination UDP Port to which right eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50601")
     public Packet initialize(HashMap<String, Object> args) {
         output("OPI Monitor: OPI Initialized");
 
@@ -58,10 +55,6 @@ public class ImoVifa extends Jovp {
                 .append(" as the clicker port which is not in the avilable ports: ")
                 .append(Arrays.toString(comPorts))
                 .toString()));
-
-            // add in the device numbers of the left and right eye cameras
-         args.put("deviceNumberCameraLeft", settings.deviceNumberCameraLeft);
-         args.put("deviceNumberCameraRight", settings.deviceNumberCameraLeft);
 
         return super.initialize(null);
     };
@@ -85,7 +78,14 @@ public class ImoVifa extends Jovp {
      * @return A packet containing a JSON object as for `query()`
      * @since 0.2.0
      */
+    @Parameter(name = "eyeStreamIP", desc = "Destination IP address to which eye images are streamed. No streaming if empty string (default).", className = String.class, isList = false, defaultValue = "")
+    @Parameter(name = "eyeStreamPortLeft", desc = "Destination UDP Port to which left eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50600")
+    @Parameter(name = "eyeStreamPortRight", desc = "Destination UDP Port to which right eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50601")
     public Packet setup(HashMap<String, Object> args) {
+            // add in the device numbers of the left and right eye cameras
+         args.put("deviceNumberCameraLeft", settings.deviceNumberCameraLeft);
+         args.put("deviceNumberCameraRight", settings.deviceNumberCameraLeft);
+
         StringBuffer sb = new StringBuffer();
         sb.append("Setup:\n");
         for (String k : args.keySet())

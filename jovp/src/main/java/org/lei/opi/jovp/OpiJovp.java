@@ -205,12 +205,13 @@ public class OpiJovp extends OpiListener {
         try {
             // get configuration
             configuration = Configuration.set(args);
-            this.prefix = "OPI JOVP " + configuration.machine() + ": ";
+            this.prefix = "OPI-JOVP " + configuration.machine() + ": ";
             switch (configuration.viewMode()) {
               case MONO -> backgrounds = new Setup[] {null};
               case STEREO -> backgrounds = new Setup[] {null, null}; 
             }
             setAction(Action.SHOW);
+            
             return new Packet(INITIALIZED);
         } catch (IllegalArgumentException | ClassCastException | IOException | NullPointerException e) {
             e.printStackTrace();
@@ -228,9 +229,9 @@ public class OpiJovp extends OpiListener {
         return Packet.error("JOVP is not ready yet. Try again or call opiInitialise()");
 
     Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
-      configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
-      configuration.calibration().getMaxLum(), configuration.calibration().getMaxPixel(), configuration.calibration().getLumPrecision(),
-      configuration.invGammaFile(), psychoEngine.getWindow().getMonitor(), configuration.webcam().toString());
+        configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
+        configuration.calibration().getMaxLum(), configuration.calibration().getMaxPixel(), configuration.calibration().getLumPrecision(),
+        configuration.invGammaFile(), psychoEngine.getWindow().getMonitor(), configuration.webcam().toString());
 
     return new Packet(q);
   }
@@ -248,23 +249,27 @@ public class OpiJovp extends OpiListener {
     if (configuration == null)
         return Packet.error("JOVP is not ready yet. Try again or call opiInitialise()");
     try {
-      // Get eye for the instruction
-      ViewEye eye = ViewEye.valueOf(((String) args.get("eye")).toUpperCase());
-      if(configuration.viewMode() == ViewMode.MONO || eye == ViewEye.BOTH || eye == ViewEye.LEFT)
-        backgrounds[0] = Setup.create2(args);
-      if(configuration.viewMode() == ViewMode.STEREO && (eye == ViewEye.BOTH || eye == ViewEye.RIGHT))
-        backgrounds[1] = Setup.create2(args);
+        // Get eye for the instruction
+        ViewEye eye = ViewEye.valueOf(((String) args.get("eye")).toUpperCase());
+        if(configuration.viewMode() == ViewMode.MONO || eye == ViewEye.BOTH || eye == ViewEye.LEFT)
+            backgrounds[0] = Setup.create2(args);
+        if(configuration.viewMode() == ViewMode.STEREO && (eye == ViewEye.BOTH || eye == ViewEye.RIGHT))
+            backgrounds[1] = Setup.create2(args);
+       
+        if (args.containsKey("fixShape")) {
+            String fs = (String)args.get("fixShape");
+            if (List.of(new String[] {"HOLLOW_TRIANGLE", "HOLLOW_SQUARE", "HOLLOW_POLYGON", "ANNULUS", "OPTOTYPE", "TEXT", "MODEL"}).contains(fs.toUpperCase()))
+                return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", fs, "setup()"));
+        }
 
-      if (args.containsKey("fixShape")) {
-          String fs = (String)args.get("fixShape");
-          if (List.of(new String[] {"HOLLOW_TRIANGLE", "HOLLOW_SQUARE", "HOLLOW_POLYGON", "ANNULUS", "OPTOTYPE", "TEXT", "MODEL"}).contains(fs.toUpperCase()))
-            return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", fs, "setup()"));
-      }
-
-      setAction(Action.SETUP);
-      return query();
+            // update the web cam config if it is here
+        if (args.containsKey("eyeStreamIP"))
+            configuration = configuration.withWebCam(WebCamConfiguration.set(args));
+       
+        setAction(Action.SETUP);
+        return query();
     } catch (ClassCastException | IllegalArgumentException e) {
-      return Packet.error(prefix + SETUP_FAILED, e);
+        return Packet.error(prefix + SETUP_FAILED, e);
     }
   }
 

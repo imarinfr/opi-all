@@ -169,4 +169,10 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
       return IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8));
     }
     
+    public Configuration withWebCam(WebCamConfiguration webcam) {
+        return new Configuration(
+            machine(), screen(), physicalSize(), pseudoGray(), fullScreen(), distance(),
+            viewMode(), input(), tracking(), invGammaFile(), calibration(),
+            webcam);
+    }
 }
