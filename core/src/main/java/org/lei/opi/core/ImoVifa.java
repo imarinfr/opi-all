@@ -14,7 +14,9 @@ import javafx.scene.Node;
 
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.JavaFXFrameConverter;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
+import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.Frame;
 
 /**
@@ -24,8 +26,11 @@ public class ImoVifa extends Jovp {
 
     public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
 
-    private FrameGrabber grabber;
+    private FrameGrabber grabberLeft, grabberRght;
     private JavaFXFrameConverter frameConverter;
+
+    private CanvasFrame frameLeft;  //temp
+    private CanvasFrame frameRght;  //temp
 
     public ImoVifa(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
@@ -63,14 +68,19 @@ public class ImoVifa extends Jovp {
                 .toString()));
 
         try {
-            this.grabber = new OpenCVFrameGrabber(0);
+            this.grabberLeft = new OpenCVFrameGrabber(0);
+            this.grabberRght = new OpenCVFrameGrabber(1);
             this.frameConverter = new JavaFXFrameConverter();
-            this.grabber.start();
+            this.grabberLeft.start();
+            this.grabberRght.start();
         } catch (FrameGrabber.Exception e) {
             System.out.println("Cannot start frame grabber in ImoVifa");
             e.printStackTrace();
         }
 
+        this.frameLeft = new CanvasFrame("eyes"); // temp
+        this.frameRght = new CanvasFrame("eyes"); // temp
+        
         return super.initialize(null);
     };
   
@@ -117,7 +127,9 @@ public class ImoVifa extends Jovp {
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
 
-        Image img = getFrame();
+        frameLeft.showImage(getFrame(this.grabberLeft));
+        frameRght.showImage(getFrame(this.grabberLeft));
+        //System.out.println(img.getWidth() + " x " + img.getHeight());
         //args.put("units", new ArrayList<String>(Arrays.asList(new String[] {"ANGLES"})));
         //double sx[] = Jovp.toDoubleArray(args.get("sx"));
         //double sy[] = Jovp.toDoubleArray(args.get("sy"));
@@ -151,17 +163,18 @@ public class ImoVifa extends Jovp {
      * Get a frame from the camera
      * @return An Image object representing the frame (or null if there was an error)
      */
-    private Image getFrame() {
-        Image im = null;
+    private Frame getFrame(FrameGrabber grabber) {
+        //Image im = null;
+        Frame frame = null;
         try {
-            Frame frame = grabber.grab();
+            frame = grabber.grab();
 
-            im = frameConverter.convert(frame);
+            //im = frameConverter.convert(frame);
         } catch (FrameGrabber.Exception e) {
             System.out.println("Error trying to grab a frame in ImoVifa");
             e.printStackTrace();
         }
-        return im;
+        return frame;
     }
 
  //--------------- FXML stuff

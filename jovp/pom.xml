@@ -46,9 +46,10 @@
     </plugin>
   </plugins>
 </build>
--->
+  -->
 
-<!-- Just the executable jar with no other jars/libs bundled -->
+<!-- Just the executable jar with no other jars/libs bundled 
+-->
   <build>
     <plugins>
       <plugin>
@@ -65,7 +66,6 @@
       </plugin>
     </plugins>
   </build>
-
   <dependencies>
     <dependency>
       <groupId>org.lei.opi</groupId>
