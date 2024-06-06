@@ -1,16 +1,20 @@
 package org.lei.opi.core;
 
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.util.Arrays;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
-import org.lei.opi.core.definitions.Parameter;
 import org.lei.opi.core.definitions.ReturnMsg;
 
 import es.optocom.jovp.Controller;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.Node;
 
 /**
@@ -18,7 +22,7 @@ import javafx.scene.Node;
  */
 public class ImoVifa extends Jovp {
 
-    public static class Settings extends Jovp.Settings { ; }  // here to trick GUI
+    public static class Settings extends Jovp.Settings { }  // here to trick GUI
 
     public ImoVifa(Scene parentScene) throws InstantiationException { 
         super(parentScene); 
@@ -32,7 +36,7 @@ public class ImoVifa extends Jovp {
     }
 
      /**
-     * opiInitialise: initialize OPI
+     * opiQueryDevice: initialize OPI
      * Update GUI, call super.initialize().
      * @param args A map of name:value pairs for Params (ignored)
      * @return A Package containing a JSON object with machine specific initialise information
@@ -47,14 +51,7 @@ public class ImoVifa extends Jovp {
         settings.setScreen(1);
         settings.setViewMode("STEREO");
 
-            // Check that the settings.input port is in the list of available comm ports
-        String [] comPorts = Controller.getSuitableControllers();
-        if (!Arrays.asList(comPorts).contains(settings.input)) 
-            return(Packet.error(new StringBuilder("OPI Settings has ")
-                .append(settings.input)
-                .append(" as the clicker port which is not in the avilable ports: ")
-                .append(Arrays.toString(comPorts))
-                .toString()));
+        args.put("check_input_com_port_exists", null); // ask opi-jovp to check input is a valid COM port
 
         return super.initialize(null);
     };
@@ -78,14 +75,15 @@ public class ImoVifa extends Jovp {
      * @return A packet containing a JSON object as for `query()`
      * @since 0.2.0
      */
-    @Parameter(name = "eyeStreamIP", desc = "Destination IP address to which eye images are streamed. No streaming if empty string (default).", className = String.class, isList = false, defaultValue = "")
-    @Parameter(name = "eyeStreamPortLeft", desc = "Destination UDP Port to which left eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50600")
-    @Parameter(name = "eyeStreamPortRight", desc = "Destination UDP Port to which right eye images are streamed.", className = Integer.class, isList = false, min = 0, max = 65535, defaultValue = "50601")
     public Packet setup(HashMap<String, Object> args) {
             // add in the device numbers of the left and right eye cameras
-         args.put("deviceNumberCameraLeft", settings.deviceNumberCameraLeft);
-         args.put("deviceNumberCameraRight", settings.deviceNumberCameraLeft);
-
+            // and my address and ports for streaming eye images
+        args.put("deviceNumberCameraLeft", settings.deviceNumberCameraLeft);
+        args.put("deviceNumberCameraRight", settings.deviceNumberCameraLeft);
+        args.put("eyeStreamPortLeft", settings.eyeStreamPortLeft);
+        args.put("eyeStreamPortRight", settings.eyeStreamPortRight);
+        args.put("eyeStreamIP", OpiListener.obtainPublicAddress().getHostAddress().toString());
+System.out.println(args.get("eyeStreamIP") + " " + args.get("eyeStreamPortLeft") + " " + args.get("eyeStreamPortRight") + " " + args.get("deviceNumberCameraLeft") + " " + args.get("deviceNumberCameraRight"));
         StringBuffer sb = new StringBuffer();
         sb.append("Setup:\n");
         for (String k : args.keySet())
@@ -147,9 +145,22 @@ public class ImoVifa extends Jovp {
         setupJavaFX("ImoVifa");
 
         // Create a thread that will get UDP packets from udp_socket and put them in imageViewLeft
-        /*
         Thread t = new Thread() {
             public void run() { 
+                DatagramSocket []udp_socket = {null, null};
+                int []ports = {settings.eyeStreamPortLeft, settings.eyeStreamPortRight};
+                try {
+                    for (int i = 0 ; i < udp_socket.length ; i++)
+                        udp_socket[i] = new DatagramSocket(ports[i]);
+                } catch (IOException e) {
+                    System.out.print("Could not open UDP socket on ports:");
+                    for (int i = 0 ; i < ports.length ; i++)
+                        System.out.print(" " + ports[i]);
+                    System.out.println("");
+                    e.printStackTrace();
+                    return;
+                }
+
                 int image_size = 640 * 480 * 1;
                 byte [] data = new byte[image_size];
                 DatagramPacket p = new DatagramPacket(data, data.length);
@@ -160,7 +171,7 @@ public class ImoVifa extends Jovp {
                 while (isRunning) {
                     try {
                         Thread.sleep(20);
-                        udp_socket.receive(p);
+                        udp_socket[0].receive(p);   // TODO both eyes
 
                         Image img = new Image(new ByteArrayInputStream(p.getData()));
                         Platform.runLater(() -> {
@@ -181,6 +192,7 @@ public class ImoVifa extends Jovp {
             }
         };
         t.start();
+        /*
         */
     }
 }

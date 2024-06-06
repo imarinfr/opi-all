@@ -27,7 +27,7 @@ import com.google.gson.reflect.TypeToken;
  *
  * An instance of this runs a ServerSocket in a separate thread that applies 
  * this.process() to any incoming messages. It assumes that the messages are 
- * JSON objects termintated with a \n that at least contain a name:value pair 
+ * JSON objects terminated with a \n that at least contain a name:value pair 
  * "command":"x" where  x is one of the 5 OPI commands. If the JSON string 
  * does match this pattern it is parsed into name:value pairs and these are passed onto 
  * this.machine.processPairs().

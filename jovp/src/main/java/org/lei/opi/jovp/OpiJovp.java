@@ -1,6 +1,7 @@
 package org.lei.opi.jovp;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
@@ -14,6 +15,7 @@ import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.definitions.ViewEye;
 import es.optocom.jovp.definitions.Paradigm;
 import es.optocom.jovp.definitions.ViewMode;
+import es.optocom.jovp.Controller;
 import es.optocom.jovp.Monitor;
 import es.optocom.jovp.MonitorDeserializer;
 import es.optocom.jovp.MonitorSerializer;
@@ -202,6 +204,20 @@ public class OpiJovp extends OpiListener {
      * @since 0.1.0
      */
     private Packet initialize(HashMap<String, Object> args) {
+            // Check that the settings.input port is in the list of available comm ports
+        if (args.containsKey("check_input_com_port_exists")) {
+            String [] comPorts = Controller.getSuitableControllers();
+            String port = args.get("input").toString();
+            if (!Arrays.asList(comPorts).contains(port)) 
+                return(Packet.error(new StringBuilder("OPI Settings has ")
+                    .append(port)
+                    .append(" as the clicker port which is not in the avilable ports: ")
+                    .append(Arrays.toString(comPorts))
+                    .toString()));
+            else
+                args.remove("check_input_com_port_exists");
+        }
+
         try {
             // get configuration
             configuration = Configuration.set(args);
@@ -210,6 +226,7 @@ public class OpiJovp extends OpiListener {
               case MONO -> backgrounds = new Setup[] {null};
               case STEREO -> backgrounds = new Setup[] {null, null}; 
             }
+
             setAction(Action.SHOW);
             
             return new Packet(INITIALIZED);
@@ -262,7 +279,6 @@ public class OpiJovp extends OpiListener {
                 return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", fs, "setup()"));
         }
 
-System.out.println("About to check for webcam in opijovp::setup()");
             // update the web cam config if it is here
         if (args.containsKey("eyeStreamIP"))
             configuration = configuration.withWebCam(WebCamConfiguration.set(args));
