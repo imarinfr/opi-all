@@ -1,12 +1,9 @@
 package org.lei.opi.core;
 
 import java.io.IOException;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.net.Socket;
 import java.util.HashMap;
 
-import org.bytedeco.librealsense.device;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.ReturnMsg;
 
@@ -15,6 +12,12 @@ import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.Node;
+import javafx.embed.swing.SwingFXUtils;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+
+
 
 /**
  * Opens up a window wherever the JOVP wants it
@@ -140,11 +143,13 @@ public class ImoVifa extends Jovp {
     void initialize() {
         setupJavaFX("ImoVifa");
 
-        File file = new File("imo_eye_OS.png");
-        Image image = new Image(file.toURI().toString());
+        //File file = new File("imo_eye_OS.png");
+        //Image image = new Image(file.toURI().toString());
+        Image image = new Image(this.getClass().getResourceAsStream("/org/lei/opi/core/imo_eye_OS.jpg"));
         imageViewLeft.setImage(image);
-        file = new File("imo_eye_OD.png");
-        image = new Image(file.toURI().toString());
+        //File file = new File("imo_eye_OD.png");
+        //image = new Image(file.toURI().toString());
+        image = new Image(this.getClass().getResourceAsStream("/org/lei/opi/core/imo_eye_OD.jpg"));
         imageViewRight.setImage(image);
 
         // Create a thread that will get images from server and put them in imageViewLeft
@@ -156,20 +161,21 @@ public class ImoVifa extends Jovp {
                 
                 Socket socket = null;
 
-                    // we have to wait for the server to be initialised
+                    // Wait for the server to be initialised
                 while (socket == null) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(2000);
                         socket = new Socket(settings.ip, port);
                     } catch (IOException e) {
-                        System.out.println("Waiting for eye camera socket on server on port: " + port);
+                        System.out.println("Waiting for opiInitialise to open up eye camera socket on server on port: " + port);
                     } catch (InterruptedException e) {
                         return;
                     }
                 }
 
-                byte []data = new byte[1024];
+                byte []bytes = new byte[1024];
 
+                int temp = 1;
                 boolean isRunning = true;
                 while (isRunning) {
                     try {
@@ -184,15 +190,22 @@ public class ImoVifa extends Jovp {
                         int n3 = (int)socket.getInputStream().read();
                         int n4 = (int)socket.getInputStream().read();
                         int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n4;
-System.out.println("Looking for " + n + " bytes from camera.");
 
-                        if (data.length != n)
-                            data = new byte[n];
+                        if (bytes.length != n)
+                            bytes = new byte[n];
 
-                        socket.getInputStream().read(data);
+                        int off = 0; // current start of buffer (offset)
+                        while (off < n) {
+                            int readN = socket.getInputStream().read(bytes, off, n - off);
+                            off += readN;
+                        }
                         //Image img = new Image(socket.getInputStream());  will this work?
 
-                        Image img = new Image(new ByteArrayInputStream(data));
+                        BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
+                        byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
+                        System.arraycopy(bytes, 0, im_array, 0, im_array.length);
+                        Image img = SwingFXUtils.toFXImage(im, null);
+
                         Platform.runLater(() -> {
                             if (deviceNum == 0)                 // TODO need to allow for mono
                                 imageViewLeft.setImage(img);

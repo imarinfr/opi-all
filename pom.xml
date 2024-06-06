@@ -22,7 +22,7 @@
     <commons-lang3.version>3.12.0</commons-lang3.version>
     <reflections.version>0.9.12</reflections.version>
     <!-- monitor -->
-    <openjfx.version>18.0.2</openjfx.version>
+    <openjfx.version>22.0.1</openjfx.version>
     <!-- jovp -->
     <jovp.version>0.1.0-SNAPSHOT</jovp.version>
   </properties>
