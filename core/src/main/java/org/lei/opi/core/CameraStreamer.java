@@ -7,7 +7,6 @@ import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -27,7 +26,7 @@ public class CameraStreamer extends Thread {
     private Socket socket;
 
     /** Whether it is connected to a client */
-    private boolean connected;
+    public boolean connected;
 
     /**
      * Create a CameraStreamer that streams images from a camera on the local machine and sends them over UDP
@@ -40,7 +39,7 @@ public class CameraStreamer extends Thread {
         this.deviceNumber = deviceNumber;
         this.start();
     }
-
+        
     @Override
     public void run() {
         OpenCVFrameGrabber []grabber = new OpenCVFrameGrabber[this.deviceNumber.length];
@@ -51,6 +50,7 @@ public class CameraStreamer extends Thread {
             }
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
+            this.connected = false;
             return;
         }
 
@@ -69,9 +69,10 @@ public class CameraStreamer extends Thread {
                     int n = con.channels() * con.rows() * con.cols();
                     byte []bytes = new byte[n];
                     con.data().get(bytes);
-                        // 1 byte for device numebr
+                        // 1 byte for device number
                         // 4 bytes for length of data, n
                         // n bytes of Mat
+System.out.println("Putting " + n + " bytes from camera " + current_device + " on socket.");
                     socket.getOutputStream().write(current_device);
                     socket.getOutputStream().write(n >> 24);
                     socket.getOutputStream().write((n >> 16) & 0xFF);
