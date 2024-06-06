@@ -2,13 +2,17 @@ package org.lei.opi.core;
 
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.Java2DFrameConverter;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.javacv.OpenCVFrameConverter;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import java.awt.image.BufferedImage;
 
 /**
  * Create a thread that streams raw images from one or more "webcams".
@@ -64,6 +68,11 @@ public class CameraStreamer extends Thread {
 
             while (this.connected) {
                 Frame frame = grabber[current_device].grab();
+                Java2DFrameConverter jc = new Java2DFrameConverter();
+                BufferedImage bi = jc.convert(frame);
+System.out.println("bi type " + bi.getType());
+System.out.println("bi width " + bi.getWidth());
+System.out.println("bi height " + bi.getHeight());
                 if (frame.image != null) {
                     Mat con = converter.convert(frame);
                     int n = con.channels() * con.rows() * con.cols();
