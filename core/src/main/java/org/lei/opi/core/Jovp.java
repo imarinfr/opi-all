@@ -30,8 +30,7 @@ public abstract class Jovp extends OpiMachine {
         public String gammaFile;
         public int deviceNumberCameraLeft;   // for eye tracking if present
         public int deviceNumberCameraRight;  // for eye tracking if present
-        /** Port on which eye images will be streamed (if any) */
-        public int eyeStreamPort; 
+        public int eyeStreamPort; // Port on which eye images will be streamed (if any, -1 if none)
 
         public void setScreen(int screen) { this.screen = screen; }
         public void setPhysicalSize(int[] psize) { this.physicalSize = psize; }
@@ -76,7 +75,24 @@ public abstract class Jovp extends OpiMachine {
     */
     public Packet initialize(HashMap<String, Object> args) {
         try {
-            this.send(initConfiguration());
+            String initialConfig = new StringBuilder("{\n  \"command\": " + Command.INITIALIZE + ",\n")
+                .append("  \"machine\": " + this.getClass().getSimpleName() + ",\n")
+                .append("  \"screen\": " + settings.screen + ",\n")
+                .append("  \"physicalSize\": " + Arrays.toString(settings.physicalSize) + ",\n")
+                .append("  \"pseudoGray\": " + settings.pseudoGray + ",\n")
+                .append("  \"fullScreen\": " + settings.fullScreen + ",\n")
+                .append("  \"distance\": " + settings.distance + ",\n")
+                .append("  \"viewMode\": " + settings.viewMode + ",\n")
+                .append("  \"input\": " + settings.input + ",\n")
+                .append("  \"tracking\": " + settings.tracking + ",\n")
+                .append("  \"gammaFile\": " + settings.gammaFile + ",\n")
+                .append("  \"eyeStreamPort\": " + settings.eyeStreamPort + ",\n")
+                .append("  \"deviceNumberCameraLeft\": " + settings.deviceNumberCameraLeft + ",\n")
+                .append("  \"deviceNumberCameraRight\": " + settings.deviceNumberCameraRight + ",\n")
+                .append("\n}").toString();
+System.out.println("Jovp machine intitialize()");
+System.out.println(initialConfig);
+            this.send(initialConfig);
             Packet p = this.receive();
             return Packet.checkReturnElements(p, this.opiMethods, "initialize");
         } catch (IOException e) {
@@ -211,22 +227,6 @@ public abstract class Jovp extends OpiMachine {
             return Packet.error(COULD_NOT_CLOSE, e);
         }
         return new Packet(true, DISCONNECTED_FROM_HOST);
-    }
-
-    /** This is what the JOVP Server/Machine is expecting for the Initialize Command */
-    private String initConfiguration() {
-        return new StringBuilder("{\n  \"command\": " + Command.INITIALIZE + ",\n")
-        .append("  \"machine\": " + this.getClass().getSimpleName() + ",\n")
-        .append("  \"screen\": " + settings.screen + ",\n")
-        .append("  \"physicalSize\": " + Arrays.toString(settings.physicalSize) + ",\n")
-        .append("  \"pseudoGray\": " + settings.pseudoGray + ",\n")
-        .append("  \"fullScreen\": " + settings.fullScreen + ",\n")
-        .append("  \"distance\": " + settings.distance + ",\n")
-        .append("  \"viewMode\": " + settings.viewMode + ",\n")
-        .append("  \"input\": " + settings.input + ",\n")
-        .append("  \"tracking\": " + settings.tracking + ",\n")
-        .append("  \"gammaFile\": " + settings.gammaFile)
-        .append("\n}").toString();
     }
 
     /**

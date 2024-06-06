@@ -168,13 +168,4 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
       InputStream inputStream = new FileInputStream(file);
       return IOUtils.toString(inputStream, String.valueOf(StandardCharsets.UTF_8));
     }
-    
-    public Configuration withWebCam(WebCamConfiguration webcam) {
-System.out.println("adding webcam to confguration");
-System.out.println(webcam.toString());
-        return new Configuration(
-            machine(), screen(), physicalSize(), pseudoGray(), fullScreen(), distance(),
-            viewMode(), input(), tracking(), invGammaFile(), calibration(),
-            webcam);
-    }
 }

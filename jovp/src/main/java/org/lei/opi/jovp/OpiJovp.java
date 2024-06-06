@@ -205,19 +205,17 @@ public class OpiJovp extends OpiListener {
      */
     private Packet initialize(HashMap<String, Object> args) {
             // Check that the settings.input port is in the list of available comm ports
-        if (args.containsKey("check_input_com_port_exists")) {
-            String [] comPorts = Controller.getSuitableControllers();
-            String port = args.get("input").toString();
-            if (!Arrays.asList(comPorts).contains(port)) 
-                return(Packet.error(new StringBuilder("OPI Settings has ")
-                    .append(port)
-                    .append(" as the clicker port which is not in the avilable ports: ")
-                    .append(Arrays.toString(comPorts))
-                    .toString()));
-            else
-                args.remove("check_input_com_port_exists");
-        }
-
+            // Will this work for all Jovp machines!?
+        String [] comPorts = Controller.getSuitableControllers();
+        String port = args.get("input").toString();
+        if (!Arrays.asList(comPorts).contains(port)) 
+            return(Packet.error(new StringBuilder("OPI Settings has ")
+                .append(port)
+                .append(" as the clicker port which is not in the avilable ports: ")
+                .append(Arrays.toString(comPorts))
+                .toString()));
+System.out.println("OpiJovp intitialize()");
+System.out.println(args.keySet());
         try {
             // get configuration
             configuration = Configuration.set(args);
@@ -279,10 +277,6 @@ public class OpiJovp extends OpiListener {
                 return Packet.error(String.format(UNIMPLEMENTED_FORMAT, prefix, "fixShape", fs, "setup()"));
         }
 
-            // update the web cam config if it is here
-        if (args.containsKey("eyeStreamIP"))
-            configuration = configuration.withWebCam(WebCamConfiguration.set(args));
-       
         setAction(Action.SETUP);
         return query();
     } catch (ClassCastException | IllegalArgumentException e) {

@@ -52,9 +52,7 @@ public class ImoVifa extends Jovp {
         settings.setScreen(1);
         settings.setViewMode("STEREO");
 
-        args.put("check_input_com_port_exists", null); // ask opi-jovp to check input is a valid COM port
-
-        return super.initialize(null);
+        return super.initialize(null);  // super uses settings, not args! why!???
     };
   
     /**
