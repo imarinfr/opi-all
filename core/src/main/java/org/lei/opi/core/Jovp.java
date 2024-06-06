@@ -19,6 +19,8 @@ import es.optocom.jovp.definitions.ViewMode;
 public abstract class Jovp extends OpiMachine {
 
     public static class Settings extends OpiMachine.Settings {
+        public String command;    // this is not read from the config file, used internally
+        public String machine;    // this is not read from the config file, used internally
         public int screen;
         public int[] physicalSize;
         public boolean pseudoGray;
@@ -75,24 +77,8 @@ public abstract class Jovp extends OpiMachine {
     */
     public Packet initialize(HashMap<String, Object> args) {
         try {
-            String initialConfig = new StringBuilder("{\n  \"command\": " + Command.INITIALIZE + ",\n")
-                .append("  \"machine\": " + this.getClass().getSimpleName() + ",\n")
-                .append("  \"screen\": " + settings.screen + ",\n")
-                .append("  \"physicalSize\": " + Arrays.toString(settings.physicalSize) + ",\n")
-                .append("  \"pseudoGray\": " + settings.pseudoGray + ",\n")
-                .append("  \"fullScreen\": " + settings.fullScreen + ",\n")
-                .append("  \"distance\": " + settings.distance + ",\n")
-                .append("  \"viewMode\": " + settings.viewMode + ",\n")
-                .append("  \"input\": " + settings.input + ",\n")
-                .append("  \"tracking\": " + settings.tracking + ",\n")
-                .append("  \"gammaFile\": " + settings.gammaFile + ",\n")
-                .append("  \"eyeStreamPort\": " + settings.eyeStreamPort + ",\n")
-                .append("  \"deviceNumberCameraLeft\": " + settings.deviceNumberCameraLeft + ",\n")
-                .append("  \"deviceNumberCameraRight\": " + settings.deviceNumberCameraRight + ",\n")
-                .append("\n}").toString();
-System.out.println("Jovp machine intitialize()");
-System.out.println(initialConfig);
-            this.send(initialConfig);
+            settings.command = Command.INITIALIZE.toString();
+            this.send(OpiListener.gson.toJson(settings));
             Packet p = this.receive();
             return Packet.checkReturnElements(p, this.opiMethods, "initialize");
         } catch (IOException e) {
@@ -145,17 +131,16 @@ System.out.println(initialConfig);
     @Parameter(name = "fixRotation", className = Double.class, desc = "Angles of rotation of fixation target (degrees). Only useful if sx != sy specified.", optional = true, min = 0, max = 360, defaultValue = "0")
     @Parameter(name = "tracking", className = Integer.class, desc = "Whether to correct stimulus location based on eye position.", optional = true, min = 0, max = 1, defaultValue = "0")
     public Packet setup(HashMap<String, Object> args) {
-      if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
-      try {
-        Packet p = validateArgs(args, this.opiMethods.get("setup").parameters(), "setup");
-          if (p.getError()) 
-            return(p);
-        //this.send(OpiListener.gson.toJson(args));
-        this.send(p.getMsg());
-        return Packet.checkReturnElements(this.receive(), this.opiMethods, "setup");
-      } catch (IOException e) {
-        return Packet.error(COULD_NOT_SETUP, e);
-      }
+        if (!this.socket.isConnected()) return Packet.error(DISCONNECTED_FROM_HOST);
+        try {
+            Packet p = validateArgs(args, this.opiMethods.get("setup").parameters(), "setup");
+                if (p.getError()) 
+                    return(p);
+            this.send(p.getMsg());
+            return Packet.checkReturnElements(this.receive(), this.opiMethods, "setup");
+        } catch (IOException e) {
+          return Packet.error(COULD_NOT_SETUP, e);
+        }
     }
    
     /**

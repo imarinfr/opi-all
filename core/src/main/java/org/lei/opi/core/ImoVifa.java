@@ -48,6 +48,7 @@ public class ImoVifa extends Jovp {
 
             // Make sure screen = 1 and viewMode = "STEREO" is present for ImoVifa
             // Also it seems the monitor does not report it's correct size...
+        settings.machine = "imoVifa";
         settings.setPhysicalSize(new int[] {121, 68});
         settings.setScreen(1);
         settings.setViewMode("STEREO");
