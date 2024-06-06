@@ -177,6 +177,7 @@ System.out.println("Looking for " + n + " bytes from camera.");
                             data = new byte[n];
 
                         socket.getInputStream().read(data);
+                        //Image img = new Image(socket.getInputStream());  will this work?
 
                         Image img = new Image(new ByteArrayInputStream(data));
                         Platform.runLater(() -> {

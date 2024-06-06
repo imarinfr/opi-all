@@ -96,11 +96,7 @@ opiInitialise_for_ImoVifa <- function(address) {
 #' @usage NULL
 #'
 #' @param settings A list containing:
-#'  * \code{eyeStreamPortLeft} Destination UDP Port to which left eye images are streamed.
 #'  * \code{eye} The eye for which to apply the settings.
-#'  * \code{eyeStreamIP} Destination IP address to which eye images are
-#'                       streamed. No streaming if empty string (default).
-#'  * \code{eyeStreamPortRight} Destination UDP Port to which right eye images are streamed.
 #'  * \code{bgImageFilename} (Optional) If present, display the image in the
 #'                           background for eye (scaled to fill fov, bgLum and bgCol ignored)
 #'  * \code{fixShape} (Optional) Fixation target type for eye.
@@ -128,12 +124,8 @@ opiInitialise_for_ImoVifa <- function(address) {
 #'
 #' @details
 #'
-#' \code{eyeStreamPortLeft} can take on values in the range \code{[0, 65535]}.
-#'
 #' \code{eye} can take on values in the set \code{{"left", "right", "both",
 #'      "none"}}.
-#'
-#' \code{eyeStreamPortRight} can take on values in the range \code{[0, 65535]}.
 #'
 #' \code{fixShape} can take on values in the set \code{{"triangle",
 #'           "square", "polygon", "hollow_triangle", "hollow_square",
@@ -166,8 +158,7 @@ opiInitialise_for_ImoVifa <- function(address) {
 #' @examples
 #' chooseOpi("ImoVifa")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
-#' result <- opiSetup(settings = list(eyeStreamPortLeft = 50600, eye = "BOTH", eyeStreamIP = "",
-#'                 eyeStreamPortRight = 50601))
+#' result <- opiSetup(settings = list(eye = "BOTH"))
 #'
 #' @seealso [opiSetup()]
 #'
@@ -177,7 +168,7 @@ opiSetup_for_ImoVifa <- function(settings) {
 
     if (is.null(settings)) return(list(err = "Nothing to do in opiSetup."))
 
-    msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixType = settings$fixType, fixCx = settings$fixCx, eyeStreamPortLeft = settings$eyeStreamPortLeft, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, eyeStreamIP = settings$eyeStreamIP, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixImageFilename = settings$fixImageFilename, eyeStreamPortRight = settings$eyeStreamPortRight)
+    msg <- list(bgImageFilename = settings$bgImageFilename, fixShape = settings$fixShape, fixLum = settings$fixLum, fixType = settings$fixType, fixCx = settings$fixCx, fixCy = settings$fixCy, fixCol = settings$fixCol, bgLum = settings$bgLum, tracking = settings$tracking, bgCol = settings$bgCol, eye = settings$eye, fixSx = settings$fixSx, fixSy = settings$fixSy, fixRotation = settings$fixRotation, fixImageFilename = settings$fixImageFilename)
     msg <- c(list(command = "setup"), msg)
     msg <- msg[!unlist(lapply(msg, is.null))]
     msg <- jsonlite::toJSON(msg, auto_unbox = TRUE)
@@ -225,8 +216,7 @@ opiSetup_for_ImoVifa <- function(settings) {
 #' @examples
 #' chooseOpi("ImoVifa")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
-#' opiSetup(list(eyeStreamPortLeft = 50600, eye = "BOTH", eyeStreamIP = "",
-#'                 eyeStreamPortRight = 50601))
+#' opiSetup(list(eye = "BOTH"))
 #' result <- opiQueryDevice()
 #'
 #' @seealso [opiQueryDevice()]
@@ -394,8 +384,7 @@ opiQueryDevice_for_ImoVifa <- function() {
 #' @examples
 #' chooseOpi("ImoVifa")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
-#' opiSetup(list(eyeStreamPortLeft = 50600, eye = "BOTH", eyeStreamIP = "",
-#'                 eyeStreamPortRight = 50601))
+#' opiSetup(list(eye = "BOTH"))
 #' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(1.0,
 #'                   1.0, 1.0)), sx = list(1.72), sy = list(1.72),
 #'                   eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
@@ -456,8 +445,7 @@ opiPresent_for_ImoVifa <- function(stim, ...) {
 #' @examples
 #' chooseOpi("ImoVifa")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
-#' opiSetup(list(eyeStreamPortLeft = 50600, eye = "BOTH", eyeStreamIP = "",
-#'                 eyeStreamPortRight = 50601))
+#' opiSetup(list(eye = "BOTH"))
 #' result <- opiClose()
 #'
 #' @seealso [opiClose()]

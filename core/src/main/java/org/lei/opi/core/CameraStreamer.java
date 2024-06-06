@@ -10,29 +10,23 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.InetAddress;
 
 /**
- * Create a thread that streams base64 encoded images from a "webcam".
- * on a given UDP port.
+ * Create a thread that streams raw images from one or more "webcams".
  *
  * @author Andrew Turpin
  * @date 5 June 2024 
  */
 public class CameraStreamer extends Thread {
-    /** The device number of the camera to stream on the machine on which this is running. */
-    private int deviceNumber; 
+    /** The device numbers of the cameras to stream on the machine on which this is running. */
+    private int []deviceNumber; 
     /** The port number on this machine that will serve images */
     private int port; 
 
     /** The socket on which frames will be sent. */
     private Socket socket;
-        /** Writer for outgoing messages to the socket */
-    PrintWriter outgoing;
-    /** Whether it is connected to a client */
 
-    /** true if should be connected, false otherwise */
+    /** Whether it is connected to a client */
     private boolean connected;
 
     /**
@@ -41,7 +35,7 @@ public class CameraStreamer extends Thread {
      * @param deviceNumber  Camera number on the local machine running the CameraStreamer
      * @throws IOException
      */
-    public CameraStreamer(int port, int deviceNumber) throws IOException {
+    public CameraStreamer(int port, int []deviceNumber) throws IOException {
         this.port = port;
         this.deviceNumber = deviceNumber;
         this.start();
@@ -49,15 +43,18 @@ public class CameraStreamer extends Thread {
 
     @Override
     public void run() {
-        boolean done = false;
-
-        OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(this.deviceNumber);
+        OpenCVFrameGrabber []grabber = new OpenCVFrameGrabber[this.deviceNumber.length];
         try {
-            grabber.start();
+            for (int i = 0 ; i < this.deviceNumber.length; i++) {
+                grabber[i] = new OpenCVFrameGrabber(this.deviceNumber[i]);
+                grabber[i].start();
+            }
         } catch (FrameGrabber.Exception e) {
             e.printStackTrace();
-            done = true;
+            return;
         }
+
+        int current_device = 0; // rotate through each device in turn
 
         OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
         try {
@@ -65,14 +62,17 @@ public class CameraStreamer extends Thread {
             socket = server.accept();
             this.connected = true;
 
-            while (!done && this.connected) {
-                Frame frame = grabber.grab();
+            while (this.connected) {
+                Frame frame = grabber[current_device].grab();
                 if (frame.image != null) {
                     Mat con = converter.convert(frame);
                     int n = con.channels() * con.rows() * con.cols();
                     byte []bytes = new byte[n];
                     con.data().get(bytes);
-                    socket.getOutputStream().write(this.deviceNumber);
+                        // 1 byte for device numebr
+                        // 4 bytes for length of data, n
+                        // n bytes of Mat
+                    socket.getOutputStream().write(current_device);
                     socket.getOutputStream().write(n >> 24);
                     socket.getOutputStream().write((n >> 16) & 0xFF);
                     socket.getOutputStream().write((n >>  8) & 0xFF);
@@ -80,16 +80,21 @@ public class CameraStreamer extends Thread {
                     socket.getOutputStream().write(bytes);
                 }
                 Thread.sleep(50);
+                current_device = (current_device + 1) % this.deviceNumber.length;
             }
             server.close();
-            grabber.close();
         } catch (IOException e) {
             e.printStackTrace();
-            done = true;
+            this.connected = false;
         } catch (InterruptedException e) {
-            done = true;
+            this.connected = false;
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        try {
+            for (int i = 0 ; i < this.deviceNumber.length; i++)
+                grabber[i].close();
+        } catch (Exception e) { ; }
     }
 }

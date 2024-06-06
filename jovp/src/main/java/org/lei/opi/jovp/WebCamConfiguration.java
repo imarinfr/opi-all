@@ -20,7 +20,7 @@ public class WebCamConfiguration {
     private int srcDeviceRight;
 
     /** CameraStreamer for left and right eyes. null if {@link use} is false */
-    public CameraStreamer leftCS, rightCS;
+    public CameraStreamer cameraStreamer;
 
     /**
      * Set up CameraStreamers {@link leftCS} and {@link rightCS} and set {@link use}.
@@ -34,16 +34,14 @@ public class WebCamConfiguration {
         this.srcDeviceLeft = srcDeviceLeft;
         this.srcDeviceRight = srcDeviceRight;
 
-        leftCS = null;
-        rightCS = null;
-
         if (port == -1)
             return;
 
         try {
-            leftCS = new CameraStreamer(port, srcDeviceLeft);
             if (srcDeviceRight != -1)
-                rightCS = new CameraStreamer(port, srcDeviceRight);
+                cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft, srcDeviceRight});
+            else
+                cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft});
         } catch(IOException e) {
             System.out.println("Could not start eye tracking cameras in OpiJovp.");
             e.printStackTrace();
