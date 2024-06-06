@@ -30,15 +30,12 @@ public abstract class Jovp extends OpiMachine {
         public String gammaFile;
         public int deviceNumberCameraLeft;   // for eye tracking if present
         public int deviceNumberCameraRight;  // for eye tracking if present
-        /** Port on which to listen for DatagramPackets which are left eye images (if any) */
-        public int eyeStreamPortLeft; 
-        /** Port on which to listen for DatagramPackets which are right eye images (if any) */
-        public int eyeStreamPortRight;
+        /** Port on which eye images will be streamed (if any) */
+        public int eyeStreamPort; 
 
         public void setScreen(int screen) { this.screen = screen; }
         public void setPhysicalSize(int[] psize) { this.physicalSize = psize; }
         public void setViewMode(String s) { this.viewMode = s; }
-        public void setStreamPorts(int []ports) { this.eyeStreamPortLeft = ports[0]; this.eyeStreamPortRight = ports[1]; }
     };
 
     /** Settings */

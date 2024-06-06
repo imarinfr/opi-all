@@ -5,20 +5,19 @@ import java.util.HashMap;
 
 import org.lei.opi.core.CameraStreamer;
 
+/**
+ * Holds information that the opiJovp server needs about any local eye cameras
+ * and the TCP socket that will stream their images.
+ * 
+ * @date 6 Jun 2024
+ */
 public class WebCamConfiguration {
-    /** Destination IP address to which eye images are streamed. No streaming if empty string (default). */
-    private String destIP;
-    /** Destination UDP Port to which left eye images are streamed. */
-    private int destPortLeft;
-    /** Destination UDP Port to which right eye images are streamed. */
-    private int destPortRight;
+    /** The port number on this machine that will serve images */
+    private int port;
     /** Device number of left eye camera (or only eye camera if just one). */
     private int srcDeviceLeft;
     /** Device number of right eye camera (or -1 if there is no such device). */
     private int srcDeviceRight;
-
-    /** active True if streaming should be activated, false otherwise*/
-    public boolean use;
 
     /** CameraStreamer for left and right eyes. null if {@link use} is false */
     public CameraStreamer leftCS, rightCS;
@@ -26,33 +25,29 @@ public class WebCamConfiguration {
     /**
      * Set up CameraStreamers {@link leftCS} and {@link rightCS} and set {@link use}.
      *
-     * @param destIP Destination IP address to which eye images are streamed. No streaming if empty string.
-     * @param destPortLeft  Destination UDP Port to which left eye images are streamed. 
-     * @param destPortRight Destination UDP Port to which right eye images are streamed. 
+     * @param port The port number on this machine that will serve images. Use -1 for no streaming.
      * @param srcDeviceLeft Device number of left eye camera (or only eye camera if just one). 
      * @param srcDeviceRight Device number of right eye camera (or -1 if there is no such device). 
     */
-    public WebCamConfiguration(String destIP, int destPortLeft, int destPortRight, int srcDeviceLeft, int srcDeviceRight) {
-        this.destIP = destIP;
-        this.destPortLeft = destPortLeft;
-        this.destPortRight = destPortRight;
+    public WebCamConfiguration(int port, int srcDeviceLeft, int srcDeviceRight) {
+        this.port = port;
         this.srcDeviceLeft = srcDeviceLeft;
         this.srcDeviceRight = srcDeviceRight;
 
-        this.use = !destIP.equals("");
-
         leftCS = null;
         rightCS = null;
-        if (this.use)
-            try {
-                leftCS = new CameraStreamer(destIP, destPortLeft, srcDeviceLeft);
-                if (srcDeviceRight != -1)
-                    rightCS = new CameraStreamer(destIP, destPortRight, srcDeviceRight);
-            } catch(IOException e) {
-                System.out.println("Could not start eye tracking cameras in OpiJovp.");
-                e.printStackTrace();
-                this.use = false;
-            }
+        if (port == -1)
+            return;
+
+        try {
+            leftCS = new CameraStreamer(port, srcDeviceLeft);
+            if (srcDeviceRight != -1)
+                rightCS = new CameraStreamer(port, srcDeviceRight);
+        } catch(IOException e) {
+            System.out.println("Could not start eye tracking cameras in OpiJovp.");
+            e.printStackTrace();
+        }
+        System.out.println(this.toString());
     }
 
     /**
@@ -63,33 +58,25 @@ public class WebCamConfiguration {
      * @return new WebCamConfiguration object
      */
     public static WebCamConfiguration set(HashMap<String, Object> args) {
-System.out.println(args.keySet());
-        if (!args.containsKey("eyeStreamIP")
-        ||  !args.containsKey("eyeStreamPortLeft")
-        ||  !args.containsKey("eyeStreamPortRight")
+        if (!args.containsKey("eyeStreamPort")
         ||  !args.containsKey("deviceNumberCameraLeft")
         ||  !args.containsKey("deviceNumberCameraRight"))
-            return new WebCamConfiguration("", 0, 0, 0, 0);
+            return new WebCamConfiguration(-1, 0, 0);
 
         return new WebCamConfiguration(
-          args.get("eyeStreamIP").toString(), 
-          ((Double) args.get("eyeStreamPortLeft")).intValue(),
-          ((Double) args.get("eyeStreamPortRight")).intValue(),
+          ((Double) args.get("eyeStreamPort")).intValue(),
           ((Double) args.get("deviceNumberCameraLeft")).intValue(), 
           ((Double) args.get("deviceNumberCameraRight")).intValue());
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder("Webcam: ");
-        if (this.use)
-            return sb.append("destIP: ").append(destIP)
-            .append(" destPortLeft: ").append(destPortLeft)
-            .append(" destPortRight: ").append(destPortRight)
+        if (port != -1)
+            return sb.append(" port: ").append(port)
             .append(" srcDeviceLeft: ").append(srcDeviceLeft)
             .append(" srcDeviceRight: ").append(srcDeviceRight)
             .toString();
         else
             return "Webcam: not active";
-
     }
 }

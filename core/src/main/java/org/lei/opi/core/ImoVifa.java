@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ByteArrayInputStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -80,10 +81,8 @@ public class ImoVifa extends Jovp {
             // and my address and ports for streaming eye images
         args.put("deviceNumberCameraLeft", settings.deviceNumberCameraLeft);
         args.put("deviceNumberCameraRight", settings.deviceNumberCameraLeft);
-        args.put("eyeStreamPortLeft", settings.eyeStreamPortLeft);
-        args.put("eyeStreamPortRight", settings.eyeStreamPortRight);
-        args.put("eyeStreamIP", OpiListener.obtainPublicAddress().getHostAddress().toString());
-System.out.println(args.get("eyeStreamIP") + " " + args.get("eyeStreamPortLeft") + " " + args.get("eyeStreamPortRight") + " " + args.get("deviceNumberCameraLeft") + " " + args.get("deviceNumberCameraRight"));
+        args.put("eyeStreamPort", settings.eyeStreamPort);
+
         StringBuffer sb = new StringBuffer();
         sb.append("Setup:\n");
         for (String k : args.keySet())
@@ -144,55 +143,59 @@ System.out.println(args.get("eyeStreamIP") + " " + args.get("eyeStreamPortLeft")
     void initialize() {
         setupJavaFX("ImoVifa");
 
-        // Create a thread that will get UDP packets from udp_socket and put them in imageViewLeft
+        // Create a thread that will get images from server and put them in imageViewLeft
         Thread t = new Thread() {
             public void run() { 
-                DatagramSocket []udp_socket = {null, null};
-                int []ports = {settings.eyeStreamPortLeft, settings.eyeStreamPortRight};
-                try {
-                    for (int i = 0 ; i < udp_socket.length ; i++)
-                        udp_socket[i] = new DatagramSocket(ports[i]);
-                } catch (IOException e) {
-                    System.out.print("Could not open UDP socket on ports:");
-                    for (int i = 0 ; i < ports.length ; i++)
-                        System.out.print(" " + ports[i]);
-                    System.out.println("");
-                    e.printStackTrace();
+                boolean isRunning = true;
+
+                int port = settings.eyeStreamPort;
+                if (port == -1)
                     return;
+                
+                Socket socket = null;
+                try {
+                    socket = new Socket(settings.ip, port);
+                } catch (IOException e) {
+                    System.out.println("Could not open socket to read camera on port: " + port);
+                    e.printStackTrace();
+                    isRunning = false;
                 }
 
-                int image_size = 640 * 480 * 1;
-                byte [] data = new byte[image_size];
-                DatagramPacket p = new DatagramPacket(data, data.length);
+                byte []data = new byte[1024];
 
-                int errorCount = 0;
-
-                boolean isRunning = true;
                 while (isRunning) {
                     try {
                         Thread.sleep(20);
-                        udp_socket[0].receive(p);   // TODO both eyes
+                        int deviceNum = (int)socket.getInputStream().read();
+                        int n1 = (int)socket.getInputStream().read();
+                        int n2 = (int)socket.getInputStream().read();
+                        int n3 = (int)socket.getInputStream().read();
+                        int n4 = (int)socket.getInputStream().read();
+                        int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n1;
+System.out.println("Looking for " + n + " bytes from camera.");
 
-                        Image img = new Image(new ByteArrayInputStream(p.getData()));
+                        if (data.length != n)
+                            data = new byte[n];
+
+                        socket.getInputStream().read(data);
+
+                        Image img = new Image(new ByteArrayInputStream(data));
                         Platform.runLater(() -> {
-                            imageViewLeft.setImage(img);
+                            if (deviceNum == 0)                 // TODO need to allow for mono
+                                imageViewLeft.setImage(img);
+                            else 
+                                imageViewRight.setImage(img);
                         });
                     } catch (InterruptedException e) {
                         isRunning = false;
                     } catch (IOException e) {
-                        System.out.println("Error receiving UDP packet from ImoVifa camera");
+                        System.out.println("Error receiving images from ImoVifa camera");
                         e.printStackTrace();
-                        errorCount++;
-                        if (errorCount > 20) {
-                            System.out.println("Received more than 20 errors from UDP socket: giving up.");
-                            isRunning = false;
-                        }
+                        isRunning = false;
                     }
                 }
             }
         };
         t.start();
-        /*
-        */
     }
 }

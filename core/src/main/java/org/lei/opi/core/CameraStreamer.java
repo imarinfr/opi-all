@@ -1,11 +1,16 @@
 package org.lei.opi.core;
 
-import org.bytedeco.opencv.opencv_videoio.VideoCapture;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.FrameGrabber;
+import org.bytedeco.javacv.OpenCVFrameGrabber;
 import org.bytedeco.opencv.opencv_core.Mat;
+import org.bytedeco.javacv.OpenCVFrameConverter;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketException;
 import java.net.InetAddress;
 
 /**
@@ -18,33 +23,27 @@ import java.net.InetAddress;
 public class CameraStreamer extends Thread {
     /** The device number of the camera to stream on the machine on which this is running. */
     private int deviceNumber; 
-    /** The destination ipAddress of machine to receive the images - we send to this. */
-    private InetAddress ipAddress; 
-    /** The destination udp port number on the target machine - we send to this. */
-    private int udpPortNumber; 
+    /** The port number on this machine that will serve images */
+    private int port; 
 
     /** The socket on which frames will be sent. */
-    private DatagramSocket socket;
+    private Socket socket;
+        /** Writer for outgoing messages to the socket */
+    PrintWriter outgoing;
+    /** Whether it is connected to a client */
+
+    /** true if should be connected, false otherwise */
+    private boolean connected;
 
     /**
      * Create a CameraStreamer that streams images from a camera on the local machine and sends them over UDP
-     * @param ipAddress Destination IP Address of the target machine that will receive images
-     * @param udpPortNumber Destination UDP port number on the target machine that will receive images
+     * @param port The port number on this machine that will serve images 
      * @param deviceNumber  Camera number on the local machine running the CameraStreamer
      * @throws IOException
      */
-    public CameraStreamer(String ipAddress, int udpPortNumber, int deviceNumber) throws IOException {
-        this.ipAddress = InetAddress.getByName(ipAddress);
-        this.udpPortNumber = udpPortNumber;
+    public CameraStreamer(int port, int deviceNumber) throws IOException {
+        this.port = port;
         this.deviceNumber = deviceNumber;
-
-        try {
-            this.socket = new DatagramSocket();
-        } catch (IOException e) {
-            System.out.println("Could not open socket on " + udpPortNumber);
-            throw(e);
-        }
-
         this.start();
     }
 
@@ -52,33 +51,45 @@ public class CameraStreamer extends Thread {
     public void run() {
         boolean done = false;
 
-        Mat image = new Mat();
-        VideoCapture capturer = new VideoCapture(this.deviceNumber);
+        OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(this.deviceNumber);
+        try {
+            grabber.start();
+        } catch (FrameGrabber.Exception e) {
+            e.printStackTrace();
+            done = true;
+        }
 
-        if (capturer.isOpened()) {
-            while (!done) {
-                try {
-                    if (capturer.read(image)) {
-                        byte []bytes = image.data().asByteBuffer().array();
-                        DatagramPacket packet = new DatagramPacket(bytes, bytes.length, this.ipAddress, this.udpPortNumber);
+        OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
+        try {
+            ServerSocket server = new ServerSocket(this.port); //, 0, this.address);
+            socket = server.accept();
+            this.connected = true;
 
-                        //String encoded = Base64.getEncoder().encodeToString(bytes);
-                        //byte []eBytes = encoded.getBytes();
-                        //DatagramPacket packet = new DatagramPacket(eBytes, eBytes.length, this.ipAddress, this.udpPortNumber);
-
-                        try {
-                            socket.send(packet);
-                        } catch (IOException e) {
-                            System.out.println("Error trying to send packet in CameraStreamer for device " + this.deviceNumber);
-                            e.printStackTrace();
-                        }
-                    }
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    done = true;
+            while (!done && this.connected) {
+                Frame frame = grabber.grab();
+                if (frame.image != null) {
+                    Mat con = converter.convert(frame);
+                    int n = con.channels() * con.rows() * con.cols();
+                    byte []bytes = new byte[n];
+                    con.data().get(bytes);
+                    socket.getOutputStream().write(this.deviceNumber);
+                    socket.getOutputStream().write(n >> 24);
+                    socket.getOutputStream().write((n >> 16) & 0xFF);
+                    socket.getOutputStream().write((n >>  8) & 0xFF);
+                    socket.getOutputStream().write( n        & 0xFF);
+                    socket.getOutputStream().write(bytes);
                 }
+                Thread.sleep(50);
             }
-            capturer.close();
+            server.close();
+            grabber.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            done = true;
+        } catch (InterruptedException e) {
+            done = true;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

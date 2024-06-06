@@ -12,17 +12,17 @@ Created by Iv&aacute;n Mar&iacute;n-Franch and Andrew Turpin commencing October 
 
 ## Description
 
-This is a new <a href="https://perimetry.org/opi">Open Perimetry Interface</a> 
+This is a new <a href="https://perimetry.org/opi">Open Perimetry Interface</a>
 middleware (or "OPI server") and some associated changes
-to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a> 
-to allow for use on screen-based devices such as phones, 
-VR headsets, and monitors. In attempt to be device independent for screen-based perimeters, it 
-makes use of the 
+to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a>
+to allow for use on screen-based devices such as phones,
+VR headsets, and monitors. In attempt to be device independent for screen-based perimeters, it
+makes use of the
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> written by Iv&aacute;n Mar&iacute;n-Franch which in turn
 is built upon the Vulkan platform.
 
 Some of the old implementations of the OPI Server (Octopus 900, Kowa AP7000 and iCare Compass/MAIA)
-will remain the same for now, but perhaps they could eventually be incorporated into this 
+will remain the same for now, but perhaps they could eventually be incorporated into this
 framework.
 
 ## Overall architecture
@@ -30,7 +30,7 @@ framework.
 The system works using TCP/IP sockets to connect this code (the OPI-JOVP SERVER)
 with both a controlling *client* (for example, R code that uses the OPI R package)
 and a target *machine* (for example, a Tempo perimeter or an Android Phone).
-Messages are sent in JSON format according to the protocol specified as part of the 
+Messages are sent in JSON format according to the protocol specified as part of the
 core code using the `@Parameter` annotator.
 
 <pre>
@@ -44,19 +44,19 @@ core code using the `@Parameter` annotator.
 
 </pre>
 
-Both the client connection and machine connection are handled 
-using socket connections that use JSON strings for messages. 
+Both the client connection and machine connection are handled
+using socket connections that use JSON strings for messages.
 
 ## Packages
 
 ### Monitor
-The "middle" executable is driven by the `monitor` package, which displays a 
-GUI written with javaFX for selecting and connecting to Machines, 
-listening to Clients, and for displaying Machine relevant information about JSON 
-messages that pass through from Client to Machine and back again. 
+The "middle" executable is driven by the `monitor` package, which displays a
+GUI written with javaFX for selecting and connecting to Machines,
+listening to Clients, and for displaying Machine relevant information about JSON
+messages that pass through from Client to Machine and back again.
 Specific GUI `Scenes` for each machine
 are specified as FXML documents in the core/resources folder and
-their class definitions (subclasses of `OpiMachine`) act as 
+their class definitions (subclasses of `OpiMachine`) act as
 fx:controllers for the associated document.
 
                                   +---------+
@@ -73,24 +73,24 @@ fx:controllers for the associated document.
                    |  +-------------+   |                | |
          Client <---->| OpiListener |<->|  fx:controller |<- - - - - - core/resources/*.fxml
                    |  +-------------+   +----------------+ |
-                   |                                       |   
+                   |                                       |
                    +---------------------------------------+
-     
+
 
 ### Core
-The classes in the `core` module specify machines, the protocol and GUI for each machine, 
-and basic utilities for socket communication and JSON processing. Reflection is used heavily 
+The classes in the `core` module specify machines, the protocol and GUI for each machine,
+and basic utilities for socket communication and JSON processing. Reflection is used heavily
 in this system, protocol so it is not for the Java novice.
-The (abstract) super class for all devices is `OpiMachine` which defines the protocol and behaviour 
+The (abstract) super class for all devices is `OpiMachine` which defines the protocol and behaviour
 for the 5 functions defined in the OPI Standard: `opiInitialise`, `opiQueryDevice`, `opiSetup`,
 `opiPresent`, and `opiClose`.
-Machine specific parameters that make up the format of JSON messages that machine expects (ie 
-the protocol) are defined by `@Parameter` and `@ReturnMsg` annotations on each of the 5 methods in the 
+Machine specific parameters that make up the format of JSON messages that machine expects (ie
+the protocol) are defined by `@Parameter` and `@ReturnMsg` annotations on each of the 5 methods in the
 machine's subclass of `OpiMachine`.
 
-### JOVP 
+### JOVP
 
-This executable package implements the JOVP Machine that in turn calls the 
+This executable package implements the JOVP Machine that in turn calls the
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> library written by Iv&aacute;n Mar&iacute;n-Franch.
 This library allows display of psychophysical stimuli on display devices.
 This repo implements the left hand box in this JOVP machine diagram.
@@ -113,19 +113,19 @@ This repo implements the left hand box in this JOVP machine diagram.
 
 </pre>
 ### R Generation
-In an attempt to reduce mismatches in the protocol between the Client and Machine, 
+In an attempt to reduce mismatches in the protocol between the Client and Machine,
 the R code for sending messages is automatically
-generated to match that expected by the relevant Machine. 
-This happens in the `rgen` package. In essence, the `@Parameter` and `@ReturnMsg` 
-annotators of the five opi functions in the `core::OpiMachine` subclasses are used to 
+generated to match that expected by the relevant Machine.
+This happens in the `rgen` package. In essence, the `@Parameter` and `@ReturnMsg`
+annotators of the five opi functions in the `core::OpiMachine` subclasses are used to
 create the relevant R code.
-This module is not for general use, but rather to be run to update the OPI 
+This module is not for general use, but rather to be run to update the OPI
 R package whenever a new machine is added, or an interface to an existing machine changes.
 
 ## Licence and Copyright
 
-The [OPI-project] (WEBSITE) project and all its modules are COPYRIGHTED by Andrew Turpin 
-and Iv&aacute;n Mar&iacute;n-Franch, and is distributed 
+The [OPI-project] (WEBSITE) project and all its modules are COPYRIGHTED by Andrew Turpin
+and Iv&aacute;n Mar&iacute;n-Franch, and is distributed
 under the Apache 2.0 license. Please read the license information in the attached file
 
 ## Future Work
@@ -152,10 +152,10 @@ There are three main changes.
 
   1. Calling of opi functions internally. Each machine now has
   its own set of OPI functions called `opiX_for_machine()` rather
-  than  the previous `machine.opiX()` functions (which were not 
-  exposed/exported to the user). This should not affect backwards 
-  compatibility and makes no change from a user point of view who 
-  still just calls `opiX()` after `chooseOPI()`. This change will 
+  than  the previous `machine.opiX()` functions (which were not
+  exposed/exported to the user). This should not affect backwards
+  compatibility and makes no change from a user point of view who
+  still just calls `opiX()` after `chooseOPI()`. This change will
   generate help pages for each `opiX_for_machine()`, hopefully
   making the help easier to read.
 
@@ -172,5 +172,5 @@ There are three main changes.
   `Display`, `ImoVifa`, `PhoneHMD`, `PivoVR`. For these to function, one
   needs the external OPI-JOVP server and JOVP Java packages.
   Note that code for these machines is automatically generated as per above.
-  These machines have slightly different calls for `opiX()` functions than in 
+  These machines have slightly different calls for `opiX()` functions than in
   the previous standard.
