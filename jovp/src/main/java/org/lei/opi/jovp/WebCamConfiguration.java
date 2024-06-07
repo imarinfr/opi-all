@@ -57,8 +57,6 @@ public class WebCamConfiguration {
      * @return new WebCamConfiguration object
      */
     public static WebCamConfiguration set(HashMap<String, Object> args) {
-System.out.println("WebCam set()");
-System.out.println(args.keySet());
         if (!args.containsKey("eyeStreamPort")
         ||  !args.containsKey("deviceNumberCameraLeft")
         ||  !args.containsKey("deviceNumberCameraRight"))

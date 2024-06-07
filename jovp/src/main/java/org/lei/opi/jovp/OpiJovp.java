@@ -205,17 +205,17 @@ public class OpiJovp extends OpiListener {
      */
     private Packet initialize(HashMap<String, Object> args) {
             // Check that the settings.input port is in the list of available comm ports
-            // Will this work for all Jovp machines!?
-        String [] comPorts = Controller.getSuitableControllers();
-        String port = args.get("input").toString();
-        if (!Arrays.asList(comPorts).contains(port)) 
-            return(Packet.error(new StringBuilder("OPI Settings has ")
-                .append(port)
-                .append(" as the clicker port which is not in the avilable ports: ")
-                .append(Arrays.toString(comPorts))
-                .toString()));
-System.out.println("OpiJovp intitialize()");
-System.out.println(args.keySet());
+        if (args.containsKey("input") && (args.get("input") != null) && ((String)args.get("input")).startsWith("COM")) {
+            String [] comPorts = Controller.getSuitableControllers();
+            String port = args.get("input").toString();
+            if (!Arrays.asList(comPorts).contains(port)) 
+                return(Packet.error(new StringBuilder("OPI Settings has ")
+                    .append(port)
+                    .append(" as the clicker port which is not in the available ports: ")
+                    .append(Arrays.toString(comPorts))
+                    .toString()));
+        }
+
         try {
             // get configuration
             configuration = Configuration.set(args);

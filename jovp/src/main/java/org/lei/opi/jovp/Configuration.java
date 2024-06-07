@@ -51,8 +51,12 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
     /** {@value API_DUMP} */
     static final boolean API_DUMP = false;
 
+    /** {@value MISSING_MACHINE} */
+    private static final String MISSING_MACHINE = "A machine name should be in the args HashMap passed to Configuration.set()";
     /** {@value WRONG_SCREEN} */
     private static final String WRONG_SCREEN = "'screen' value has to be 0 (default screen) or positive. It is %s";
+    /** {@value MISSING_SETTING} */
+    private static final String MISSING_SETTING = "The name %s should be in the settings file for machine %s";
     /** {@value WRONG_SCREEN} */
     private static final String WRONG_PHYSICAL_SIZE = "'physicalSize' has to be an array with two positive integers for width and size in mm. It is %s";
     /** {@value WRONG_DISTANCE} */
@@ -72,6 +76,13 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
      * @since 0.0.1
      */
     public static Configuration set(HashMap<String, Object> args) throws IllegalArgumentException, ClassCastException, IOException, NullPointerException {
+        if (!args.containsKey("machine"))
+            throw new IllegalArgumentException(MISSING_MACHINE);
+
+        for (String k : new String[] {"screen", "physicalSize", "distance", "viewMode", "input", "tracking", "gammaFile", "pseudoGray", "fullScreen"})
+          if (!args.containsKey(k))
+            throw new IllegalArgumentException(String.format(MISSING_SETTING, k, args.get("machine")));
+
         Machine machine = Machine.valueOf(args.get("machine").toString().toUpperCase());
 
         int screen = ((Double) args.get("screen")).intValue();

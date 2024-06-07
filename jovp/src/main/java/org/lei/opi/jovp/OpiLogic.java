@@ -166,7 +166,9 @@ public class OpiLogic implements PsychoLogic {
       driver.setActionToNull();
     }
 
-    /** Change background and/or fixation markers */
+    /** Change background and/or fixation markers 
+     * Don't update models or textures if we can avoid it.
+     */  
     private void setup() {
         for (int i = 0; i < backgrounds.length; i++) {
             Setup input_bg = driver.getBackgrounds()[i];
@@ -178,16 +180,22 @@ public class OpiLogic implements PsychoLogic {
                 if (input_bg.bgImageFilename().length() > 0) {    // a bit yuck, but rgen needs a default value...
                     backgrounds[i].update(new Texture(input_bg.bgImageFilename()));
                 } else {
-                    backgrounds[i].update(new Texture(TextureType.FLAT, gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol)));
+                    if (backgrounds[i].getTexture().getType() != TextureType.FLAT)
+                        backgrounds[i].update(new Texture(TextureType.FLAT, gammaLumToColor(bgLum, bgCol), gammaLumToColor(bgLum, bgCol)));
                 }
+
+                    // Update fixation[i] if we need to
+                if (fixations[i].getModel().getType() != input_bg.fixShape())
+                    fixations[i].update(new Model(input_bg.fixShape()));
 
                 if (input_bg.fixType() == TextureType.IMAGE) {
                     fixations[i].update(new Texture(input_bg.fixImageFilename()));
                 } else {
-                    fixations[i].update(new Texture(input_bg.fixType()));
+                    if (fixations[i].getTexture().getType() != input_bg.fixType())
+                        fixations[i].update(new Texture(input_bg.fixType()));
                     fixations[i].setColor(gammaLumToColor(input_bg.fixLum(), input_bg.fixCol()));
                 }
-                fixations[i].update(new Model(input_bg.fixShape()));
+
                 fixations[i].position(input_bg.fixCx(), input_bg.fixCy());
                 fixations[i].size(input_bg.fixSx(), input_bg.fixSy());
                 fixations[i].rotation(input_bg.fixRotation());

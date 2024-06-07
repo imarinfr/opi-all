@@ -46,7 +46,15 @@ CP="$CORE:
     $M2_HOME/repository/io/github/java-native/jssc/2.9.4/jssc-2.9.4.jar:
     $M2_HOME/repository/org/scijava/native-lib-loader/2.3.6/native-lib-loader-2.3.6.jar:
     $M2_HOME/repository/org/slf4j/slf4j-simple/2.0.3/slf4j-simple-2.0.3.jar:
-    $M2_HOME/repository/org/slf4j/slf4j-api/2.0.3/slf4j-api-2.0.3.jar
+    $M2_HOME/repository/org/slf4j/slf4j-api/2.0.3/slf4j-api-2.0.3.jar:
+    $M2_HOME/repository/org/bytedeco/javacpp/1.5.5/javacpp-1.5.5.jar:
+    $M2_HOME/repository/org/bytedeco/javacpp/1.5.5/javacpp-1.5.5-macosx-x86_64.jar:
+    $M2_HOME/repository/org/bytedeco/javacv/1.5.5/javacv-1.5.5.jar:
+    $M2_HOME/repository/org/bytedeco/opencv/4.5.1-1.5.5/opencv-4.5.1-1.5.5.jar:
+    $M2_HOME/repository/org/bytedeco/opencv/4.5.1-1.5.5/opencv-4.5.1-1.5.5-macosx-x86_64.jar:
+    $M2_HOME/repository/org/bytedeco/openblas-platform/0.3.13-1.5.5/openblas-platform-0.3.13-1.5.5.jar:
+    $M2_HOME/repository/org/bytedeco/openblas/0.3.13-1.5.5/openblas-0.3.13-1.5.5.jar:
+    $M2_HOME/repository/org/bytedeco/openblas/0.3.13-1.5.5/openblas-0.3.13-1.5.5-macosx-x86_64.jar
 "
 
 CP=$(echo $CP | tr -d '\n' | tr -d ' ')

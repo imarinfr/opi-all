@@ -35,6 +35,9 @@ public class Display extends Jovp {
             Platform.runLater(()-> {
                 textAreaCommands.appendText("OPI Initialized");
             });
+
+        settings.machine = "Display";
+
         return super.initialize(args);
     };
   
