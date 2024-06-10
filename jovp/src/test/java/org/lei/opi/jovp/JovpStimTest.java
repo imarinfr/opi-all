@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.junit.jupiter.api.Test;
 import org.lei.opi.core.Display;
 import org.lei.opi.core.Jovp;
 import org.lei.opi.core.OpiMachine;
@@ -25,6 +26,7 @@ public class JovpStimTest {
    * @since 0.2.0
    */
  
+   @Test
   public void aTestStims1() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetupPresent] " + server);

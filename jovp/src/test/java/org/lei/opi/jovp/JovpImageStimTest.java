@@ -16,6 +16,8 @@ import org.lei.opi.core.definitions.Parameter;
 
 import es.optocom.jovp.definitions.TextureType;
 
+import org.junit.jupiter.api.Test;
+
 public class JovpImageStimTest {
 
     /**
@@ -25,6 +27,7 @@ public class JovpImageStimTest {
     * @since 0.2.0
     */
     
+    @Test
     public void aTestSetupBgLumAndCol() {
         OpiJovp server = new OpiJovp(50002);
         System.out.println("[testSetupBgLumAndCol] " + server);

@@ -14,6 +14,8 @@ import org.lei.opi.core.OpiListener.Command;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.Parameter;
 
+import org.junit.jupiter.api.Test;
+
 public class JovpBgTest {
 
   /**
@@ -23,6 +25,7 @@ public class JovpBgTest {
    * @since 0.2.0
    */
 
+  @Test
   public void aTestSetupBgLumAndCol() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialiseSetupPresent] " + server);
