@@ -15,9 +15,9 @@ public class WebCamConfiguration {
     /** The port number on this machine that will serve images */
     private int port;
     /** Device number of left eye camera (or only eye camera if just one). */
-    private int srcDeviceLeft;
+    public int srcDeviceLeft;
     /** Device number of right eye camera (or -1 if there is no such device). */
-    private int srcDeviceRight;
+    public int srcDeviceRight;
 
     /** CameraStreamer for left and right eyes. null if {@link use} is false */
     public CameraStreamer cameraStreamer;

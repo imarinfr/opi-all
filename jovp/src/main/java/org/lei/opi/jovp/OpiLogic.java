@@ -3,6 +3,9 @@ package org.lei.opi.jovp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import org.lei.opi.core.CameraStreamer;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
@@ -68,6 +71,9 @@ public class OpiLogic implements PsychoLogic {
     /** Accumulates presentation time: useful for dynamic stimulus */
     private int presentationTime;
 
+    /** Keep the start and end times of presentation for looking up camera information */
+    private long startStimTimeStamp, buttonPressTimeStamp;
+
     OpiLogic(OpiJovp driver) {
         this.driver = driver;
     }
@@ -128,7 +134,7 @@ public class OpiLogic implements PsychoLogic {
         if (command == Command.NONE) return;
         // if no response or response is too early, do nothing
         if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
-        driver.setResponse(new Response(true, timer.getElapsedTime(), 0.4, -0.6, 5.2, 1255));
+        buildResponse(true);
         timer.stop();
         for (Item s : stimulusItems) 
             s.show(ViewEye.NONE);
@@ -224,10 +230,16 @@ public class OpiLogic implements PsychoLogic {
                 double t = currentStim.get(currentStim.size() - 1).t();
                 if (timer.getElapsedTime() > presentationTime + t) {
                     presentationTime += t;
-                    // if presentation time is over for the last element of the array, then hide stimulus
-                    if (stimIndex == driver.getStimuliLength() - 1) 
+                    // If presentation time is over for the last element of the array, then hide stimulus
+                    // and ask for eye position from camera
+                    if (stimIndex == driver.getStimuliLength() - 1) {
+                        buttonPressTimeStamp = System.currentTimeMillis();
+
                         for (Item s : stimulusItems)
                             s.show(ViewEye.NONE);
+
+                        requestEyePosition(currentStim.get(currentStim.size() - 1).eye(), buttonPressTimeStamp);
+                    }
                     else {
                         stimIndex++;
                         updateStimuli();
@@ -236,8 +248,7 @@ public class OpiLogic implements PsychoLogic {
             } else if (timer.getElapsedTime() > currentStim.get(currentStim.size() - 1).w()) {
                 // if no response, reset timer and send negative response
                 timer.stop();
-                    // TODO tracking results need to be put in response
-                driver.setResponse(new Response(false, timer.getElapsedTime(), 0, 0, 0, 0));
+                buildResponse(false);
             };
     }
 
@@ -303,6 +314,25 @@ public class OpiLogic implements PsychoLogic {
         }
     }
 
+    /** 
+     * Request details of eye position from the camera(s)
+     * Response should end up on driver.getConfiguration().webcam().cameraStreamer.responseQueue
+     * 
+     * @param eye One of ViewEye.LEFT, ViewEye.RIGHT, or ViewEye.BOTH
+     * @param timestamp Stamp of the request like System.getCurrentTimeMillis()
+     */
+    private void requestEyePosition(ViewEye eye, long timestamp) {
+        CameraStreamer.Request req;
+        if (currentStim.size() == 1) {
+            if (eye == ViewEye.LEFT) 
+                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
+            else 
+                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
+        } else 
+            req = new CameraStreamer.Request(timestamp, 0);  // 0 for all cameras
+        driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
+    }
+
     /** Update stimulusItems to match the next section of driver.getStimulus(index).
      * Try and reuse existing Items as much as possible.
       * Only create new Items if the stim has new components (ie t == 0)
@@ -311,7 +341,9 @@ public class OpiLogic implements PsychoLogic {
     private void updateStimuli() {
         if (stimulusItems.size() == 0) { // first time, create the lot
             createStimuli();
-            return;
+        
+            startStimTimeStamp = System.currentTimeMillis();
+            requestEyePosition(currentStim.get(0).eye(), startStimTimeStamp);
         }
 
             // Check each driver.getStimulus(stimIndex) against currentStim[itemIndex] to see if
@@ -392,7 +424,7 @@ public class OpiLogic implements PsychoLogic {
 
         // Any excess in stimulusItems or currentStim are left (with View.NONE) for later use.
     }
-
+                
     /** 
      * Apply inverse gamma to convert cd/m^2 to RGB in [0, 1]
      * @param luminance [0]=R [1]=G [2]=B cd/m^2
@@ -405,5 +437,49 @@ public class OpiLogic implements PsychoLogic {
     private double[] gammaLumToColor(double luminance, double[] color) {
       double lum[] = Arrays.stream(color).map((double c) -> c * luminance).toArray();
       return gammaLumToColor(lum);
+    }
+
+    /**
+     * Set the driver.response after getting the relevant eye positions 
+     * from the camera(s) response queues.
+     */
+    private void buildResponse(boolean seen) {
+        CameraStreamer.Response resp = null;
+        Response result = new Response(seen, timer.getElapsedTime());
+
+        int oneTryTime = 50;  // 50 ms
+        int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
+        int count = 0;
+
+            // Keep looking for start and end responses until either we get 
+            // the wrong response (mis-matching timestamp) or no response
+            // too many times (totalTries)
+        try {
+            int gotData = 0;
+            while (gotData < 2) {
+                while (resp == null && count < totalTries) {
+                    resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
+                    count++;
+                }
+
+                if (resp == null) {
+                    System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime / 1000));
+                    break;
+                }
+
+                if (resp.requestTimeStamp() == startStimTimeStamp) {
+                    result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
+                    gotData++;
+                } else if (resp.requestTimeStamp() == buttonPressTimeStamp) {
+                    result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
+                    gotData++;
+                } else 
+                    driver.getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for someone else
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        driver.setResponse(result);
     }
 }

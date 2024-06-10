@@ -99,11 +99,13 @@ public class ImoVifa extends Jovp {
      * @return A packet containing a JSON object
      * @since 0.2.0
      */
-    //TODO
-    //@ReturnMsg(name = "eyed", className = Double.class, desc = "Diameter of pupil at times eyet (mm).")
-    //@ReturnMsg(name = "eyet", className = Double.class, desc = "Time of (eyex, eyey) pupil from stimulus onset (ms).", min = 0)
-    @ReturnMsg(name = "eyex", className = Double.class, desc = "x co-ordinates of pupil at ??? (degrees).")
-    @ReturnMsg(name = "eyey", className = Double.class, desc = "y co-ordinates of pupil at ??? (degrees).")
+    // TODO These are in pixels at the moment.
+    @ReturnMsg(name = "eyexStart", className = Double.class, desc = "x co-ordinates of pupil at stimulus onset (degrees).")
+    @ReturnMsg(name = "eyeyStart", className = Double.class, desc = "y co-ordinates of pupil at stimulus onset (degrees).")
+    @ReturnMsg(name = "eyedStart", className = Double.class, desc = "Diameter of pupil at stimulus onset (mm).")
+    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinates of pupil at button press of response window expiry (degrees).")
+    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinates of pupil at button press or response window expiry (degrees).")
+    @ReturnMsg(name = "eyedEnd", className = Double.class, desc = "Diameter of pupil at button press or response window expiry (mm).")
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
 

@@ -18,7 +18,7 @@
     "gammaFile": "imo_invGamma.json",
     "deviceNumberCameraLeft": 1,
     "deviceNumberCameraRight": 2,
-    "ip": "192.168.4.149",
+    "ip": "192.168.4.135",
     "eyeStreamPort": 50201,
     "port": 51234.0
   },
