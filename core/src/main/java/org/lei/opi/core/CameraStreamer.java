@@ -9,6 +9,7 @@ import org.bytedeco.javacv.OpenCVFrameConverter;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,13 +94,21 @@ public class CameraStreamer extends Thread {
         OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
         try {
             ServerSocket server = new ServerSocket(this.port); //, 0, this.address);
-            socket = server.accept();
-            this.connected = true;
+            server.setSoTimeout(10);
 
             long []timestamp = new long[deviceNumber.length];
             Frame []frame = new Frame[deviceNumber.length];
             byte []bytes = new byte[1];
-            while (this.connected) {
+            while (!isInterrupted()) {
+                    // See if someone wants to connect and stream...
+                if (!connected)
+                    try {
+                        socket = server.accept();
+                        this.connected = true;
+                    } catch (SocketTimeoutException e) {
+                        this.connected = false;
+                    }
+
                     // Try and grab each device as close as possible in time
                 for (int i = 0 ; i < this.deviceNumber.length; i++) {
                     frame[i] = grabber[i].grab();
