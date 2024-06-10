@@ -33,7 +33,9 @@ public class JovpQueueTest {
                     if (count == tries)
                         System.out.println("[sendAndReceive1]...Consumer tried too many times.");
                     else
-                        System.out.println(String.format("[sendAndReceive1]...Consumer got %s.", resp.acquisitionTimeStamp()));
+                        System.out.println(String.format("[sendAndReceive1]...Consumer got %s. Time delta %s.",
+                            resp.requestTimeStamp(),
+                            resp.acquisitionTimeStamp() - resp.requestTimeStamp()));
                 }
             } catch (InterruptedException e) { ; }
         }
@@ -51,7 +53,7 @@ public class JovpQueueTest {
                 while (!isInterrupted()) {
                     CameraStreamer.Request req = new CameraStreamer.Request(System.currentTimeMillis(), 0);
                     server.requestQueue.put(req);
-                    System.out.println("[sendAndReceive1]...Prodcuer issued request.");
+                    System.out.println(String.format("[sendAndReceive1]...Prodcuer issued request: %s.", req.timeStamp()));
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException e) { ; }
@@ -62,10 +64,7 @@ public class JovpQueueTest {
     public void sendAndReceive1() {
         CameraStreamer server = null;
         try {
-            server = new CameraStreamer(50002, new int[] {0});
-
-                // this should kick start the camera loop...
-            Socket socket = new Socket("localhost", 50002);
+            server = new CameraStreamer(50202, new int[] {1});
         } catch (IOException e) {
             System.out.println("[sendAndReceive1]...Could not start camera");
             e.printStackTrace();
