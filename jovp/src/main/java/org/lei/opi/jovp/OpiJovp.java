@@ -325,7 +325,8 @@ public class OpiJovp extends OpiListener {
             stimuli = Stimulus.create(args);
             setAction(Action.PRESENT);
             while (response == null) {
-                Thread.sleep(100);  // wait for response
+                //Thread.sleep(100);  // wait for response
+                Thread.onSpinWait();
             }
             Packet p = new Packet(response);
             response = null;

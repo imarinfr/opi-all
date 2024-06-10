@@ -105,9 +105,7 @@ public class CameraStreamer extends Thread {
                     try {
                         socket = server.accept();
                         this.connected = true;
-                    } catch (SocketTimeoutException e) {
-                        this.connected = false;
-                    }
+                    } catch (SocketTimeoutException e) { ; }
 
                     // Try and grab each device as close as possible in time
                 for (int i = 0 ; i < this.deviceNumber.length; i++) {
@@ -120,22 +118,22 @@ public class CameraStreamer extends Thread {
                     processRequest(request, frame, timestamp);
 
                     // And now send the frames on the socket
-                for (int i = 0 ; i < this.deviceNumber.length; i++) {
+                if (connected) {
+                    for (int i = 0 ; i < this.deviceNumber.length; i++) {
 //BufferedImage bi = jc.convert(frame[i]);
 //System.out.println("bi type " + bi.getType());
 //System.out.println("bi width " + bi.getWidth());
 //System.out.println("bi height " + bi.getHeight());
-                    if (frame[i].image != null) {
-                        Mat con = converter.convert(frame[i]);
-                        int n = con.channels() * con.rows() * con.cols();
-                        if (n != bytes.length)
-                            bytes = new byte[n];
-                        con.data().get(bytes);
-                            // 1 byte for device number
-                            // 4 bytes for length of data, n
-                            // n bytes of Mat
+                        if (frame[i].image != null) {
+                            Mat con = converter.convert(frame[i]);
+                            int n = con.channels() * con.rows() * con.cols();
+                            if (n != bytes.length)
+                                bytes = new byte[n];
+                            con.data().get(bytes);
+                                // 1 byte for device number
+                                // 4 bytes for length of data, n
+                                // n bytes of Mat
 //System.out.println("Putting " + n + " bytes from camera " + i + " on socket.");
-                        if (connected) {
                             socket.getOutputStream().write(i);
                             socket.getOutputStream().write(n >> 24);
                             socket.getOutputStream().write((n >> 16) & 0xFF);

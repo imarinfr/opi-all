@@ -31,8 +31,6 @@ public class OpiLogic implements PsychoLogic {
     private static final ModelType DEFAULT_BACKGROUND_SHAPE = ModelType.CIRCLE;
     /** {@value DEFAULT_FIXATION_SHAPE} */
     private static final ModelType DEFAULT_FIXATION_SHAPE = ModelType.MALTESE;
-    /** {@value DEFAULT_STIMULUS_SHAPE} */
-    private static final ModelType DEFAULT_STIMULUS_SHAPE = ModelType.CIRCLE;
     /** {@value DEFAULT_FIXATION_SIZE} */
     private static final int DEFAULT_FIXATION_SIZE = 1;
     /** {@value MINIMUM_TIME_FROM_ONSET} */
