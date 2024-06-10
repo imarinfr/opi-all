@@ -135,12 +135,14 @@ public class CameraStreamer extends Thread {
                             // 4 bytes for length of data, n
                             // n bytes of Mat
 //System.out.println("Putting " + n + " bytes from camera " + i + " on socket.");
-                        socket.getOutputStream().write(i);
-                        socket.getOutputStream().write(n >> 24);
-                        socket.getOutputStream().write((n >> 16) & 0xFF);
-                        socket.getOutputStream().write((n >>  8) & 0xFF);
-                        socket.getOutputStream().write( n        & 0xFF);
-                        socket.getOutputStream().write(bytes);
+                        if (connected) {
+                            socket.getOutputStream().write(i);
+                            socket.getOutputStream().write(n >> 24);
+                            socket.getOutputStream().write((n >> 16) & 0xFF);
+                            socket.getOutputStream().write((n >>  8) & 0xFF);
+                            socket.getOutputStream().write( n        & 0xFF);
+                            socket.getOutputStream().write(bytes);
+                        }
                     }
                 }
                 Thread.sleep(50);
