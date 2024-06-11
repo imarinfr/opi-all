@@ -5,10 +5,7 @@ import static org.lei.opi.jovp.JsonProcessor.toDoubleArray;
 import static org.lei.opi.jovp.JsonProcessor.toStringArray;
 import static org.lei.opi.jovp.JsonProcessor.toObjectStream;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.stream.IntStream;
 
 import es.optocom.jovp.definitions.EnvelopeType;
 import es.optocom.jovp.definitions.ViewEye;

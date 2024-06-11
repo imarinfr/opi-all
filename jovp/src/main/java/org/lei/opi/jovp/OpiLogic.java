@@ -469,7 +469,7 @@ public class OpiLogic implements PsychoLogic {
                         System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime / 1000));
                         break;
                     }
-
+                        // Check response's requestTimeStamp to see which fields to update
                     if (resp.requestTimeStamp() == startStimTimeStamp) {
                         result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
                         gotData++;
