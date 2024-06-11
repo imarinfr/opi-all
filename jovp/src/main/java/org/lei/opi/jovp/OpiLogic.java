@@ -50,13 +50,15 @@ public class OpiLogic implements PsychoLogic {
     private Item[] backgrounds;
     /** Always 2 fixations, but second is unused for MONO */
     private Item[] fixations;
-    /** The stim on the screen. 
-      * Assumes that stimulus[0] and stimulus[1,2,...] (if it exists) are will be shown for the same duration
-    */
-    private List<Item> stimulusItems;
 
-    /** Current stim being shown */
-    private List<Stimulus> currentStim;
+    /** The current stimulus on the screen. 
+      * Assumes that stimulus[0] and stimulus[1,2,...] (if it exists) are will be shown for the same duration
+      * This allows different Items in each eye at the same time as opposed to different stimuli in each eye 
+      * which cannot happen simultaneously.
+    */
+    private List<Item> currentItems;
+    /** Current stimulus being shown. Each should have a matching Item in currentItems*/
+    private List<Stimulus> currentStims;
 
     /** The current index into driver.getStimulus() for presentation. This steps along the list of stimuli in driver. */
     private int stimIndex = -1;
@@ -117,7 +119,7 @@ public class OpiLogic implements PsychoLogic {
             view.add(backgrounds[i]);
         }
 
-        driver.setActionToNull(); // Action is over
+        driver.setActionToNull(); // Action is over  // TODO use a Condition
     }
 
     /**
@@ -134,7 +136,7 @@ public class OpiLogic implements PsychoLogic {
         if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
         buildResponse(true);
         timer.stop();
-        for (Item s : stimulusItems) 
+        for (Item s : currentItems) 
             s.show(ViewEye.NONE);
     }
 
@@ -167,7 +169,7 @@ public class OpiLogic implements PsychoLogic {
     /** Show psychoEngine */
     private void show(PsychoEngine psychoEngine) {
       psychoEngine.show();
-      driver.setActionToNull();
+      driver.setActionToNull();   // TODO use a Condition
     }
 
     /** Change background and/or fixation markers 
@@ -205,27 +207,27 @@ public class OpiLogic implements PsychoLogic {
                 fixations[i].rotation(input_bg.fixRotation());
             }
         }
-        driver.setActionToNull();
+        driver.setActionToNull();  // TODO use a Condition
     }
 
     /** Present stimulus upon request */
     private void present() {
-        if (currentStim == null || stimulusItems == null) {
-            currentStim = new ArrayList<Stimulus>();
-            stimulusItems = new ArrayList<Item>();
+        if (currentStims == null || currentItems == null) {
+            currentStims = new ArrayList<Stimulus>();
+            currentItems = new ArrayList<Item>();
         } 
         stimIndex = 0;  // the first element in the stimulus list
         updateStimuli();
         timer.start();
         presentationTime = 0;
-        driver.setActionToNull();
+        driver.setActionToNull(); // TODO use a Condition
     }
 
     /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
     private void checkAction() {
         if (timer.getElapsedTime() > 0) // if timer is active, we are presenting
-            if (stimulusItems.get(0).showing()) {
-                double t = currentStim.get(currentStim.size() - 1).t();
+            if (currentItems.get(0).showing()) {
+                double t = currentStims.get(currentStims.size() - 1).t();
                 if (timer.getElapsedTime() > presentationTime + t) {
                     presentationTime += t;
                     // If presentation time is over for the last element of the array, then hide stimulus
@@ -233,17 +235,16 @@ public class OpiLogic implements PsychoLogic {
                     if (stimIndex == driver.getStimuliLength() - 1) {
                         buttonPressTimeStamp = System.currentTimeMillis();
 
-                        for (Item s : stimulusItems)
+                        for (Item s : currentItems)
                             s.show(ViewEye.NONE);
 
-                        requestEyePosition(currentStim.get(currentStim.size() - 1).eye(), buttonPressTimeStamp);
-                    }
-                    else {
+                        requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), buttonPressTimeStamp);
+                    } else {
                         stimIndex++;
                         updateStimuli();
                     }
                 }
-            } else if (timer.getElapsedTime() > currentStim.get(currentStim.size() - 1).w()) {
+            } else if (timer.getElapsedTime() > currentStims.get(currentStims.size() - 1).w()) {
                 // if no response, reset timer and send negative response
                 timer.stop();
                 buildResponse(false);
@@ -268,18 +269,18 @@ public class OpiLogic implements PsychoLogic {
         return new Item(m, t, Units.ANGLES);
     }
 
-    /** Create stims from the list driver.getStimulus[stimIndex, ...]
+    /** Create stimuli from the list driver.getStimulus[stimIndex, ...]
      * Elements are taken from driver while t == 0 (ie duration is 0)
-     * All taken elements are put into currentStim list.
-     * For each one, an Item is created and put into stimulusItems list.
+     * All taken elements are put into currentStims list.
+     * For each one, an Item is created and put into currentItems list.
     */
     private void createStimuli() {
-        currentStim.clear();
-        stimulusItems.clear();
+        currentStims.clear();
+        currentItems.clear();
 
         Stimulus stim = driver.getStimulus(stimIndex);
         for(;;) {
-            currentStim.add(stim);
+            currentStims.add(stim);
 
             Item stimItem = createStimItem(stim);
 
@@ -301,7 +302,7 @@ public class OpiLogic implements PsychoLogic {
             stimItem.depth(STIM_DEPTH);
             view.add(stimItem);
 
-            stimulusItems.add(stimItem);
+            currentItems.add(stimItem);
 
             if (stim.t() == 0) {
                 stimIndex++;
@@ -320,8 +321,11 @@ public class OpiLogic implements PsychoLogic {
      * @param timestamp Stamp of the request like System.getCurrentTimeMillis()
      */
     private void requestEyePosition(ViewEye eye, long timestamp) {
+        if (driver.getConfiguration().webcam().cameraStreamer == null)
+            return;
+
         CameraStreamer.Request req;
-        if (currentStim.size() == 1) {
+        if (currentStims.size() == 1) {   // There should not be a 'multi-stim' for MONO
             if (eye == ViewEye.LEFT) 
                 req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
             else 
@@ -331,39 +335,39 @@ public class OpiLogic implements PsychoLogic {
         driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
     }
 
-    /** Update stimulusItems to match the next section of driver.getStimulus(index).
+    /** Update currentItems to match the next section of driver.getStimulus(index).
      * Try and reuse existing Items as much as possible.
       * Only create new Items if the stim has new components (ie t == 0)
       * Only create new Models or Textures in existing Items if really needed
     */
     private void updateStimuli() {
-        if (stimulusItems.size() == 0) { // first time, create the lot
+        if (currentItems.size() == 0) { // first time, create the lot
             createStimuli();
         
             startStimTimeStamp = System.currentTimeMillis();
-            requestEyePosition(currentStim.get(0).eye(), startStimTimeStamp);
+            requestEyePosition(currentStims.get(0).eye(), startStimTimeStamp);
         }
 
-            // Check each driver.getStimulus(stimIndex) against currentStim[itemIndex] to see if
-            //   (a) It exists (ie new stim has more items than currentStim)
+            // Check each driver.getStimulus(stimIndex) against currentStims[itemIndex] to see if
+            //   (a) It exists (ie new stim has more items than currentStims)
             //   (a) OR it should not exist (ie is first or pre t == 0)
             //   (b) OR the model or texture should be updated
-            // ASSERT stimulusItems.len >= currentStim
-        int itemIndex = 0; // index into stimulusItems (and the prefix of currentStim)
+            // ASSERT currentItems.len >= currentStims
+        int itemIndex = 0; // index into currentItems (and the prefix of currentStims)
         for(;;) {
             Stimulus stim = driver.getStimulus(stimIndex);
             
-            if (itemIndex >= stimulusItems.size()) {
-                stimulusItems.add(createStimItem(stim));
+            if (itemIndex >= currentItems.size()) {
+                currentItems.add(createStimItem(stim));
             } else {
                 boolean newModel = false;
                 int newTexture = 0;  // 0 = no new texture, 1 = new texture, 2 = update image of existing texture
 
-                if (itemIndex >= currentStim.size()) { // there is no previous stim available
+                if (itemIndex >= currentStims.size()) { // there is no previous stim available
                     newModel = true;
                     newTexture = 1;
                 } else {
-                    Stimulus prev = currentStim.get(itemIndex);
+                    Stimulus prev = currentStims.get(itemIndex);
                     newModel = stim.shape() != prev.shape();
                     newModel |= stim.shape() == ModelType.OPTOTYPE && prev.shape() == ModelType.OPTOTYPE && !stim.optotype().equals(prev.optotype());
 
@@ -375,52 +379,52 @@ public class OpiLogic implements PsychoLogic {
 
                 if (newModel)
                     if (stim.shape() == ModelType.OPTOTYPE)
-                        stimulusItems.get(itemIndex).update(new Model(stim.optotype()));  // give it the optotype
+                        currentItems.get(itemIndex).update(new Model(stim.optotype()));  // give it the optotype
                     else
-                        stimulusItems.get(itemIndex).update(new Model(stim.shape()));
+                        currentItems.get(itemIndex).update(new Model(stim.shape()));
 
                 if (newTexture == 1) {
                     if (stim.type() == TextureType.IMAGE) 
-                        stimulusItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // new, string filename
+                        currentItems.get(itemIndex).update(new Texture(stim.imageFilename()));  // new, string filename
                     else
-                        stimulusItems.get(itemIndex).update(new Texture(stim.type()));  
+                        currentItems.get(itemIndex).update(new Texture(stim.type()));  
                 } else if (newTexture == 2) {
-                    Texture t = stimulusItems.get(itemIndex).getTexture();
+                    Texture t = currentItems.get(itemIndex).getTexture();
                     t.updateImage(stim.imageFilename());     // update the texture
-                    stimulusItems.get(itemIndex).update(t);  // trigger update of the Item
+                    currentItems.get(itemIndex).update(t);  // trigger update of the Item
                 }
 
-                stimulusItems.get(itemIndex).position(stim.x(), stim.y());
+                currentItems.get(itemIndex).position(stim.x(), stim.y());
                 if (stim.fullFoV() != 0) {
-                    stimulusItems.get(itemIndex).size(this.fov[0], this.fov[1]);
+                    currentItems.get(itemIndex).size(this.fov[0], this.fov[1]);
                 } else {
-                    stimulusItems.get(itemIndex).size(stim.sx(), stim.sy());
+                    currentItems.get(itemIndex).size(stim.sx(), stim.sy());
                 }
-                stimulusItems.get(itemIndex).rotation(stim.rotation());
-                stimulusItems.get(itemIndex).contrast(stim.contrast());
-                stimulusItems.get(itemIndex).frequency(stim.phase(), stim.frequency());
-                stimulusItems.get(itemIndex).defocus(stim.defocus());
-                stimulusItems.get(itemIndex).texRotation(stim.texRotation());
-                stimulusItems.get(itemIndex).setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
-                stimulusItems.get(itemIndex).envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
-                stimulusItems.get(itemIndex).show(stim.eye());
+                currentItems.get(itemIndex).rotation(stim.rotation());
+                currentItems.get(itemIndex).contrast(stim.contrast());
+                currentItems.get(itemIndex).frequency(stim.phase(), stim.frequency());
+                currentItems.get(itemIndex).defocus(stim.defocus());
+                currentItems.get(itemIndex).texRotation(stim.texRotation());
+                currentItems.get(itemIndex).setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
+                currentItems.get(itemIndex).envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
+                currentItems.get(itemIndex).show(stim.eye());
             }
 
-                // record the new currentStim
-            if (itemIndex >= currentStim.size())
-                currentStim.add(stim);
+                // record the new currentStims
+            if (itemIndex >= currentStims.size())
+                currentStims.add(stim);
             else
-                currentStim.set(itemIndex, stim);
+                currentStims.set(itemIndex, stim);
 
                 // see if we need some more items
             if (stim.t() == 0) {
-                itemIndex++;  // local step through stimulusItems and currentStim
+                itemIndex++;  // local step through currentItems and currentStims
                 stimIndex++;  // global step through driver
             } else 
                 break;
         }
 
-        // Any excess in stimulusItems or currentStim are left (with View.NONE) for later use.
+        // Any excess in currentItems or currentStims are left (with View.NONE) for later use.
     }
                 
     /** 
@@ -443,41 +447,43 @@ public class OpiLogic implements PsychoLogic {
      */
     private void buildResponse(boolean seen) {
         CameraStreamer.Response resp = null;
-        Response result = new Response(seen, timer.getElapsedTime());
+        Response result = new Response(seen, timer.getElapsedTime()); // no eye tracking data
 
-        int oneTryTime = 50;  // 50 ms
-        int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
-        int count = 0;
+        if (driver.getConfiguration().webcam().cameraStreamer != null) {
+            int oneTryTime = 50;  // 50 ms
+            int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
+            int count = 0;
 
-            // Keep looking for start and end responses until either we get 
-            // the wrong response (mis-matching timestamp) or no response
-            // too many times (totalTries)
-        try {
-            int gotData = 0;
-            while (gotData < 2) {
-                while (resp == null && count < totalTries) {
-                    resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
-                    count++;
+                // Keep looking for start and end responses until either we get 
+                // the wrong response (mis-matching timestamp) or no response
+                // too many times (totalTries)
+            try {
+                int gotData = 0;
+                while (gotData < 2) {
+                    while (resp == null && count < totalTries) {
+                        resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
+                        count++;
+                    }
+
+                    if (resp == null) {
+                        System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime / 1000));
+                        break;
+                    }
+
+                    if (resp.requestTimeStamp() == startStimTimeStamp) {
+                        result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
+                        gotData++;
+                    } else if (resp.requestTimeStamp() == buttonPressTimeStamp) {
+                        result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
+                        gotData++;
+                    } else 
+                        driver.getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for another time
                 }
-
-                if (resp == null) {
-                    System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime / 1000));
-                    break;
-                }
-
-                if (resp.requestTimeStamp() == startStimTimeStamp) {
-                    result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
-                    gotData++;
-                } else if (resp.requestTimeStamp() == buttonPressTimeStamp) {
-                    result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
-                    gotData++;
-                } else 
-                    driver.getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for someone else
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
 
-        driver.setResponse(result);
+        driver.setResponse(result);  // TODO signal this with a Condition
     }
 }

@@ -93,7 +93,7 @@ public class CameraStreamer extends Thread {
 
         OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
         try {
-            ServerSocket server = new ServerSocket(this.port); //, 0, this.address);
+            ServerSocket server = new ServerSocket(this.port);
             server.setSoTimeout(10);
 
             long []timestamp = new long[deviceNumber.length];

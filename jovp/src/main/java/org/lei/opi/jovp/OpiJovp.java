@@ -103,6 +103,7 @@ public class OpiJovp extends OpiListener {
     public void setResponse(Response response) { this.response = response; }
 
     // Don't interrupt another action. Wait until it is finished (ie action is set to null by OPILogic)
+    // TODO replace this pair of functions with a Semaphore or Condition
     private void setAction(Action a) {
       while (this.action != null) {
         try { Thread.sleep(10); } catch (InterruptedException ignored) {; }
@@ -133,6 +134,7 @@ public class OpiJovp extends OpiListener {
         // Have to start PsychoEngine on the main thread (as it uses GLFW)
         // so we cannot trigger it from the server OpiListener thread.
         // So we will just spin here on the main thread until we can progress (action == SHOW)
+        // TODO replace this with a Semaphore or Condition
         while (this.action != Action.SHOW) {
           try { Thread.sleep(500);} catch(InterruptedException ignored) { ; }
         }
@@ -215,7 +217,7 @@ public class OpiJovp extends OpiListener {
                     .append(Arrays.toString(comPorts))
                     .toString()));
         }
-
+System.out.println(args.keySet());
         try {
             // get configuration
             configuration = Configuration.set(args);
@@ -324,9 +326,9 @@ public class OpiJovp extends OpiListener {
         try {
             stimuli = Stimulus.create(args);
             setAction(Action.PRESENT);
+                // TODO replace this with a Semaphore or Condition
             while (response == null) {
-                //Thread.sleep(100);  // wait for response
-                Thread.onSpinWait();
+                Thread.sleep(100);  // wait for response
             }
             Packet p = new Packet(response);
             response = null;

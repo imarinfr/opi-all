@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
+// NOTE This cannot be run on a machine without a camera as Consumer can never be satisfied.
+//      (eg OpiMachine.Display on a mac as that does not allow access to the camera.)
 public class JovpQueueTest {
     /**
     * @since 0.3.0

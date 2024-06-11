@@ -177,7 +177,6 @@ public class ImoVifa extends Jovp {
 
                 byte []bytes = new byte[1024];
 
-                int temp = 1;
                 boolean isRunning = true;
                 while (isRunning) {
                     try {

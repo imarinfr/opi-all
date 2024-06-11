@@ -307,10 +307,14 @@ opiQueryDevice_for_ImoVifa <- function() {
 #'
 #' @return A list containing:
 #'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
-#'  * \code{eyey} y co-ordinates of pupil at ??? (degrees).
-#'  * \code{eyex} x co-ordinates of pupil at ??? (degrees).
+#'  * \code{eyedStart} Diameter of pupil at stimulus onset (mm).
+#'  * \code{eyexEnd} x co-ordinates of pupil at button press of response window expiry (degrees).
+#'  * \code{eyeyEnd} y co-ordinates of pupil at button press or response window expiry (degrees).
+#'  * \code{eyedEnd} Diameter of pupil at button press or response window expiry (mm).
+#'  * \code{eyexStart} x co-ordinates of pupil at stimulus onset (degrees).
 #'  * \code{time} Response time from stimulus onset if button pressed (ms).
 #'  * \code{seen} '1' if seen, '0' if not.
+#'  * \code{eyeyStart} y co-ordinates of pupil at stimulus onset (degrees).
 
 #'
 #' @details

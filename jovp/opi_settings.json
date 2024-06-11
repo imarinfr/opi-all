@@ -61,6 +61,7 @@
     "input": "mouse",
     "tracking": false,
     "gammaFile": "linear8bit_invGamma.json",
+    "eyeStreamPort" : -1,
     "ip": "localhost",
     "port": 51234.0
   }

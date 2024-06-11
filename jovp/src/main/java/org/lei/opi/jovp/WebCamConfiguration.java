@@ -33,7 +33,7 @@ public class WebCamConfiguration {
         this.port = port;
         this.srcDeviceLeft = srcDeviceLeft;
         this.srcDeviceRight = srcDeviceRight;
-
+System.out.println(String.format("Port for camera is %s", port));
         if (port == -1)
             return;
 
