@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import org.joml.Vector4f;
 import org.lei.opi.core.CameraStreamer;
 
 import es.optocom.jovp.PsychoEngine;
@@ -273,7 +274,7 @@ public class OpiLogic implements PsychoLogic {
     private void checkAction() {
         if (timer.getElapsedTime() <= 0) // if timer is active, we are presenting
             return;
-
+System.out.println(currentItems.get(0).getEye() + " " + currentItems.get(1).getEye());
         if (currentItems.get(0).showing()) {
             double t = currentStims.get(currentStims.size() - 1).t();
             if (timer.getElapsedTime() >= presentationTime + t) {
@@ -310,7 +311,10 @@ public class OpiLogic implements PsychoLogic {
             t = new Texture(stim.type());  
 
             // units is always in ANGLES for now
-        return new Item(m, t, Units.ANGLES);
+        Item i = new Item(m, t, Units.ANGLES);
+        i.show(ViewEye.NONE);
+        view.add(i);
+        return(i);
     }
 
     /** Update currentItems to match the next section of driver.getStimulus(index).
@@ -328,6 +332,7 @@ public class OpiLogic implements PsychoLogic {
         for(;;) {
             Stimulus stim = driver.getStimulus(stimIndex);
             
+                // Make sure we have the right Model and Texture (reusing previous if possible)
             if (itemIndex >= currentItems.size()) {
                 currentItems.add(createStimItem(stim));  // nothing to update, just add it.
             } else {
@@ -365,21 +370,36 @@ public class OpiLogic implements PsychoLogic {
                     currentItems.get(itemIndex).update(t);  // trigger update of the Item
                 }
 
-                currentItems.get(itemIndex).position(stim.x(), stim.y());
-                if (stim.fullFoV() != 0) {
-                    currentItems.get(itemIndex).size(this.fov[0], this.fov[1]);
-                } else {
-                    currentItems.get(itemIndex).size(stim.sx(), stim.sy());
-                }
-                currentItems.get(itemIndex).rotation(stim.rotation());
-                currentItems.get(itemIndex).contrast(stim.contrast());
-                currentItems.get(itemIndex).frequency(stim.phase(), stim.frequency());
-                currentItems.get(itemIndex).defocus(stim.defocus());
-                currentItems.get(itemIndex).texRotation(stim.texRotation());
-                currentItems.get(itemIndex).setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
-                currentItems.get(itemIndex).envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
-                currentItems.get(itemIndex).show(stim.eye());
+                    // Reuse color if possible
+                double []col1 = gammaLumToColor(stim.lum(), stim.color1());
+                double []col2 = gammaLumToColor(stim.lum(), stim.color2());  
+                Vector4f []cols = currentItems.get(itemIndex).getTexture().getColors();
+                if (col1[0] != cols[0].x || 
+                    col1[1] != cols[0].y || 
+                    col1[2] != cols[0].z ||
+                    col1[3] != cols[0].w ||
+                    col2[0] != cols[1].x || 
+                    col2[1] != cols[1].y || 
+                    col2[2] != cols[1].z ||
+                    col2[3] != cols[1].w)
+                    currentItems.get(itemIndex).setColors(col1, col2);
             }
+
+                // Update all the other bits
+            currentItems.get(itemIndex).position(stim.x(), stim.y());
+            if (stim.fullFoV() != 0) {
+                currentItems.get(itemIndex).size(this.fov[0], this.fov[1]);
+            } else {
+                currentItems.get(itemIndex).size(stim.sx(), stim.sy());
+            }
+            currentItems.get(itemIndex).rotation(stim.rotation());
+            currentItems.get(itemIndex).contrast(stim.contrast());
+            currentItems.get(itemIndex).frequency(stim.phase(), stim.frequency());
+            currentItems.get(itemIndex).defocus(stim.defocus());
+            currentItems.get(itemIndex).texRotation(stim.texRotation());
+            currentItems.get(itemIndex).envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
+            currentItems.get(itemIndex).depth(STIM_DEPTH);
+            currentItems.get(itemIndex).show(stim.eye());
 
                 // record the new currentStims
             if (itemIndex >= currentStims.size())
@@ -417,8 +437,8 @@ public class OpiLogic implements PsychoLogic {
      * from the camera(s) response queues.
      */
     private void buildResponse(boolean seen) {
-        CameraStreamer.Response resp = null;
-        Response result = new Response(seen, timer.getElapsedTime()); // no eye tracking data
+            // no eye tracking data at first
+        Response result = new Response(seen, seen ? buttonPressTimeStamp - startStimTimeStamp : 0); 
 
         if (driver.getConfiguration().webcam().cameraStreamer != null) {
             int oneTryTime = 50;  // 50 ms
@@ -428,6 +448,7 @@ public class OpiLogic implements PsychoLogic {
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up
             try {
+                CameraStreamer.Response resp = null;
                 boolean gotStart = false;
                 boolean gotEnd = !seen;   // If !seen then we will not look for End data
                 while (!gotStart && !gotEnd) {

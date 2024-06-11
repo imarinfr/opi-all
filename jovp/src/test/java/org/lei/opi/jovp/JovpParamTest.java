@@ -358,6 +358,9 @@ public class JovpParamTest {
           try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
 
           HashMap<String, Object> setupArgs = getDefaultValues(Command.SETUP);
+          setupArgs.put("fixSx", 5);
+          setupArgs.put("fixSy", 5);
+          setupArgs.put("bgLum", 100);
           result = machine.setup(setupArgs);
           System.out.println(String.format("[aTestPresent2] Setup result: %s", result));
 
@@ -373,12 +376,12 @@ public class JovpParamTest {
           stimArgs.put("eye", new ArrayList<String>(Arrays.asList("left", "right")));
           stimArgs.put("x", new ArrayList<Double>(Arrays.asList(1.0, -10.0)));
           stimArgs.put("y", new ArrayList<Double>(Arrays.asList(1.0, 10.0)));
-          stimArgs.put("sx", new ArrayList<Double>(Arrays.asList(1.0, 1.0)));
-          stimArgs.put("sy", new ArrayList<Double>(Arrays.asList(1.0, 1.0)));
+          stimArgs.put("sx", new ArrayList<Double>(Arrays.asList(10.0, 5.0)));
+          stimArgs.put("sy", new ArrayList<Double>(Arrays.asList(10.0, 5.0)));
           stimArgs.put("lum", new ArrayList<Double>(Arrays.asList(255.0, 255.0)));
           stimArgs.put("color1", cols);
           stimArgs.put("t", new ArrayList<Double>(Arrays.asList(0.0, 1000.0)));
-          stimArgs.put("w", 1005.0);
+          stimArgs.put("w", 10005.0);
           stimArgs.put("command", "present");
 
           for (int i = 0 ; i < 5 ; i++) {
