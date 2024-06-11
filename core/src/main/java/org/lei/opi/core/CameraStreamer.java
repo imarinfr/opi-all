@@ -1,5 +1,6 @@
 package org.lei.opi.core;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.FrameGrabber;
 import org.bytedeco.javacv.OpenCVFrameGrabber;
@@ -10,8 +11,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -39,7 +38,7 @@ public class CameraStreamer extends Thread {
     /** The data of an incoming request to the camera */
     static public record Request(
         long timeStamp,           // some timestamp of the request (used to match responses, perhaps)
-        int deviceNumber         // 0 for all devices, otherwise the device number for which to get the response
+        int deviceNumber          // device number for which to get the response
     ) {;}
 
     /** The data put back on the queue for each request */
@@ -114,8 +113,10 @@ public class CameraStreamer extends Thread {
                 }
 
                 Request request = requestQueue.poll();
-                if (request != null) 
-                    processRequest(request, frame, timestamp);
+                if (request != null) {
+                    int i = ArrayUtils.indexOf(deviceNumber, request.deviceNumber);
+                    processRequest(request, frame[i], timestamp[i]);  
+                }
 
                     // And now send the frames on the socket
                 if (connected) {
@@ -163,32 +164,25 @@ public class CameraStreamer extends Thread {
 
     /**
      * Process a request from the client by finding the centre and diameter of the 
-     * pupil in the current (relevant) frame(s) and putting the result on 
-     * responseQueue.
+     * pupil in `frame` and putting the result on responseQueue.
+     *              
+     *  WARNING: make sure 1 request only generates 1 response
      * 
-     * @param request Details of device number(s) to process.
+     * @param request Contains timeStamp of request
+     * @param frame Image frame to process
+     * @param timestamp Timestamp that the image was acquired
      */
-    private void processRequest(Request request, Frame []frame, long []timestamp) {
-
-        ArrayList<Integer> todo = new ArrayList<Integer>(Arrays.asList(request.deviceNumber));
-
-        if (request.deviceNumber == 0) {
-            todo.clear();
-            for (int i = 0 ; i < this.deviceNumber.length; i++) 
-                todo.add(i);
-        }
-
+    private void processRequest(Request request, Frame frame, long timestamp) {
+System.out.println("Processing Req: " + request.timeStamp + " -> " + timestamp);
         HashMap<String, Integer> res = new HashMap<String, Integer>(3);
-        for (int i : todo) {
-            getImageValues(frame[i], res);
-            responseQueue.add(new Response(
-                request.timeStamp,
-                timestamp[i],
-                res.get("x").intValue(),
-                res.get("y").intValue(),
-                res.get("d").intValue()
-            ));
-        }
+        getImageValues(frame, res);
+        responseQueue.add(new Response(
+            request.timeStamp,
+            timestamp,
+            res.get("x").intValue(),
+            res.get("y").intValue(),
+            res.get("d").intValue()
+        ));
     }
             
     /**

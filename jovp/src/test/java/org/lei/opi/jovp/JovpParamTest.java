@@ -344,8 +344,8 @@ public class JovpParamTest {
         try { Thread.sleep(2000); } catch (InterruptedException ignored) { ; }
           
         try {
-          Display machine = new Display(null);
-          //ImoVifa machine = new ImoVifa(null);
+          //Display machine = new Display(null);
+          ImoVifa machine = new ImoVifa(null);
           System.out.println("[aTestPresent2] " + machine);
           if (machine != null && !machine.connect(server.getIP(), server.getPort()))
             System.out.println(String.format("[aTestPresent2] Cannot connect to %s:%s", server.getIP(), server.getPort()));
@@ -381,7 +381,7 @@ public class JovpParamTest {
           stimArgs.put("lum", new ArrayList<Double>(Arrays.asList(255.0, 255.0)));
           stimArgs.put("color1", cols);
           stimArgs.put("t", new ArrayList<Double>(Arrays.asList(0.0, 1000.0)));
-          stimArgs.put("w", 10005.0);
+          stimArgs.put("w", 5005.0);
           stimArgs.put("command", "present");
 
           for (int i = 0 ; i < 5 ; i++) {

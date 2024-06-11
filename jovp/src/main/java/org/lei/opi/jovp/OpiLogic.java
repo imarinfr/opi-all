@@ -136,13 +136,11 @@ public class OpiLogic implements PsychoLogic {
             return;
 
         CameraStreamer.Request req;
-        if (currentStims.size() == 1) {   // There should not be a 'multi-stim' for MONO
-            if (eye == ViewEye.LEFT) 
-                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
-            else 
-                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
-        } else 
-            req = new CameraStreamer.Request(timestamp, 0);  // 0 for all cameras
+        if (eye != ViewEye.RIGHT) // use left for BOTH eyes
+            req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
+        else 
+            req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
+
         driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
     }
 
@@ -157,6 +155,9 @@ public class OpiLogic implements PsychoLogic {
     public void input(PsychoEngine psychoEngine, Command command) {
             // If not a YES response, do nothing
         if (command != Command.YES) return;
+
+            // input before anything has happened!
+        if (currentStims == null || currentStims.size() == 0) return;
 
             // Request the end eye position from the camera
         buttonPressTimeStamp = System.currentTimeMillis();
@@ -274,7 +275,7 @@ public class OpiLogic implements PsychoLogic {
     private void checkAction() {
         if (timer.getElapsedTime() <= 0) // if timer is active, we are presenting
             return;
-System.out.println(currentItems.get(0).getEye() + " " + currentItems.get(1).getEye());
+
         if (currentItems.get(0).showing()) {
             double t = currentStims.get(currentStims.size() - 1).t();
             if (timer.getElapsedTime() >= presentationTime + t) {
@@ -312,6 +313,7 @@ System.out.println(currentItems.get(0).getEye() + " " + currentItems.get(1).getE
 
             // units is always in ANGLES for now
         Item i = new Item(m, t, Units.ANGLES);
+        i.setColors(stim.color1(), stim.color2());
         i.show(ViewEye.NONE);
         view.add(i);
         return(i);
@@ -445,17 +447,22 @@ System.out.println(currentItems.get(0).getEye() + " " + currentItems.get(1).getE
             int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
             int count = 0;
 
+System.out.println("Start time: " + startStimTimeStamp);
+System.out.println("End time: " + (!seen ? -1 : buttonPressTimeStamp));
+driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up
-            try {
                 CameraStreamer.Response resp = null;
                 boolean gotStart = false;
                 boolean gotEnd = !seen;   // If !seen then we will not look for End data
-                while (!gotStart && !gotEnd) {
-                    while (resp == null && count < totalTries) {
-                        resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
-                        count++;
-                    }
+                while (!gotStart || !gotEnd) {
+                    try {
+                        //while (resp == null && count < totalTries) {
+                        //    resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
+                        //    count++;
+                        // }
+                        resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.take();
+                    } catch (InterruptedException e) { ; }
 
                     if (resp == null) {
                         System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime / 1000));
@@ -469,11 +476,12 @@ System.out.println(currentItems.get(0).getEye() + " " + currentItems.get(1).getE
                         result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
                         gotEnd = true;
                     } else 
-                        driver.getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for another time
+                        try {
+                            driver.getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for another time
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
         }
 
         driver.setResponse(result);  // TODO signal this with a Condition
