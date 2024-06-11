@@ -33,8 +33,6 @@ public class OpiLogic implements PsychoLogic {
     private static final ModelType DEFAULT_FIXATION_SHAPE = ModelType.MALTESE;
     /** {@value DEFAULT_FIXATION_SIZE} */
     private static final int DEFAULT_FIXATION_SIZE = 1;
-    /** {@value MINIMUM_TIME_FROM_ONSET} */
-    private static final double MINIMUM_TIME_FROM_ONSET = 80;
 
     /** Depth of background from screen */
     private static float BACK_DEPTH = Observer.ZFAR - 1;
@@ -60,7 +58,10 @@ public class OpiLogic implements PsychoLogic {
     /** Current stimulus being shown. Each should have a matching Item in currentItems*/
     private List<Stimulus> currentStims;
 
-    /** The current index into driver.getStimulus() for presentation. This steps along the list of stimuli in driver. */
+    /** The current index into driver.getStimulus() for presentation. This steps along the list of stimuli in driver. 
+     *  Note that several elements of driver.getStimulus() could be consumed in one "presentation" if their t = 0.
+     *  to become currentStims hence currentItems.
+    */
     private int stimIndex = -1;
 
     /** PsychoEngine field of view */
@@ -122,8 +123,30 @@ public class OpiLogic implements PsychoLogic {
         driver.setActionToNull(); // Action is over  // TODO use a Condition
     }
 
+    /** 
+     * Request details of eye position from the camera(s)
+     * Response should end up on driver.getConfiguration().webcam().cameraStreamer.responseQueue
+     * 
+     * @param eye One of ViewEye.LEFT, ViewEye.RIGHT, or ViewEye.BOTH
+     * @param timestamp Stamp of the request like System.getCurrentTimeMillis()
+     */
+    private void requestEyePosition(ViewEye eye, long timestamp) {
+        if (driver.getConfiguration().webcam().cameraStreamer == null)
+            return;
+
+        CameraStreamer.Request req;
+        if (currentStims.size() == 1) {   // There should not be a 'multi-stim' for MONO
+            if (eye == ViewEye.LEFT) 
+                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
+            else 
+                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
+        } else 
+            req = new CameraStreamer.Request(timestamp, 0);  // 0 for all cameras
+        driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
+    }
+
     /**
-     * Process input
+     * Process a YES input, ignore the rest.
      *
      * @param command the command received  
      * 
@@ -131,13 +154,19 @@ public class OpiLogic implements PsychoLogic {
      */
     @Override
     public void input(PsychoEngine psychoEngine, Command command) {
-        if (command == Command.NONE) return;
-        // if no response or response is too early, do nothing
-        if(command != Command.YES || timer.getElapsedTime() < MINIMUM_TIME_FROM_ONSET) return;
-        buildResponse(true);
+            // If not a YES response, do nothing
+        if (command != Command.YES) return;
+
+            // Request the end eye position from the camera
+        buttonPressTimeStamp = System.currentTimeMillis();
+        requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), buttonPressTimeStamp);
+
         timer.stop();
         for (Item s : currentItems) 
             s.show(ViewEye.NONE);
+
+            // Build a 'seen' response
+        buildResponse(true);
     }
 
     /**
@@ -150,8 +179,7 @@ public class OpiLogic implements PsychoLogic {
     @Override
     public void update(PsychoEngine psychoEngine) {
         // Instructions are always given by the OpiDriver.
-        // OpiLogic sets action back to null once instruction is carried out,
-        // except when presenting, where the OpiDriver waits for a response.
+        // OpiLogic sets action back to null once instruction is carried out. (does not block)
         //if (driver.action != null) System.out.println(driver.action);
         if (driver.getAction() == null) 
             checkAction();
@@ -216,39 +244,50 @@ public class OpiLogic implements PsychoLogic {
             currentStims = new ArrayList<Stimulus>();
             currentItems = new ArrayList<Item>();
         } 
-        stimIndex = 0;  // the first element in the stimulus list
-        updateStimuli();
-        timer.start();
+        stimIndex = 0;        // The first element in the stimulus list
+        updateStimuli();      // Create first stimulus
+        timer.start();        // Start the timer to signal presentation in procees
         presentationTime = 0;
         driver.setActionToNull(); // TODO use a Condition
     }
 
-    /** Checks if something must be updated, e.g. if presenting a stimulus or processing the observer's response */
+    /** Checks if something must be updated.
+     *  There are two main states:
+     *     (1) Stimulus are being presented; or
+     *     (2) Stimulus are finished and we are waiting for a user response.
+     * 
+     *  If a stimulus is not being presented, do nothing.
+     * 
+     *  If a stimulus is visible (first component is "showing()") then
+     *      If the time is up for this stimulus
+     *          If there are more stims in driver, step stimIndex and updateStimuli
+     *          Otherwise hide all parts of the stimuli
+     *  Otherwise 
+     *      If timer has reached response window, stop timer and send negative response.
+     */
     private void checkAction() {
-        if (timer.getElapsedTime() > 0) // if timer is active, we are presenting
-            if (currentItems.get(0).showing()) {
-                double t = currentStims.get(currentStims.size() - 1).t();
-                if (timer.getElapsedTime() > presentationTime + t) {
-                    presentationTime += t;
-                    // If presentation time is over for the last element of the array, then hide stimulus
-                    // and ask for eye position from camera
-                    if (stimIndex == driver.getStimuliLength() - 1) {
-                        buttonPressTimeStamp = System.currentTimeMillis();
+        if (timer.getElapsedTime() <= 0) // if timer is active, we are presenting
+            return;
 
-                        for (Item s : currentItems)
-                            s.show(ViewEye.NONE);
-
-                        requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), buttonPressTimeStamp);
-                    } else {
-                        stimIndex++;
-                        updateStimuli();
-                    }
+        if (currentItems.get(0).showing()) {
+            double t = currentStims.get(currentStims.size() - 1).t();
+            if (timer.getElapsedTime() >= presentationTime + t) {
+                presentationTime += t;
+                // If presentation time is over for the last element of the array, then hide stimulus
+                // otherwise move along to next part of the stimulus
+                if (stimIndex == driver.getStimuliLength() - 1) {
+                    for (Item s : currentItems)
+                        s.show(ViewEye.NONE);
+                } else {
+                    stimIndex++;
+                    updateStimuli();
                 }
-            } else if (timer.getElapsedTime() > currentStims.get(currentStims.size() - 1).w()) {
-                // if no response, reset timer and send negative response
-                timer.stop();
-                buildResponse(false);
-            };
+            }
+        } else if (timer.getElapsedTime() > currentStims.get(currentStims.size() - 1).w()) {
+                // If no response, reset timer and send negative response
+            timer.stop();
+            buildResponse(false);
+        };
     }
 
     /** Create a new item from Stimulus stim */
@@ -313,30 +352,8 @@ public class OpiLogic implements PsychoLogic {
         }
     }
 
-    /** 
-     * Request details of eye position from the camera(s)
-     * Response should end up on driver.getConfiguration().webcam().cameraStreamer.responseQueue
-     * 
-     * @param eye One of ViewEye.LEFT, ViewEye.RIGHT, or ViewEye.BOTH
-     * @param timestamp Stamp of the request like System.getCurrentTimeMillis()
-     */
-    private void requestEyePosition(ViewEye eye, long timestamp) {
-        if (driver.getConfiguration().webcam().cameraStreamer == null)
-            return;
-
-        CameraStreamer.Request req;
-        if (currentStims.size() == 1) {   // There should not be a 'multi-stim' for MONO
-            if (eye == ViewEye.LEFT) 
-                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
-            else 
-                req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
-        } else 
-            req = new CameraStreamer.Request(timestamp, 0);  // 0 for all cameras
-        driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
-    }
-
     /** Update currentItems to match the next section of driver.getStimulus(index).
-     * Try and reuse existing Items as much as possible.
+      * Try and reuse existing Items as much as possible.
       * Only create new Items if the stim has new components (ie t == 0)
       * Only create new Models or Textures in existing Items if really needed
     */
@@ -454,12 +471,12 @@ public class OpiLogic implements PsychoLogic {
             int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
             int count = 0;
 
-                // Keep looking for start and end responses until either we get 
-                // the wrong response (mis-matching timestamp) or no response
-                // too many times (totalTries)
+                // Keep looking for start and end responses (if !seen) 
+                // If we don't get any data after `totalTries` then we give up
             try {
-                int gotData = 0;
-                while (gotData < 2) {
+                boolean gotStart = false;
+                boolean gotEnd = !seen;   // If !seen then we will not look for End data
+                while (!gotStart && !gotEnd) {
                     while (resp == null && count < totalTries) {
                         resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
                         count++;
@@ -472,10 +489,10 @@ public class OpiLogic implements PsychoLogic {
                         // Check response's requestTimeStamp to see which fields to update
                     if (resp.requestTimeStamp() == startStimTimeStamp) {
                         result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
-                        gotData++;
-                    } else if (resp.requestTimeStamp() == buttonPressTimeStamp) {
+                        gotStart = true;
+                    } else if (seen && resp.requestTimeStamp() == buttonPressTimeStamp) {
                         result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));
-                        gotData++;
+                        gotEnd = true;
                     } else 
                         driver.getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for another time
                 }
