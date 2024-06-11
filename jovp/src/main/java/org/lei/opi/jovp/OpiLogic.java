@@ -248,6 +248,11 @@ public class OpiLogic implements PsychoLogic {
         updateStimuli();      // Create first stimulus
         timer.start();        // Start the timer to signal presentation in procees
         presentationTime = 0;
+
+            // get the eye position at the start of presentation
+        startStimTimeStamp = System.currentTimeMillis();
+        requestEyePosition(currentStims.get(0).eye(), startStimTimeStamp);
+
         driver.setActionToNull(); // TODO use a Condition
     }
 
@@ -308,74 +313,23 @@ public class OpiLogic implements PsychoLogic {
         return new Item(m, t, Units.ANGLES);
     }
 
-    /** Create stimuli from the list driver.getStimulus[stimIndex, ...]
-     * Elements are taken from driver while t == 0 (ie duration is 0)
-     * All taken elements are put into currentStims list.
-     * For each one, an Item is created and put into currentItems list.
-    */
-    private void createStimuli() {
-        currentStims.clear();
-        currentItems.clear();
-
-        Stimulus stim = driver.getStimulus(stimIndex);
-        for(;;) {
-            currentStims.add(stim);
-
-            Item stimItem = createStimItem(stim);
-
-            stimItem.position(stim.x(), stim.y());
-            if (stim.fullFoV() != 0) {
-                stimItem.size(this.fov[0], this.fov[1]);
-            } else {
-                stimItem.size(stim.sx(), stim.sy());
-            }
-            stimItem.rotation(stim.rotation());
-            stimItem.contrast(stim.contrast());
-            stimItem.frequency(stim.phase(), stim.frequency());
-            stimItem.defocus(stim.defocus());
-            stimItem.texRotation(stim.texRotation());
-            stimItem.setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
-            stimItem.envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
-            stimItem.show(stim.eye());
-
-            stimItem.depth(STIM_DEPTH);
-            view.add(stimItem);
-
-            currentItems.add(stimItem);
-
-            if (stim.t() == 0) {
-                stimIndex++;
-                stim = driver.getStimulus(stimIndex);
-            } else {
-                break;
-            }
-        }
-    }
-
     /** Update currentItems to match the next section of driver.getStimulus(index).
       * Try and reuse existing Items as much as possible.
       * Only create new Items if the stim has new components (ie t == 0)
       * Only create new Models or Textures in existing Items if really needed
     */
     private void updateStimuli() {
-        if (currentItems.size() == 0) { // first time, create the lot
-            createStimuli();
-        
-            startStimTimeStamp = System.currentTimeMillis();
-            requestEyePosition(currentStims.get(0).eye(), startStimTimeStamp);
-        }
-
             // Check each driver.getStimulus(stimIndex) against currentStims[itemIndex] to see if
             //   (a) It exists (ie new stim has more items than currentStims)
             //   (a) OR it should not exist (ie is first or pre t == 0)
             //   (b) OR the model or texture should be updated
-            // ASSERT currentItems.len >= currentStims
+            // ASSERT currentItems.len >= currentStims.len
         int itemIndex = 0; // index into currentItems (and the prefix of currentStims)
         for(;;) {
             Stimulus stim = driver.getStimulus(stimIndex);
             
             if (itemIndex >= currentItems.size()) {
-                currentItems.add(createStimItem(stim));
+                currentItems.add(createStimItem(stim));  // nothing to update, just add it.
             } else {
                 boolean newModel = false;
                 int newTexture = 0;  // 0 = no new texture, 1 = new texture, 2 = update image of existing texture
