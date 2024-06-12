@@ -66,8 +66,14 @@ public class OpiLogic implements PsychoLogic {
     /** PsychoEngine field of view */
     private float[] fov;
 
+    private enum PresentingState { 
+        PRESENTING,  // stimulus is active
+        AWAITING,    // stim finished but response window still open
+        RESPONDED,   // subject has clicked
+        NOT          // None of the above
+    };
     /** True if showing stim or waiting for a response after a stim */
-    private boolean presenting= false;
+    private PresentingState presenting = PresentingState.NOT;
 
     /** Accumulates presentation time: useful for dynamic stimulus */
     private int presentationTime;
@@ -149,6 +155,7 @@ public class OpiLogic implements PsychoLogic {
 
     /**
      * Process a YES input, ignore the rest.
+     * Only generate a request for eye image on the first button press of a stimulus.
      *
      * @param command the command received  
      * 
@@ -161,6 +168,9 @@ public class OpiLogic implements PsychoLogic {
 
             // input before anything has happened!
         if (currentStims == null || currentStims.size() == 0) return;
+
+        if (presenting == PresentingState.NOT) return;
+        if (presenting == PresentingState.RESPONDED) return;  // ignore any extra button presses
 
             // Request the end eye position from the camera
         buttonPressTimeStamp = System.currentTimeMillis();
@@ -248,10 +258,11 @@ public class OpiLogic implements PsychoLogic {
         } 
         stimIndex = 0;        // The first element in the stimulus list
         updateStimuli();      // Create first stimulus
-        presentationTime = 0;
-        presenting = true;
         startStimTimeStamp = System.currentTimeMillis();
         requestEyePosition(currentStims.get(0).eye(), startStimTimeStamp); // get the eye position at the start of presentation
+        presentationTime = 0;
+        buttonPressTimeStamp = -1;
+        presenting = PresentingState.PRESENTING;
 
         driver.setActionToNull(); // TODO use a Condition
     }
@@ -261,26 +272,18 @@ public class OpiLogic implements PsychoLogic {
      *     (1) Stimulus are being presented; or
      *     (2) Stimulus are finished and we are waiting for a user response.
      * 
-     *  If a stimulus is not being presented, do nothing.
-     * 
-     *  If a stimulus is visible (first component is "showing()") then
-     *      If the time is up for this stimulus
-     *          If there are more stims in driver, step stimIndex and updateStimuli
-     *          Otherwise hide all parts of the stimuli
-     *  Otherwise 
-     *      If timer has reached response window, stop timer and send negative response.
+     * BE CAREFUL with this function. You need to return from it quickly
+     * if you make a change to a stimulus so that psychoEngine can update.
+     * (eg don't check for No response before time out as long stimuli will not clear.)
      */
     private void checkAction() {
-        if (!presenting) return;
+        if (presenting == PresentingState.NOT) return;
 
         long elapsed = System.currentTimeMillis() - startStimTimeStamp;
 
-        if (buttonPressTimeStamp > 0) { // A yes response
-            presenting = false;
+        if (presenting == PresentingState.RESPONDED) { // A yes response
+            presenting = PresentingState.NOT;
             buildResponse(true);
-        } else if (elapsed > currentStims.get(currentStims.size() - 1).w()) { // A no response.
-            presenting = false;
-            buildResponse(false);
         } else if (currentItems.get(0).showing()) {  // increment stim or turn it off
             double t = currentStims.get(currentStims.size() - 1).t();
             if (elapsed >= presentationTime + t) {
@@ -290,11 +293,15 @@ public class OpiLogic implements PsychoLogic {
                 if (stimIndex == driver.getStimuliLength() - 1) {
                     for (Item s : currentItems)
                         s.show(ViewEye.NONE);
+                    presenting = PresentingState.AWAITING;
                 } else {
                     stimIndex++;
                     updateStimuli();
                 }
             }
+        } else if (elapsed > currentStims.get(currentStims.size() - 1).w()) { // A no response.
+            presenting = PresentingState.NOT;
+            buildResponse(false);
         }
     }
 
@@ -431,10 +438,10 @@ public class OpiLogic implements PsychoLogic {
 
         if (driver.getConfiguration().webcam().cameraStreamer != null) {
             int oneTryTime = 50;  // 50 ms
-            int totalTries = 10 * 1000 / oneTryTime / 2;  // 10 seconds
+            int totalTries = 5 * 1000 / oneTryTime / 2;  // 5 seconds
 
-//System.out.println("Start time: " + startStimTimeStamp);
-//System.out.println("End time: " + (buttonPressTimeStamp));
+System.out.println("Start time: " + startStimTimeStamp);
+System.out.println("End time: " + (buttonPressTimeStamp));
 //driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up
