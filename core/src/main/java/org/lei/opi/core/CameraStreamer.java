@@ -71,8 +71,8 @@ public class CameraStreamer extends Thread {
     public CameraStreamer(int port, int []deviceNumber) throws IOException {
         this.port = port;
         this.deviceNumber = deviceNumber;
-        requestQueue = new LinkedBlockingQueue<Request>();
-        responseQueue = new LinkedBlockingQueue<Response>();
+        requestQueue = new LinkedBlockingQueue<Request>(10);
+        responseQueue = new LinkedBlockingQueue<Response>(10);
         this.start();
     }
         

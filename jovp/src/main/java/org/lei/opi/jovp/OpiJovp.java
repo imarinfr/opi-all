@@ -217,7 +217,7 @@ public class OpiJovp extends OpiListener {
                     .append(Arrays.toString(comPorts))
                     .toString()));
         }
-System.out.println(args.keySet());
+
         try {
             // get configuration
             configuration = Configuration.set(args);

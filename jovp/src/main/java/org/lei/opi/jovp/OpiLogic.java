@@ -3,14 +3,11 @@ package org.lei.opi.jovp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
-import org.joml.Vector4f;
 import org.lei.opi.core.CameraStreamer;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
-import es.optocom.jovp.Timer;
 import es.optocom.jovp.rendering.Item;
 import es.optocom.jovp.rendering.Model;
 import es.optocom.jovp.rendering.Observer;
@@ -68,8 +65,9 @@ public class OpiLogic implements PsychoLogic {
     /** PsychoEngine field of view */
     private float[] fov;
 
-    /** A timer to control, well, you know, er, time? */
-    private Timer timer = new Timer();
+    /** True if showing stim or waiting for a response after a stim */
+    private boolean presenting= false;
+
     /** Accumulates presentation time: useful for dynamic stimulus */
     private int presentationTime;
 
@@ -141,7 +139,11 @@ public class OpiLogic implements PsychoLogic {
         else 
             req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
 
-        driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
+        try {
+            driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
+        } catch (IllegalStateException e) {
+            System.out.println("CameraStreamer request queue is full. Dropping request.");
+        }
     }
 
     /**
@@ -163,12 +165,9 @@ public class OpiLogic implements PsychoLogic {
         buttonPressTimeStamp = System.currentTimeMillis();
         requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), buttonPressTimeStamp);
 
-        timer.stop();
         for (Item s : currentItems) 
             s.show(ViewEye.NONE);
-
-            // Build a 'seen' response
-        buildResponse(true);
+        // Note: Do not build a response here in case it delays stimulus off
     }
 
     /**
@@ -248,12 +247,10 @@ public class OpiLogic implements PsychoLogic {
         } 
         stimIndex = 0;        // The first element in the stimulus list
         updateStimuli();      // Create first stimulus
-        timer.start();        // Start the timer to signal presentation in procees
         presentationTime = 0;
-
-            // get the eye position at the start of presentation
+        presenting = true;
         startStimTimeStamp = System.currentTimeMillis();
-        requestEyePosition(currentStims.get(0).eye(), startStimTimeStamp);
+        requestEyePosition(currentStims.get(0).eye(), startStimTimeStamp); // get the eye position at the start of presentation
 
         driver.setActionToNull(); // TODO use a Condition
     }
@@ -273,12 +270,19 @@ public class OpiLogic implements PsychoLogic {
      *      If timer has reached response window, stop timer and send negative response.
      */
     private void checkAction() {
-        if (timer.getElapsedTime() <= 0) // if timer is active, we are presenting
-            return;
+        if (!presenting) return;
 
-        if (currentItems.get(0).showing()) {
+        long elapsed = System.currentTimeMillis() - startStimTimeStamp;
+
+        if (buttonPressTimeStamp > 0) { // A yes response
+            presenting = false;
+            buildResponse(true);
+        } else if (elapsed > currentStims.get(currentStims.size() - 1).w()) { // A no response.
+            presenting = false;
+            buildResponse(false);
+        } else if (currentItems.get(0).showing()) {  // increment stim or turn it off
             double t = currentStims.get(currentStims.size() - 1).t();
-            if (timer.getElapsedTime() >= presentationTime + t) {
+            if (elapsed >= presentationTime + t) {
                 presentationTime += t;
                 // If presentation time is over for the last element of the array, then hide stimulus
                 // otherwise move along to next part of the stimulus
@@ -290,11 +294,7 @@ public class OpiLogic implements PsychoLogic {
                     updateStimuli();
                 }
             }
-        } else if (timer.getElapsedTime() > currentStims.get(currentStims.size() - 1).w()) {
-                // If no response, reset timer and send negative response
-            timer.stop();
-            buildResponse(false);
-        };
+        }
     }
 
     /** Create a new item from Stimulus stim */
@@ -313,7 +313,6 @@ public class OpiLogic implements PsychoLogic {
 
             // units is always in ANGLES for now
         Item i = new Item(m, t, Units.ANGLES);
-        i.setColors(stim.color1(), stim.color2());
         i.show(ViewEye.NONE);
         view.add(i);
         return(i);
@@ -371,20 +370,6 @@ public class OpiLogic implements PsychoLogic {
                     t.updateImage(stim.imageFilename());     // update the texture
                     currentItems.get(itemIndex).update(t);  // trigger update of the Item
                 }
-
-                    // Reuse color if possible
-                double []col1 = gammaLumToColor(stim.lum(), stim.color1());
-                double []col2 = gammaLumToColor(stim.lum(), stim.color2());  
-                Vector4f []cols = currentItems.get(itemIndex).getTexture().getColors();
-                if (col1[0] != cols[0].x || 
-                    col1[1] != cols[0].y || 
-                    col1[2] != cols[0].z ||
-                    col1[3] != cols[0].w ||
-                    col2[0] != cols[1].x || 
-                    col2[1] != cols[1].y || 
-                    col2[2] != cols[1].z ||
-                    col2[3] != cols[1].w)
-                    currentItems.get(itemIndex).setColors(col1, col2);
             }
 
                 // Update all the other bits
@@ -400,6 +385,7 @@ public class OpiLogic implements PsychoLogic {
             currentItems.get(itemIndex).defocus(stim.defocus());
             currentItems.get(itemIndex).texRotation(stim.texRotation());
             currentItems.get(itemIndex).envelope(stim.envType(), stim.envSdx(), stim.envSdy(), stim.envRotation());
+            currentItems.get(itemIndex).setColors(gammaLumToColor(stim.lum(), stim.color1()), gammaLumToColor(stim.lum(), stim.color2()));
             currentItems.get(itemIndex).depth(STIM_DEPTH);
             currentItems.get(itemIndex).show(stim.eye());
 
@@ -445,7 +431,7 @@ public class OpiLogic implements PsychoLogic {
         if (driver.getConfiguration().webcam().cameraStreamer != null) {
             int oneTryTime = 50;  // 50 ms
             int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
-            int count = 0;
+            //int count = 0;
 
 System.out.println("Start time: " + startStimTimeStamp);
 System.out.println("End time: " + (!seen ? -1 : buttonPressTimeStamp));
