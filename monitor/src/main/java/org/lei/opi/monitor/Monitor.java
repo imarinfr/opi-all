@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.Optional;
 
@@ -18,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Constructor;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
 import javafx.stage.Stage;
@@ -45,6 +47,13 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.layout.AnchorPane;
 
+/**
+ * Monitor GUI can be activated in one of three ways:
+ *   1) With no arguments, it opens the interactive GUI.
+ *   2) With --cli <port number> <machine name> it runs in command line mode with no GUI.
+ *   3) With --mGUI <machine name> it clicks the 'Connect' button on the interactive GUI page (using 'this' port in settings file).
+ * See usage().
+ */
 public class Monitor extends Application {
     @FXML
     private Button btnConnect;
@@ -82,18 +91,20 @@ public class Monitor extends Application {
         // Used as data for tableSettings (settings for {@link currentMachineChoice}).
         // Initially try to get this from the settings file.
         // If the settings file doesn't exist, or the Reset Settings button is 
-        // pressed, then get them from the Settings nested classes in the OpiMachine heirachy.
+        // pressed, then get them from the Settings nested classes in the OpiMachine hierarchy.
     private ObservableList<List<StringProperty>> settingsList = FXCollections.observableArrayList();
 
         // IP and port of the monitor (myself) - this will be the address for the client to send commands.
     private String myIpAddress;
     private String myPort;
-    private static OpiListener opiClientListener;  // a bit gruby being static, but there is only ever one of these...
+    private static OpiListener opiClientListener;  // a bit grubby being static, but there is only ever one of these...
 
     private boolean settingsHaveBeenEdited; // true if settings have been edited since last change. 
     private boolean myPortHasBeenEdited; // true if myIp or myPort have been edited since last change. 
     private String currentMachineChoice;
     private Object currentSettingsObject;  // an OpiMachine$Settings object
+
+    private static int skipFrontPageToThisMachine = -1; // If >= 0, initialize will choose this machine and 'click' Connect. (grubby static!)
 
     /**
      * First checks if settings for current selection have been changed and 
@@ -320,6 +331,7 @@ public class Monitor extends Application {
      * 3) Get my port from the settings file if it exists.
      * 3.1) Add change listeners to the myport text field.
      * 3.2) Put my IP address in the localhost box.
+     * 5) Automatically click Connect if skipFrontPageToThisMachine is set.
      */
     @FXML
     public void initialize() {
@@ -390,6 +402,16 @@ public class Monitor extends Application {
         //final Stage stage = (Stage) gridPane.getScene().getWindow();
         //stage.setWidth(850);
         //stage.setHeight(520);
+
+            // (5) If skipFrontPageToThisMachine is set, select that machine and 'click' Connect
+        if (skipFrontPageToThisMachine >= 0) {
+            Platform.runLater(new Runnable() {
+                @Override public void run() {
+                    listMachines.getSelectionModel().select(skipFrontPageToThisMachine);
+                    btnConnect.fire();
+                }
+            });
+        }
     }
 
     public static OpiMachine createOpiMachine(String machineName, Scene parentScene) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InstantiationException, InvocationTargetException {
@@ -505,16 +527,24 @@ public class Monitor extends Application {
     }
 
     private static void usage() {
-        System.err.println("Usage: Monitor [--cli <port number> <machine name>] [--setting <name> <value> ...]");
+        System.err.println("Usage: Monitor [--cli <port number> <machine name> | --mGUI <machine name>] [--setting <name> <value> ...]");
         System.err.println("       eg java ... Monitor --cli 50001 Echo --setting port 50002 ip localhost");
+        System.err.println("       With no arguments, opens interactive GUI.");
+        System.err.println("       --cli runs in command line mode with no GUI.");
+        System.err.println("       --mGUI clicks the 'Connect' button on the interactive GUI page (using 'this' port in settings file).");
         System.exit(-1);
     }
-            
+
+    /**
+     * Create the OpiMachine and listener given in args.
+     * @param args Command line arguments
+     */
     private static void runCommandLineMode(String[] args) {
         System.out.println("CLI mode");
 
             // store the supplied port and localhost IP address
         int i = Arrays.asList(args).indexOf("--cli");
+
         if (i + 1 > args.length - 1) {
             System.err.println("Missing port number");
             usage();
@@ -549,7 +579,7 @@ public class Monitor extends Application {
         }
 
         if (Arrays.asList(args).contains("--settings")) {
-            System.out.println("I am really sorry, I haven't done '--settings' yet. Edit them with GUI."); // TODO
+            System.out.println("Sorry, I haven't done '--settings' yet. Edit them with Interactive GUI."); // TODO
             usage();
             // Need to read each name value pair in the args and edit opiMachine.settings accordingly
             //opiMachine.getSettings();
@@ -567,13 +597,44 @@ public class Monitor extends Application {
         System.exit(0);
     }
 
+    /**
+     * Start the GUI, select machine, click Connect.
+     *
+     * @param args Command line arguments
+     */
+    private static void runMGuiMode(String[] args) {
+        System.out.println("mGUI mode");
+
+            // store the supplied port and localhost IP address
+        int i = Arrays.asList(args).indexOf("--mGUI");
+
+        if (i + 1 > args.length - 1) {
+            System.err.println("Missing machine");
+            usage();
+        }
+        String machine = args[i + 1];
+
+        List<String> ms = Arrays.asList(OpiMachine.MACHINES);
+        Collections.sort(ms);
+        int j = ms.indexOf(machine);
+        if (j == -1) {
+            System.out.println("Cannot find machine " + machine + " in OpiMachine.MACHINES");
+            usage();
+        }
+
+        skipFrontPageToThisMachine = j;
+        launch();
+    }
+
     // Should not be executed directly from command line. (JavaFx has a fit)
     // See Main.main
     public static void main(String[] args) {
         if (Arrays.asList(args).contains("--cli")) {
             runCommandLineMode(args);
+        } else if (Arrays.asList(args).contains("--mGUI")) {
+            runMGuiMode(args);
         } else {
-            System.out.println("GUI mode");
+            System.out.println("Interactive GUI mode");
             launch(); 
         }
     }
