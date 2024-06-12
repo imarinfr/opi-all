@@ -465,7 +465,7 @@ public class Monitor extends Application {
             FXMLLoader loader = new FXMLLoader(opiMachine.getClass().getResource(String.format("/org/lei/opi/core/%s", opiMachine.fxmlFileName)));
             loader.setController(opiMachine);
             Parent root = loader.load();
-            Scene scene = new Scene(root, 800, 800);
+            Scene scene = new Scene(root);
 
             stage.setScene(scene);
             stage.show();
