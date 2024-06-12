@@ -172,6 +172,8 @@ public class OpiLogic implements PsychoLogic {
         if (presenting == PresentingState.NOT) return;
         if (presenting == PresentingState.RESPONDED) return;  // ignore any extra button presses
 
+        presenting = PresentingState.RESPONDED;  
+
             // Request the end eye position from the camera
         buttonPressTimeStamp = System.currentTimeMillis();
         requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), buttonPressTimeStamp);
