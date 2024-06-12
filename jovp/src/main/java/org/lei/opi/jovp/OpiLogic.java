@@ -3,6 +3,7 @@ package org.lei.opi.jovp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.lei.opi.core.CameraStreamer;
 
@@ -430,30 +431,32 @@ public class OpiLogic implements PsychoLogic {
 
         if (driver.getConfiguration().webcam().cameraStreamer != null) {
             int oneTryTime = 50;  // 50 ms
-            int totalTries = 10 * 1000 / oneTryTime;  // 10 seconds
-            //int count = 0;
+            int totalTries = 10 * 1000 / oneTryTime / 2;  // 10 seconds
 
-System.out.println("Start time: " + startStimTimeStamp);
-System.out.println("End time: " + (!seen ? -1 : buttonPressTimeStamp));
-driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
+//System.out.println("Start time: " + startStimTimeStamp);
+//System.out.println("End time: " + (buttonPressTimeStamp));
+//driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up
-                CameraStreamer.Response resp = null;
+                CameraStreamer.Response resp;
                 boolean gotStart = false;
                 boolean gotEnd = !seen;   // If !seen then we will not look for End data
                 while (!gotStart || !gotEnd) {
+                    resp = null;
                     try {
-                        //while (resp == null && count < totalTries) {
-                        //    resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
-                        //    count++;
-                        // }
-                        resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.take();
+                        int count = 0;
+                        while (resp == null && count < totalTries) {
+                            resp = driver.getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
+                            count++;
+                            Thread.sleep(oneTryTime);
+                        }
                     } catch (InterruptedException e) { ; }
 
                     if (resp == null) {
-                        System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime / 1000));
+                        System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime * 2 / 1000));
                         break;
                     }
+
                         // Check response's requestTimeStamp to see which fields to update
                     if (resp.requestTimeStamp() == startStimTimeStamp) {
                         result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startStimTimeStamp));

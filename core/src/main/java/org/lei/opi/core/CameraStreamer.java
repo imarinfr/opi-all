@@ -176,13 +176,17 @@ public class CameraStreamer extends Thread {
 System.out.println("Processing Req: " + request.timeStamp + " -> " + timestamp);
         HashMap<String, Integer> res = new HashMap<String, Integer>(3);
         getImageValues(frame, res);
-        responseQueue.add(new Response(
-            request.timeStamp,
-            timestamp,
-            res.get("x").intValue(),
-            res.get("y").intValue(),
-            res.get("d").intValue()
-        ));
+        try {
+            responseQueue.add(new Response(
+                request.timeStamp,
+                timestamp,
+                res.get("x").intValue(),
+                res.get("y").intValue(),
+                res.get("d").intValue()
+            ));
+        } catch (IllegalStateException e) {
+            System.out.println("Response queue is full, apparently!");
+        }
     }
             
     /**
