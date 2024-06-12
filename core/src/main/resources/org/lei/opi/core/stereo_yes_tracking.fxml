@@ -13,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="600.0" style="-fx-background-color: #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="800.0" prefWidth="500.0" style="-fx-background-color: #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <HBox alignment="CENTER_LEFT" prefHeight="72.0" prefWidth="600.0">
          <children>
@@ -36,7 +36,10 @@
                </padding>
             </VBox>
             <Region prefHeight="100.0" prefWidth="264.0" />
-            <Button fx:id="btnClose" mnemonicParsing="false" onAction="#actionBtnClose" text="Close" />
+            <Button fx:id="btnClose" mnemonicParsing="false" onAction="#actionBtnClose" prefHeight="25.0" prefWidth="118.0" text="Close">
+               <HBox.margin>
+                  <Insets right="10.0" />
+               </HBox.margin></Button>
          </children>
       </HBox>
       <FlowPane alignment="CENTER" prefHeight="326.0" prefWidth="600.0">
@@ -49,4 +52,7 @@
          </children>
       </FlowPane>
    </children>
+   <opaqueInsets>
+      <Insets top="500.0" />
+   </opaqueInsets>
 </VBox>
