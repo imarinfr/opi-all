@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 
 import org.lei.opi.core.CameraStreamer;
+import org.lei.opi.core.CameraStreamerImo;
 
 /**
  * Holds information that the opiJovp server needs about any local eye cameras
@@ -29,19 +30,26 @@ public class WebCamConfiguration {
      * @param srcDeviceLeft Device number of left eye camera (or only eye camera if just one). 
      * @param srcDeviceRight Device number of right eye camera (or -1 if there is no such device). 
     */
-    public WebCamConfiguration(int port, int srcDeviceLeft, int srcDeviceRight) {
+    public WebCamConfiguration(int port, int srcDeviceLeft, int srcDeviceRight, String machine) {
         this.port = port;
         this.srcDeviceLeft = srcDeviceLeft;
         this.srcDeviceRight = srcDeviceRight;
-System.out.println(String.format("Port for camera is %s", port));
+
         if (port == -1)
             return;
 
         try {
-            if (srcDeviceRight != -1)
-                cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft, srcDeviceRight});
-            else
-                cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft});
+            if (srcDeviceRight != -1) {
+                if (machine == "ImoVifa")
+                    cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft, srcDeviceRight});
+                else
+                    cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft, srcDeviceRight});
+            } else {
+                if (machine == "ImoVifa")
+                    cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft});
+                else
+                    cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft});
+            }
         } catch(IOException e) {
             System.out.println("Could not start eye tracking cameras in OpiJovp.");
             e.printStackTrace();
@@ -59,13 +67,15 @@ System.out.println(String.format("Port for camera is %s", port));
     public static WebCamConfiguration set(HashMap<String, Object> args) {
         if (!args.containsKey("eyeStreamPort")
         ||  !args.containsKey("deviceNumberCameraLeft")
-        ||  !args.containsKey("deviceNumberCameraRight"))
-            return new WebCamConfiguration(-1, 0, 0);
+        ||  !args.containsKey("deviceNumberCameraRight")
+        ||  !args.containsKey("machine"))
+            return new WebCamConfiguration(-1, 0, 0, null);
 
         return new WebCamConfiguration(
           ((Double) args.get("eyeStreamPort")).intValue(),
           ((Double) args.get("deviceNumberCameraLeft")).intValue(), 
-          ((Double) args.get("deviceNumberCameraRight")).intValue());
+          ((Double) args.get("deviceNumberCameraRight")).intValue(),
+          args.get("machine").toString());
     }
 
     public String toString() {

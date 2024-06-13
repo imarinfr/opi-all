@@ -23,15 +23,6 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @date 5 June 2024 
  */
 public class CameraStreamer extends Thread {
-    /** The device numbers of the cameras to stream on the machine on which this is running. */
-    private int []deviceNumber; 
-
-    /** The port number on this machine that will serve images */
-    private int port; 
-
-    /** The socket on which frames will be sent. */
-    private Socket socket;
-
     /** Whether this streamer is connected to a client */
     public boolean connected;
 
@@ -62,6 +53,18 @@ public class CameraStreamer extends Thread {
     /** Queue of results from image processing */
     public LinkedBlockingQueue<Response> responseQueue;
 
+    /** The device numbers of the cameras to stream on the machine on which this is running. */
+    private int []deviceNumber; 
+
+    /** The port number on this machine that will serve images */
+    private int port; 
+
+    /** The socket on which frames will be sent. */
+    private Socket socket;
+
+    /** Little bit of memory for communicating with image processing subclass */
+    protected HashMap<String, Integer> processingResults;
+
     /**
      * Create a CameraStreamer that streams images from a camera on the local machine and sends them over UDP
      * @param port The port number on this machine that will serve images 
@@ -73,6 +76,7 @@ public class CameraStreamer extends Thread {
         this.deviceNumber = deviceNumber;
         requestQueue = new LinkedBlockingQueue<Request>(10);
         responseQueue = new LinkedBlockingQueue<Response>(10);
+        processingResults = new HashMap<String, Integer>(3);
         this.start();
     }
         
@@ -173,16 +177,14 @@ public class CameraStreamer extends Thread {
      * @param timestamp Timestamp that the image was acquired
      */
     private void processRequest(Request request, Frame frame, long timestamp) {
-System.out.println("Processing Req: " + request.timeStamp + " -> " + timestamp);
-        HashMap<String, Integer> res = new HashMap<String, Integer>(3);
-        getImageValues(frame, res);
+        getImageValues(frame);
         try {
             responseQueue.add(new Response(
                 request.timeStamp,
                 timestamp,
-                res.get("x").intValue(),
-                res.get("y").intValue(),
-                res.get("d").intValue()
+                processingResults.get("x").intValue(),
+                processingResults.get("y").intValue(),
+                processingResults.get("d").intValue()
             ));
         } catch (IllegalStateException e) {
             System.out.println("Response queue is full, apparently!");
@@ -191,12 +193,15 @@ System.out.println("Processing Req: " + request.timeStamp + " -> " + timestamp);
             
     /**
      * Process frame to find (x, y) and diameter of pupil and put the result in map values.
+     * These must be put into `processingResults` as `x`, `y`, and `d` respectively.
+     * 
+     * Should override this method in a subclass to do something useful.
+     * 
      * @param frame Frame to process looking for pupil
-     * @param values Map object to update with (x,y) and diameter as `x`, `y`, and `d` respectively.
      */
-    private void getImageValues(Frame frame, HashMap<String, Integer> values) {
-        values.put("x", 66);
-        values.put("y", 77);
-        values.put("d", 22);
-    }
+    protected void getImageValues(Frame frame) {
+        processingResults.put("x", -1);
+        processingResults.put("y", -1);
+        processingResults.put("d", -1);
+    };
 }
