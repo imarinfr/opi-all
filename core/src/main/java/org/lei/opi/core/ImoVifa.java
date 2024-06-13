@@ -169,7 +169,7 @@ public class ImoVifa extends Jovp {
                         Thread.sleep(2000);
                         socket = new Socket(settings.ip, port);
                     } catch (IOException e) {
-                        System.out.println("Waiting for opiInitialise to open up eye camera socket on server on port: " + port);
+                        System.out.println("Monitor is waiting for opiInitialise to open up eye camera socket on server on port: " + port);
                     } catch (InterruptedException e) {
                         return;
                     }
