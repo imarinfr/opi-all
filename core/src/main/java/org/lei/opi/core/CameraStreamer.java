@@ -1,11 +1,9 @@
 package org.lei.opi.core;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.bytedeco.javacv.Frame;
-import org.bytedeco.javacv.FrameGrabber;
-import org.bytedeco.javacv.OpenCVFrameGrabber;
-import org.bytedeco.opencv.opencv_core.Mat;
-import org.bytedeco.javacv.OpenCVFrameConverter;
+
+import org.opencv.core.Mat;
+import org.opencv.videoio.VideoCapture;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -82,25 +80,22 @@ public class CameraStreamer extends Thread {
         
     @Override
     public void run() {
-        OpenCVFrameGrabber []grabber = new OpenCVFrameGrabber[this.deviceNumber.length];
-        try {
-            for (int i = 0 ; i < this.deviceNumber.length; i++) {
-                grabber[i] = new OpenCVFrameGrabber(this.deviceNumber[i]);
-                grabber[i].start();
+        VideoCapture []grabber = new VideoCapture[this.deviceNumber.length];
+        for (int i = 0 ; i < this.deviceNumber.length; i++) {
+            grabber[i] = new VideoCapture(this.deviceNumber[i]);
+            if (!grabber[i].isOpened()) {
+                System.out.println("Cannot open camera device " + this.deviceNumber[i]);
+                this.connected = false;
+                return;
             }
-        } catch (FrameGrabber.Exception e) {
-            e.printStackTrace();
-            this.connected = false;
-            return;
         }
 
-        OpenCVFrameConverter.ToMat converter = new OpenCVFrameConverter.ToMat();
         try {
             ServerSocket server = new ServerSocket(this.port);
             server.setSoTimeout(10);
 
-            long []timestamp = new long[deviceNumber.length];
-            Frame []frame = new Frame[deviceNumber.length];
+            long []timestamp = new long[deviceNumber.length];   // -1 for invalid frame
+            Mat []frame = new Mat[deviceNumber.length];
             byte []bytes = new byte[1];
             while (!isInterrupted()) {
                     // See if someone wants to connect and stream...
@@ -112,8 +107,12 @@ public class CameraStreamer extends Thread {
 
                     // Try and grab each device as close as possible in time
                 for (int i = 0 ; i < this.deviceNumber.length; i++) {
-                    frame[i] = grabber[i].grab();
-                    timestamp[i] = System.currentTimeMillis();
+                    if (grabber[i].read(frame[i]))
+                        timestamp[i] = System.currentTimeMillis();
+                    else {
+                        timestamp[i] = -1;
+                        System.out.println("Could not get frame from " + this.deviceNumber[i]);
+                    }
                 }
 
                 Request request = requestQueue.poll();
@@ -129,12 +128,11 @@ public class CameraStreamer extends Thread {
 //System.out.println("bi type " + bi.getType());
 //System.out.println("bi width " + bi.getWidth());
 //System.out.println("bi height " + bi.getHeight());
-                        if (frame[i].image != null) {
-                            Mat con = converter.convert(frame[i]);
-                            int n = con.channels() * con.rows() * con.cols();
+                        if (timestamp[i] != -1) {
+                            int n = frame[i].channels() * frame[i].rows() * frame[i].cols();
                             if (n != bytes.length)
                                 bytes = new byte[n];
-                            con.data().get(bytes);
+                            frame[i].get(0, 0, bytes);
                                 // 1 byte for device number
                                 // 4 bytes for length of data, n
                                 // n bytes of Mat
@@ -162,7 +160,7 @@ public class CameraStreamer extends Thread {
 
         try {
             for (int i = 0 ; i < this.deviceNumber.length; i++)
-                grabber[i].close();
+                grabber[i].release();
         } catch (Exception e) { ; }
     }
 
@@ -176,7 +174,7 @@ public class CameraStreamer extends Thread {
      * @param frame Image frame to process
      * @param timestamp Timestamp that the image was acquired
      */
-    private void processRequest(Request request, Frame frame, long timestamp) {
+    private void processRequest(Request request, Mat frame, long timestamp) {
         getImageValues(frame);
         try {
             responseQueue.add(new Response(
@@ -199,7 +197,7 @@ public class CameraStreamer extends Thread {
      * 
      * @param frame Frame to process looking for pupil
      */
-    protected void getImageValues(Frame frame) {
+    protected void getImageValues(Mat frame) {
         processingResults.put("x", -1);
         processingResults.put("y", -1);
         processingResults.put("d", -1);

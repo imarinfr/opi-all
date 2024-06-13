@@ -3,7 +3,6 @@ package org.lei.opi.jovp;
 import org.lei.opi.core.CameraStreamer;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
