@@ -1,6 +1,7 @@
 package org.lei.opi.monitor;
 
 import org.lei.opi.core.OpiMachine;
+import org.opencv.core.Core;
 import org.lei.opi.core.OpiListener;
 
 import java.util.List;
@@ -629,6 +630,7 @@ public class Monitor extends Application {
     // Should not be executed directly from command line. (JavaFx has a fit)
     // See Main.main
     public static void main(String[] args) {
+        nu.pattern.OpenCV.loadLocally();
         if (Arrays.asList(args).contains("--cli")) {
             runCommandLineMode(args);
         } else if (Arrays.asList(args).contains("--mGUI")) {

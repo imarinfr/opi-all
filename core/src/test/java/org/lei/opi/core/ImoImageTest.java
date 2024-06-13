@@ -1,9 +1,9 @@
 package org.lei.opi.core;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.videoio.*;
 
 import org.junit.jupiter.api.Test;
@@ -15,8 +15,6 @@ public class ImoImageTest {
     private CameraStreamerImo cameraStreamer;
     
     ImoImageTest() {
-        Arrays.asList(System.getProperty("java.class.path").split(":")).forEach(s -> System.out.println(s));
-
         try {
             cameraStreamer = new CameraStreamerImo(-1, new int[] {1});
         } catch (IOException e) {
@@ -24,8 +22,24 @@ public class ImoImageTest {
     }
 
     @Test
-    public void detectPupil() {
-        VideoCapture camera = new VideoCapture(this.getClass().getResource("/org/lei/opi/core/imo_eye_OD.jpg").toString());
+    public void detectPupil_image() {
+        nu.pattern.OpenCV.loadLocally();
+        String fname = this.getClass().getResource("/org/lei/opi/core/imo_eye_OD.jpg").toString();
+        System.out.println("Filename: " + fname);
+
+        Mat frame = Imgcodecs.imread(fname);
+
+        cameraStreamer.processFrame(frame);
+    }
+
+    @Test
+    public void detectPupil_vidImages() {
+        nu.pattern.OpenCV.loadLocally();
+        String fname = this.getClass().getResource("/org/lei/opi/core/imo_eye_OD.jpg").toString();
+        System.out.println("Filename: " + fname);
+        fname = fname.replace("imo_eye_OD", "%02d");
+        System.out.println("Filename: " + fname);
+        VideoCapture camera = new VideoCapture(fname, Videoio.CAP_IMAGES);
 
         if (!camera.isOpened()) {
             System.out.println("Error! Camera can't be opened!");
