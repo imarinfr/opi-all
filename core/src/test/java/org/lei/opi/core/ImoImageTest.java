@@ -1,7 +1,11 @@
 package org.lei.opi.core;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
+
+import javax.imageio.ImageIO;
 
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
@@ -24,19 +28,14 @@ public class ImoImageTest {
     }
 
     @Test
-    public void detectPupil_image() {
+    public void detectPupil_image() throws IOException {
         //nu.pattern.OpenCV.loadShared();  // works on mac
-        nu.pattern.OpenCV.loadLocally();  // works on mac
+        nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
         
-        File file = new File(this.getClass().getResource("/org/lei/opi/core/OD.jpg").getFile());
-        String fname = file.getAbsolutePath();
-        file = null;
-        System.out.println("Filename: " + fname);
-
-        Mat frame = Imgcodecs.imread(fname);
-        System.out.println("image size: " + frame.width() + " " + frame.height());
-        Mat frame2 = new Mat(640, 480, frame.type());
-        Imgproc.resize(frame, frame2, new Size(640, 480));
+        BufferedImage im = ImageIO.read(getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg"));
+        byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
+        Mat frame2 = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
+        frame2.put(0, 0, im_array);
 
         cameraStreamer.processFrame(frame2);
     }

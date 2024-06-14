@@ -161,6 +161,7 @@ public class ImoVifa extends Jovp {
                 if (port == -1)
                     return;
                 
+                CameraStreamerImo csImo = new CameraStreamerImo();
                 Socket socket = null;
 
                     // Wait for the server to be initialised
@@ -181,30 +182,21 @@ public class ImoVifa extends Jovp {
                 while (isRunning) {
                     try {
                         Thread.sleep(20);
-                        int deviceNum = (int)socket.getInputStream().read();
-                        if (deviceNum < 0) {
+                        int deviceNum = csImo.readBytes(socket);
+
+                        if (deviceNum == -1) {
                             isRunning = false;
                             break;
                         }
-                        int n1 = (int)socket.getInputStream().read();
-                        int n2 = (int)socket.getInputStream().read();
-                        int n3 = (int)socket.getInputStream().read();
-                        int n4 = (int)socket.getInputStream().read();
-                        int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n4;
-
-                        if (bytes.length != n)
-                            bytes = new byte[n];
-
-                        int off = 0; // current start of buffer (offset)
-                        while (off < n) {
-                            int readN = socket.getInputStream().read(bytes, off, n - off);
-                            off += readN;
-                        }
-                        //Image img = new Image(socket.getInputStream());  will this work?
 
                         BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
                         byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
-                        System.arraycopy(bytes, 0, im_array, 0, im_array.length);
+                        try {
+                            CameraStreamerImo.bytesLock.lock();
+                            System.arraycopy(CameraStreamerImo.bytes, 0, im_array, 0, im_array.length);
+                        } finally {
+                            CameraStreamerImo.bytesLock.unlock();
+                        }
                         Image img = SwingFXUtils.toFXImage(im, null);
 
                         Platform.runLater(() -> {
@@ -214,10 +206,6 @@ public class ImoVifa extends Jovp {
                                 imageViewRight.setImage(img);
                         });
                     } catch (InterruptedException e) {
-                        isRunning = false;
-                    } catch (IOException e) {
-                        System.out.println("Error receiving images from ImoVifa camera");
-                        e.printStackTrace();
                         isRunning = false;
                     }
                 }

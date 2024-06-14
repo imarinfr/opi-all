@@ -1,7 +1,7 @@
 package org.lei.opi.core;
 
 import org.apache.commons.lang3.ArrayUtils;
-
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 
@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Create a thread that serves/streams raw images from one or more "webcams" on a TCP port.
@@ -20,7 +22,12 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @author Andrew Turpin
  * @date 5 June 2024 
  */
-public class CameraStreamer extends Thread {
+public abstract class CameraStreamer extends Thread {
+    /** Used to lock bytes for processing in {@link readImageToBytes} */
+    public static final ReentrantLock bytesLock = new ReentrantLock();
+    /** a buffer that is filled by {@link readImageToBytes} */
+    public static byte []bytes = new byte[1];
+
     /** Whether this streamer is connected to a client */
     public boolean connected;
 
@@ -63,6 +70,9 @@ public class CameraStreamer extends Thread {
     /** Little bit of memory for communicating with image processing subclass */
     protected HashMap<String, Integer> processingResults;
 
+    /** Weak instance just to allow calling of readBytes. Why not make it static? */
+    public CameraStreamer() { ; }
+
     /**
      * Create a CameraStreamer that streams images from a camera on the local machine and sends them over UDP
      * @param port The port number on this machine that will serve images 
@@ -96,7 +106,10 @@ public class CameraStreamer extends Thread {
 
             long []timestamp = new long[deviceNumber.length];   // -1 for invalid frame
             Mat []frame = new Mat[deviceNumber.length];
-            byte []bytes = new byte[1];
+
+            for (int i = 0 ; i < this.deviceNumber.length; i++)
+                frame[i] = new Mat(480, 640, CvType.CV_8UC3);
+
             while (!isInterrupted()) {
                     // See if someone wants to connect and stream...
                 if (!connected)
@@ -130,23 +143,19 @@ public class CameraStreamer extends Thread {
 //System.out.println("bi height " + bi.getHeight());
                         if (timestamp[i] != -1) {
                             int n = frame[i].channels() * frame[i].rows() * frame[i].cols();
-                            if (n != bytes.length)
-                                bytes = new byte[n];
-                            frame[i].get(0, 0, bytes);
-                                // 1 byte for device number
-                                // 4 bytes for length of data, n
-                                // n bytes of Mat
-//System.out.println("Putting " + n + " bytes from camera " + i + " on socket.");
-                            socket.getOutputStream().write(i);
-                            socket.getOutputStream().write(n >> 24);
-                            socket.getOutputStream().write((n >> 16) & 0xFF);
-                            socket.getOutputStream().write((n >>  8) & 0xFF);
-                            socket.getOutputStream().write( n        & 0xFF);
-                            socket.getOutputStream().write(bytes);
+                            try {
+                                bytesLock.lock();
+                                if (n != bytes.length)
+                                    bytes = new byte[n];
+                                frame[i].get(0, 0, CameraStreamer.bytes);
+                                writeBytes(socket, this.deviceNumber[i]);
+                            } finally {
+                                bytesLock.unlock();
+                            }
                         }
                     }
+                    Thread.sleep(50);
                 }
-                Thread.sleep(50);
             }
             server.close();
         } catch (IOException e) {
@@ -197,9 +206,28 @@ public class CameraStreamer extends Thread {
      * 
      * @param frame Frame to process looking for pupil
      */
-    protected void getImageValues(Mat frame) {
-        processingResults.put("x", -1);
-        processingResults.put("y", -1);
-        processingResults.put("d", -1);
-    };
+    protected abstract void getImageValues(Mat frame);
+
+    /**
+     * Write static bytes array out on socket as 
+     *       1 byte for device number
+     *       4 bytes for length of data, n
+     *       n bytes
+     *
+     * @param socket Open socket on which to write byets
+     * @param deviceNumber To write before bytes
+     * @throws IOException
+     * @throws ConcurrentModificationException You should CameraStreamer.bytesLock.lock() before calling this.
+     */
+    public abstract void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException;
+
+    /**
+     * Fill bytes with the image on socket
+     *
+     * Should override this method in a subclass to do something useful.
+     * 
+     * @param socket An open socket from which to read
+     * @return Device number read. -1 for error
+     */
+    public abstract int readBytes(Socket socket);
 }

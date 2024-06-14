@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import org.lei.opi.core.CameraStreamer;
 import org.lei.opi.core.CameraStreamerImo;
+import org.lei.opi.core.CameraStreamerNone;
 
 /**
  * Holds information that the opiJovp server needs about any local eye cameras
@@ -43,12 +44,12 @@ public class WebCamConfiguration {
                 if (machine == "ImoVifa")
                     cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft, srcDeviceRight});
                 else
-                    cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft, srcDeviceRight});
+                    cameraStreamer = new CameraStreamerNone(port, new int[] {srcDeviceLeft, srcDeviceRight});
             } else {
                 if (machine == "ImoVifa")
                     cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft});
                 else
-                    cameraStreamer = new CameraStreamer(port, new int[] {srcDeviceLeft});
+                    cameraStreamer = new CameraStreamerNone(port, new int[] {srcDeviceLeft});
             }
         } catch(IOException e) {
             System.out.println("Could not start eye tracking cameras in OpiJovp.");

@@ -1,6 +1,8 @@
 package org.lei.opi.core;
 
 import java.io.IOException;
+import java.net.Socket;
+import java.util.ConcurrentModificationException;
 
 import org.opencv.core.*;
 import org.opencv.imgproc.*;
@@ -16,10 +18,12 @@ public class CameraStreamerImo extends CameraStreamer {
     /** ROI for pupil detection. Updated from last frame as we go, starts with whole image */
     private Rect pupilRect = new Rect(0, 0, 640, 480); 
 
+    /** Weak instance just to allow calling of readBytes. Why not make it static? */
+    public CameraStreamerImo() { ; }
+
     public CameraStreamerImo(int port, int []deviceNumber) throws IOException {
         super(port, deviceNumber);
     }
-
     protected void getImageValues(Mat frame) {
         processingResults.put("x", 66);
         processingResults.put("y", 77);
@@ -391,5 +395,66 @@ public class CameraStreamerImo extends CameraStreamer {
         }
             */
 
+    }
+
+    /**
+     * Fill bytes with the image on socket. Assumes it has been written with writeBytes
+     * @param socket An open socket from which to read
+     * @return Device number read. -1 for error
+     */
+    public int readBytes(Socket socket) {
+        int deviceNum = -1;
+        try {
+            deviceNum = (int)socket.getInputStream().read();
+            if (deviceNum < 0)
+                return -1;
+
+            int n1 = (int)socket.getInputStream().read();
+            int n2 = (int)socket.getInputStream().read();
+            int n3 = (int)socket.getInputStream().read();
+            int n4 = (int)socket.getInputStream().read();
+            int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n4;
+
+            bytesLock.lock();
+
+            if (bytes.length != n)
+                bytes = new byte[n];
+
+            int off = 0; // current start of buffer (offset)
+            while (off < n) {
+                int readN = socket.getInputStream().read(bytes, off, n - off);
+                off += readN;
+            }
+        } catch(IOException e) {
+            System.out.println("readImageToBytes: trouble reading socket");
+            e.printStackTrace();
+        } finally {
+            bytesLock.unlock();
+        }
+        return deviceNum;
+    }
+    
+    /**
+     * Write static bytes array out on socket as 
+     *       1 byte for device number
+     *       4 bytes for length of data, n
+     *       n bytes
+     *
+     * @param socket Open socket on which to write byets
+     * @param deviceNumber To write before bytes
+     * @throws IOException
+     * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
+     */
+    public void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException {
+//System.out.println("Putting " + n + " bytes from camera " + i + " on socket.");
+        if (!bytesLock.isLocked())
+            throw new ConcurrentModificationException("Reading CamerStreamImo.bytes without locking it.");
+        int n = bytes.length;
+        socket.getOutputStream().write(deviceNumber);
+        socket.getOutputStream().write(n >> 24);
+        socket.getOutputStream().write((n >> 16) & 0xFF);
+        socket.getOutputStream().write((n >>  8) & 0xFF);
+        socket.getOutputStream().write( n        & 0xFF);
+        socket.getOutputStream().write(bytes);
     }
 }
