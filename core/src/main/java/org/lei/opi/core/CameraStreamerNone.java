@@ -15,8 +15,6 @@ public class CameraStreamerNone extends CameraStreamer {
         super(port, deviceNumber);
     }
 
-    protected void getImageValues(Mat frame) {; }
-
     /**
      * Fill bytes with the image on socket. Assumes it has been written with writeBytes
      * @param socket An open socket from which to read
@@ -30,7 +28,7 @@ public class CameraStreamerNone extends CameraStreamer {
      *       4 bytes for length of data, n
      *       n bytes
      *
-     * @param socket Open socket on which to write byets
+     * @param socket Open socket on which to write bytes
      * @param deviceNumber To write before bytes
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
@@ -38,6 +36,6 @@ public class CameraStreamerNone extends CameraStreamer {
     public void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException {
         return;
     }
-    
 
+    protected boolean getImageValues(Mat frame) {return false; }
 }

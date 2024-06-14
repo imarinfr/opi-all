@@ -60,7 +60,7 @@ public class CameraQueueTest {
                 while (!isInterrupted()) {
                     CameraStreamer.Request req = new CameraStreamer.Request(System.currentTimeMillis(), 1);
                     server.requestQueue.put(req);
-                    System.out.println(String.format("[sendAndReceive1]...Prodcuer issued request: %s.", req.timeStamp()));
+                    System.out.println(String.format("[sendAndReceive1]...Prodcuer issued request: %s.", req.timeStamp));
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException e) { ; }

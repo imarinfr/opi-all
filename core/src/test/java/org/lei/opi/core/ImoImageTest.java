@@ -27,27 +27,45 @@ public class ImoImageTest {
         }
     }
 
+    /** 
+     * Call `processFrame` on test images
+     */
     @Test
-    public void detectPupil_image() throws IOException {
-        //nu.pattern.OpenCV.loadShared();  // works on mac
+    public void detectPupil_images() throws IOException {
         nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
         
-        BufferedImage im = ImageIO.read(getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg"));
-        byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
-        Mat frame2 = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
-        frame2.put(0, 0, im_array);
+        for (int eye = 0; eye < 20; eye++) {
+            String fname = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
+            BufferedImage im = ImageIO.read(getClass().getResource(fname));
 
-        cameraStreamer.processFrame(frame2);
+            Mat frame = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
+
+            byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
+            frame.put(0, 0, im_array);
+
+            System.out.print("\nProcessFrame: " + eye);
+
+            if (cameraStreamer.getImageValues(frame))
+                System.out.println("  Found pupil:" + cameraStreamer.getResults());
+            else
+                System.out.println("No Pupil found");
+
+
+        }
     }
 
+    /** 
+     * Call `processFrame` on a stream of images.
+     */
     @Test
     public void detectPupil_vidImages() {
         nu.pattern.OpenCV.loadLocally();
-        String fname = this.getClass().getResource("/org/lei/opi/core/imo_eye_OD.jpg").toString();
-        System.out.println("Filename: " + fname);
-        fname = fname.replace("imo_eye_OD", "%02d");
-        System.out.println("Filename: " + fname);
-        VideoCapture camera = new VideoCapture(fname, Videoio.CAP_IMAGES);
+
+        //String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
+        //System.out.println("         Filename: " + fname);
+        //fname = fname.replace("00", "%02d");
+        //System.out.println("Sequence Filename: " + fname);
+        VideoCapture camera = new VideoCapture(0); //, Videoio.CAP_IMAGES);
 
         if (!camera.isOpened()) {
             System.out.println("Error! Camera can't be opened!");
@@ -55,9 +73,14 @@ public class ImoImageTest {
         }
         Mat frame = new Mat();
 
-        if (camera.read(frame))
-            cameraStreamer.processFrame(frame);
-        else
-            System.out.println("Error! Could not read frame");
+        while (camera.isOpened()) {
+            if (camera.read(frame)) {
+                if (cameraStreamer.getImageValues(frame))
+                    System.out.println("Pupil:" + cameraStreamer.getResults());
+                else
+                    System.out.println("No Pupil found");
+            } else
+                System.out.println("Error! Could not read frame");
+        }
     }
 }

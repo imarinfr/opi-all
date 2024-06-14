@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -32,10 +33,25 @@ public abstract class CameraStreamer extends Thread {
     public boolean connected;
 
     /** The data of an incoming request to the camera */
-    static public record Request(
-        long timeStamp,           // some timestamp of the request (used to match responses, perhaps)
-        int deviceNumber          // device number for which to get the response
-    ) {;}
+    static public class Request {
+        long timeStamp;           // some timestamp of the request (used to match responses, perhaps)
+        int deviceNumber;         // device number for which to get the response
+        int numberOfTries;         // The number of times this request has been attempted to be completed
+
+        /** The maximum number of times/frames to try and find pupil to satisfy request */
+        static final int MAX_TRIES_FOR_REQUEST = 10;
+
+        public Request(long timeStamp, int deviceNumber) {
+            this.timeStamp = timeStamp;
+            this.deviceNumber = deviceNumber;
+            this.numberOfTries = 0;
+        }
+        public boolean incTries() { 
+            this.numberOfTries++;
+            return this.numberOfTries < MAX_TRIES_FOR_REQUEST;
+        }
+            
+    }
 
     /** The data put back on the queue for each request */
     static public record Response(
@@ -54,7 +70,7 @@ public abstract class CameraStreamer extends Thread {
     }
 
     /** Queue of requests for image processing */
-    public LinkedBlockingQueue<Request> requestQueue;
+    public LinkedBlockingDeque<Request> requestQueue;
     /** Queue of results from image processing */
     public LinkedBlockingQueue<Response> responseQueue;
 
@@ -70,6 +86,14 @@ public abstract class CameraStreamer extends Thread {
     /** Little bit of memory for communicating with image processing subclass */
     protected HashMap<String, Integer> processingResults;
 
+    /** Accesor method to get results from a call to {@link getImageValues} */
+    public String getResults() { 
+        if (processingResults.containsKey("x") && processingResults.containsKey("y") && processingResults.containsKey("d"))
+            return String.format("x: %d, y: %d, d: %d", processingResults.get("x"), processingResults.get("y"), processingResults.get("d"));
+        else
+            return "No results yet";
+    }
+
     /** Weak instance just to allow calling of readBytes. Why not make it static? */
     public CameraStreamer() { ; }
 
@@ -82,7 +106,7 @@ public abstract class CameraStreamer extends Thread {
     public CameraStreamer(int port, int []deviceNumber) throws IOException {
         this.port = port;
         this.deviceNumber = deviceNumber;
-        requestQueue = new LinkedBlockingQueue<Request>(10);
+        requestQueue = new LinkedBlockingDeque<Request>(10);
         responseQueue = new LinkedBlockingQueue<Response>(10);
         processingResults = new HashMap<String, Integer>(3);
         this.start();
@@ -184,37 +208,38 @@ public abstract class CameraStreamer extends Thread {
      * @param timestamp Timestamp that the image was acquired
      */
     private void processRequest(Request request, Mat frame, long timestamp) {
-        getImageValues(frame);
-        try {
-            responseQueue.add(new Response(
-                request.timeStamp,
-                timestamp,
-                processingResults.get("x").intValue(),
-                processingResults.get("y").intValue(),
-                processingResults.get("d").intValue()
-            ));
-        } catch (IllegalStateException e) {
-            System.out.println("Response queue is full, apparently!");
+        if (getImageValues(frame)) {
+            try {
+                responseQueue.add(new Response(
+                    request.timeStamp,
+                    timestamp,
+                    processingResults.get("x").intValue(),
+                    processingResults.get("y").intValue(),
+                    processingResults.get("d").intValue()
+                ));
+            } catch (IllegalStateException e) {
+                System.out.println("Response queue is full, apparently!");
+            }
+        } else {
+            if (request.incTries())
+                requestQueue.addFirst(request); // put it back for a go at another frame
+            else {
+                try {
+                    responseQueue.add(new Response(request.timeStamp, timestamp));
+                } catch (IllegalStateException e) {
+                    System.out.println("Response queue is full, apparently!");
+                }
+            }
         }
     }
             
-    /**
-     * Process frame to find (x, y) and diameter of pupil and put the result in map values.
-     * These must be put into `processingResults` as `x`, `y`, and `d` respectively.
-     * 
-     * Should override this method in a subclass to do something useful.
-     * 
-     * @param frame Frame to process looking for pupil
-     */
-    protected abstract void getImageValues(Mat frame);
-
     /**
      * Write static bytes array out on socket as 
      *       1 byte for device number
      *       4 bytes for length of data, n
      *       n bytes
      *
-     * @param socket Open socket on which to write byets
+     * @param socket Open socket on which to write bytes
      * @param deviceNumber To write before bytes
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamer.bytesLock.lock() before calling this.
@@ -230,4 +255,15 @@ public abstract class CameraStreamer extends Thread {
      * @return Device number read. -1 for error
      */
     public abstract int readBytes(Socket socket);
+
+    /**
+     * Process frame to find (x, y) and diameter of pupil and put the result in map values.
+     * These must be put into `processingResults` as `x`, `y`, and `d` respectively.
+     * 
+     * Should override this method in a subclass to do something useful.
+     * 
+     * @param frame Frame to process looking for pupil
+     * @return true if values found, false otherwise
+     */
+    protected abstract boolean getImageValues(Mat frame);
 }
