@@ -174,3 +174,25 @@ There are three main changes.
   Note that code for these machines is automatically generated as per above.
   These machines have slightly different calls for `opiX()` functions than in
   the previous standard.
+
+
+# Developer notes
+
+## Installing opencv on mac June 2024
+
+<pre>
+  pom contains
+
+    <dependency>
+      <groupId>org.openpnp</groupId>
+      <artifactId>opencv</artifactId>
+      <version>4.9.0-0</version>
+    </dependency>
+
+  Then on the command line
+
+    brew install opencv   # make sure the version matches the pom
+    brew edit opencv      # change java to "ON", note name of formula file edited = X
+    export HOMEBREW_NO_INSTALL_FROM_API=1
+    brew reinstall --build-from-source opencv --formula <X>
+</pre>
