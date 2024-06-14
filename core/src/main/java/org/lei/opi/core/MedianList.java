@@ -52,6 +52,9 @@ public class MedianList {
             }
         }
 
-        return tempValues[size / 2];
+        if (size % 2 == 0)
+            return (tempValues[size / 2 - 1] + tempValues[size / 2]) / 2;
+        else
+            return tempValues[size / 2];
     }
 }
