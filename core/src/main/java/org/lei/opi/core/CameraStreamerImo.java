@@ -3,30 +3,43 @@ package org.lei.opi.core;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 
 import org.opencv.core.*;
+//import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
 
 
+/*
+ * Contains pupil detection code based on Csharp code from Mitsuko Yoshida 16 March 2023.
+ * (Quite a few modifications to try and avoid garbage collection...)
+ */
 
 public class CameraStreamerImo extends CameraStreamer {
     
-    private static final Scalar WHITE = new Scalar(1, 1, 1);
-    private static final Scalar BLUE = new Scalar(0, 0, 1);
+    private static final Scalar WHITE = new Scalar(255, 255, 255);
 
-    /** ROI for pupil detection. Updated from last frame as we go, starts with whole image */
-    private Rect pupilRect = new Rect(0, 0, 640, 480); 
+    private static final int EYE_IMAGE_HEIGHT = 480;
+    private static final int EYE_IMAGE_WIDTH = 640;
 
-    private Rect newROIRect;
+    /** Circular region for cropping out in {@link detectPupil} */
+    //private final Mat circleMask = new Mat(EYE_IMAGE_HEIGHT, EYE_IMAGE_WIDTH, CvType.CV_8UC3, Scalar.all(0));
+    private final int MASK_RADIUS = 125;
 
-        // The Median is used over 5 items in a list to avoid mislead
-    private MedianList pupilCenterXMedian  = new MedianList(5);
-    private MedianList pupilCenterYMedian  = new MedianList(5);
-    private MedianList pupilDiameterMedian = new MedianList(5);
-    private MedianList brightCenterXMedian = new MedianList(5);
-    private MedianList brightCenterYMedian = new MedianList(5);
+    /** Current window for looking for pupil. Might change size as the stream progresses. */
+    //Rect pupilRect = new Rect(0, 0, EYE_IMAGE_WIDTH, EYE_IMAGE_HEIGHT);
+    Rect pupilRect = new Rect(EYE_IMAGE_WIDTH / 2 - MASK_RADIUS, EYE_IMAGE_HEIGHT / 2 - MASK_RADIUS, 
+                              MASK_RADIUS * 2, MASK_RADIUS * 2);
+
+    /** Brightest a pupil can get for {@link detectPupil} */
+    private final int COLOR_UPPER_LIMIT = 80;
+    /** Some parameter for edge detection... for {@link detectPupil} */
+    private final int HOUGH_CIRCLES_THRESHOLD = 80;
+    /** Edge around roughly detected pupil to cut out for ellipse finding in {@link detectPupil} */
+    final int PADDING = 60;   
+
+    /** Working are for {@link detectPupil} */
+    Rect newROIRect = new Rect(0, 0, 2 * PADDING, 2 * PADDING);
 
 
     /** Weak instance just to allow calling of readBytes. Why not make it static? */
@@ -34,6 +47,8 @@ public class CameraStreamerImo extends CameraStreamer {
 
     public CameraStreamerImo(int port, int []deviceNumber) throws IOException {
         super(port, deviceNumber);
+        pupilInfo = new PupilInfo(EYE_IMAGE_WIDTH, EYE_IMAGE_HEIGHT);
+        //Imgproc.circle(circleMask, new Point(EYE_IMAGE_WIDTH / 2, EYE_IMAGE_HEIGHT / 2), MASK_RADIUS, WHITE, -1);
     }
 
     /**
@@ -98,53 +113,238 @@ public class CameraStreamerImo extends CameraStreamer {
     }
 
     /**
-     * Find pupil (x, y) and diameter
+     * Find pupil (x, y) and diameter, updating pupilInfo as necessary
      * Translation of Csharp code from Mitsuko Yoshida 16 March 2023.
      * @param frame
      * @return
      */
-    protected boolean getImageValues(Mat inputFrame) {
-        Mat srcFrame = new Mat(inputFrame.size(), inputFrame.type());
-
-            // Create a circular mask for rough trimming
-        int CenterX = inputFrame.width() / 2;
-        int CenterY = inputFrame.height() / 2;
-
-        Mat blackMask = new Mat(inputFrame.size(), inputFrame.type());
-        Imgproc.circle(blackMask, new Point(CenterX, CenterY), 125, WHITE);
-
-            // Create copies of the raw frames for each process
-        inputFrame.copyTo(srcFrame, blackMask);
-
-        Imgproc.GaussianBlur(srcFrame, srcFrame, new Size(0, 0), 1.8);
-
-        Mat tempFrame = new Mat();
-        srcFrame.copyTo(tempFrame);
-
-            // Set ROI with the previous pupilRect size
-            // If first time, or not detected in the previous frame, set ROI to the whole frame
-        Mat imageROI = new Mat(srcFrame, pupilRect);
-
-        double pupilDiameter = 0.0;
-        Point pupilCenter = new Point(0, 0);
-        RotatedRect ellipse = new RotatedRect();
-
-            // Detection of the pupil
-        boolean existPupil = detectPupil(imageROI, pupilDiameter, pupilCenter, ellipse, pupilRect, tempFrame);
-    
-        if (existPupil) {
-            processingResults.put("x", (int)pupilCenter.x);
-            processingResults.put("y", (int)pupilCenter.y);
-            processingResults.put("d", (int)pupilDiameter);
-        } 
-
-        return existPupil;
+    protected void getImageValues(Mat inputFrame) {
+        detectPupil(inputFrame);
+//Imgcodecs.imwrite("my.jpg", imageROI);
     }
 
      /* ----------------------------------------------------------------------
       * All of the code below is a translation of Csharp code from Mitsuko Yoshida 16 March 2023.
       * ----------------------------------------------------------------------
       */
+
+
+    /**
+     * Look for a pupil ellipse in a central square region of {@link inputFrame} defined by {@ link pupilRect}.
+     * Update {@link pupilInfo} as a side effect.
+     *  1) Cut out pupilRect is bigger than mask radius
+     *  2) Gaussian blur
+     *  3) Crop out pupilRect
+     *  4) Hough transform to find circles
+     *  5) For each circle, check color to the left and right and find darkest that is white -> black -> white
+     *
+     * @param inputFrame An input image straight from camera. Should be EYE_IMAGE_WIDTH x EYE_IMAGE_HEIGHT
+     */
+    private void detectPupil(Mat inputFrame) {
+        //Imgcodecs.imwrite("input.jpg", inputFrame);
+        Mat inputROI = new Mat(inputFrame, pupilRect);
+        Imgproc.GaussianBlur(inputROI, inputROI, new Size(0, 0), 1.8);
+
+        Imgproc.cvtColor(inputROI, inputROI, Imgproc.COLOR_RGB2GRAY, 0);
+
+        //Imgcodecs.imwrite("roi_b4Hough.jpg", inputROI);
+            // Rough detection of the pupil
+            // Houghcircles does not need to be binarized yet. "4" is the grid for accuracy (the smaller the more accurate, but the more misdetections)
+        Mat circles = new Mat();   // TODO would MatOfPoint3 or Mat.Tuple3<double> be better?
+        Imgproc.HoughCircles(inputROI, circles, Imgproc.HOUGH_GRADIENT, 2, 500, HOUGH_CIRCLES_THRESHOLD, 40, 15, 30);
+
+        //if (circles.type() > 0) {
+        //    System.out.print("\n\tFound some circles: " + circles.size() + " " + circles.type());
+        //    for (int r = 0 ; r < circles.rows() ; r++) {
+        //        double [] v = circles.get(r, 0);
+        //        System.out.println("\n\t\t" + v.length + " values: " + Arrays.toString(v));
+        //    }
+        //}
+
+            // if no circles detected, stop and reset pupilRect to full size.
+        if (circles.type() == 0) {
+            pupilInfo.reset();
+            inputROI.release();
+            circles.release();
+            //srcFrame.release();
+            return;
+        }
+
+            // Look for the darkest circle where the color on its left and right 
+            // should be lower than the center of the circle, 
+            // (If not, it is probably not the pupil. White -> Black -> White)
+        int minColorC = 255; // Center
+        int minColorR = 255; // Right
+        int minColorL = 255; // Left
+        int pupilIndex = -1;
+        for (int index = 0 ; index < circles.rows() ; index++) {
+            int x = (int)circles.get(index, 0)[0];
+            int y = (int)circles.get(index, 0)[1];
+            int r = Math.min((int)circles.get(index, 0)[2], 25);  // cap r at 25 (for some reason)
+
+            int centerColor = getColorValue(inputROI, y, x - r, x + r);
+            int leftColor = getColorValue(inputROI, y, x - 2 * r - 2, x - 2 * r + 3);
+            int rightColor = getColorValue(inputROI, y, x + 2 * r - 2, x + 2 * r + 3);
+
+            if (centerColor <= COLOR_UPPER_LIMIT && centerColor < minColorC) {
+                minColorC = centerColor;
+                minColorR = rightColor;
+                minColorL = leftColor;
+                if (pupilIndex == -1) pupilIndex = index;   // just keep the first one, for some reason...
+            }
+        }
+
+            // Send a little square around the centre off to getPupilInfo to find the ellipse.
+            // If the little square is outside pupilRect, give up
+        if (pupilIndex > -1) {
+            // Imgcodecs.imwrite("roi_b4tight.jpg", inputROI);
+            if (pupilRect.width > 2 * PADDING) {
+                double []c = circles.get(pupilIndex, 0);
+                newROIRect.x = (int)(c[0] - PADDING);
+                newROIRect.y = (int)(c[1] - PADDING);
+
+                try {
+                    inputROI = new Mat(inputROI, newROIRect);  
+                } catch (Exception e) {
+                        // We have strayed outside the pupilRect, reset everything and give up
+                    pupilRect.x = EYE_IMAGE_WIDTH / 2 - MASK_RADIUS;
+                    pupilRect.y = EYE_IMAGE_HEIGHT / 2 - MASK_RADIUS;
+                    pupilRect.width = MASK_RADIUS * 2;
+                    pupilRect.height = MASK_RADIUS * 2;
+                    pupilInfo.reset();
+                    inputROI.release();
+                    circles.release();
+                    //srcFrame.release();
+                    return;
+                }
+            }
+            // Imgcodecs.imwrite("roi_afttight.jpg", inputROI);
+
+                // Set the threshold as the mean value between center and minimum
+            int colorMin = Math.min(minColorR, minColorL);
+            double threshold = (minColorC + colorMin) / 2.0;
+
+                // Convert to binary image
+            Imgproc.threshold(inputROI, inputROI, threshold, 255, Imgproc.THRESH_BINARY_INV);
+
+                // Get all the input informations with getPupilInfo. (use FindContour)
+            //Imgproc.cvtColor(inputROI, inputROI, Imgproc.COLOR_RGB2GRAY);  // No need for this? already GRAY
+            getPupilInfo(inputROI, newROIRect);
+            inputROI.release();
+            circles.release();
+        }
+    }
+
+    /** 
+     * Get the average value of the pixel in the range of `from` to `to` along row `y` in the Mat `srcMat`.
+     * @param srcMat The Mat from which to read the pixel values
+     * @param y The row along which to read the pixel values
+     * @param from The start column from which to read the pixel values
+     * @param to The end column to which to read the pixel values
+     * @return The average pixel value in the range of `from` to `to` along row `y` in the Mat `srcMat`
+     */
+    private int getColorValue(Mat srcMat, int y, int from, int to) {
+        //if (srcMat.type() != CvType.CV_8UC1)
+        //    throw new IllegalArgumentException("getColorValue: srcMat must be of type CV_8UC1");
+
+        int pixelvalue = 0;
+        for (int i = from; i < to; i++)
+            pixelvalue += srcMat.get(y, i)[0];
+        pixelvalue = pixelvalue / (to - from);
+
+        return pixelvalue;
+    }
+
+    /**
+     * Get the pupil information from the inputROI and set pupilInfo appropriately.
+     * +----------------------------------+
+     * |                  inputFrame      |
+     * |      +-------------------+       |
+     * |      |   pupilRect       |       |
+     * |      |    +------+       |       |
+     * |      |    |      |       |       |
+     * |      |    |srcROI|       |       |
+     * |      |    |      |       |       |
+     * |      |    +------+       |       |
+     * |      +-------------------+       |
+     * +----------------------------------+
+     * @param inputROI The Mat in which to find contours and ellipse - binary image
+     * @param srcROI The Rect from which the inputROI was cropped out of the whole frame
+     */
+    private void getPupilInfo(Mat inputROI, Rect srcROI) {
+        //Imgcodecs.imwrite("gpi.jpg", inputROI);
+        ArrayList<MatOfPoint> mContour = new ArrayList<MatOfPoint>();
+        Mat mHierarchy = new Mat();
+
+        double ellipseCircleLevelMax = 0;
+            // use findcontour to find all the islands
+        Imgproc.findContours(inputROI, mContour, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+
+        for (int i = 0; i < mContour.size(); ++i) {
+            //if (mContour.Length <= 5) continue;
+            Moments moment = Imgproc.moments(mContour.get(i));
+            if (moment.m00 == 0) continue;
+
+            double area;// = 0.0;
+            double perimeter;// = 0.0;
+            double circleLevel;// = 0.0;
+
+            //面積 check the area in the contour, do not count if too small or too big
+            area = moment.m00;
+            if (area > 6000) continue;
+            if (area < 100) continue;
+            //周囲長
+
+            MatOfPoint2f m2f = new MatOfPoint2f();
+            mContour.get(i).convertTo(m2f, CvType.CV_32F);
+            perimeter = Imgproc.arcLength(m2f, true);
+            //円形度 
+            if (perimeter > 0.0)
+                circleLevel = 4.0 * Math.PI * area / (perimeter * perimeter); // 4*pi*area/(perimeter^2)
+            else
+                continue;
+
+            double area_r = Math.sqrt(area / Math.PI);
+            double perimeter_r = perimeter / (2 * Math.PI);
+            // check the circleness of the detected island. if the circle is very flat, or not circular at all, then NG
+            if (circleLevel > 0.6 && (area_r > 10 && perimeter_r > 10)) {
+                // Check if ellipse fits inside the ROI 
+                RotatedRect ellipse = Imgproc.fitEllipse(m2f);
+                if (!(ellipse.center.x >= 0 && ellipse.center.y >= 0 && ellipse.center.x < inputROI.width() && ellipse.center.y < inputROI.height())) // ROI width and height
+                    continue;
+
+                if (ellipse.size.width > 120 || ellipse.size.height > 120)
+                    continue;
+
+                double ellipseCircleLevel = ellipse.size.width > ellipse.size.height ? ellipse.size.height / ellipse.size.width : ellipse.size.width / ellipse.size.height;
+
+                if (ellipseCircleLevel > ellipseCircleLevelMax) {
+                    double xAdj = srcROI.x + pupilRect.x;
+                    double yAdj = srcROI.y + pupilRect.y;
+                    pupilInfo.centerX = (int)(ellipse.center.x + xAdj);
+                    pupilInfo.centerY = (int)(ellipse.center.x + yAdj);
+                    pupilInfo.bb_tl_x = (int)(ellipse.boundingRect().tl().x + xAdj);
+                    pupilInfo.bb_tl_y = (int)(ellipse.boundingRect().tl().y + yAdj);
+                    pupilInfo.bb_width = (int)ellipse.boundingRect().width;
+                    pupilInfo.bb_height = (int)ellipse.boundingRect().height;
+                    pupilInfo.diameter = ellipse.size.height * 14.0 / 176.0;
+                    pupilInfo.valid = true;
+                }
+            }
+        }
+            
+            // release memory
+    }
+
+    /* 
+    private static final Scalar BLUE = new Scalar(0, 0, 255);
+
+        // The Median is used over 5 items in a list to avoid mislead
+    private MedianList centerXMedian  = new MedianList(5);
+    private MedianList centerYMedian  = new MedianList(5);
+    private MedianList pupilDiameterMedian = new MedianList(5);
+    private MedianList brightCenterXMedian = new MedianList(5);
+    private MedianList brightCenterYMedian = new MedianList(5);
 
     // ------ gaze tracking values
     private int frameCount = -4; // Throw away 4 frames when pupil is not detected (for blinking)
@@ -167,19 +367,19 @@ public class CameraStreamerImo extends CameraStreamer {
     private int listN = 40;
     private ArrayList<Double> offsetListX = new ArrayList<Double>(listN);
     private ArrayList<Double> offsetListY = new ArrayList<Double>(listN);
-    private ArrayList<Double> pupilCenterListX = new ArrayList<Double>(listN);
-    private ArrayList<Double> pupilCenterListY = new ArrayList<Double>(listN);
+    private ArrayList<Double> centerListX = new ArrayList<Double>(listN);
+    private ArrayList<Double> centerListY = new ArrayList<Double>(listN);
     private ArrayList<Double> brightCenterListX = new ArrayList<Double>(listN);
     private ArrayList<Double> brightCenterListY = new ArrayList<Double>(listN);
     private ArrayList<Double> initOffsetListX = new ArrayList<Double>(listN);
     private ArrayList<Double> initOffsetListY = new ArrayList<Double>(listN);
+    */
 
 
     /**
      * Find pupil (x, y) and diameter
      * @param frame
      * @return
-     */
     public void processFrameWithTracking(Mat inputFrame) {
         Mat srcFrame = new Mat(inputFrame.size(), inputFrame.type());
         Mat outFrame = new Mat(inputFrame.size(), CvType.CV_8UC1);
@@ -190,11 +390,8 @@ public class CameraStreamerImo extends CameraStreamer {
         int CenterX = inputFrame.width() / 2;
         int CenterY = inputFrame.height() / 2;
 
-        Mat blackMask = new Mat(inputFrame.size(), inputFrame.type());
-        Imgproc.circle(blackMask, new Point(CenterX, CenterY), 125, WHITE);
-
             // Create copies of the raw frames for each process
-        inputFrame.copyTo(srcFrame, blackMask);
+        inputFrame.copyTo(srcFrame, circleMask);
         inputFrame.copyTo(outFrame);
 
         Imgproc.GaussianBlur(srcFrame, srcFrame, new Size(0, 0), 1.8);
@@ -204,27 +401,23 @@ public class CameraStreamerImo extends CameraStreamer {
 
             // Set ROI with the previous pupilRect size
             // If first time, or not detected in the previous frame, set ROI to the whole frame
-        var ImageROI = new Mat(srcFrame, pupilRect);
-        var ImageROISize = ImageROI.size();
-
-        double pupilDiameter = 0.0;
-        Point pupilCenter = new Point(0, 0);
-        RotatedRect ellipse = new RotatedRect();
+        Mat ImageROI = new Mat(srcFrame, pupilRect);
+        Size ImageROISize = ImageROI.size();
 
             // Detection of the pupil
-        boolean existPupil = detectPupil(ImageROI, pupilDiameter, pupilCenter, ellipse, pupilRect, tempFrame);
+        detectPupil(
 
             // reset ROIs   aht - WHY?
         srcFrame = new Mat();
         tempFrame.copyTo(srcFrame);
 
-        if (existPupil) {
+        if (pupilInfo.valid) {
                 // detect the light spots (x4)
-            pupilCenter.x = pupilCenterXMedian.getMedian(pupilCenter.x);
-            pupilCenter.y = pupilCenterYMedian.getMedian(pupilCenter.y);
-            pupilDiameter = pupilDiameterMedian.getMedian(pupilDiameter);
+            pupilInfo.centerX = (int)centerXMedian.getMedian(pupilInfo.centerX);
+            pupilInfo.centerY = (int)centerYMedian.getMedian(pupilInfo.centerY);
+            pupilInfo.diameter = (int)pupilDiameterMedian.getMedian(pupilInfo.diameter);
 
-            int r = (int)(pupilDiameter * 176.0 / 14.0 / 2.0);
+            int r = (int)(pupilInfo.diameter * 176.0 / 14.0 / 2.0);
 
                 // Create a new copy of the raw frame
             srcFrame = new Mat();
@@ -246,13 +439,15 @@ public class CameraStreamerImo extends CameraStreamer {
                 // reset ROIs
             inputFrame.copyTo(srcFrame);
 
-
+                // TODO this needs tidying up as pass by ref probably wont work or is memory wasteful
             Point topRight = new Point();
             Point topLeft = new Point();
             Point bottomRight = new Point();
             Point bottomLeft = new Point();
                 // Select the 4 bright spots in the detected ones
-            selectBrightPointFour(brightPoints, pupilCenter, topRight, topLeft, bottomRight, bottomLeft, pupilRect);
+            selectBrightPointFour(brightPoints, 
+                new Point(pupilInfo.centerX, pupilInfo.centerY), 
+                topRight, topLeft, bottomRight, bottomLeft, pupilRect);
 
             // If the bright spots are detected, use the 2 bottom ones to detect the center of the 4 (because same distance between the spots)
             boolean existBrightPoint = true;
@@ -272,18 +467,19 @@ public class CameraStreamerImo extends CameraStreamer {
                 Imgproc.circle(outFrame, brightPointCenter, 5, new Scalar(200, 200, 200), 1); // 輝点中心
                 Imgproc.putText(outFrame, String.format("Bright Points Center (pxl): (%0.2f, %0.2f)", brightPointCenter.x, brightPointCenter.y), 
                     new Point(150, 400), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, BLUE);
-                Imgproc.putText(outFrame, String.format("PupilCenter (pxl): (%0.2f, %0.2f)", pupilCenter.x, pupilCenter.y), 
+                Imgproc.putText(outFrame, String.format("PupilCenter (pxl): (%0.2f, %0.2f)", 
+                    pupilInfo.centerX, pupilInfo.centerY), 
                     new Point(150, 420), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, BLUE);
 
                 if (m_IsValidInitialOffset) {
-                    gaze_X_deg = -((brightPointCenter.x - pupilCenter.x - ptStOffsetX) * 1.230);
-                    gaze_Y_deg = ((brightPointCenter.y - pupilCenter.y - ptStOffsetY) * 1.230);
+                    gaze_X_deg = -((brightPointCenter.x - pupilInfo.centerX - ptStOffsetX) * 1.230);
+                    gaze_Y_deg = ((brightPointCenter.y - pupilInfo.centerY - ptStOffsetY) * 1.230);
                     Imgproc.putText(outFrame, String.format("Gaze (deg): (%0.2f, %0.2f)", gaze_X_deg, gaze_Y_deg), 
                         new Point(150, 440), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, BLUE);
                 }
 
-                offsetListX.set(offsetListPos,  brightPointCenter.x - pupilCenter.x);
-                offsetListY.set(offsetListPos,  brightPointCenter.y - pupilCenter.y);
+                offsetListX.set(offsetListPos,  brightPointCenter.x - pupilInfo.centerX);
+                offsetListY.set(offsetListPos,  brightPointCenter.y - pupilInfo.centerY);
                 offsetListPos = (offsetListPos + 1) % offsetListN;
 
                 if (MeasureStart == true)
@@ -297,8 +493,8 @@ public class CameraStreamerImo extends CameraStreamer {
                     if (frameCount - preValidFrameCount == 1)
                     {
                         int n = validFrameCount % listN;
-                        pupilCenterListX.set(n, pupilCenter.x);
-                        pupilCenterListY.set(n, pupilCenter.y);
+                        centerListX.set(n, (double)pupilInfo.centerX);
+                        centerListY.set(n, (double)pupilInfo.centerY);
                         brightCenterListX.set(n, brightPointCenter.x);
                         brightCenterListY.set(n, brightPointCenter.y);
                         validFrameCount++;
@@ -306,8 +502,8 @@ public class CameraStreamerImo extends CameraStreamer {
                         if (validFrameCount >= listN) {
                             for (int i = 0; i < listN; i++)
                             {
-                                initOffsetListX.set(i, brightCenterListX.get(i) - pupilCenterListX.get(i));
-                                initOffsetListY.set(i, brightCenterListY.get(i)- pupilCenterListY.get(i));
+                                initOffsetListX.set(i, brightCenterListX.get(i) - centerListX.get(i));
+                                initOffsetListY.set(i, brightCenterListY.get(i)- centerListY.get(i));
                             }
                             double averageInitOffsetX = initOffsetListX.stream().mapToDouble(a -> a).average().getAsDouble();
                             double averageInitOffsetY = initOffsetListY.stream().mapToDouble(a -> a).average().getAsDouble();
@@ -342,7 +538,7 @@ public class CameraStreamerImo extends CameraStreamer {
                 pupilRect = new Rect(0, 0, inputFrame.width(), inputFrame.height());
             }
 
-            pupilWidthHeight = (int)pupilDiameter;
+            pupilWidthHeight = (int)pupilInfo.diameter;
         } else {
             pupilWidthHeight = 0.0;
             gaze_X_deg = 0;
@@ -350,212 +546,6 @@ public class CameraStreamerImo extends CameraStreamer {
             pupilRect = new Rect(0, 0, inputFrame.width(), inputFrame.height());
         }
         return;
-    }
-
-    /**
-     * 
-     * @param inputROI
-     * @param dstMat  Output Mat
-     * @param pupilDiameter
-     * @param pupilCenter
-     * @param ellipse
-     * @param pupilRect
-     * @param rawFrame
-     * @return True if found a pupil, false otherwise
-     */
-    private boolean detectPupil(Mat inputROI, double pupilDiameter, 
-                                Point pupilCenter, RotatedRect ellipse, Rect pupilRect, Mat rawFrame) {
-
-        // Rough detection of the pupil
-        int pupilColorUpperLimit = 80;
-        int houghCirclesThreshold = 80;
-
-        boolean result = false;
-
-        Mat circles = new Mat();   // TODO would MatOfPoint3 or Mat.Tuple3<double> be better?
-            // Houghcircles does not need to be binarized yet. "4" is the grid for accuracy (the smaller the more accurate, but the more misdetections)
-        Imgproc.cvtColor(inputROI, inputROI, Imgproc.COLOR_RGB2GRAY, 0);
-        Imgproc.HoughCircles(inputROI, circles, Imgproc.HOUGH_GRADIENT, 2, 500, houghCirclesThreshold, 40, 15, 30);
-
-        if (circles.type() > 0) {
-            System.out.print("\n\tFound some circles: " + circles.size() + " " + circles.type());
-            for (int r = 0 ; r < circles.rows() ; r++) {
-                double [] v = circles.get(r, 0);
-                System.out.println("\n\t\t" + v.length + " values: " + Arrays.toString(v));
-            }
-        }
-
-            // if no circles detected, stop and reset pupilRect to srcMat size.
-        if (circles.type() == 0) {
-            pupilDiameter = 0;
-            pupilRect = new Rect(0, 0, rawFrame.width(), rawFrame.height());
-            return false;
-        }
-
-            // Create a list of all the circles detected, and change the coordinates to the absolute frame
-            // Then, check if next to the detected circle, the colors are as expected:
-            // If the detected circle is a pupil, the color on its left and right should be lower than the center of the circle, 
-            // if not, it is probably not the pupil. White -> Black -> White
-            // If few circles meet the expectations, then check if the black is really black.
-        int pupilColorC = 255; // Center
-        int pupilColorR = 255; // Right
-        int pupilColorL = 255; // Left
-        ArrayList<double []> possiblePupils = new ArrayList<double[]>();
-        for (int r = 0 ; r < circles.rows() ; r++) {
-            int x = (int)circles.get(r, 0)[0];
-            int y = (int)circles.get(r, 0)[1];
-            int rr = (int)circles.get(r, 0)[2];
-            if (inputROI.width() == 120) {
-                x = x - (int)pupilRect.tl().x;
-                y = y - (int)pupilRect.tl().y;
-            }
-            rr = rr > 25 ? 25 : rr;
-            int centerColor = getColorValue(inputROI, y, x - rr, x + rr);
-            int leftsideColor = getColorValue(inputROI, y, x - 2 * rr - 2, x - 2 * rr + 3);
-            int rightsideColor = getColorValue(inputROI, y, x + 2 * rr - 2, x + 2 * rr + 3);
-
-            if (centerColor <= pupilColorUpperLimit) {
-                possiblePupils.add(circles.get(r, 0));
-
-                if (pupilColorC > centerColor) {
-                    pupilColorC = centerColor;
-                    pupilColorR = rightsideColor;
-                    pupilColorL = leftsideColor;
-                }
-            }
-        }
-
-        if (possiblePupils.size() > 0) {
-            int edge = 60;
-            newROIRect = new Rect((int)(possiblePupils.get(0)[0] - edge), (int)(possiblePupils.get(0)[1] - edge), 2 * edge, 2 * edge);
-
-            if (!(0 <= newROIRect.x + newROIRect.width && newROIRect.x <= rawFrame.width() && 
-                  0 <= newROIRect.y + newROIRect.height && newROIRect.y <= rawFrame.height())) {
-                pupilDiameter = 0;
-                pupilRect = new Rect(0, 0, rawFrame.width(), rawFrame.height());
-
-                return false;
-            }
-                // reset roi
-            rawFrame.copyTo(inputROI);
-
-                // set new roi
-            inputROI = new Mat(inputROI, newROIRect);
-
-            Point gravityCenter = new Point();
-            Point pupilSize = new Point();
-
-                // Calculate the minimum between pupil color right and left.
-                // If (pupilColoreR < pupilColoreL == true) -> pupilColoreR. Else{ pupilColoreL}
-                // then, set the threshold as the mean value between center and minimum
-            int pupilColorMin = pupilColorR < pupilColorL ? pupilColorR : pupilColorL;
-
-            double threshold = (pupilColorC + pupilColorMin) / 2.0;
-
-                //binarization
-            Imgproc.threshold(inputROI, inputROI, threshold, 255, Imgproc.THRESH_BINARY_INV);
-
-                // Get all the input informations with getPupilInfo. (use FindContour)
-            Imgproc.cvtColor(inputROI, inputROI, Imgproc.COLOR_RGB2GRAY);
-            result = getPupilInfo(inputROI, gravityCenter, pupilCenter, pupilSize, ellipse, newROIRect);
-            if (result) {
-                pupilDiameter = pupilSize.y * 14.0 / 176.0;
-                pupilRect = new Rect((int)(pupilCenter.x - edge), (int)(pupilCenter.y - edge), 2 * edge, 2 * edge);
-                if (!(0 <= pupilRect.x + pupilRect.width && pupilRect.x <= rawFrame.width() && 0 <= pupilRect.y + pupilRect.height && pupilRect.y <= rawFrame.height())) {
-                    pupilDiameter = 0;
-                    pupilRect = new Rect(0, 0, rawFrame.width(), rawFrame.height());
-                    return false;
-                }
-            }
-        }
-        return result;
-    }
-
-    /** 
-     * Get the average value of the pixel in the range of `from` to `to` along row `y` in the Mat `srcMat`.
-     * @param srcMat The Mat from which to read the pixel values
-     * @param y The row along which to read the pixel values
-     * @param from The start column from which to read the pixel values
-     * @param to The end column to which to read the pixel values
-     * @return The average pixel value in the range of `from` to `to` along row `y` in the Mat `srcMat`
-     */
-    private int getColorValue(Mat srcMat, int y, int from, int to) {
-        //if (srcMat.type() != CvType.CV_8UC1)
-        //    throw new IllegalArgumentException("getColorValue: srcMat must be of type CV_8UC1");
-
-        int pixelvalue = 0;
-        for (int i = from; i < to; i++)
-            pixelvalue += srcMat.get(y, i)[0];
-        pixelvalue = pixelvalue / (to - from);
-
-        return pixelvalue;
-    }
-
-    private boolean getPupilInfo(Mat inputROI, Point gravityCenter, Point pupilCenter, Point pupilSize, RotatedRect ellipse, Rect srcROI) {
-        boolean result = false;
-        Point pt;
-
-        ArrayList<MatOfPoint> mContour = new ArrayList<MatOfPoint>();
-        Mat mHierarchy = new Mat();
-
-        double ellipseCircleLevelMax = 0;
-            // use findcontour to find all the islands
-        Imgproc.findContours(inputROI, mContour, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        for (int i = 0; i < mContour.size(); ++i) {
-            //if (mContour.Length <= 5) continue;
-            Moments moment = Imgproc.moments(mContour.get(i));
-            if (moment.m00 == 0) continue;
-            pt = new Point(moment.m10 / moment.m00, moment.m01 / moment.m00);
-
-            double area;// = 0.0;
-            double perimeter;// = 0.0;
-            double circleLevel;// = 0.0;
-
-            //面積 check the area in the contour, do not count if too small or too big
-            area = moment.m00;
-            if (area > 6000) continue;
-            if (area < 100) continue;
-            //周囲長
-
-            MatOfPoint2f m2f = new MatOfPoint2f();
-            mContour.get(i).convertTo(m2f, CvType.CV_32F);
-            perimeter = Imgproc.arcLength(m2f, true);
-            //円形度 
-            if (perimeter > 0.0)
-                circleLevel = 4.0 * Math.PI * area / (perimeter * perimeter); // 4*pi*area/(perimeter^2)
-            else
-                continue;
-
-            double area_r = Math.sqrt(area / Math.PI);
-            double perimeter_r = perimeter / (2 * Math.PI);
-            // check the circleness of the detected island. if the circle is very flat, or not circular at all, then NG
-            if (circleLevel > 0.6 && (area_r > 10 && perimeter_r > 10)) {
-                // Check if ellipse fits inside the ROI 
-                ellipse = Imgproc.fitEllipse(m2f);
-                if (!(ellipse.center.x >= 0 && ellipse.center.y >= 0 && ellipse.center.x < inputROI.width() && ellipse.center.y < inputROI.height())) // ROI width and height
-                    continue;
-
-                if (ellipse.size.width > 120 || ellipse.size.height > 120)
-                    continue;
-
-                double ellipseCircleLevel = ellipse.size.width > ellipse.size.height ? ellipse.size.height / ellipse.size.width : ellipse.size.width / ellipse.size.height;
-
-                if (ellipseCircleLevel > ellipseCircleLevelMax) {
-                    gravityCenter = new Point(pt.x + srcROI.tl().x, pt.y + srcROI.tl().y);
-                    pupilCenter = new Point(ellipse.center.x + srcROI.tl().x, ellipse.center.y + srcROI.tl().y);
-                    pupilSize = new Point(ellipse.size.width, ellipse.size.height);
-                    ellipseCircleLevelMax = ellipseCircleLevel;
-                    result = true;
-                    ellipse.center.x = ellipse.center.x + srcROI.tl().x;
-                    ellipse.center.y = ellipse.center.y + srcROI.tl().y;
-                }
-            }
-        }
-            
-            // release memory
-
-        return result;
     }
 
     private void detectBrightPoint(Mat srcMat, ArrayList<Point> points, Rect ROIRect) {
@@ -581,35 +571,35 @@ public class CameraStreamerImo extends CameraStreamer {
         return;
     }
 
-    private void selectBrightPointFour(ArrayList<Point> brightPoints, Point pupilCenter, Point topRight, Point topLeft, Point bottomRight, Point bottomLeft, Rect ROI) {
+    private void selectBrightPointFour(ArrayList<Point> brightPoints, Point center, Point topRight, Point topLeft, Point bottomRight, Point bottomLeft, Rect ROI) {
         ArrayList<Point> TR = new ArrayList<Point>();
         ArrayList<Point> TL = new ArrayList<Point>();
         ArrayList<Point> BR = new ArrayList<Point>();
         ArrayList<Point> BL = new ArrayList<Point>();
 
         for (Point point : brightPoints) {
-            if (point.x + ROI.tl().x < pupilCenter.x && point.y + ROI.tl().y < pupilCenter.y) {
+            if (point.x + ROI.tl().x < center.x && point.y + ROI.tl().y < center.y) {
                 TL.add(point);
-            } else if (point.x + ROI.tl().x >= pupilCenter.x && point.y + ROI.tl().y < pupilCenter.y) {
+            } else if (point.x + ROI.tl().x >= center.x && point.y + ROI.tl().y < center.y) {
                 TR.add(point);
-            } else if (point.x + ROI.tl().x < pupilCenter.x && point.y + ROI.tl().y >= pupilCenter.y) {
+            } else if (point.x + ROI.tl().x < center.x && point.y + ROI.tl().y >= center.y) {
                 BL.add(point);
             } else {
                 BR.add(point);
             }
-            topLeft = selectBrightPointOne(TL, pupilCenter);
-            topRight = selectBrightPointOne(TR, pupilCenter);
-            bottomRight = selectBrightPointOne(BR, pupilCenter);
-            bottomLeft = selectBrightPointOne(BL, pupilCenter);
+            topLeft = selectBrightPointOne(TL, center);
+            topRight = selectBrightPointOne(TR, center);
+            bottomRight = selectBrightPointOne(BR, center);
+            bottomLeft = selectBrightPointOne(BL, center);
         }
     }
 
-    private Point selectBrightPointOne(ArrayList<Point> targetPoints, Point pupilCenter) {
+    private Point selectBrightPointOne(ArrayList<Point> targetPoints, Point center) {
         Point result = new Point(0, 0);
         if (targetPoints.size() > 1) {
             double distanceMin = 1000000;
             for (Point point : targetPoints) {
-                double distance = (double)((pupilCenter.x - point.x) * (pupilCenter.x - point.x) + (pupilCenter.y - point.y) * (pupilCenter.y - point.y));
+                double distance = (double)((center.x - point.x) * (center.x - point.x) + (center.y - point.y) * (center.y - point.y));
                 if (distance < distanceMin) {
                     distanceMin = distance;
                     result = point;
@@ -620,5 +610,7 @@ public class CameraStreamerImo extends CameraStreamer {
         }
         return result;
     }
+
+     */
 
 }

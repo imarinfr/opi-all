@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -59,7 +58,7 @@ public abstract class CameraStreamer extends Thread {
         long acquisitionTimeStamp,   // timestamp of frame acquisition (approximate)
         int x,                       // pupil position in pixels with (0,0) at centre of image
         int y,                       // pupil position in pixels with (0,0) at centre of image
-        int diameter                // pupil diameter in pixels
+        double diameter              // pupil diameter in mm
     ) {
         public Response(long requestTimeStamp, long acquisitionTimeStamp) {
             this(requestTimeStamp, acquisitionTimeStamp, -1, -1, -1);
@@ -84,12 +83,52 @@ public abstract class CameraStreamer extends Thread {
     private Socket socket;
 
     /** Little bit of memory for communicating with image processing subclass */
-    protected HashMap<String, Integer> processingResults;
+    class PupilInfo {
+        private int srcWidth;          // width of source image coming from camera (pixels)
+        private int srcHeight;        // height of source image coming from camera (pixels)
+        public double diameter;     // diameter of pupil in pixels??? or mm??
+        public int centerX;      // x position of pupil in pixels
+        public int centerY;      // y position of pupil in pixels
+        public int bb_tl_x;             // bounding box of pupil (pixels)
+        public int bb_tl_y;
+        public int bb_width;
+        public int bb_height;
+        public boolean valid;       // true if these current values are from a found pixel
 
-    /** Accesor method to get results from a call to {@link getImageValues} */
+        /** @param srcWidth Width of source image in pixels 
+         *  @param srcHeight Height of source image in pixels 
+         */
+        PupilInfo(int srcWidth, int srcHeight) {
+            this.srcWidth = srcWidth;
+            this.srcHeight = srcHeight;
+            this.reset();
+        }
+            
+        public void reset() {
+            diameter = 0;
+            centerX = -1;
+            centerY = -1;
+            bb_tl_x = 0;
+            bb_tl_y = 0;
+            bb_width = srcWidth;
+            bb_height = srcHeight;
+            valid = false;
+        }
+
+        public String toString() {
+            if (valid)
+                return String.format("x: %d, y: %d, d: %5.2f", centerX, centerY, diameter);
+            else
+                return "No valid pupil.";
+        }
+    }
+    protected PupilInfo pupilInfo;
+
+
+    /** Accessor method to get results from a call to {@link getImageValues} */
     public String getResults() { 
-        if (processingResults.containsKey("x") && processingResults.containsKey("y") && processingResults.containsKey("d"))
-            return String.format("x: %d, y: %d, d: %d", processingResults.get("x"), processingResults.get("y"), processingResults.get("d"));
+        if (pupilInfo.valid) 
+            return String.format("x: %d, y: %d, d: %d", pupilInfo.centerX, pupilInfo.centerY, pupilInfo.diameter);
         else
             return "No results yet";
     }
@@ -108,7 +147,6 @@ public abstract class CameraStreamer extends Thread {
         this.deviceNumber = deviceNumber;
         requestQueue = new LinkedBlockingDeque<Request>(10);
         responseQueue = new LinkedBlockingQueue<Response>(10);
-        processingResults = new HashMap<String, Integer>(3);
         this.start();
     }
         
@@ -208,14 +246,15 @@ public abstract class CameraStreamer extends Thread {
      * @param timestamp Timestamp that the image was acquired
      */
     private void processRequest(Request request, Mat frame, long timestamp) {
-        if (getImageValues(frame)) {
+        getImageValues(frame);
+        if (pupilInfo.valid) {
             try {
                 responseQueue.add(new Response(
                     request.timeStamp,
                     timestamp,
-                    processingResults.get("x").intValue(),
-                    processingResults.get("y").intValue(),
-                    processingResults.get("d").intValue()
+                    pupilInfo.centerX,
+                    pupilInfo.centerY,
+                    pupilInfo.diameter
                 ));
             } catch (IllegalStateException e) {
                 System.out.println("Response queue is full, apparently!");
@@ -249,8 +288,6 @@ public abstract class CameraStreamer extends Thread {
     /**
      * Fill bytes with the image on socket
      *
-     * Should override this method in a subclass to do something useful.
-     * 
      * @param socket An open socket from which to read
      * @return Device number read. -1 for error
      */
@@ -258,12 +295,10 @@ public abstract class CameraStreamer extends Thread {
 
     /**
      * Process frame to find (x, y) and diameter of pupil and put the result in map values.
-     * These must be put into `processingResults` as `x`, `y`, and `d` respectively.
-     * 
-     * Should override this method in a subclass to do something useful.
+     * These must be put into {@link pupilInfo}.
      * 
      * @param frame Frame to process looking for pupil
      * @return true if values found, false otherwise
      */
-    protected abstract boolean getImageValues(Mat frame);
+    protected abstract void getImageValues(Mat frame);
 }

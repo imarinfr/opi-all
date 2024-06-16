@@ -13,6 +13,7 @@ public class CameraStreamerNone extends CameraStreamer {
 
     public CameraStreamerNone(int port, int []deviceNumber) throws IOException {
         super(port, deviceNumber);
+        pupilInfo = new PupilInfo(0, 0);
     }
 
     /**
@@ -37,5 +38,5 @@ public class CameraStreamerNone extends CameraStreamer {
         return;
     }
 
-    protected boolean getImageValues(Mat frame) {return false; }
+    protected void getImageValues(Mat frame) { pupilInfo.valid = false; }
 }

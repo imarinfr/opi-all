@@ -2,14 +2,11 @@ package org.lei.opi.core;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
 import org.opencv.core.*;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.*;
 
 import org.junit.jupiter.api.Test;
@@ -21,6 +18,7 @@ public class ImoImageTest {
     private CameraStreamerImo cameraStreamer;
     
     ImoImageTest() {
+        nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
         try {
             cameraStreamer = new CameraStreamerImo(-1, new int[] {1});
         } catch (IOException e) {
@@ -32,9 +30,8 @@ public class ImoImageTest {
      */
     @Test
     public void detectPupil_images() throws IOException {
-        nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
-        
         for (int eye = 0; eye < 20; eye++) {
+            long start = System.currentTimeMillis();
             String fname = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
             BufferedImage im = ImageIO.read(getClass().getResource(fname));
 
@@ -45,12 +42,15 @@ public class ImoImageTest {
 
             System.out.print("\nProcessFrame: " + eye);
 
-            if (cameraStreamer.getImageValues(frame))
-                System.out.println("  Found pupil:" + cameraStreamer.getResults());
+            long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            cameraStreamer.getImageValues(frame);
+            long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            
+
+            if (cameraStreamer.pupilInfo.valid)
+                System.out.println(String.format("%3d %10d Found pupil:" + cameraStreamer.pupilInfo, System.currentTimeMillis() - start, mem2 - mem1)) ;
             else
-                System.out.println("No Pupil found");
-
-
+                System.out.println(String.format("%3d %10d No Pupil found", System.currentTimeMillis() - start, mem2 - mem1));
         }
     }
 
@@ -59,8 +59,6 @@ public class ImoImageTest {
      */
     @Test
     public void detectPupil_vidImages() {
-        nu.pattern.OpenCV.loadLocally();
-
         //String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
         //System.out.println("         Filename: " + fname);
         //fname = fname.replace("00", "%02d");
@@ -75,7 +73,8 @@ public class ImoImageTest {
 
         while (camera.isOpened()) {
             if (camera.read(frame)) {
-                if (cameraStreamer.getImageValues(frame))
+                cameraStreamer.getImageValues(frame);
+                if (cameraStreamer.pupilInfo.valid)
                     System.out.println("Pupil:" + cameraStreamer.getResults());
                 else
                     System.out.println("No Pupil found");
