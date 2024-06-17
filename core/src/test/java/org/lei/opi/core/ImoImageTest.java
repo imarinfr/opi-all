@@ -10,6 +10,8 @@ import org.opencv.core.*;
 import org.opencv.videoio.*;
 
 import org.junit.jupiter.api.Test;
+import org.lei.opi.core.definitions.CircularBuffer;
+import org.lei.opi.core.definitions.FrameInfo;
 
 public class ImoImageTest {
     /**
@@ -59,11 +61,11 @@ public class ImoImageTest {
      */
     @Test
     public void detectPupil_vidImages() {
-        //String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
-        //System.out.println("         Filename: " + fname);
-        //fname = fname.replace("00", "%02d");
-        //System.out.println("Sequence Filename: " + fname);
-        VideoCapture camera = new VideoCapture(0); //, Videoio.CAP_IMAGES);
+        String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
+        System.out.println("         Filename: " + fname);
+        fname = fname.replace("00", "%02d");
+        System.out.println("Sequence Filename: " + fname);
+        VideoCapture camera = new VideoCapture(fname, Videoio.CAP_IMAGES);
 
         if (!camera.isOpened()) {
             System.out.println("Error! Camera can't be opened!");
@@ -80,6 +82,42 @@ public class ImoImageTest {
                     System.out.println("No Pupil found");
             } else
                 System.out.println("Error! Could not read frame");
+        }
+    }
+
+    @Test
+    public void circular_buffer_test() throws IOException {
+        CameraStreamerImo cameraStreamer = new CameraStreamerImo(-1, new int[] {1});
+        CircularBuffer<FrameInfo> buffer = cameraStreamer.frameBuffer[0];
+
+        FrameInfo workingFrameInfo = new FrameInfo();
+
+        for (int eye = 0; eye < 30; eye++) {
+            String fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
+            if (eye >= 20)
+                fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye - 20);
+            String fname = fnameMut;
+
+            System.out.println("\nProcessFrame: " + eye);
+
+            long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            buffer.put(f -> f.grab(fname));
+            long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+
+            //System.out.println("\t Buffer: " + buffer);
+
+            long start = System.currentTimeMillis();
+            if (buffer.get((FrameInfo f) -> f.timeIsClose(System.currentTimeMillis(), 100), (src, dst) -> src.copyTo(dst), workingFrameInfo)) {
+                System.out.println("\t Got a frame");
+                cameraStreamer.getImageValues(workingFrameInfo.mat());
+                long mem3 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+
+                System.out.println(String.format("\t\tt= %3d memGrab= %10d memProc= %10d Pupil:" + cameraStreamer.pupilInfo, 
+                    System.currentTimeMillis() - start, 
+                    mem2 - mem1, 
+                    mem3 - mem2)) ;
+            } else
+                System.out.println("\t Dropped frame");
         }
     }
 }

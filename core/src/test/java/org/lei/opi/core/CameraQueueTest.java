@@ -10,11 +10,12 @@ import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
+import org.lei.opi.core.CameraStreamer;
 
 // NOTE This cannot be run on a machine without a camera as Consumer can never be satisfied.
 //      (eg OpiMachine.Display on a mac as that does not allow access to the camera.)
 public class CameraQueueTest {
-    final int camerPort = 50202;
+    final int cameraPort = 50202;
 
     /**
     * @since 0.3.0
@@ -79,10 +80,10 @@ public class CameraQueueTest {
             int tries = 0;
             while (socket == null && tries < 10)
                 try {
-                    socket = new Socket("localhost", camerPort);
+                    socket = new Socket("localhost", cameraPort);
                 } catch (IOException e) {
                     tries++;
-                    System.out.println("JovpQueueTest is waiting for eye camera socket on port: " + camerPort);
+                    System.out.println("JovpQueueTest is waiting for eye camera socket on port: " + cameraPort);
                     try { Thread.sleep(2000); } catch (InterruptedException ee) { ; }
                 }
 
@@ -122,7 +123,7 @@ public class CameraQueueTest {
         nu.pattern.OpenCV.loadLocally();  // works on mac
         CameraStreamer server = null;
         try {
-            server = new CameraStreamerImo(camerPort, new int[] {1});
+            server = new CameraStreamerImo(cameraPort, new int[] {1});
         } catch (IOException e) {
             System.out.println("[sendAndReceive1]...Could not start camera");
             e.printStackTrace();
@@ -135,9 +136,23 @@ public class CameraQueueTest {
         p.start();
         c.start();
 
-       //ImageSaver i = new ImageSaver(server, 100); // write images to files
-
         try { p.join(); } catch (InterruptedException ignored) { ; }
         try { c.join(); } catch (InterruptedException ignored) { ; }
+    }
+
+
+    @Test
+    public void imoSaveImages() {
+        nu.pattern.OpenCV.loadLocally();  // works on mac
+        CameraStreamer server = null;
+        try {
+            server = new CameraStreamerImo(cameraPort, new int[] {1});
+        } catch (IOException e) {
+            System.out.println("[sendAndReceive1]...Could not start camera");
+            e.printStackTrace();
+            return;
+        }
+
+        ImageSaver i = new ImageSaver(server, 100); // write images to files
     }
 }

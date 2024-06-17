@@ -1,4 +1,4 @@
-package org.lei.opi.core;
+package org.lei.opi.core.definitions;
 
 import java.util.NoSuchElementException;
 import java.util.concurrent.locks.ReentrantLock;
@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Create a concurrent safe circular buffer of fixed-size objects.
+ * Create a concurrent safe circular LIFO buffer of fixed-size objects.
  * 
  * Andrew Turpin
  * Date Mon 17 Jun 2024 09:49:45 AWST
@@ -21,8 +21,13 @@ public class CircularBuffer<T> {
     private Object []buffer;
     /** Max number of elements in buffer */
     private int capacity;
-    /** Next available element of buffer */
-    private int index = 0;
+    /** Current "rightmost" element of buffer; most recently added. */
+    private int head;
+    /** Current "leftmost" element of buffer; oldest in the array. */
+    private int tail;
+
+    /** Number of elements in array */
+    private int n;
 
     /** Used to lock {@link buffer} for update and reading */
     public final ReentrantLock lock = new ReentrantLock();
@@ -34,27 +39,40 @@ public class CircularBuffer<T> {
     public CircularBuffer(Supplier<T> supplier, int capacity) {
         if (capacity < 1)
             capacity = DEFAULT_CAPACITY;
+        this.capacity = capacity;
 
         buffer = new Object[capacity];
-        index = 0;
+        head = -1;
+        n = 0;
 
         for (int i = 0 ; i < capacity ; i++)
             buffer[i] = supplier.get();
     }
 
+    /** @return true if buffer is empty, false otherwise */
+    public boolean empty() { 
+        lock.lock();
+        try {
+            return n == 0;
+        } finally {
+            lock.unlock();
+        }
+    }
+
     /**
-     * Remove the first element of the buffer and return it.
+     * Remove the last element in the buffer and return it.
      * (Does not free the memory - leaves object there for reuse.)
      * @return First element of buffer.
      */
     public T pop() {
+        if (empty()) return null;
+
         Object o = null;
         lock.lock();
         try {
-            o = buffer[(index - 1) % this.capacity];
-            index--;
-            if (index == -1)
-                index = this.capacity;
+            o = buffer[tail];
+            tail = (tail + 1) % capacity;
+            n--;
         } finally {
             lock.unlock();
         }
@@ -67,9 +85,17 @@ public class CircularBuffer<T> {
      */
     public void put(Consumer<T> mutator) {
         lock.lock();
+        int newHead = (head + 1) % capacity;
         try {
-            mutator.accept((T)buffer[index]);
-            index = (index + 1) % capacity;
+            mutator.accept((T)buffer[newHead]);
+            if (n == 0)  // empty
+                tail = newHead;
+            else if (newHead == tail) { // full!
+                tail = (tail + 1) % capacity;
+                n--;
+            }
+            head = newHead;
+            n++;
         } finally {
             lock.unlock();
         }
@@ -77,13 +103,13 @@ public class CircularBuffer<T> {
     }
 
     /**
-     * Apply {@link f} to the end of the buffer (element {@link index - 1}).
+     * Apply {@link f} to the tail (oldest added) of the buffer.
      * @param f Function to take an element and do something 
      */
-    public void apply(Consumer<T> f) {
+    public void applyTail(Consumer<T> f) {
         lock.lock();
         try {
-            f.accept((T)buffer[(index - 1) % capacity]);
+            f.accept((T)buffer[tail]);
         } finally {
             lock.unlock();
         }
@@ -91,44 +117,84 @@ public class CircularBuffer<T> {
     }
 
     /**
+     * Apply {@link f} to the head (most recently added) of the buffer.
+     * @param f Function to take an element and do something 
+     */
+    public void applyHead(Consumer<T> f) {
+        lock.lock();
+        try {
+            f.accept((T)buffer[head]);
+        } finally {
+            lock.unlock();
+        }
+        return;
+    }
+
+    /**
+     * Elements are linear searched from tail (oldest) to head (newest).
+     * 
      * @param filter Predicate to apply to each element of {@link buffer}
      * @param copy Function to copy element i of the buffer to dst (eg copy = (src, dst) -> src.copyTo(dst); )
      * @param dst Destination object for the copy  TODO do i need this??? or can it be in copy function?
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean get(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
-        boolean found = false;
         lock.lock();
         try {
-            for(int i = (index + 1) % capacity ; i != index ; i = (i + 1) % capacity)
-                if (filter.test((T)buffer[i])) {
-                    copy.accept((T)buffer[i], dst);
-                    found = true;
-                    break;
+            for(int i = 0 ; i < capacity ; i++) {
+                int j = (tail + i ) % capacity;
+                if (filter.test((T)buffer[j])) {
+                    copy.accept((T)buffer[j], dst);
+                    return true;
                 }
+            }
         } finally {
             lock.unlock();
         }
-        return found;
+        return false;
     }
 
     /**
+     * Elements are linear searched from tail (oldest) to head (newest).
+     * 
      * Apply {@link mutator} to the first element of {@link buffer} for which {@link filter} returns true.
      * If no elements make {@link filter} true, throw NoSuchElementException.
      * @param filter Function that takes a T and returns true of false.
      * @param mutator Function to mutate element i of the buffer
      */
-    public void findAndApply(Function<T, Boolean> filter, Function<T, T> mutator) throws NoSuchElementException {
+    public void findAndApply(Predicate<T> filter, Function<T, T> mutator) throws NoSuchElementException {
         lock.lock();
         try {
-            for(int i = (index + 1) % capacity ; i != index ; i = (i + 1) % capacity)
-                if (filter.apply((T)buffer[i])) {
-                    buffer[i] = mutator.apply((T)buffer[i]);
-                    break;
+            for(int i = 0 ; i < n ; i++) {
+                int j = (tail + i) % capacity;
+                if (filter.test((T)buffer[j])) {
+                    buffer[i] = mutator.apply((T)buffer[j]);
+                    return;
                 }
+            }
         } finally {
             lock.unlock();
         }
         return;
+    }
+
+    public String toString() {
+        lock.lock();
+        try {
+            StringBuilder b = new StringBuilder(String.format("CircularBuffer (n = %d/%d, tail = %s, head = %s):", n, capacity, tail, head));
+            
+            if (empty())
+                return b.toString();
+
+            for(int i = 0 ; i < n ; i++) {
+                int j = (tail + i) % capacity;
+
+                b.append("\n\t\t" + ((T)buffer[j]).toString());
+            }
+
+            return b.toString();
+        } finally {
+            lock.unlock();
+        }
     }
 }

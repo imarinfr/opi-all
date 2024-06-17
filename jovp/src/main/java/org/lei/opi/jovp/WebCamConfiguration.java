@@ -3,9 +3,9 @@ package org.lei.opi.jovp;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.lei.opi.core.CameraStreamer;
 import org.lei.opi.core.CameraStreamerImo;
 import org.lei.opi.core.CameraStreamerNone;
+import org.lei.opi.core.CameraStreamer;
 
 /**
  * Holds information that the opiJovp server needs about any local eye cameras

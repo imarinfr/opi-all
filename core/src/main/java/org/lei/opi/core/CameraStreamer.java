@@ -1,7 +1,8 @@
 package org.lei.opi.core;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.opencv.core.CvType;
+import org.lei.opi.core.definitions.CircularBuffer;
+import org.lei.opi.core.definitions.FrameInfo;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
 
@@ -13,8 +14,6 @@ import java.util.ConcurrentModificationException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Create a thread that serves/streams raw images from one or more "webcams" on a TCP port.
@@ -25,69 +24,13 @@ import java.util.function.Function;
  * @date 5 June 2024 
  */
 public abstract class CameraStreamer extends Thread {
-    /** Used to lock bytes for processing in {@link readImageToBytes} */
+    /** Used to lock static bytes for processing in {@link readImageToBytes} */
     public static final ReentrantLock bytesLock = new ReentrantLock();
     /** a buffer that is filled by {@link readImageToBytes} */
     public static byte []bytes = new byte[1];
 
     /** Whether this streamer is connected to a client */
     public boolean connected;
-
-    protected class FrameInfo {
-        long timeStamp;
-        Mat mat;
-        FrameInfo() {
-            this.timeStamp = -1;
-            this.mat = new Mat();
-        }
-
-        /*
-         * @param otherTimeStamp A time stamp to which to compare this.timeStamp
-         * @param tol The tolerance for the comparison
-         * @return true if the difference between this.timeStamp and otherTimeStamp is less than tol, false otherwise
-         */
-        public boolean timeIsClose(long otherTimeStamp, int tol) {
-            return Math.abs(this.timeStamp - otherTimeStamp) < tol;
-        }
-
-        /** 
-         * @param dst Destination Mat to receive a copy of me
-         * Copy myself into dst 
-         */
-        public void copyTo(FrameInfo dst) {
-            dst.timeStamp = this.timeStamp;
-            this.mat.copyTo(dst.mat);
-        }
-
-        /**
-         * Grab a frame from the grabber and put it in {@link mat}.
-         * @param grabber
-         */
-        public void grab(VideoCapture grabber) {
-            this.timeStamp = System.currentTimeMillis(); 
-            if (!grabber.read(this.mat))
-                this.timeStamp = -1;
-        }
-        
-        /**
-         * Copy mat's bytes into CameraStreamer.bytes and write them on the socket.
-         * @param socket
-         * @param deviceNumber
-         * @throws IOException
-         */
-        public void sendBytes(Socket socket, int deviceNumber) throws IOException {
-            int n = mat.channels() * mat.rows() * mat.cols();
-            try {
-                bytesLock.lock();
-                if (n != bytes.length)
-                    bytes = new byte[n];
-                mat.get(0, 0, CameraStreamer.bytes);
-                writeBytes(socket, deviceNumber);
-            } finally {
-                bytesLock.unlock();
-            }
-        }
-    }
 
     /** A working are for processRequest  */
     private FrameInfo workingFrameInfo = new FrameInfo();
@@ -192,7 +135,7 @@ public abstract class CameraStreamer extends Thread {
             return "No results yet";
     }
 
-    /** Weak instance just to allow calling of readBytes. Why not make it static? */
+    /** Junk instance just to allow calling of readBytes. And testing... */
     public CameraStreamer() { ; }
 
     /**
@@ -257,13 +200,19 @@ public abstract class CameraStreamer extends Thread {
 //System.out.println("bi type " + bi.getType());
 //System.out.println("bi width " + bi.getWidth());
 //System.out.println("bi height " + bi.getHeight());
-                        final Integer ii = Integer.valueOf(i);
-                        frameBuffer[i].apply((FrameInfo f) -> {
+                        final Integer dn = Integer.valueOf(deviceNumber[i]);
+                        frameBuffer[i].applyHead((FrameInfo f) -> {
+                            int n = f.mat().channels() * f.mat().rows() * f.mat().cols();
                             try {
-                                f.sendBytes(socket, this.deviceNumber[ii]);
+                                bytesLock.lock();
+                                if (n != bytes.length)
+                                    bytes = new byte[n];
+                                f.mat().get(0, 0, this.bytes);
+                                writeBytes(socket, dn);
                             } catch (IOException e) {
-                                e.printStackTrace();
-                                this.connected = false;
+                                System.out.println("Error writing eye image bytes to socket");
+                            } finally {
+                                bytesLock.unlock();
                             }
                         });
                     }
@@ -301,12 +250,12 @@ public abstract class CameraStreamer extends Thread {
                 break;
         }
 
-        getImageValues(workingFrameInfo.mat);
+        getImageValues(workingFrameInfo.mat());
         if (pupilInfo.valid) {
             try {
                 responseQueue.add(new Response(
                     request.timeStamp,
-                    workingFrameInfo.timeStamp,
+                    workingFrameInfo.timeStamp(),
                     pupilInfo.centerX,
                     pupilInfo.centerY,
                     pupilInfo.diameter
@@ -319,7 +268,7 @@ public abstract class CameraStreamer extends Thread {
                 requestQueue.addFirst(request); // put it back for a go at another frame
             else {
                 try {
-                    responseQueue.add(new Response(request.timeStamp, workingFrameInfo.timeStamp));
+                    responseQueue.add(new Response(request.timeStamp, workingFrameInfo.timeStamp()));
                 } catch (IllegalStateException e) {
                     System.out.println("Response queue is full, apparently!");
                 }
