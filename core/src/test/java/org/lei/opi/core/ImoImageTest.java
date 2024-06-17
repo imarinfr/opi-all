@@ -3,11 +3,14 @@ package org.lei.opi.core;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 
 import org.opencv.core.*;
 import org.opencv.videoio.*;
+
+import nu.pattern.OpenCV;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.core.definitions.CircularBuffer;
@@ -18,6 +21,8 @@ public class ImoImageTest {
     * @since 0.3.0
     */
     private CameraStreamerImo cameraStreamer;
+
+    private final static Logger logger = Logger.getLogger(OpenCV.class.getName());
     
     ImoImageTest() {
         nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
@@ -107,13 +112,15 @@ public class ImoImageTest {
             //System.out.println("\t Buffer: " + buffer);
 
             long start = System.currentTimeMillis();
-            if (buffer.get((FrameInfo f) -> f.timeIsClose(System.currentTimeMillis(), 100), (src, dst) -> src.copyTo(dst), workingFrameInfo)) {
+            System.out.println("Looking at: " + (start - 10));
+            if (buffer.getHeadToTail((FrameInfo f) -> f.timeIsClose(start - 10, 50), (src, dst) -> src.copyTo(dst), workingFrameInfo)) {
                 System.out.println("\t Got a frame");
                 cameraStreamer.getImageValues(workingFrameInfo.mat());
                 long mem3 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-                System.out.println(String.format("\t\tt= %3d memGrab= %10d memProc= %10d Pupil:" + cameraStreamer.pupilInfo, 
+                System.out.println(String.format("\t\tt= %3d dt= %4d memGrab= %10d memProc= %10d Pupil:" + cameraStreamer.pupilInfo, 
                     System.currentTimeMillis() - start, 
+                    start - workingFrameInfo.timeStamp(), 
                     mem2 - mem1, 
                     mem3 - mem2)) ;
             } else

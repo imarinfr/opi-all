@@ -138,11 +138,35 @@ public class CircularBuffer<T> {
      * @param dst Destination object for the copy  TODO do i need this??? or can it be in copy function?
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
-    public boolean get(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
+    public boolean getTailToHead(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
         lock.lock();
         try {
-            for(int i = 0 ; i < capacity ; i++) {
+            for(int i = 0 ; i < n ; i++) {
                 int j = (tail + i ) % capacity;
+                if (filter.test((T)buffer[j])) {
+                    copy.accept((T)buffer[j], dst);
+                    return true;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return false;
+    }
+
+    /**
+     * Elements are linear searched from head (newest) to tail (oldest).
+     * 
+     * @param filter Predicate to apply to each element of {@link buffer}
+     * @param copy Function to copy element i of the buffer to dst (eg copy = (src, dst) -> src.copyTo(dst); )
+     * @param dst Destination object for the copy  TODO do i need this??? or can it be in copy function?
+     * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
+     */
+    public boolean getHeadToTail(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
+        lock.lock();
+        try {
+            for(int i = 0 ; i < n ; i++) {
+                int j = (head + i ) % capacity;
                 if (filter.test((T)buffer[j])) {
                     copy.accept((T)buffer[j], dst);
                     return true;
@@ -162,11 +186,35 @@ public class CircularBuffer<T> {
      * @param filter Function that takes a T and returns true of false.
      * @param mutator Function to mutate element i of the buffer
      */
-    public void findAndApply(Predicate<T> filter, Function<T, T> mutator) throws NoSuchElementException {
+    public void findAndApplyTailToHead(Predicate<T> filter, Function<T, T> mutator) throws NoSuchElementException {
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {
                 int j = (tail + i) % capacity;
+                if (filter.test((T)buffer[j])) {
+                    buffer[i] = mutator.apply((T)buffer[j]);
+                    return;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return;
+    }
+
+    /**
+     * Elements are linear searched from head (newest)to tail (oldest) .
+     * 
+     * Apply {@link mutator} to the first element of {@link buffer} for which {@link filter} returns true.
+     * If no elements make {@link filter} true, throw NoSuchElementException.
+     * @param filter Function that takes a T and returns true of false.
+     * @param mutator Function to mutate element i of the buffer
+     */
+    public void findAndApplyHeadToTail(Predicate<T> filter, Function<T, T> mutator) throws NoSuchElementException {
+        lock.lock();
+        try {
+            for(int i = 0 ; i < n ; i++) {
+                int j = (head + i) % capacity;
                 if (filter.test((T)buffer[j])) {
                     buffer[i] = mutator.apply((T)buffer[j]);
                     return;

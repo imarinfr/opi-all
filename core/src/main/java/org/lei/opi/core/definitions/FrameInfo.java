@@ -61,8 +61,6 @@ public class FrameInfo {
      * @param grabber
      */
     public void grab(String filename) {
-        this.timeStamp = System.currentTimeMillis(); 
-        
         try {
             //long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
             BufferedImage im = ImageIO.read(getClass().getResource(filename));
@@ -76,6 +74,7 @@ public class FrameInfo {
 
             byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
             this.mat.put(0, 0, im_array);
+            this.timeStamp = System.currentTimeMillis(); 
         } catch (IOException e) {
             this.timeStamp = -1;
             System.out.println("Error! Could not read frame from " + filename);

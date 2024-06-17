@@ -244,9 +244,9 @@ public abstract class CameraStreamer extends Thread {
      */
     private void processRequest(Request request, CircularBuffer<FrameInfo> buffer) {
 
-        for (int tol = 1 ; tol < 500 ; tol += 50) {
+        for (int tol = 1 ; tol < 500 ; tol *= 2) {
             final Integer iTol = Integer.valueOf(tol);
-            if (buffer.get((FrameInfo f) -> f.timeIsClose(request.timeStamp, iTol), (src, dst) -> src.copyTo(dst), workingFrameInfo))
+            if (buffer.getHeadToTail((FrameInfo f) -> f.timeIsClose(request.timeStamp, iTol), (src, dst) -> src.copyTo(dst), workingFrameInfo))
                 break;
         }
 
