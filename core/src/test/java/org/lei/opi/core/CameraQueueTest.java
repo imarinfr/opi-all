@@ -40,9 +40,10 @@ public class CameraQueueTest {
                     if (count == tries)
                         System.out.println("[sendAndReceive1]...Consumer tried too many times.");
                     else
-                        System.out.println(String.format("[sendAndReceive1]...Consumer got %s. Time delta %s.",
+                        System.out.println(String.format("[sendAndReceive1]...Consumer got %s. Time delta %4s. (%6.2f,%6.2f) %4.2f mm",
                             resp.requestTimeStamp(),
-                            resp.acquisitionTimeStamp() - resp.requestTimeStamp()));
+                            resp.acquisitionTimeStamp() - resp.requestTimeStamp(),
+                            resp.x(), resp.y(), resp.diameter()));
                 }
             } catch (InterruptedException e) { ; }
         }
@@ -70,8 +71,10 @@ public class CameraQueueTest {
     class ImageSaver {
         Socket socket = null;
         CameraStreamer server = null;
-        public ImageSaver(CameraStreamer server) {
+        int numImages;
+        public ImageSaver(CameraStreamer server, int numImages) {
             this.server = server;
+            this.numImages = numImages;
 
             int tries = 0;
             while (socket == null && tries < 10)
@@ -91,7 +94,7 @@ public class CameraQueueTest {
 
         public void run() {
             int savedCount = 0;
-            while (savedCount < 20) {
+            while (savedCount < numImages) {
                 server.readBytes(socket);
                 BufferedImage image = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
                 byte[] im_array = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
@@ -132,7 +135,7 @@ public class CameraQueueTest {
         p.start();
         c.start();
 
-        ImageSaver i = new ImageSaver(server); // write images to files
+       //ImageSaver i = new ImageSaver(server, 100); // write images to files
 
         try { p.join(); } catch (InterruptedException ignored) { ; }
         try { c.join(); } catch (InterruptedException ignored) { ; }
