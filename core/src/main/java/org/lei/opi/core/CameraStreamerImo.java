@@ -321,8 +321,8 @@ public class CameraStreamerImo extends CameraStreamer {
                 if (ellipseCircleLevel > ellipseCircleLevelMax) {
                     double xAdj = srcROI.x + pupilRect.x;
                     double yAdj = srcROI.y + pupilRect.y;
-                    pupilInfo.centerX = (int)(ellipse.center.x + xAdj);
-                    pupilInfo.centerY = (int)(ellipse.center.x + yAdj);
+                    pupilInfo.centerX = (ellipse.center.x + xAdj - EYE_IMAGE_WIDTH / 2.0) * 1.23;  // TODO need to allow for off centre start
+                    pupilInfo.centerY = (ellipse.center.y + yAdj - EYE_IMAGE_HEIGHT / 2.0) * 1.23;  // TODO need to allow for off centre start
                     pupilInfo.bb_tl_x = (int)(ellipse.boundingRect().tl().x + xAdj);
                     pupilInfo.bb_tl_y = (int)(ellipse.boundingRect().tl().y + yAdj);
                     pupilInfo.bb_width = (int)ellipse.boundingRect().width;

@@ -56,8 +56,8 @@ public abstract class CameraStreamer extends Thread {
     static public record Response(
         long requestTimeStamp,       // timestamp of request object that initiated this response
         long acquisitionTimeStamp,   // timestamp of frame acquisition (approximate)
-        int x,                       // pupil position in pixels with (0,0) at centre of image
-        int y,                       // pupil position in pixels with (0,0) at centre of image
+        double x,                    // pupil position with (0,0) at centre of image (degrees)
+        double y,                    // pupil position with (0,0) at centre of image (degrees)
         double diameter              // pupil diameter in mm
     ) {
         public Response(long requestTimeStamp, long acquisitionTimeStamp) {
@@ -84,12 +84,10 @@ public abstract class CameraStreamer extends Thread {
 
     /** Little bit of memory for communicating with image processing subclass */
     class PupilInfo {
-        private int srcWidth;          // width of source image coming from camera (pixels)
-        private int srcHeight;        // height of source image coming from camera (pixels)
         public double diameter;     // diameter of pupil in pixels??? or mm??
-        public int centerX;      // x position of pupil in pixels
-        public int centerY;      // y position of pupil in pixels
-        public int bb_tl_x;             // bounding box of pupil (pixels)
+        public double centerX;      // x position of pupil in degrees
+        public double centerY;      // y position of pupil in degrees
+        public int bb_tl_x;         // bounding box of pupil (pixels)
         public int bb_tl_y;
         public int bb_width;
         public int bb_height;
@@ -99,8 +97,6 @@ public abstract class CameraStreamer extends Thread {
          *  @param srcHeight Height of source image in pixels 
          */
         PupilInfo(int srcWidth, int srcHeight) {
-            this.srcWidth = srcWidth;
-            this.srcHeight = srcHeight;
             this.reset();
         }
             
@@ -110,8 +106,8 @@ public abstract class CameraStreamer extends Thread {
             centerY = -1;
             bb_tl_x = 0;
             bb_tl_y = 0;
-            bb_width = srcWidth;
-            bb_height = srcHeight;
+            bb_width = 0;
+            bb_height = 0;
             valid = false;
         }
 
