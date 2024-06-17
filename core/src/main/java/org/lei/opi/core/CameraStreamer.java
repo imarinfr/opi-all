@@ -113,7 +113,7 @@ public abstract class CameraStreamer extends Thread {
 
         public String toString() {
             if (valid)
-                return String.format("x: %d, y: %d, d: %5.2f", centerX, centerY, diameter);
+                return String.format("x: %6.4f, y: %6.4f, d: %5.2f", centerX, centerY, diameter);
             else
                 return "No valid pupil.";
         }

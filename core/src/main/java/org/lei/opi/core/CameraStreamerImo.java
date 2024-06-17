@@ -230,9 +230,9 @@ public class CameraStreamerImo extends CameraStreamer {
                 // Get all the input informations with getPupilInfo. (use FindContour)
             //Imgproc.cvtColor(inputROI, inputROI, Imgproc.COLOR_RGB2GRAY);  // No need for this? already GRAY
             getPupilInfo(inputROI, newROIRect);
-            inputROI.release();
-            circles.release();
         }
+        inputROI.release();
+        circles.release();
     }
 
     /** 
