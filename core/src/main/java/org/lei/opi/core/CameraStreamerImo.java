@@ -113,7 +113,7 @@ public class CameraStreamerImo extends CameraStreamer {
     }
 
     /**
-     * Find pupil (x, y) and diameter, updating pupilInfo as necessary
+     * Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
      * Translation of Csharp code from Mitsuko Yoshida 16 March 2023.
      * @param frame
      * @return
@@ -141,6 +141,7 @@ public class CameraStreamerImo extends CameraStreamer {
      * @param inputFrame An input image straight from camera. Should be EYE_IMAGE_WIDTH x EYE_IMAGE_HEIGHT
      */
     private void detectPupil(Mat inputFrame) {
+        //System.out.println(" " + inputFrame.size());
         //Imgcodecs.imwrite("input.jpg", inputFrame);
         Mat inputROI = new Mat(inputFrame, pupilRect);
         Imgproc.GaussianBlur(inputROI, inputROI, new Size(0, 0), 1.8);

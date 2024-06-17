@@ -13,6 +13,8 @@ import java.util.ConcurrentModificationException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Create a thread that serves/streams raw images from one or more "webcams" on a TCP port.
@@ -30,6 +32,68 @@ public abstract class CameraStreamer extends Thread {
 
     /** Whether this streamer is connected to a client */
     public boolean connected;
+
+    protected class FrameInfo {
+        long timeStamp;
+        Mat mat;
+        FrameInfo() {
+            this.timeStamp = -1;
+            this.mat = new Mat();
+        }
+
+        /*
+         * @param otherTimeStamp A time stamp to which to compare this.timeStamp
+         * @param tol The tolerance for the comparison
+         * @return true if the difference between this.timeStamp and otherTimeStamp is less than tol, false otherwise
+         */
+        public boolean timeIsClose(long otherTimeStamp, int tol) {
+            return Math.abs(this.timeStamp - otherTimeStamp) < tol;
+        }
+
+        /** 
+         * @param dst Destination Mat to receive a copy of me
+         * Copy myself into dst 
+         */
+        public void copyTo(FrameInfo dst) {
+            dst.timeStamp = this.timeStamp;
+            this.mat.copyTo(dst.mat);
+        }
+
+        /**
+         * Grab a frame from the grabber and put it in {@link mat}.
+         * @param grabber
+         */
+        public void grab(VideoCapture grabber) {
+            this.timeStamp = System.currentTimeMillis(); 
+            if (!grabber.read(this.mat))
+                this.timeStamp = -1;
+        }
+        
+        /**
+         * Copy mat's bytes into CameraStreamer.bytes and write them on the socket.
+         * @param socket
+         * @param deviceNumber
+         * @throws IOException
+         */
+        public void sendBytes(Socket socket, int deviceNumber) throws IOException {
+            int n = mat.channels() * mat.rows() * mat.cols();
+            try {
+                bytesLock.lock();
+                if (n != bytes.length)
+                    bytes = new byte[n];
+                mat.get(0, 0, CameraStreamer.bytes);
+                writeBytes(socket, deviceNumber);
+            } finally {
+                bytesLock.unlock();
+            }
+        }
+    }
+
+    /** A working are for processRequest  */
+    private FrameInfo workingFrameInfo = new FrameInfo();
+
+    /** A buffer of most recent frames grabbed for each device */
+    CircularBuffer<FrameInfo> []frameBuffer; 
 
     /** The data of an incoming request to the camera */
     static public class Request {
@@ -49,7 +113,6 @@ public abstract class CameraStreamer extends Thread {
             this.numberOfTries++;
             return this.numberOfTries < MAX_TRIES_FOR_REQUEST;
         }
-            
     }
 
     /** The data put back on the queue for each request */
@@ -143,6 +206,11 @@ public abstract class CameraStreamer extends Thread {
         this.deviceNumber = deviceNumber;
         requestQueue = new LinkedBlockingDeque<Request>(10);
         responseQueue = new LinkedBlockingQueue<Response>(10);
+
+        frameBuffer = new CircularBuffer[deviceNumber.length];
+        for (int i = 0 ; i < deviceNumber.length; i++)
+            frameBuffer[i] = new CircularBuffer<FrameInfo>(FrameInfo::new, 20);
+
         this.start();
     }
         
@@ -162,12 +230,6 @@ public abstract class CameraStreamer extends Thread {
             ServerSocket server = new ServerSocket(this.port);
             server.setSoTimeout(10);
 
-            long []timestamp = new long[deviceNumber.length];   // -1 for invalid frame
-            Mat []frame = new Mat[deviceNumber.length];
-
-            for (int i = 0 ; i < this.deviceNumber.length; i++)
-                frame[i] = new Mat(480, 640, CvType.CV_8UC3);
-
             while (!isInterrupted()) {
                     // See if someone wants to connect and stream...
                 if (!connected)
@@ -178,18 +240,14 @@ public abstract class CameraStreamer extends Thread {
 
                     // Try and grab each device as close as possible in time
                 for (int i = 0 ; i < this.deviceNumber.length; i++) {
-                    if (grabber[i].read(frame[i]))
-                        timestamp[i] = System.currentTimeMillis();
-                    else {
-                        timestamp[i] = -1;
-                        System.out.println("Could not get frame from " + this.deviceNumber[i]);
-                    }
+                    final Integer ii = Integer.valueOf(i);
+                    frameBuffer[i].put((FrameInfo f) -> f.grab(grabber[ii]));
                 }
 
                 Request request = requestQueue.poll();
                 if (request != null) {
                     int i = ArrayUtils.indexOf(deviceNumber, request.deviceNumber);
-                    processRequest(request, frame[i], timestamp[i]);  
+                    processRequest(request, frameBuffer[i]);
                 }
 
                     // And now send the frames on the socket
@@ -199,26 +257,20 @@ public abstract class CameraStreamer extends Thread {
 //System.out.println("bi type " + bi.getType());
 //System.out.println("bi width " + bi.getWidth());
 //System.out.println("bi height " + bi.getHeight());
-                        if (timestamp[i] != -1) {
-                            int n = frame[i].channels() * frame[i].rows() * frame[i].cols();
+                        final Integer ii = Integer.valueOf(i);
+                        frameBuffer[i].apply((FrameInfo f) -> {
                             try {
-                                bytesLock.lock();
-                                if (n != bytes.length)
-                                    bytes = new byte[n];
-                                frame[i].get(0, 0, CameraStreamer.bytes);
-                                writeBytes(socket, this.deviceNumber[i]);
-                            } finally {
-                                bytesLock.unlock();
+                                f.sendBytes(socket, this.deviceNumber[ii]);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                this.connected = false;
                             }
-                        }
+                        });
                     }
                     Thread.sleep(50);
                 }
             }
             server.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            this.connected = false;
         } catch (InterruptedException e) {
             this.connected = false;
         } catch (Exception e) {
@@ -241,13 +293,20 @@ public abstract class CameraStreamer extends Thread {
      * @param frame Image frame to process
      * @param timestamp Timestamp that the image was acquired
      */
-    private void processRequest(Request request, Mat frame, long timestamp) {
-        getImageValues(frame);
+    private void processRequest(Request request, CircularBuffer<FrameInfo> buffer) {
+
+        for (int tol = 1 ; tol < 500 ; tol += 50) {
+            final Integer iTol = Integer.valueOf(tol);
+            if (buffer.get((FrameInfo f) -> f.timeIsClose(request.timeStamp, iTol), (src, dst) -> src.copyTo(dst), workingFrameInfo))
+                break;
+        }
+
+        getImageValues(workingFrameInfo.mat);
         if (pupilInfo.valid) {
             try {
                 responseQueue.add(new Response(
                     request.timeStamp,
-                    timestamp,
+                    workingFrameInfo.timeStamp,
                     pupilInfo.centerX,
                     pupilInfo.centerY,
                     pupilInfo.diameter
@@ -260,7 +319,7 @@ public abstract class CameraStreamer extends Thread {
                 requestQueue.addFirst(request); // put it back for a go at another frame
             else {
                 try {
-                    responseQueue.add(new Response(request.timeStamp, timestamp));
+                    responseQueue.add(new Response(request.timeStamp, workingFrameInfo.timeStamp));
                 } catch (IllegalStateException e) {
                     System.out.println("Response queue is full, apparently!");
                 }
@@ -282,7 +341,7 @@ public abstract class CameraStreamer extends Thread {
     public abstract void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException;
 
     /**
-     * Fill bytes with the image on socket
+     * Fill bytes with the image incoming on socket
      *
      * @param socket An open socket from which to read
      * @return Device number read. -1 for error
@@ -290,8 +349,7 @@ public abstract class CameraStreamer extends Thread {
     public abstract int readBytes(Socket socket);
 
     /**
-     * Process frame to find (x, y) and diameter of pupil and put the result in map values.
-     * These must be put into {@link pupilInfo}.
+     * Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
      * 
      * @param frame Frame to process looking for pupil
      * @return true if values found, false otherwise

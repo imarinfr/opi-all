@@ -38,5 +38,6 @@ public class CameraStreamerNone extends CameraStreamer {
         return;
     }
 
+    // Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
     protected void getImageValues(Mat frame) { pupilInfo.valid = false; }
 }
