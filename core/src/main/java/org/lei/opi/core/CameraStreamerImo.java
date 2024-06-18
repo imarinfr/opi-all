@@ -17,12 +17,11 @@ import org.opencv.imgproc.*;
 
 public class CameraStreamerImo extends CameraStreamer {
     
-    private static final Scalar WHITE = new Scalar(255, 255, 255);
-
     private static final int EYE_IMAGE_HEIGHT = 480;
     private static final int EYE_IMAGE_WIDTH = 640;
 
     /** Circular region for cropping out in {@link detectPupil} */
+    //private static final Scalar WHITE = new Scalar(255, 255, 255);
     //private final Mat circleMask = new Mat(EYE_IMAGE_HEIGHT, EYE_IMAGE_WIDTH, CvType.CV_8UC3, Scalar.all(0));
     private final int MASK_RADIUS = 125;
 

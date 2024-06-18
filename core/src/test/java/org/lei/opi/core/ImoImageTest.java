@@ -2,15 +2,14 @@ package org.lei.opi.core;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
 import java.io.IOException;
-import java.util.logging.Logger;
+import java.net.Socket;
 
 import javax.imageio.ImageIO;
 
 import org.opencv.core.*;
 import org.opencv.videoio.*;
-
-import nu.pattern.OpenCV;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.core.definitions.CircularBuffer;
@@ -21,15 +20,73 @@ public class ImoImageTest {
     * @since 0.3.0
     */
     private CameraStreamerImo cameraStreamer;
+    final int cameraPort = 50202;
 
-    private final static Logger logger = Logger.getLogger(OpenCV.class.getName());
-    
     ImoImageTest() {
         nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
         try {
-            cameraStreamer = new CameraStreamerImo(-1, new int[] {1});
+            cameraStreamer = new CameraStreamerImo(cameraPort, new int[] {1});
         } catch (IOException e) {
         }
+    }
+
+    class ImageSaver {
+        Socket socket = null;
+        public ImageSaver() {
+            int tries = 0;
+            while (socket == null && tries < 10) {
+                System.out.println("ImageSaver: trying to connect to socket on port: " + cameraPort);
+                try {
+                    socket = new Socket("localhost", cameraPort);
+                } catch (IOException e) {
+                    tries++;
+                    try { Thread.sleep(2000); } catch (InterruptedException ee) { ; }
+                }
+            }
+
+            if (!socket.isConnected())
+                System.out.println("ImageSaver:  giving up on socket.");
+            else
+                System.out.println("ImageSaver: connected socket.");
+        }
+
+        public void run() {
+            if (!socket.isConnected()) {
+                System.out.println("ImageSaver is giving up on ImageSaver thread.");
+                return;
+            }
+
+           int savedCount = 0;
+           BufferedImage image = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
+           byte[] im_array = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+            while (savedCount < 20) {
+                System.out.println("ImageSaver: begin read: " + savedCount);
+                cameraStreamer.readBytes(socket);
+                try {
+                    cameraStreamer.bytesLock.lock();
+                    System.arraycopy(cameraStreamer.bytes, 0, im_array, 0, im_array.length);
+                } finally {
+                    cameraStreamer.bytesLock.unlock();
+                }
+                System.out.println("ImageSaver: begin write: " + savedCount);
+                File outputfile = new File(String.format("eye_%02d.jpg", savedCount));
+                try {
+                    ImageIO.write(image, "jpg", outputfile);
+                    System.out.println("Wrote file: " + outputfile.getAbsolutePath());
+                } catch (IOException e) {
+                    System.out.println("JovpQueueTest ImageSaver thread is having trouble saving images.");
+                    e.printStackTrace();
+                }
+                savedCount++;
+            }
+        }
+    }
+
+    /** steam camera to files */
+    @Test
+    public void saveImageFilesImo() {
+        ImageSaver i = new ImageSaver(); // write images to files
+        i.run();
     }
 
     /** 
@@ -87,6 +144,24 @@ public class ImoImageTest {
                     System.out.println("No Pupil found");
             } else
                 System.out.println("Error! Could not read frame");
+        }
+    }
+
+      /** 
+     * Call `processFrame` on a stream of images.
+     */
+    @Test
+    public void detectPupil_video() {
+
+        for (int i = 0 ; i < 30 ; i++) {
+            System.out.println("Request " + i);
+            try {
+                cameraStreamer.requestQueue.add(new CameraStreamer.Request(System.currentTimeMillis(), 1));
+                CameraStreamer.Response resp = cameraStreamer.responseQueue.poll();
+                System.out.println(resp);
+                Thread.sleep(300); 
+            } catch (InterruptedException e) { break; }
+            catch (Exception e) { ; }
         }
     }
 

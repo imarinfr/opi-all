@@ -25,9 +25,9 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public abstract class CameraStreamer extends Thread {
     /** Used to lock static bytes for processing in {@link readImageToBytes} */
-    public static final ReentrantLock bytesLock = new ReentrantLock();
+    public final ReentrantLock bytesLock = new ReentrantLock();
     /** a buffer that is filled by {@link readImageToBytes} */
-    public static byte []bytes = new byte[1];
+    public byte []bytes = new byte[1];
 
     /** Whether this streamer is connected to a client */
     public boolean connected;

@@ -69,55 +69,6 @@ public class CameraQueueTest {
         }
     }
 
-    class ImageSaver {
-        Socket socket = null;
-        CameraStreamer server = null;
-        int numImages;
-        public ImageSaver(CameraStreamer server, int numImages) {
-            this.server = server;
-            this.numImages = numImages;
-
-            int tries = 0;
-            while (socket == null && tries < 10)
-                try {
-                    socket = new Socket("localhost", cameraPort);
-                } catch (IOException e) {
-                    tries++;
-                    System.out.println("JovpQueueTest is waiting for eye camera socket on port: " + cameraPort);
-                    try { Thread.sleep(2000); } catch (InterruptedException ee) { ; }
-                }
-
-            if (tries >= 10)
-                System.out.println("JovpQueueTest is giving up on ImageSaver thread.");
-            else
-                run();
-        }
-
-        public void run() {
-            int savedCount = 0;
-            while (savedCount < numImages) {
-                server.readBytes(socket);
-                BufferedImage image = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
-                byte[] im_array = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
-                try {
-                    CameraStreamerImo.bytesLock.lock();
-                    System.arraycopy(CameraStreamerImo.bytes, 0, im_array, 0, im_array.length);
-                } finally {
-                    CameraStreamerImo.bytesLock.unlock();
-                }
-                File outputfile = new File(String.format("eye_%02d.jpg", savedCount));
-                try {
-                    ImageIO.write(image, "jpg", outputfile);
-                    System.out.println("Wrote file: " + outputfile.getAbsolutePath());
-                } catch (IOException e) {
-                    System.out.println("JovpQueueTest ImageSaver thread is having trouble saving images.");
-                    e.printStackTrace();
-                }
-                savedCount++;
-            }
-        }
-    }
-
     @Test
     public void sendAndReceive1() {
         nu.pattern.OpenCV.loadLocally();  // works on mac
@@ -138,21 +89,5 @@ public class CameraQueueTest {
 
         try { p.join(); } catch (InterruptedException ignored) { ; }
         try { c.join(); } catch (InterruptedException ignored) { ; }
-    }
-
-
-    @Test
-    public void imoSaveImages() {
-        nu.pattern.OpenCV.loadLocally();  // works on mac
-        CameraStreamer server = null;
-        try {
-            server = new CameraStreamerImo(cameraPort, new int[] {1});
-        } catch (IOException e) {
-            System.out.println("[sendAndReceive1]...Could not start camera");
-            e.printStackTrace();
-            return;
-        }
-
-        ImageSaver i = new ImageSaver(server, 100); // write images to files
     }
 }

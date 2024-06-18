@@ -352,6 +352,8 @@ public class OpiJovp extends OpiListener {
     // args[0] = port number
     // note opiJovp is `running` on a separate thread as a server
     public static void main(String args[]) {
+        nu.pattern.OpenCV.loadLocally();
+
         if (args.length != 1) {
             System.out.println("Usage: java -jar opiJovp.jar [port number]");
             System.exit(-1);

@@ -24,14 +24,7 @@ c:\\Users\\imo vifa\\.m2\\repository\\io\\github\\java-native\\jssc\\2.9.4\\jssc
 c:\\Users\\imo vifa\\.m2\\repository\\org\\scijava\\native-lib-loader\\2.3.6\\native-lib-loader-2.3.6.jar;\
 c:\\Users\\imo vifa\\.m2\\repository\\org\\slf4j\\slf4j-simple\\2.0.3\\slf4j-simple-2.0.3.jar;\
 c:\\Users\\imo vifa\\.m2\\repository\\org\\slf4j\\slf4j-api\\2.0.3\\slf4j-api-2.0.3.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\javacpp\\1.5.5\\javacpp-1.5.5.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\javacpp\\1.5.5\\javacpp-1.5.5-windows-x86_64.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\javacv\\1.5.5\\javacv-1.5.5.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\opencv\\4.5.1-1.5.5\\opencv-4.5.1-1.5.5.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\opencv\\4.5.1-1.5.5\\opencv-4.5.1-1.5.5-windows-x86_64.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\openblas-platform\\0.3.13-1.5.5\\openblas-platform-0.3.13-1.5.5.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\openblas\\0.3.13-1.5.5\\openblas-0.3.13-1.5.5.jar;\
-C:\\Users\\imo vifa\\.m2\\repository\\org\\bytedeco\\openblas\\0.3.13-1.5.5\\openblas-0.3.13-1.5.5-windows-x86_64.jar\
+C:\\Users\\imo vifa\\.m2\\repository\\org\\openpnp\\opencv\\4.9.0-0\\opencv-4.9.0-0.jar\
 "
 --module-path "C:\\Users\\imo vifa\\Desktop\\opi3\\javafx-sdk-22.0.1\\;C:\\Users\\imo vifa\\Desktop\\opi3\\javafx-sdk-22.0.1\\lib\\"
 --add-modules javafx.controls,javafx.fxml,javafx.swing
