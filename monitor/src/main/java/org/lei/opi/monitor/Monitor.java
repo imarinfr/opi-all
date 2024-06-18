@@ -11,13 +11,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.io.IOException;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.lang.reflect.Constructor;
 
 import javafx.application.Application;
@@ -493,7 +490,7 @@ public class Monitor extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("resources/Monitor.fxml"));
+            Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("Monitor.fxml"));
         
             Scene scene = new Scene(root, 800, 515);
 
