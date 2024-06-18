@@ -176,17 +176,13 @@ public class ImoVifa extends Jovp {
                     }
                 }
 
-System.out.println("camera socket established:");
                 BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
                 byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
                 boolean isRunning = true;
-System.out.println("about to loop:");
                 while (isRunning) {
                     try {
                         Thread.sleep(20);
-System.out.println("start to read bytes from camera socket: ");
                         int deviceNum = csImo.readBytes(socket, im_array);
-System.out.println("read device number from camera socket: " + deviceNum);
 
                         if (deviceNum == -1) {
                             Thread.sleep(1000);  // try again in a second
@@ -198,7 +194,7 @@ System.out.println("read device number from camera socket: " + deviceNum);
                         Image img = SwingFXUtils.toFXImage(im, null);
 
                         Platform.runLater(() -> {
-                            if (deviceNum == 0)                 // TODO need to allow for mono
+                            if (deviceNum == 1)                 // TODO need to allow for mono
                                 imageViewLeft.setImage(img);
                             else 
                                 imageViewRight.setImage(img);

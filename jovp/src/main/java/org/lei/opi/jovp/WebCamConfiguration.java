@@ -30,6 +30,7 @@ public class WebCamConfiguration {
      * @param port The port number on this machine that will serve images. Use -1 for no streaming.
      * @param srcDeviceLeft Device number of left eye camera (or only eye camera if just one). 
      * @param srcDeviceRight Device number of right eye camera (or -1 if there is no such device). 
+     * @param machine Machine name for which to start cameras.
     */
     public WebCamConfiguration(int port, int srcDeviceLeft, int srcDeviceRight, String machine) {
         this.port = port;
@@ -41,12 +42,12 @@ public class WebCamConfiguration {
 
         try {
             if (srcDeviceRight != -1) {
-                if (machine == "ImoVifa")
+                if (machine.toLowerCase().equals("imovifa")) {
                     cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft, srcDeviceRight});
-                else
+                } else
                     cameraStreamer = new CameraStreamerNone(port, new int[] {srcDeviceLeft, srcDeviceRight});
             } else {
-                if (machine == "ImoVifa")
+                if (machine.toLowerCase().equals("imovifa"))
                     cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft});
                 else
                     cameraStreamer = new CameraStreamerNone(port, new int[] {srcDeviceLeft});

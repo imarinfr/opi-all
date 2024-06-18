@@ -98,19 +98,23 @@ public class CameraStreamerImo extends CameraStreamer {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
      */
-    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) throws IOException {
-//System.out.println("Putting " + n + " bytes from camera " + i + " on socket.");
+    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) {
         int n = frame.mat().channels() * frame.mat().rows() * frame.mat().cols();
         if (n != bytes.length)
             bytes = new byte[n];
         frame.mat().get(0, 0, this.bytes);
 
-        socket.getOutputStream().write(deviceNumber);
-        socket.getOutputStream().write(n >> 24);
-        socket.getOutputStream().write((n >> 16) & 0xFF);
-        socket.getOutputStream().write((n >>  8) & 0xFF);
-        socket.getOutputStream().write( n        & 0xFF);
-        socket.getOutputStream().write(bytes);
+        try {
+             socket.getOutputStream().write(deviceNumber);
+             socket.getOutputStream().write(n >> 24);
+             socket.getOutputStream().write((n >> 16) & 0xFF);
+             socket.getOutputStream().write((n >>  8) & 0xFF);
+             socket.getOutputStream().write( n        & 0xFF);
+             socket.getOutputStream().write(bytes);
+        } catch (IOException e) {
+            System.out.println("Error writing eye image bytes to socket");
+            e.printStackTrace();
+        }
     }
 
     /**

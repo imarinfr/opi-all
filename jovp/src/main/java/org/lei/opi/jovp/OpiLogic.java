@@ -442,8 +442,8 @@ public class OpiLogic implements PsychoLogic {
             int oneTryTime = 50;  // 50 ms
             int totalTries = 5 * 1000 / oneTryTime / 2;  // 5 seconds
 
-System.out.println("Start time: " + startStimTimeStamp);
-System.out.println("End time: " + (buttonPressTimeStamp));
+//System.out.println("Start time: " + startStimTimeStamp);
+//System.out.println("End time: " + (buttonPressTimeStamp));
 //driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up

@@ -30,7 +30,7 @@ public class CircularBuffer<T> {
     private int n;
 
     /** Used to lock {@link buffer} for access */
-    public final ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     /**
      * @param supplier Supplier of objects to put in buffer (eg String::new or a -> new MyClass(a))
@@ -110,6 +110,8 @@ public class CircularBuffer<T> {
      * @param f Function to take an element and do something 
      */
     public void applyTail(Consumer<T> f) {
+        if (empty()) return;
+
         lock.lock();
         try {
             f.accept((T)buffer[tail]);
@@ -124,9 +126,13 @@ public class CircularBuffer<T> {
      * @param f Function to take an element and do something 
      */
     public void applyHead(Consumer<T> f) {
+        if (empty()) return;
         lock.lock();
         try {
             f.accept((T)buffer[head]);
+        } catch (Exception e) {
+            System.out.println("\t\t\tCircuarBuffer::applyHead Fails.");
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
@@ -142,6 +148,7 @@ public class CircularBuffer<T> {
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean getTailToHead(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
+        if (empty()) return false;
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {
@@ -166,6 +173,7 @@ public class CircularBuffer<T> {
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean getHeadToTail(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
+        if (empty()) return false;
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {
@@ -190,6 +198,7 @@ public class CircularBuffer<T> {
      * @param mutator Function to mutate element i of the buffer
      */
     public void findAndApplyTailToHead(Predicate<T> filter, Function<T, T> mutator) throws NoSuchElementException {
+        if (empty()) return;
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {
@@ -214,6 +223,7 @@ public class CircularBuffer<T> {
      * @param mutator Function to mutate element i of the buffer
      */
     public void findAndApplyHeadToTail(Predicate<T> filter, Function<T, T> mutator) throws NoSuchElementException {
+        if (empty()) return;
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {

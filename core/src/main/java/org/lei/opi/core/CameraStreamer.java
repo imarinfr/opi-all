@@ -13,7 +13,6 @@ import java.net.SocketTimeoutException;
 import java.util.ConcurrentModificationException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Create a thread that serves/streams raw images from one or more "webcams" on a TCP port.
@@ -24,9 +23,6 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date 5 June 2024 
  */
 public abstract class CameraStreamer extends Thread {
-    /** A working area for converting Mat to bytes */
-    private byte []bytes = new byte[1];
-
     /** Whether this streamer is connected to a client */
     public boolean connected;
 
@@ -194,18 +190,8 @@ public abstract class CameraStreamer extends Thread {
                     // And now send the frames on the socket
                 if (connected) {
                     for (int i = 0 ; i < this.deviceNumber.length; i++) {
-//BufferedImage bi = jc.convert(frame[i]);
-//System.out.println("bi type " + bi.getType());
-//System.out.println("bi width " + bi.getWidth());
-//System.out.println("bi height " + bi.getHeight());
                         final Integer dn = Integer.valueOf(deviceNumber[i]);
-                            frameBuffer[i].applyHead((FrameInfo f) -> {
-                                try {
-                                    writeBytes(socket, dn, f);
-                                } catch (IOException e) {
-                                    System.out.println("Error writing eye image bytes to socket");
-                                }
-                            });
+                        frameBuffer[i].applyHead((FrameInfo f) -> writeBytes(socket, dn, f));
                     }
                     Thread.sleep(50);
                 }
@@ -276,7 +262,7 @@ public abstract class CameraStreamer extends Thread {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamer.bytesLock.lock() before calling this.
      */
-    public abstract void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) throws IOException;
+    public abstract void writeBytes(Socket socket, int deviceNumber, FrameInfo frame);
 
     /**
      * Fill dst with the image incoming on socket.

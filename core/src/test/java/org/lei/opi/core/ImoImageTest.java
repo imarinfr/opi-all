@@ -114,11 +114,10 @@ public class ImoImageTest {
 
     /** 
      * Call `processFrame` on a stream of images.
-     * Can't get this to work..
-    @Test
      */
+    @Test
     public void detectPupil_vidImages() {
-        String fname = this.getClass().getClassLoader().getResource("org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
+        String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
         System.out.println("         Filename: " + fname);
         fname = fname.replace("00", "%02d");
         System.out.println("Sequence Filename: " + fname);
@@ -142,7 +141,7 @@ public class ImoImageTest {
         }
     }
 
-      /** 
+    /** 
      * Call `processFrame` on a stream of images.
      */
     @Test

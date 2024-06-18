@@ -35,9 +35,7 @@ public class CameraStreamerNone extends CameraStreamer {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
      */
-    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) throws IOException {
-        return;
-    }
+    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) { return; }
 
     // Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
     protected void getImageValues(Mat frame) { pupilInfo.valid = false; }
