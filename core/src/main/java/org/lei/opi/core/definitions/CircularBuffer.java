@@ -29,7 +29,7 @@ public class CircularBuffer<T> {
     /** Number of elements in array */
     private int n;
 
-    /** Used to lock {@link buffer} for update and reading */
+    /** Used to lock {@link buffer} for access */
     public final ReentrantLock lock = new ReentrantLock();
 
     /**
@@ -63,7 +63,9 @@ public class CircularBuffer<T> {
      * Remove the last element in the buffer and return it.
      * (Does not free the memory - leaves object there for reuse.)
      * @return First element of buffer.
-     */
+      
+      Worried that this returns o and not o.clone()
+
     public T pop() {
         if (empty()) return null;
 
@@ -78,10 +80,11 @@ public class CircularBuffer<T> {
         }
         return (T)o;
     }
+     */
 
     /**
-     * Apply {@link mutator} to the free end of the buffer (element {@link index}).
-     * @param mutator Function to mutate element the buffer (eg a -> b.copyTo(a))
+     * Apply {@link mutator} to the free end of the buffer (element "head + 1").
+     * @param mutator Function to mutate a buffer element (eg (T a) -> b.copyTo(a))
      */
     public void put(Consumer<T> mutator) {
         lock.lock();
@@ -226,6 +229,9 @@ public class CircularBuffer<T> {
         return;
     }
 
+    /**
+     * 
+     */
     public String toString() {
         lock.lock();
         try {

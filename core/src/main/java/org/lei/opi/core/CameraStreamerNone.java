@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.ConcurrentModificationException;
 
+import org.lei.opi.core.definitions.FrameInfo;
 import org.opencv.core.Mat;
 
 public class CameraStreamerNone extends CameraStreamer {
@@ -21,7 +22,7 @@ public class CameraStreamerNone extends CameraStreamer {
      * @param socket An open socket from which to read
      * @return Device number read. -1 for error
      */
-    public int readBytes(Socket socket) { return -1; }
+    public int readBytes(Socket socket, byte []dst) { return -1; }
 
     /**
      * Write static bytes array out on socket as 
@@ -34,7 +35,7 @@ public class CameraStreamerNone extends CameraStreamer {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
      */
-    public void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException {
+    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) throws IOException {
         return;
     }
 

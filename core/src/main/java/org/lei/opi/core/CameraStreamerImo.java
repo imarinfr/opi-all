@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 
+import org.lei.opi.core.definitions.FrameInfo;
 import org.opencv.core.*;
 //import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
@@ -19,6 +20,9 @@ public class CameraStreamerImo extends CameraStreamer {
     
     private static final int EYE_IMAGE_HEIGHT = 480;
     private static final int EYE_IMAGE_WIDTH = 640;
+
+    /** Working area for {@link writeBytes} */
+    private byte []bytes = new byte[EYE_IMAGE_HEIGHT * EYE_IMAGE_WIDTH * 3];
 
     /** Circular region for cropping out in {@link detectPupil} */
     //private static final Scalar WHITE = new Scalar(255, 255, 255);
@@ -55,7 +59,7 @@ public class CameraStreamerImo extends CameraStreamer {
      * @param socket An open socket from which to read
      * @return Device number read. -1 for error
      */
-    public int readBytes(Socket socket) {
+    public int readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException {
         int deviceNum = -1;
         try {
             deviceNum = (int)socket.getInputStream().read();
@@ -68,21 +72,17 @@ public class CameraStreamerImo extends CameraStreamer {
             int n4 = (int)socket.getInputStream().read();
             int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n4;
 
-            bytesLock.lock();
-
-            if (bytes.length != n)
-                bytes = new byte[n];
+            if (dst.length != n)
+                throw new IndexOutOfBoundsException("CameraStreamerImo readBytes needs a bigger destination.");
 
             int off = 0; // current start of buffer (offset)
             while (off < n) {
-                int readN = socket.getInputStream().read(bytes, off, n - off);
+                int readN = socket.getInputStream().read(dst, off, n - off);
                 off += readN;
             }
         } catch(IOException e) {
-            System.out.println("readImageToBytes: trouble reading socket");
+            System.out.println("CameraStreamerImo readBytes: trouble reading socket");
             e.printStackTrace();
-        } finally {
-            bytesLock.unlock();
         }
         return deviceNum;
     }
@@ -98,11 +98,13 @@ public class CameraStreamerImo extends CameraStreamer {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
      */
-    public void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException {
+    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) throws IOException {
 //System.out.println("Putting " + n + " bytes from camera " + i + " on socket.");
-        if (!bytesLock.isLocked())
-            throw new ConcurrentModificationException("Reading CameraStreamImo.bytes without locking it.");
-        int n = bytes.length;
+        int n = frame.mat().channels() * frame.mat().rows() * frame.mat().cols();
+        if (n != bytes.length)
+            bytes = new byte[n];
+        frame.mat().get(0, 0, this.bytes);
+
         socket.getOutputStream().write(deviceNumber);
         socket.getOutputStream().write(n >> 24);
         socket.getOutputStream().write((n >> 16) & 0xFF);

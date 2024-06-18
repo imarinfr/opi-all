@@ -24,10 +24,8 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date 5 June 2024 
  */
 public abstract class CameraStreamer extends Thread {
-    /** Used to lock static bytes for processing in {@link readImageToBytes} */
-    public final ReentrantLock bytesLock = new ReentrantLock();
-    /** a buffer that is filled by {@link readImageToBytes} */
-    public byte []bytes = new byte[1];
+    /** A working area for converting Mat to bytes */
+    private byte []bytes = new byte[1];
 
     /** Whether this streamer is connected to a client */
     public boolean connected;
@@ -201,20 +199,13 @@ public abstract class CameraStreamer extends Thread {
 //System.out.println("bi width " + bi.getWidth());
 //System.out.println("bi height " + bi.getHeight());
                         final Integer dn = Integer.valueOf(deviceNumber[i]);
-                        frameBuffer[i].applyHead((FrameInfo f) -> {
-                            int n = f.mat().channels() * f.mat().rows() * f.mat().cols();
-                            try {
-                                bytesLock.lock();
-                                if (n != bytes.length)
-                                    bytes = new byte[n];
-                                f.mat().get(0, 0, this.bytes);
-                                writeBytes(socket, dn);
-                            } catch (IOException e) {
-                                System.out.println("Error writing eye image bytes to socket");
-                            } finally {
-                                bytesLock.unlock();
-                            }
-                        });
+                            frameBuffer[i].applyHead((FrameInfo f) -> {
+                                try {
+                                    writeBytes(socket, dn, f);
+                                } catch (IOException e) {
+                                    System.out.println("Error writing eye image bytes to socket");
+                                }
+                            });
                     }
                     Thread.sleep(50);
                 }
@@ -277,25 +268,24 @@ public abstract class CameraStreamer extends Thread {
     }
             
     /**
-     * Write static bytes array out on socket as 
-     *       1 byte for device number
-     *       4 bytes for length of data, n
-     *       n bytes
+     * Write the most recent image (head of {@link frameBuffer}) out on socket.
      *
      * @param socket Open socket on which to write bytes
      * @param deviceNumber To write before bytes
+     * @param frame Frame to process.
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamer.bytesLock.lock() before calling this.
      */
-    public abstract void writeBytes(Socket socket, int deviceNumber) throws IOException, ConcurrentModificationException;
+    public abstract void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) throws IOException;
 
     /**
-     * Fill bytes with the image incoming on socket
+     * Fill dst with the image incoming on socket.
      *
      * @param socket An open socket from which to read
+     * @param dst Byte array to fill.
      * @return Device number read. -1 for error
      */
-    public abstract int readBytes(Socket socket);
+    public abstract int readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException;
 
     /**
      * Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.

@@ -185,7 +185,7 @@ System.out.println("about to loop:");
                     try {
                         Thread.sleep(20);
 System.out.println("start to read bytes from camera socket: ");
-                        int deviceNum = csImo.readBytes(socket);
+                        int deviceNum = csImo.readBytes(socket, im_array);
 System.out.println("read device number from camera socket: " + deviceNum);
 
                         if (deviceNum == -1) {
@@ -195,12 +195,6 @@ System.out.println("read device number from camera socket: " + deviceNum);
                             continue;
                         }
 
-                        try {
-                            csImo.bytesLock.lock();
-                            System.arraycopy(csImo.bytes, 0, im_array, 0, im_array.length);
-                        } finally {
-                            csImo.bytesLock.unlock();
-                        }
                         Image img = SwingFXUtils.toFXImage(im, null);
 
                         Platform.runLater(() -> {

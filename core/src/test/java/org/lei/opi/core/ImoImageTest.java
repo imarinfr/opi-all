@@ -61,13 +61,7 @@ public class ImoImageTest {
            byte[] im_array = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
             while (savedCount < 20) {
                 System.out.println("ImageSaver: begin read: " + savedCount);
-                cameraStreamer.readBytes(socket);
-                try {
-                    cameraStreamer.bytesLock.lock();
-                    System.arraycopy(cameraStreamer.bytes, 0, im_array, 0, im_array.length);
-                } finally {
-                    cameraStreamer.bytesLock.unlock();
-                }
+                cameraStreamer.readBytes(socket, im_array);
                 System.out.println("ImageSaver: begin write: " + savedCount);
                 File outputfile = new File(String.format("eye_%02d.jpg", savedCount));
                 try {
@@ -120,10 +114,11 @@ public class ImoImageTest {
 
     /** 
      * Call `processFrame` on a stream of images.
-     */
+     * Can't get this to work..
     @Test
+     */
     public void detectPupil_vidImages() {
-        String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
+        String fname = this.getClass().getClassLoader().getResource("org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
         System.out.println("         Filename: " + fname);
         fname = fname.replace("00", "%02d");
         System.out.println("Sequence Filename: " + fname);
