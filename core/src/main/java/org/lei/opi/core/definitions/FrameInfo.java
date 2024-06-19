@@ -28,15 +28,6 @@ public class FrameInfo {
     public long timeStamp() { return timeStamp; }
     public Mat mat() { return mat; }
 
-    /*
-        * @param otherTimeStamp A time stamp to which to compare this.timeStamp
-        * @param tol The tolerance for the comparison
-        * @return true if the difference between this.timeStamp and otherTimeStamp is less than tol, false otherwise
-        */
-    public boolean timeIsClose(long otherTimeStamp, int tol) {
-        return Math.abs(this.timeStamp - otherTimeStamp) < tol;
-    }
-
     /** 
      * @param dst Destination Mat to receive a copy of me
      * Copy myself into dst 
