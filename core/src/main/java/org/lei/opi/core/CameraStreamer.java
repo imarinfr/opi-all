@@ -174,7 +174,7 @@ public abstract class CameraStreamer extends Thread {
             this.deviceNumber.put(ViewEye.RIGHT, Integer.valueOf(deviceNumberRight));
 
         for (ViewEye e : this.deviceNumber.keySet()) 
-            frameBuffer.put(e, new CircularBuffer<FrameInfo>(FrameInfo::new, 20));
+            frameBuffer.put(e, new CircularBuffer<FrameInfo>(FrameInfo::new, 30));
 
         requestQueue = new LinkedBlockingDeque<Request>(10);
         responseQueue = new LinkedBlockingQueue<Response>(10);
@@ -182,6 +182,11 @@ public abstract class CameraStreamer extends Thread {
         this.start();
     }
         
+    /**
+     * Loop grabbing frames into the frameBuffer(s) and both
+     *  (1) Checking if there is a Request - if so service it with {@link processRequest}
+     *  (2) Send the frame over the TCP socket if there is a client connected
+     */
     @Override
     public void run() {
         HashMap <ViewEye, VideoCapture> grabber = new HashMap<ViewEye, VideoCapture>();
@@ -210,11 +215,12 @@ public abstract class CameraStreamer extends Thread {
                 for (ViewEye e : this.frameBuffer.keySet())
                     frameBuffer.get(e).put((FrameInfo f) -> f.grab(grabber.get(e)));
 
+                    // If there is a Request pending, process it
                 Request request = requestQueue.poll();
                 if (request != null)
                     processRequest(request, frameBuffer.get(request.eye));
 
-                    // And now send the frames on the socket
+                    // And now send most recent frames on the socket if there is a client
                 if (connected) {
                     for (ViewEye e : this.frameBuffer.keySet())
                         frameBuffer.get(e).applyHead((FrameInfo f) -> writeBytes(socket, e, f));
