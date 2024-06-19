@@ -1,16 +1,18 @@
 package org.lei.opi.core;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.lei.opi.core.definitions.CircularBuffer;
 import org.lei.opi.core.definitions.FrameInfo;
 import org.opencv.core.Mat;
 import org.opencv.videoio.VideoCapture;
+
+import es.optocom.jovp.definitions.ViewEye;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.ConcurrentModificationException;
+import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -30,20 +32,20 @@ public abstract class CameraStreamer extends Thread {
     private FrameInfo workingFrameInfo = new FrameInfo();
 
     /** A buffer of most recent frames grabbed for each device */
-    CircularBuffer<FrameInfo> []frameBuffer; 
+    private final HashMap<ViewEye, CircularBuffer<FrameInfo>> frameBuffer = new HashMap<ViewEye, CircularBuffer<FrameInfo>>(); 
 
     /** The data of an incoming request to the camera */
     static public class Request {
         long timeStamp;           // some timestamp of the request (used to match responses, perhaps)
-        int deviceNumber;         // device number for which to get the response
-        int numberOfTries;         // The number of times this request has been attempted to be completed
+        ViewEye eye;              // eye for which to get the response
+        int numberOfTries;        // The number of times this request has been attempted to be completed
 
         /** The maximum number of times/frames to try and find pupil to satisfy request */
         static final int MAX_TRIES_FOR_REQUEST = 10;
 
-        public Request(long timeStamp, int deviceNumber) {
+        public Request(long timeStamp, ViewEye eye) {
             this.timeStamp = timeStamp;
-            this.deviceNumber = deviceNumber;
+            this.eye = eye;
             this.numberOfTries = 0;
         }
         public boolean incTries() { 
@@ -73,8 +75,10 @@ public abstract class CameraStreamer extends Thread {
     /** Queue of results from image processing */
     public LinkedBlockingQueue<Response> responseQueue;
 
-    /** The device numbers of the cameras to stream on the machine on which this is running. */
-    private int []deviceNumber; 
+    /** The device numbers of the one or two cameras to stream on the machine on which this is running. 
+     * If ony one camera, then just use "Left".
+    */
+    private final HashMap<ViewEye, Integer> deviceNumber = new HashMap<ViewEye, Integer>(); 
 
     /** The port number on this machine that will serve images */
     private int port; 
@@ -129,35 +133,43 @@ public abstract class CameraStreamer extends Thread {
             return "No results yet";
     }
 
+    /** Accesor for buffers */
+    public CircularBuffer<FrameInfo> getBuffer(ViewEye eye) { return frameBuffer.get(eye);} 
+
     /** Junk instance just to allow calling of readBytes. And testing... */
     public CameraStreamer() { ; }
 
     /**
      * Create a CameraStreamer that streams images from a camera on the local machine and sends them over UDP
      * @param port The port number on this machine that will serve images 
-     * @param deviceNumber  Camera number on the local machine running the CameraStreamer
+     * @param deviceNumberLeft Camera number on the local machine running the CameraStreamer for left eye (or just one camera)
+     * @param deviceNumberRight Camera number on the local machine running the CameraStreamer for right eye (could be -1 for just one camera)
      * @throws IOException
      */
-    public CameraStreamer(int port, int []deviceNumber) throws IOException {
+    public CameraStreamer(int port, int deviceNumberLeft, int deviceNumberRight) throws IOException {
         this.port = port;
-        this.deviceNumber = deviceNumber;
+
+        if (deviceNumberLeft > -1)
+            this.deviceNumber.put(ViewEye.LEFT, Integer.valueOf(deviceNumberLeft));
+        if (deviceNumberRight > -1)
+            this.deviceNumber.put(ViewEye.RIGHT, Integer.valueOf(deviceNumberRight));
+
+        for (ViewEye e : this.deviceNumber.keySet()) 
+            frameBuffer.put(e, new CircularBuffer<FrameInfo>(FrameInfo::new, 20));
+
         requestQueue = new LinkedBlockingDeque<Request>(10);
         responseQueue = new LinkedBlockingQueue<Response>(10);
-
-        frameBuffer = new CircularBuffer[deviceNumber.length];
-        for (int i = 0 ; i < deviceNumber.length; i++)
-            frameBuffer[i] = new CircularBuffer<FrameInfo>(FrameInfo::new, 20);
 
         this.start();
     }
         
     @Override
     public void run() {
-        VideoCapture []grabber = new VideoCapture[this.deviceNumber.length];
-        for (int i = 0 ; i < this.deviceNumber.length; i++) {
-            grabber[i] = new VideoCapture(this.deviceNumber[i]);
-            if (!grabber[i].isOpened()) {
-                System.out.println("Cannot open camera device " + this.deviceNumber[i]);
+        HashMap <ViewEye, VideoCapture> grabber = new HashMap<ViewEye, VideoCapture>();
+        for (ViewEye e : this.deviceNumber.keySet()) {
+            grabber.put(e, new VideoCapture((int)deviceNumber.get(e)));
+            if (!grabber.get(e).isOpened()) {
+                System.out.println(String.format("Cannot open camera %s for eye %s", deviceNumber.get(e), e));
                 this.connected = false;
                 return;
             }
@@ -176,23 +188,17 @@ public abstract class CameraStreamer extends Thread {
                     } catch (SocketTimeoutException e) { ; }
 
                     // Try and grab each device as close as possible in time
-                for (int i = 0 ; i < this.deviceNumber.length; i++) {
-                    final Integer ii = Integer.valueOf(i);
-                    frameBuffer[i].put((FrameInfo f) -> f.grab(grabber[ii]));
-                }
+                for (ViewEye e : this.frameBuffer.keySet())
+                    frameBuffer.get(e).put((FrameInfo f) -> f.grab(grabber.get(e)));
 
                 Request request = requestQueue.poll();
-                if (request != null) {
-                    int i = ArrayUtils.indexOf(deviceNumber, request.deviceNumber);
-                    processRequest(request, frameBuffer[i]);
-                }
+                if (request != null)
+                    processRequest(request, frameBuffer.get(request.eye));
 
                     // And now send the frames on the socket
                 if (connected) {
-                    for (int i = 0 ; i < this.deviceNumber.length; i++) {
-                        final Integer dn = Integer.valueOf(deviceNumber[i]);
-                        frameBuffer[i].applyHead((FrameInfo f) -> writeBytes(socket, dn, f));
-                    }
+                    for (ViewEye e : this.frameBuffer.keySet())
+                        frameBuffer.get(e).applyHead((FrameInfo f) -> writeBytes(socket, e, f));
                     Thread.sleep(50);
                 }
             }
@@ -204,8 +210,8 @@ public abstract class CameraStreamer extends Thread {
         }
 
         try {
-            for (int i = 0 ; i < this.deviceNumber.length; i++)
-                grabber[i].release();
+            for (ViewEye e : grabber.keySet())
+                grabber.get(e).release();
         } catch (Exception e) { ; }
     }
 
@@ -257,12 +263,12 @@ public abstract class CameraStreamer extends Thread {
      * Write the most recent image (head of {@link frameBuffer}) out on socket.
      *
      * @param socket Open socket on which to write bytes
-     * @param deviceNumber To write before bytes
+     * @param eye Eye to write before bytes
      * @param frame Frame to process.
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamer.bytesLock.lock() before calling this.
      */
-    public abstract void writeBytes(Socket socket, int deviceNumber, FrameInfo frame);
+    public abstract void writeBytes(Socket socket, ViewEye eye, FrameInfo frame);
 
     /**
      * Fill dst with the image incoming on socket.
@@ -271,7 +277,7 @@ public abstract class CameraStreamer extends Thread {
      * @param dst Byte array to fill.
      * @return Device number read. -1 for error
      */
-    public abstract int readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException;
+    public abstract ViewEye readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException;
 
     /**
      * Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.

@@ -11,6 +11,8 @@ import javax.imageio.ImageIO;
 import org.opencv.core.*;
 import org.opencv.videoio.*;
 
+import es.optocom.jovp.definitions.ViewEye;
+
 import org.junit.jupiter.api.Test;
 import org.lei.opi.core.definitions.CircularBuffer;
 import org.lei.opi.core.definitions.FrameInfo;
@@ -25,7 +27,7 @@ public class ImoImageTest {
     ImoImageTest() {
         nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
         try {
-            cameraStreamer = new CameraStreamerImo(cameraPort, new int[] {1});
+            cameraStreamer = new CameraStreamerImo(cameraPort, 0, -1);
         } catch (IOException e) {
         }
     }
@@ -150,7 +152,7 @@ public class ImoImageTest {
         for (int i = 0 ; i < 30 ; i++) {
             System.out.println("Request " + i);
             try {
-                cameraStreamer.requestQueue.add(new CameraStreamer.Request(System.currentTimeMillis(), 1));
+                cameraStreamer.requestQueue.add(new CameraStreamer.Request(System.currentTimeMillis(), ViewEye.LEFT));
                 CameraStreamer.Response resp = cameraStreamer.responseQueue.poll();
                 System.out.println(resp);
                 Thread.sleep(300); 
@@ -161,8 +163,8 @@ public class ImoImageTest {
 
     @Test
     public void circular_buffer_test() throws IOException {
-        CameraStreamerImo cameraStreamer = new CameraStreamerImo(-1, new int[] {1});
-        CircularBuffer<FrameInfo> buffer = cameraStreamer.frameBuffer[0];
+        CameraStreamerImo cameraStreamer = new CameraStreamerImo(-1, 0, -1);
+        CircularBuffer<FrameInfo> buffer = cameraStreamer.getBuffer(ViewEye.LEFT);
 
         FrameInfo workingFrameInfo = new FrameInfo();
 

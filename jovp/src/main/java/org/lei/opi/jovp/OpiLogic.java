@@ -142,9 +142,9 @@ public class OpiLogic implements PsychoLogic {
 
         CameraStreamer.Request req;
         if (eye != ViewEye.RIGHT) // use left for BOTH eyes
-            req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceLeft);
+            req = new CameraStreamer.Request(timestamp, ViewEye.LEFT);
         else 
-            req = new CameraStreamer.Request(timestamp, driver.getConfiguration().webcam().srcDeviceRight);
+            req = new CameraStreamer.Request(timestamp, ViewEye.RIGHT);
 
         try {
             driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);

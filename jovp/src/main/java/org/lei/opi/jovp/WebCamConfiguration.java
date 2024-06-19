@@ -43,14 +43,14 @@ public class WebCamConfiguration {
         try {
             if (srcDeviceRight != -1) {
                 if (machine.toLowerCase().equals("imovifa")) {
-                    cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft, srcDeviceRight});
+                    cameraStreamer = new CameraStreamerImo(port, srcDeviceLeft, srcDeviceRight);
                 } else
-                    cameraStreamer = new CameraStreamerNone(port, new int[] {srcDeviceLeft, srcDeviceRight});
+                    cameraStreamer = new CameraStreamerNone(port, srcDeviceLeft, srcDeviceRight);
             } else {
                 if (machine.toLowerCase().equals("imovifa"))
-                    cameraStreamer = new CameraStreamerImo(port, new int[] {srcDeviceLeft});
+                    cameraStreamer = new CameraStreamerImo(port, srcDeviceLeft, -1);
                 else
-                    cameraStreamer = new CameraStreamerNone(port, new int[] {srcDeviceLeft});
+                    cameraStreamer = new CameraStreamerNone(port, srcDeviceLeft, -1);
             }
         } catch(IOException e) {
             System.out.println("Could not start eye tracking cameras in OpiJovp.");

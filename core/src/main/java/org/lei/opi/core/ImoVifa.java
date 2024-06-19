@@ -7,6 +7,7 @@ import java.util.HashMap;
 import org.lei.opi.core.definitions.Packet;
 import org.lei.opi.core.definitions.ReturnMsg;
 
+import es.optocom.jovp.definitions.ViewEye;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -182,9 +183,9 @@ public class ImoVifa extends Jovp {
                 while (isRunning) {
                     try {
                         Thread.sleep(20);
-                        int deviceNum = csImo.readBytes(socket, im_array);
+                        ViewEye eye = csImo.readBytes(socket, im_array);
 
-                        if (deviceNum == -1) {
+                        if (eye == ViewEye.NONE) {
                             Thread.sleep(1000);  // try again in a second
                             //isRunning = false;
                             //break;
@@ -194,7 +195,7 @@ public class ImoVifa extends Jovp {
                         Image img = SwingFXUtils.toFXImage(im, null);
 
                         Platform.runLater(() -> {
-                            if (deviceNum == 1)                 // TODO need to allow for mono
+                            if (eye == ViewEye.LEFT)                 // TODO need to allow for mono
                                 imageViewLeft.setImage(img);
                             else 
                                 imageViewRight.setImage(img);

@@ -10,6 +10,8 @@ import org.opencv.core.*;
 //import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.*;
 
+import es.optocom.jovp.definitions.ViewEye;
+
 
 /*
  * Contains pupil detection code based on Csharp code from Mitsuko Yoshida 16 March 2023.
@@ -48,8 +50,8 @@ public class CameraStreamerImo extends CameraStreamer {
     /** Weak instance just to allow calling of readBytes. Why not make it static? */
     public CameraStreamerImo() { ; }
 
-    public CameraStreamerImo(int port, int []deviceNumber) throws IOException {
-        super(port, deviceNumber);
+    public CameraStreamerImo(int port, int deviceNumberLeft, int deviceNumberRight) throws IOException {
+        super(port, deviceNumberLeft, deviceNumberRight);
         pupilInfo = new PupilInfo(EYE_IMAGE_WIDTH, EYE_IMAGE_HEIGHT);
         //Imgproc.circle(circleMask, new Point(EYE_IMAGE_WIDTH / 2, EYE_IMAGE_HEIGHT / 2), MASK_RADIUS, WHITE, -1);
     }
@@ -57,14 +59,14 @@ public class CameraStreamerImo extends CameraStreamer {
     /**
      * Fill bytes with the image on socket. Assumes it has been written with writeBytes
      * @param socket An open socket from which to read
-     * @return Device number read. -1 for error
+     * @return Eye read (NONE for error)
      */
-    public int readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException {
-        int deviceNum = -1;
+    public ViewEye readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException {
+        ViewEye eye = ViewEye.NONE;
         try {
-            deviceNum = (int)socket.getInputStream().read();
-            if (deviceNum < 0)
-                return -1;
+            int eyeCode = (int)socket.getInputStream().read();
+            if (eyeCode < 0)
+                return eye;
 
             int n1 = (int)socket.getInputStream().read();
             int n2 = (int)socket.getInputStream().read();
@@ -84,7 +86,7 @@ public class CameraStreamerImo extends CameraStreamer {
             System.out.println("CameraStreamerImo readBytes: trouble reading socket");
             e.printStackTrace();
         }
-        return deviceNum;
+        return eye;
     }
     
     /**
@@ -98,14 +100,14 @@ public class CameraStreamerImo extends CameraStreamer {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
      */
-    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) {
+    public void writeBytes(Socket socket, ViewEye eye, FrameInfo frame) {
         int n = frame.mat().channels() * frame.mat().rows() * frame.mat().cols();
         if (n != bytes.length)
             bytes = new byte[n];
         frame.mat().get(0, 0, this.bytes);
 
         try {
-             socket.getOutputStream().write(deviceNumber);
+             socket.getOutputStream().write(eye == ViewEye.LEFT ? 0 : 1);
              socket.getOutputStream().write(n >> 24);
              socket.getOutputStream().write((n >> 16) & 0xFF);
              socket.getOutputStream().write((n >>  8) & 0xFF);

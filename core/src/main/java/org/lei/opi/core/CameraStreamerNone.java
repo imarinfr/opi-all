@@ -7,13 +7,15 @@ import java.util.ConcurrentModificationException;
 import org.lei.opi.core.definitions.FrameInfo;
 import org.opencv.core.Mat;
 
+import es.optocom.jovp.definitions.ViewEye;
+
 public class CameraStreamerNone extends CameraStreamer {
     
     /** Weak instance just to allow calling of readBytes. Why not make it static? */
     public CameraStreamerNone() { ; }
 
-    public CameraStreamerNone(int port, int []deviceNumber) throws IOException {
-        super(port, deviceNumber);
+    public CameraStreamerNone(int port, int deviceNumberLeft, int deviceNumberRight) throws IOException {
+        super(port, deviceNumberLeft, deviceNumberRight);
         pupilInfo = new PupilInfo(0, 0);
     }
 
@@ -22,7 +24,7 @@ public class CameraStreamerNone extends CameraStreamer {
      * @param socket An open socket from which to read
      * @return Device number read. -1 for error
      */
-    public int readBytes(Socket socket, byte []dst) { return -1; }
+    public ViewEye readBytes(Socket socket, byte []dst) { return ViewEye.NONE; }
 
     /**
      * Write static bytes array out on socket as 
@@ -35,7 +37,7 @@ public class CameraStreamerNone extends CameraStreamer {
      * @throws IOException
      * @throws ConcurrentModificationException You should CameraStreamerImo.bytesLock.lock() before calling this.
      */
-    public void writeBytes(Socket socket, int deviceNumber, FrameInfo frame) { return; }
+    public void writeBytes(Socket socket, ViewEye eye, FrameInfo frame) { return; }
 
     // Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
     protected void getImageValues(Mat frame) { pupilInfo.valid = false; }
