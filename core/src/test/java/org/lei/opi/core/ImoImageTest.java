@@ -27,7 +27,7 @@ public class ImoImageTest {
     ImoImageTest() {
         nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
         try {
-            cameraStreamer = new CameraStreamerImo(cameraPort, 0, -1);
+            cameraStreamer = new CameraStreamerImo(cameraPort, 1, -1);
         } catch (IOException e) {
         }
     }
@@ -116,10 +116,11 @@ public class ImoImageTest {
 
     /** 
      * Call `processFrame` on a stream of images.
-     */
+    Does not work
     @Test
+     */
     public void detectPupil_vidImages() {
-        String fname = this.getClass().getResource("/org/lei/opi/core/ImoVifa/eye_00.jpg").toString();
+        String fname = "/org/lei/opi/core/ImoVifa/eye_%02d.jpg";
         System.out.println("         Filename: " + fname);
         fname = fname.replace("00", "%02d");
         System.out.println("Sequence Filename: " + fname);
