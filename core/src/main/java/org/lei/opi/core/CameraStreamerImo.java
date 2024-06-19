@@ -19,7 +19,8 @@ import es.optocom.jovp.definitions.ViewEye;
  */
 
 public class CameraStreamerImo extends CameraStreamer {
-    
+    private static final int CODE_LEFT = 0;
+    private static final int CODE_RIGHT = 1;
     private static final int EYE_IMAGE_HEIGHT = 480;
     private static final int EYE_IMAGE_WIDTH = 640;
 
@@ -67,6 +68,7 @@ public class CameraStreamerImo extends CameraStreamer {
             int eyeCode = (int)socket.getInputStream().read();
             if (eyeCode < 0)
                 return eye;
+            eye = eyeCode == CODE_LEFT ? ViewEye.LEFT : ViewEye.RIGHT;
 
             int n1 = (int)socket.getInputStream().read();
             int n2 = (int)socket.getInputStream().read();
@@ -107,7 +109,7 @@ public class CameraStreamerImo extends CameraStreamer {
         frame.mat().get(0, 0, this.bytes);
 
         try {
-             socket.getOutputStream().write(eye == ViewEye.LEFT ? 0 : 1);
+             socket.getOutputStream().write(eye == ViewEye.LEFT ? CODE_LEFT : CODE_RIGHT);
              socket.getOutputStream().write(n >> 24);
              socket.getOutputStream().write((n >> 16) & 0xFF);
              socket.getOutputStream().write((n >>  8) & 0xFF);
