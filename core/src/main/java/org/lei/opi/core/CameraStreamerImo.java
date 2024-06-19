@@ -133,7 +133,7 @@ public class CameraStreamerImo extends CameraStreamer {
     }
 
      /* ----------------------------------------------------------------------
-      * All of the code below is a translation of Csharp code from Mitsuko Yoshida 16 March 2023.
+      * All of the code below is a translation of Csharp code supplied by Mitsuko Yoshida 16 March 2023.
       * ----------------------------------------------------------------------
       */
 
@@ -251,16 +251,20 @@ public class CameraStreamerImo extends CameraStreamer {
      * @param y The row along which to read the pixel values
      * @param from The start column from which to read the pixel values
      * @param to The end column to which to read the pixel values
-     * @return The average pixel value in the range of `from` to `to` along row `y` in the Mat `srcMat`
+     * @return The average pixel value in the range of `from` to `to` along row `y` in the Mat `srcMat`. If we go out of image, return -1.
      */
     private int getColorValue(Mat srcMat, int y, int from, int to) {
         //if (srcMat.type() != CvType.CV_8UC1)
         //    throw new IllegalArgumentException("getColorValue: srcMat must be of type CV_8UC1");
 
         int pixelvalue = 0;
-        for (int i = from; i < to; i++)
-            pixelvalue += srcMat.get(y, i)[0];
-        pixelvalue = pixelvalue / (to - from);
+        try {
+            for (int i = from; i < to; i++)
+                pixelvalue += srcMat.get(y, i)[0];
+            pixelvalue = pixelvalue / (to - from);
+        } catch (Exception e) {
+            return -1;
+        }
 
         return pixelvalue;
     }
@@ -342,285 +346,5 @@ public class CameraStreamerImo extends CameraStreamer {
                 }
             }
         }
-            
-            // release memory
     }
-
-    /* 
-    private static final Scalar BLUE = new Scalar(0, 0, 255);
-
-        // The Median is used over 5 items in a list to avoid mislead
-    private MedianList centerXMedian  = new MedianList(5);
-    private MedianList centerYMedian  = new MedianList(5);
-    private MedianList pupilDiameterMedian = new MedianList(5);
-    private MedianList brightCenterXMedian = new MedianList(5);
-    private MedianList brightCenterYMedian = new MedianList(5);
-
-    // ------ gaze tracking values
-    private int frameCount = -4; // Throw away 4 frames when pupil is not detected (for blinking)
-    private boolean isMeasureStart = false;
-    private int preValidFrameCount = 0;
-    private int validFrameCount = 0;
-    private boolean MeasureStart = false;
-
-        // Output values
-    private double gaze_X_deg = 0.0;
-    private double gaze_Y_deg = 0.0;
-    private double pupilWidthHeight = 0.0;
-        // Calibration values
-    private boolean m_IsValidInitialOffset = false;
-    private Point ptStOffset = new Point(0, 0);
-    private double ptStOffsetX = 0.0;
-    private double ptStOffsetY = 0.0;
-    private int offsetListPos = 0;
-    private int offsetListN = 15;
-    private int listN = 40;
-    private ArrayList<Double> offsetListX = new ArrayList<Double>(listN);
-    private ArrayList<Double> offsetListY = new ArrayList<Double>(listN);
-    private ArrayList<Double> centerListX = new ArrayList<Double>(listN);
-    private ArrayList<Double> centerListY = new ArrayList<Double>(listN);
-    private ArrayList<Double> brightCenterListX = new ArrayList<Double>(listN);
-    private ArrayList<Double> brightCenterListY = new ArrayList<Double>(listN);
-    private ArrayList<Double> initOffsetListX = new ArrayList<Double>(listN);
-    private ArrayList<Double> initOffsetListY = new ArrayList<Double>(listN);
-    */
-
-
-    /**
-     * Find pupil (x, y) and diameter
-     * @param frame
-     * @return
-    public void processFrameWithTracking(Mat inputFrame) {
-        Mat srcFrame = new Mat(inputFrame.size(), inputFrame.type());
-        Mat outFrame = new Mat(inputFrame.size(), CvType.CV_8UC1);
-
-        int brightPointThreshold = 230;
-
-            // Create a circular mask for rough trimming
-        int CenterX = inputFrame.width() / 2;
-        int CenterY = inputFrame.height() / 2;
-
-            // Create copies of the raw frames for each process
-        inputFrame.copyTo(srcFrame, circleMask);
-        inputFrame.copyTo(outFrame);
-
-        Imgproc.GaussianBlur(srcFrame, srcFrame, new Size(0, 0), 1.8);
-
-        Mat tempFrame = new Mat();
-        srcFrame.copyTo(tempFrame);
-
-            // Set ROI with the previous pupilRect size
-            // If first time, or not detected in the previous frame, set ROI to the whole frame
-        Mat ImageROI = new Mat(srcFrame, pupilRect);
-        Size ImageROISize = ImageROI.size();
-
-            // Detection of the pupil
-        detectPupil(
-
-            // reset ROIs   aht - WHY?
-        srcFrame = new Mat();
-        tempFrame.copyTo(srcFrame);
-
-        if (pupilInfo.valid) {
-                // detect the light spots (x4)
-            pupilInfo.centerX = (int)centerXMedian.getMedian(pupilInfo.centerX);
-            pupilInfo.centerY = (int)centerYMedian.getMedian(pupilInfo.centerY);
-            pupilInfo.diameter = (int)pupilDiameterMedian.getMedian(pupilInfo.diameter);
-
-            int r = (int)(pupilInfo.diameter * 176.0 / 14.0 / 2.0);
-
-                // Create a new copy of the raw frame
-            srcFrame = new Mat();
-            tempFrame.copyTo(srcFrame);
-
-                // Create new ROI with new pupilRect.
-            srcFrame = new Mat(srcFrame, pupilRect);
-            var srcSize = srcFrame.size();
-
-            // Use MEDIAN smoothing (to avoid a too smooth edge due to gaussian blur)
-            Imgproc.medianBlur(srcFrame, srcFrame, 5);
-            // Binarize the image to get the bright spots
-            Imgproc.threshold(srcFrame, srcFrame, brightPointThreshold, 255, Imgproc.THRESH_BINARY_INV);
-
-                // Find the bright spots
-            ArrayList<Point> brightPoints = new ArrayList<Point>();
-            detectBrightPoint(srcFrame, brightPoints, pupilRect);
-
-                // reset ROIs
-            inputFrame.copyTo(srcFrame);
-
-                // TODO this needs tidying up as pass by ref probably wont work or is memory wasteful
-            Point topRight = new Point();
-            Point topLeft = new Point();
-            Point bottomRight = new Point();
-            Point bottomLeft = new Point();
-                // Select the 4 bright spots in the detected ones
-            selectBrightPointFour(brightPoints, 
-                new Point(pupilInfo.centerX, pupilInfo.centerY), 
-                topRight, topLeft, bottomRight, bottomLeft, pupilRect);
-
-            // If the bright spots are detected, use the 2 bottom ones to detect the center of the 4 (because same distance between the spots)
-            boolean existBrightPoint = true;
-            if ((bottomRight.x == 0.0 && bottomRight.y == 0.0) || (bottomLeft.x == 0.0 && bottomLeft.y == 0.0))
-                existBrightPoint = false;
-
-            // gaze tracking starts
-            if (existBrightPoint) {
-                double brightPointDistance = Math.sqrt((bottomLeft.x - bottomRight.x) * (bottomLeft.x - bottomRight.x) + (bottomLeft.y - bottomRight.y) * (bottomLeft.y - bottomRight.y));
-                Point brightPointCenter = new Point((bottomLeft.x + bottomRight.x) / 2, (bottomLeft.y + bottomRight.y) / 2 - brightPointDistance / 2);
-                brightPointCenter.x = brightCenterXMedian.getMedian(brightPointCenter.x + pupilRect.tl().x);
-                brightPointCenter.y = brightCenterYMedian.getMedian(brightPointCenter.y + pupilRect.tl().y);
-
-                //Adjust lens deviation
-                brightPointCenter.x = 1.1 * brightPointCenter.x - 0.1 * 640 / 2;
-                brightPointCenter.y = 1.1 * brightPointCenter.y - 0.1 * 480 / 2;
-                Imgproc.circle(outFrame, brightPointCenter, 5, new Scalar(200, 200, 200), 1); // 輝点中心
-                Imgproc.putText(outFrame, String.format("Bright Points Center (pxl): (%0.2f, %0.2f)", brightPointCenter.x, brightPointCenter.y), 
-                    new Point(150, 400), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, BLUE);
-                Imgproc.putText(outFrame, String.format("PupilCenter (pxl): (%0.2f, %0.2f)", 
-                    pupilInfo.centerX, pupilInfo.centerY), 
-                    new Point(150, 420), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, BLUE);
-
-                if (m_IsValidInitialOffset) {
-                    gaze_X_deg = -((brightPointCenter.x - pupilInfo.centerX - ptStOffsetX) * 1.230);
-                    gaze_Y_deg = ((brightPointCenter.y - pupilInfo.centerY - ptStOffsetY) * 1.230);
-                    Imgproc.putText(outFrame, String.format("Gaze (deg): (%0.2f, %0.2f)", gaze_X_deg, gaze_Y_deg), 
-                        new Point(150, 440), Imgproc.FONT_HERSHEY_SIMPLEX, 0.7, BLUE);
-                }
-
-                offsetListX.set(offsetListPos,  brightPointCenter.x - pupilInfo.centerX);
-                offsetListY.set(offsetListPos,  brightPointCenter.y - pupilInfo.centerY);
-                offsetListPos = (offsetListPos + 1) % offsetListN;
-
-                if (MeasureStart == true)
-                {
-                    isMeasureStart = true;
-                    m_IsValidInitialOffset = false;
-                    MeasureStart = false;
-                }
-                if (!m_IsValidInitialOffset && isMeasureStart)
-                {
-                    if (frameCount - preValidFrameCount == 1)
-                    {
-                        int n = validFrameCount % listN;
-                        centerListX.set(n, (double)pupilInfo.centerX);
-                        centerListY.set(n, (double)pupilInfo.centerY);
-                        brightCenterListX.set(n, brightPointCenter.x);
-                        brightCenterListY.set(n, brightPointCenter.y);
-                        validFrameCount++;
-
-                        if (validFrameCount >= listN) {
-                            for (int i = 0; i < listN; i++)
-                            {
-                                initOffsetListX.set(i, brightCenterListX.get(i) - centerListX.get(i));
-                                initOffsetListY.set(i, brightCenterListY.get(i)- centerListY.get(i));
-                            }
-                            double averageInitOffsetX = initOffsetListX.stream().mapToDouble(a -> a).average().getAsDouble();
-                            double averageInitOffsetY = initOffsetListY.stream().mapToDouble(a -> a).average().getAsDouble();
-
-                            double varianceInitOffsetX = 0.0;
-                            double varianceInitOffsetY = 0.0;
-                            for (int i = 0; i < listN; i++) {
-                                varianceInitOffsetX += (initOffsetListX.get(i) - averageInitOffsetX) * (initOffsetListX.get(i) - averageInitOffsetX);
-                                varianceInitOffsetY += (initOffsetListY.get(i) - averageInitOffsetY) * (initOffsetListY.get(i) - averageInitOffsetY);
-                            }
-                            varianceInitOffsetX /= listN;
-                            varianceInitOffsetY /= listN;
-
-                            if (varianceInitOffsetX + varianceInitOffsetY < 0.64) {
-                                ptStOffsetX = averageInitOffsetX;
-                                ptStOffsetY = averageInitOffsetY;
-
-                                m_IsValidInitialOffset = true;
-                            }
-                        }
-                        if (validFrameCount >= 100)
-                            isMeasureStart = false;
-                    } else {
-                        validFrameCount = 0;
-                    }
-                    preValidFrameCount = frameCount;
-                }
-            } else {
-                pupilWidthHeight = 0.0;
-                gaze_X_deg = 0;
-                gaze_Y_deg = 0;
-                pupilRect = new Rect(0, 0, inputFrame.width(), inputFrame.height());
-            }
-
-            pupilWidthHeight = (int)pupilInfo.diameter;
-        } else {
-            pupilWidthHeight = 0.0;
-            gaze_X_deg = 0;
-            gaze_Y_deg = 0;
-            pupilRect = new Rect(0, 0, inputFrame.width(), inputFrame.height());
-        }
-        return;
-    }
-
-    private void detectBrightPoint(Mat srcMat, ArrayList<Point> points, Rect ROIRect) {
-        Point pt;
-        Imgproc.cvtColor(srcMat, srcMat, Imgproc.COLOR_RGB2GRAY);
-
-        //use findcontour to find all the islands
-        ArrayList<MatOfPoint> mContour = new ArrayList<MatOfPoint>();
-        Mat mHierarchy = new Mat();
-        Imgproc.findContours(srcMat, mContour, mHierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        if (mContour.size() > 0) {
-            for (int i = 0; i < mContour.size(); ++i) {
-                Moments moment = Imgproc.moments(mContour.get(i));
-                if (moment.m00 < 5) continue;
-                if (moment.m00 > 150) continue;
-                pt = new Point(moment.m10 / moment.m00, moment.m01 / moment.m00); 
-
-                points.add(pt);
-            }
-        }
-        //release memory
-        return;
-    }
-
-    private void selectBrightPointFour(ArrayList<Point> brightPoints, Point center, Point topRight, Point topLeft, Point bottomRight, Point bottomLeft, Rect ROI) {
-        ArrayList<Point> TR = new ArrayList<Point>();
-        ArrayList<Point> TL = new ArrayList<Point>();
-        ArrayList<Point> BR = new ArrayList<Point>();
-        ArrayList<Point> BL = new ArrayList<Point>();
-
-        for (Point point : brightPoints) {
-            if (point.x + ROI.tl().x < center.x && point.y + ROI.tl().y < center.y) {
-                TL.add(point);
-            } else if (point.x + ROI.tl().x >= center.x && point.y + ROI.tl().y < center.y) {
-                TR.add(point);
-            } else if (point.x + ROI.tl().x < center.x && point.y + ROI.tl().y >= center.y) {
-                BL.add(point);
-            } else {
-                BR.add(point);
-            }
-            topLeft = selectBrightPointOne(TL, center);
-            topRight = selectBrightPointOne(TR, center);
-            bottomRight = selectBrightPointOne(BR, center);
-            bottomLeft = selectBrightPointOne(BL, center);
-        }
-    }
-
-    private Point selectBrightPointOne(ArrayList<Point> targetPoints, Point center) {
-        Point result = new Point(0, 0);
-        if (targetPoints.size() > 1) {
-            double distanceMin = 1000000;
-            for (Point point : targetPoints) {
-                double distance = (double)((center.x - point.x) * (center.x - point.x) + (center.y - point.y) * (center.y - point.y));
-                if (distance < distanceMin) {
-                    distanceMin = distance;
-                    result = point;
-                }
-            }
-        } else if (targetPoints.size() == 1) {
-            result = targetPoints.get(0);
-        }
-        return result;
-    }
-
-     */
-
 }
