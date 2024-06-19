@@ -65,7 +65,7 @@ public class ImoImageTest {
                 System.out.println("ImageSaver: begin read: " + savedCount);
                 cameraStreamer.readBytes(socket, im_array);
                 System.out.println("ImageSaver: begin write: " + savedCount);
-                File outputfile = new File(String.format("eye_%02d.jpg", savedCount));
+                File outputfile = new File(String.format("src/test/resources/eye_%02d.jpg", savedCount));
                 try {
                     ImageIO.write(image, "jpg", outputfile);
                     System.out.println("Wrote file: " + outputfile.getAbsolutePath());
