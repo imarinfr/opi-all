@@ -185,7 +185,7 @@ public class ImoImageTest {
 
             long start = System.currentTimeMillis();
             System.out.println("Looking at: " + (start - 10));
-            if (buffer.getHeadToTail((FrameInfo f) -> f.timeIsClose(start - 10, 50), (src, dst) -> src.copyTo(dst), workingFrameInfo)) {
+            if (buffer.getHeadToTail((FrameInfo f) -> Math.abs(f.timeStamp() - start + 10) < 50, (src, dst) -> src.copyTo(dst), workingFrameInfo)) {
                 System.out.println("\t Got a frame");
                 cameraStreamer.getImageValues(workingFrameInfo.mat());
                 long mem3 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
