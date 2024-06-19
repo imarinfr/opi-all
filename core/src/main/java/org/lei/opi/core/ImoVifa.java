@@ -100,12 +100,11 @@ public class ImoVifa extends Jovp {
      * @return A packet containing a JSON object
      * @since 0.2.0
      */
-    // TODO These are in pixels at the moment.
-    @ReturnMsg(name = "eyexStart", className = Double.class, desc = "x co-ordinates of pupil at stimulus onset (degrees).")
-    @ReturnMsg(name = "eyeyStart", className = Double.class, desc = "y co-ordinates of pupil at stimulus onset (degrees).")
+    @ReturnMsg(name = "eyexStart", className = Double.class, desc = "x co-ordinates of pupil at stimulus onset (degrees from image centre). For a multi-part stimulus (t=0), the eye taken is the first eye in the list of components.")
+    @ReturnMsg(name = "eyeyStart", className = Double.class, desc = "y co-ordinates (degrees from image centre). See eyexStart for more details.")
     @ReturnMsg(name = "eyedStart", className = Double.class, desc = "Diameter of pupil at stimulus onset (mm).")
-    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinates of pupil at button press of response window expiry (degrees).")
-    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinates of pupil at button press or response window expiry (degrees).")
+    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinate of pupil at button press (degrees from image centre). Note that for multi-part stimuli (t=0), the eye taken is the last eye in the list of components.")
+    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinate (degrees). See eyexEnd for more details.")
     @ReturnMsg(name = "eyedEnd", className = Double.class, desc = "Diameter of pupil at button press or response window expiry (mm).")
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);

@@ -42,15 +42,31 @@ public abstract class CameraStreamer extends Thread {
 
         /** The maximum number of times/frames to try and find pupil to satisfy request */
         static final int MAX_TRIES_FOR_REQUEST = 10;
+        /** The maximum number of milliseconds to allow a frame to answer a request (should be a 2^x + 1) */
+        static final int MAX_TIME_DIFFERENCE_TO_SATISFY_REQUEST = 513;
 
         public Request(long timeStamp, ViewEye eye) {
             this.timeStamp = timeStamp;
             this.eye = eye;
             this.numberOfTries = 0;
         }
+
+        /*
+        * @return true If we can increment the number of tries, false if we have hit the limit.
+        * SIDE EFFECT - increment the number of tries
+        */
         public boolean incTries() { 
             this.numberOfTries++;
             return this.numberOfTries < MAX_TRIES_FOR_REQUEST;
+        }
+
+        /*
+        * @param otherTimeStamp A time stamp to which to compare this.timeStamp
+        * @param tol The tolerance for the comparison
+        * @return true if the difference between this.timeStamp and otherTimeStamp is less than tol, false otherwise
+        */
+        public boolean closeEnough(long otherTimeStamp, int tol) {
+            return Math.abs(this.timeStamp - otherTimeStamp) < tol;
         }
     }
 
@@ -60,14 +76,17 @@ public abstract class CameraStreamer extends Thread {
         long acquisitionTimeStamp,   // timestamp of frame acquisition (approximate)
         double x,                    // pupil position with (0,0) at centre of image (degrees)
         double y,                    // pupil position with (0,0) at centre of image (degrees)
-        double diameter              // pupil diameter in mm
+        double diameter              // pupil diameter in mm (-1 indicates no pupil found)
     ) {
         public Response(long requestTimeStamp, long acquisitionTimeStamp) {
             this(requestTimeStamp, acquisitionTimeStamp, -1, -1, -1);
         }
+
         public Response set(int x, int y, int diameter) {
             return new Response(this.requestTimeStamp, this.acquisitionTimeStamp, x, y, diameter);
         }
+
+        public boolean pupilFound() { return diameter > 0; }
     }
 
     /** Queue of requests for image processing */
@@ -217,7 +236,7 @@ public abstract class CameraStreamer extends Thread {
 
     /**
      * Process a request from the client by finding the centre and diameter of the 
-     * pupil in `frame` and putting the result on responseQueue.
+     * pupil in the frame in `buffer` that has closest timestamp to request.
      *              
      *  WARNING: make sure 1 request only generates 1 response
      * 
@@ -227,9 +246,9 @@ public abstract class CameraStreamer extends Thread {
      */
     private void processRequest(Request request, CircularBuffer<FrameInfo> buffer) {
 
-        for (int tol = 1 ; tol < 500 ; tol *= 2) {
+        for (int tol = 1 ; tol < Request.MAX_TIME_DIFFERENCE_TO_SATISFY_REQUEST ; tol *= 2) {
             final Integer iTol = Integer.valueOf(tol);
-            if (buffer.getHeadToTail((FrameInfo f) -> f.timeIsClose(request.timeStamp, iTol), (src, dst) -> src.copyTo(dst), workingFrameInfo))
+            if (buffer.getHeadToTail((FrameInfo f) -> request.closeEnough(f.timeStamp(), iTol), (src, dst) -> src.copyTo(dst), workingFrameInfo))
                 break;
         }
 

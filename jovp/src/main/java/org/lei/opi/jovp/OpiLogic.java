@@ -433,6 +433,7 @@ public class OpiLogic implements PsychoLogic {
     /**
      * Set the driver.response after getting the relevant eye positions 
      * from the camera(s) response queues.
+     * Only update end time for a seen response.
      */
     private void buildResponse(boolean seen) {
             // no eye tracking data at first
