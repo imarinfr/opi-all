@@ -471,8 +471,8 @@ public class Monitor extends Application {
             stage.setScene(scene);
             stage.show();
             Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
-            stage.setX(bounds.getMaxX() - scene.getWidth() + 30);
-            stage.setY(bounds.getMaxY() - scene.getHeight() + 30);
+            stage.setX(bounds.getMaxX() - scene.getWidth() - 30);
+            stage.setY(bounds.getMaxY() - scene.getHeight() - 30);
         } catch (IOException e) {
             labelMessages.setText("Cannot load FXML GUI for " + this.currentMachineChoice);
             e.printStackTrace();
