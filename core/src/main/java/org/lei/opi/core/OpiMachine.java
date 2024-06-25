@@ -715,7 +715,6 @@ public abstract class OpiMachine {
      * This should be called from the FXML initialize() method
      * in the subclass to set up updateCanvas and any other
      * things common to all JOVP GUIs.
-     * TODO - add some tracking stuff
      */
     protected void setupJavaFX(String chosenLabel) {
         assert btnClose != null : String.format("fx:id=\"btnClose\" was not injected: check your FXML file %s", fxmlFileName);

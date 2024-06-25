@@ -147,12 +147,12 @@ public class ImoVifa extends Jovp {
 
         //File file = new File("imo_eye_OS.png");
         //Image image = new Image(file.toURI().toString());
-        Image image = new Image(this.getClass().getResourceAsStream("/org/lei/opi/core/imo_eye_OS.jpg"));
-        imageViewLeft.setImage(image);
+        //Image image = new Image(this.getClass().getResourceAsStream("/org/lei/opi/core/imo_eye_OS.jpg"));
+        //imageViewLeft.setImage(image);
         //File file = new File("imo_eye_OD.png");
         //image = new Image(file.toURI().toString());
-        image = new Image(this.getClass().getResourceAsStream("/org/lei/opi/core/imo_eye_OD.jpg"));
-        imageViewRight.setImage(image);
+        //image = new Image(this.getClass().getResourceAsStream("/org/lei/opi/core/imo_eye_OD.jpg"));
+        //imageViewRight.setImage(image);
 
         // Create a thread that will get images from server and put them in imageViewLeft
         Thread t = new Thread() {
