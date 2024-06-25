@@ -10,10 +10,12 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Ellipse?>
 <?import javafx.scene.text.Font?>
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="780.0" prefWidth="500.0" style="-fx-background-color: #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="740.0" prefWidth="640.0" style="-fx-background-color: #787EB2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <HBox alignment="CENTER_LEFT" prefHeight="72.0" prefWidth="600.0">
          <children>
@@ -35,7 +37,7 @@
                   <Insets left="10.0" />
                </padding>
             </VBox>
-            <Region prefHeight="72.0" prefWidth="110.0" />
+            <Region prefHeight="65.0" prefWidth="138.0" />
             <Button fx:id="btnClose" mnemonicParsing="false" onAction="#actionBtnClose" prefHeight="25.0" prefWidth="93.0" text="Close">
                <HBox.margin>
                   <Insets right="10.0" />
@@ -46,9 +48,19 @@
          <children>
             <Canvas fx:id="canvasVFLeft" height="250.0" width="250.0" />
             <Canvas fx:id="canvasVFRight" height="250.0" width="250.0" />
-            <TextArea fx:id="textAreaCommands" prefHeight="200.0" prefWidth="500.0" />
-            <ImageView fx:id="imageViewLeft" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" />
-            <ImageView fx:id="imageViewRight" fitHeight="250.0" fitWidth="250.0" pickOnBounds="true" preserveRatio="true" />
+            <TextArea fx:id="textAreaCommands" prefHeight="200.0" prefWidth="612.0" />
+            <StackPane prefHeight="150.0" prefWidth="200.0">
+               <children>
+                  <ImageView fx:id="imageViewLeft" fitHeight="240.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true" />
+                  <Ellipse fill="#1f96ff00" radiusX="63.0" radiusY="63.0" stroke="BLACK" strokeType="INSIDE" />
+               </children>
+            </StackPane>
+            <StackPane prefHeight="150.0" prefWidth="200.0">
+               <children>
+                  <ImageView fx:id="imageViewRight" fitHeight="240.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true" />
+                  <Ellipse fill="#1f96ff00" radiusX="63.0" radiusY="63.0" stroke="BLACK" strokeType="INSIDE" />
+               </children>
+            </StackPane>
          </children>
       </FlowPane>
    </children>
