@@ -21,11 +21,13 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.collections.FXCollections;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.Node;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.event.ActionEvent;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.property.SimpleStringProperty;
@@ -508,6 +510,9 @@ public class Monitor extends Application {
             });
 
             stage.show();
+            Rectangle2D bounds = Screen.getPrimary().getVisualBounds();
+            stage.setX(bounds.getMaxX() - scene.getWidth());
+            stage.setY(bounds.getMaxY() - scene.getHeight());
         } catch (Throwable e) {
             e.printStackTrace();
             throw e;
