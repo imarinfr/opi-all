@@ -52,13 +52,13 @@
             <StackPane prefHeight="150.0" prefWidth="200.0">
                <children>
                   <ImageView fx:id="imageViewLeft" fitHeight="240.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true" />
-                  <Ellipse fill="#1f96ff00" radiusX="63.0" radiusY="63.0" stroke="BLACK" strokeType="INSIDE" />
+                  <Ellipse fill="#1f96ff00" radiusX="44.0" radiusY="44.0" stroke="#0ad052" strokeType="INSIDE" strokeWidth="2.0" />
                </children>
             </StackPane>
             <StackPane prefHeight="150.0" prefWidth="200.0">
                <children>
                   <ImageView fx:id="imageViewRight" fitHeight="240.0" fitWidth="320.0" pickOnBounds="true" preserveRatio="true" />
-                  <Ellipse fill="#1f96ff00" radiusX="63.0" radiusY="63.0" stroke="BLACK" strokeType="INSIDE" />
+                  <Ellipse fill="#1f96ff00" radiusX="44.0" radiusY="44.0" stroke="#0ad052" strokeType="INSIDE" strokeWidth="2.0" />
                </children>
             </StackPane>
          </children>
