@@ -90,27 +90,29 @@ public class ImoImageTest {
      */
     @Test
     public void detectPupil_images() throws IOException {
-        for (int eye = 0; eye < 20; eye++) {
+        for (int eye = 0; eye < 50; eye++) {
             long start = System.currentTimeMillis();
-            String fname = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
-            BufferedImage im = ImageIO.read(getClass().getResource(fname));
+            String fname = String.format("/org/lei/opi/core/ImoVifa/Left/eye_%02d.jpg", eye);
+            try {
+                BufferedImage im = ImageIO.read(getClass().getResource(fname));
 
-            Mat frame = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
+                Mat frame = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
 
-            byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
-            frame.put(0, 0, im_array);
+                byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
+                frame.put(0, 0, im_array);
 
-            System.out.print("\nProcessFrame: " + eye);
+                System.out.print("\nProcessFrame: " + eye);
 
-            long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-            cameraStreamer.getImageValues(frame);
-            long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-            
+                long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                cameraStreamer.getImageValues(frame);
+                long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                
 
-            if (cameraStreamer.pupilInfo.valid)
-                System.out.println(String.format("%3d %10d Found pupil:" + cameraStreamer.pupilInfo, System.currentTimeMillis() - start, mem2 - mem1)) ;
-            else
-                System.out.println(String.format("%3d %10d No Pupil found", System.currentTimeMillis() - start, mem2 - mem1));
+                if (cameraStreamer.pupilInfo.valid)
+                    System.out.println(String.format("%3d %10d Found pupil:" + cameraStreamer.pupilInfo, System.currentTimeMillis() - start, mem2 - mem1)) ;
+                else
+                    System.out.println(String.format("%3d %10d No Pupil found", System.currentTimeMillis() - start, mem2 - mem1));
+            } catch(IllegalArgumentException e) { ; }
         }
     }
 

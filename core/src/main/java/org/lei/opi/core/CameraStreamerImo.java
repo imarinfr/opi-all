@@ -123,23 +123,6 @@ public class CameraStreamerImo extends CameraStreamer {
     }
 
     /**
-     * Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
-     * Translation of Csharp code from Mitsuko Yoshida 16 March 2023.
-     * @param frame
-     * @return
-     */
-    protected void getImageValues(Mat inputFrame) {
-        detectPupil(inputFrame);
-//Imgcodecs.imwrite("my.jpg", imageROI);
-    }
-
-     /* ----------------------------------------------------------------------
-      * All of the code below is a translation of Csharp code supplied by Mitsuko Yoshida 16 March 2023.
-      * ----------------------------------------------------------------------
-      */
-
-
-    /**
      * Look for a pupil ellipse in a central square region of {@link inputFrame} defined by {@ link pupilRect}.
      * Update {@link pupilInfo} as a side effect.
      *  1) Cut out pupilRect
@@ -150,7 +133,7 @@ public class CameraStreamerImo extends CameraStreamer {
      *
      * @param inputFrame An input image straight from camera. Should be EYE_IMAGE_WIDTH x EYE_IMAGE_HEIGHT
      */
-    private void detectPupil(Mat inputFrame) {
+    protected void getImageValues(Mat inputFrame) {
         //System.out.println(" " + inputFrame.size());
         //Imgcodecs.imwrite("input.jpg", inputFrame);
 
@@ -192,9 +175,8 @@ public class CameraStreamerImo extends CameraStreamer {
         */
 
         int pupilIndex = 0;
-        if (ks.length > 1) {
-                // Look for the darkest circle on average across centre
-            int minColorC = 255; // Center
+        if (ks.length > 1) {     // Look for the darkest circle on average across centre
+            int minColorC = 255;
 
             for (int index = 0 ; index < ks.length ; index++) {
                 int x = (int)ks[index].pt.x;
