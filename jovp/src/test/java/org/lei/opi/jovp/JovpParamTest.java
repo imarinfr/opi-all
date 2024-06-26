@@ -19,11 +19,10 @@ import org.lei.opi.core.definitions.Parameter;
 import org.junit.jupiter.api.Test;
 
 import es.optocom.jovp.Controller;
-import es.optocom.jovp.definitions.ViewEye;
 
 /**
  *
- * Unitary tests for commumication with IMO driver
+ * Unitary tests for communication with IMO driver
  *
  * @since 0.0.1
  */

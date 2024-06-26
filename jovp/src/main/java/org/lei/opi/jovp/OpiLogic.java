@@ -5,7 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import org.lei.opi.core.CameraStreamer;
+import org.lei.opi.core.definitions.PupilRequest;
+import org.lei.opi.core.definitions.PupilResponse;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;
@@ -140,11 +141,11 @@ public class OpiLogic implements PsychoLogic {
         if (driver.getConfiguration().webcam().cameraStreamer == null)
             return;
 
-        CameraStreamer.Request req;
+        PupilRequest req;
         if (eye != ViewEye.RIGHT) // use left for BOTH eyes
-            req = new CameraStreamer.Request(timestamp, ViewEye.LEFT);
+            req = new PupilRequest(timestamp, ViewEye.LEFT);
         else 
-            req = new CameraStreamer.Request(timestamp, ViewEye.RIGHT);
+            req = new PupilRequest(timestamp, ViewEye.RIGHT);
 
         try {
             driver.getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
@@ -448,7 +449,7 @@ public class OpiLogic implements PsychoLogic {
 //driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up
-                CameraStreamer.Response resp;
+                PupilResponse resp;
                 boolean gotStart = false;
                 boolean gotEnd = !seen;   // If !seen then we will not look for End data
                 while (!gotStart || !gotEnd) {
