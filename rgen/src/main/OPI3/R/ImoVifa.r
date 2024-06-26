@@ -308,13 +308,17 @@ opiQueryDevice_for_ImoVifa <- function() {
 #' @return A list containing:
 #'  * \code{err} \code{NULL} if there was no error, a string message if there is an error.
 #'  * \code{eyedStart} Diameter of pupil at stimulus onset (mm).
-#'  * \code{eyexEnd} x co-ordinates of pupil at button press of response window expiry (degrees).
-#'  * \code{eyeyEnd} y co-ordinates of pupil at button press or response window expiry (degrees).
+#'  * \code{eyexEnd} x co-ordinate of pupil at button press (degrees from image
+#'                   centre). Note that for multi-part stimuli (t=0), the eye
+#'                   taken is the last eye in the list of components.
+#'  * \code{eyeyEnd} y co-ordinate (degrees). See eyexEnd for more details.
 #'  * \code{eyedEnd} Diameter of pupil at button press or response window expiry (mm).
-#'  * \code{eyexStart} x co-ordinates of pupil at stimulus onset (degrees).
+#'  * \code{eyexStart} x co-ordinates of pupil at stimulus onset (degrees from
+#'                     image centre). For a multi-part stimulus (t=0), the eye
+#'                     taken is the first eye in the list of components.
 #'  * \code{time} Response time from stimulus onset if button pressed (ms).
 #'  * \code{seen} '1' if seen, '0' if not.
-#'  * \code{eyeyStart} y co-ordinates of pupil at stimulus onset (degrees).
+#'  * \code{eyeyStart} y co-ordinates (degrees from image centre). See eyexStart for more details.
 
 #'
 #' @details
