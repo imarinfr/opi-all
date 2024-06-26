@@ -113,6 +113,8 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
                     frameBuffer.get(e).put((FT f) -> f.grab(grabber.get(e)));
                 for (ViewEye e : this.frameBuffer.keySet()) {
                     frameBuffer.get(e).applyHead((FT f) -> f.findPupil());
+                    if (connected)
+                        frameBuffer.get(e).applyHead((FT f) -> writeBytes(socket, e, f));
                     frameBuffer.get(e).conditionalPop((FT f) -> !f.hasPupil());   // throw out frames without a pupil
                 }
 
@@ -120,13 +122,8 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
                 PupilRequest request = requestQueue.poll();
                 if (request != null)
                     processRequest(request, frameBuffer.get(request.eye()));
-
-                    // And now send most recent frames on the socket if there is a client
-                if (connected) {
-                    for (ViewEye e : this.frameBuffer.keySet())
-                        frameBuffer.get(e).applyHead((FT f) -> writeBytes(socket, e, f));
+                else
                     Thread.sleep(50);
-                }
             }
             server.close();
         } catch (InterruptedException e) {
