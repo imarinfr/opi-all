@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import org.lei.opi.core.CameraStreamerImo;
 import org.lei.opi.core.CameraStreamerNone;
+import org.lei.opi.core.definitions.FrameInfo;
 import org.lei.opi.core.CameraStreamer;
 
 /**
@@ -22,7 +23,7 @@ public class WebCamConfiguration {
     public int srcDeviceRight;
 
     /** CameraStreamer for left and right eyes. null if {@link use} is false */
-    public CameraStreamer cameraStreamer;
+    public CameraStreamer<? extends FrameInfo> cameraStreamer;
 
     /**
      * Set up CameraStreamers {@link leftCS} and {@link rightCS} and set {@link use}.

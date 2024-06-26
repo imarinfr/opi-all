@@ -1,16 +1,12 @@
 package org.lei.opi.core;
 
-import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferByte;
-import java.io.File;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.concurrent.TimeUnit;
 
-import javax.imageio.ImageIO;
-
 import org.junit.jupiter.api.Test;
-import org.lei.opi.core.CameraStreamer;
+import org.lei.opi.core.definitions.FrameInfo;
+import org.lei.opi.core.definitions.PupilRequest;
+import org.lei.opi.core.definitions.PupilResponse;
 
 import es.optocom.jovp.definitions.ViewEye;
 
@@ -23,9 +19,9 @@ public class CameraQueueTest {
     * @since 0.3.0
     */
     class Consumer extends Thread {
-        CameraStreamer server;
+        CameraStreamer<? extends FrameInfo> server;
         
-        Consumer(CameraStreamer server) { this.server = server; }
+        Consumer(CameraStreamer<? extends FrameInfo> server) { this.server = server; }
 
         @Override
         public void run() {
@@ -34,7 +30,7 @@ public class CameraQueueTest {
             try {
                 int tries = 20;
                 while (!isInterrupted()) {
-                    CameraStreamer.Response resp = null;
+                    PupilResponse resp = null;
                     int count = 0;
                     while (resp == null && count < tries) {
                         resp = server.responseQueue.poll(50, TimeUnit.MILLISECONDS);
@@ -53,8 +49,8 @@ public class CameraQueueTest {
     }
 
     class Producer extends Thread {
-        CameraStreamer server;
-        Producer(CameraStreamer server) { this.server = server; }
+        CameraStreamer<? extends FrameInfo> server;
+        Producer(CameraStreamer<? extends FrameInfo> server) { this.server = server; }
 
         @Override
         public void run() {
@@ -62,9 +58,9 @@ public class CameraQueueTest {
             
             try {
                 while (!isInterrupted()) {
-                    CameraStreamer.Request req = new CameraStreamer.Request(System.currentTimeMillis(), ViewEye.LEFT);
+                    PupilRequest req = new PupilRequest(System.currentTimeMillis(), ViewEye.LEFT);
                     server.requestQueue.put(req);
-                    System.out.println(String.format("[sendAndReceive1]...Prodcuer issued request: %s.", req.timeStamp));
+                    System.out.println(String.format("[sendAndReceive1]...Producer issued request: %s.", req.timeStamp()));
                     Thread.sleep(1000);
                 }
             } catch (InterruptedException e) { ; }
@@ -74,7 +70,7 @@ public class CameraQueueTest {
     @Test
     public void sendAndReceive1() {
         nu.pattern.OpenCV.loadLocally();  // works on mac
-        CameraStreamer server = null;
+        CameraStreamer<? extends FrameInfo> server = null;
         try {
             server = new CameraStreamerImo(cameraPort, 1, -1);
         } catch (IOException e) {

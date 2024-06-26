@@ -16,35 +16,54 @@ import javax.imageio.ImageIO;
  * @author Andrew Turpin
  * @date 5 June 2024 
  */
-public class FrameInfo {
-    private long timeStamp;
-    private Mat mat;
+public abstract class FrameInfo {
+    protected long timeStamp;
+    protected Mat mat;
+    protected boolean hasPupil;
+    protected double pupilDiameter;     // diameter of pupil in mm
+    protected double pupilX;      // x position of pupil in degrees from image centre
+    protected double pupilY;      // y position of pupil in degrees from image centre
 
     public FrameInfo() {
         this.timeStamp = -1;
         this.mat = new Mat();
+        this.hasPupil = false;
     }
 
+    public FrameInfo(Mat m, long timeStamp) {
+        this.timeStamp = timeStamp;
+        this.mat = m;
+        this.hasPupil = false;
+    }
+
+    public double pupilDiameter() { return pupilDiameter; }
+    public double pupilY() { return pupilY; }
+    public double pupilX() { return pupilX; }
+    public boolean hasPupil() { return hasPupil; }
     public long timeStamp() { return timeStamp; }
     public Mat mat() { return mat; }
 
-    /** 
-     * @param dst Destination Mat to receive a copy of me
-     * Copy myself into dst 
+    /**
+     * Copy my pupil info to another FrameInfo object.
+     * @param destination
      */
-    public void copyTo(FrameInfo dst) {
-        dst.timeStamp = this.timeStamp;
-        this.mat.copyTo(dst.mat);
+    public <T extends FrameInfo> void copyPupilInfo(T destination) {
+        destination.hasPupil = hasPupil;
+        destination.pupilDiameter = pupilDiameter;
+        destination.pupilX = pupilX;
+        destination.pupilY = pupilY;
     }
 
     /**
      * Grab a frame from the grabber and put it in {@link mat}.
+     * Look for a pupil.
      * @param grabber
      */
     public void grab(VideoCapture grabber) {
         this.timeStamp = System.currentTimeMillis(); 
         if (!grabber.read(this.mat))
             this.timeStamp = -1;
+        this.hasPupil = false;
     }
 
     /**
@@ -52,6 +71,7 @@ public class FrameInfo {
      * @param grabber
      */
     public void grab(String filename) {
+        this.hasPupil = false;
         try {
             //long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
             BufferedImage im = ImageIO.read(getClass().getResource(filename));
@@ -73,6 +93,14 @@ public class FrameInfo {
     }
 
     public String toString() {
-        return String.format("FrameInfo: timeStamp=%10d, mat=%s", timeStamp, mat);
+        if (this.hasPupil)
+            return String.format("FrameInfo: timeStamp=%10d, mat=%s x: %6.4f, y: %6.4f, d: %5.2f", timeStamp, mat, pupilX, pupilY, pupilDiameter);
+        else
+            return String.format("FrameInfo: timeStamp=%10d, mat=%s No pupil", timeStamp, mat);
     }
+
+    /*
+    * Fill in the pupil data for the mat in this object.
+    */
+    public abstract void findPupil();
 }

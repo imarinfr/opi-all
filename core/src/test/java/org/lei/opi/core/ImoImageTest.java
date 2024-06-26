@@ -9,13 +9,14 @@ import java.net.Socket;
 import javax.imageio.ImageIO;
 
 import org.opencv.core.*;
-import org.opencv.videoio.*;
 
 import es.optocom.jovp.definitions.ViewEye;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.core.definitions.CircularBuffer;
-import org.lei.opi.core.definitions.FrameInfo;
+import org.lei.opi.core.definitions.FrameInfoImo;
+import org.lei.opi.core.definitions.PupilRequest;
+import org.lei.opi.core.definitions.PupilResponse;
 
 public class ImoImageTest {
     /**
@@ -65,10 +66,10 @@ public class ImoImageTest {
                 System.out.println("ImageSaver: begin read: " + savedCount);
                 cameraStreamer.readBytes(socket, im_array);
                 System.out.println("ImageSaver: begin write: " + savedCount);
-                File outputfile = new File(String.format("src/test/resources/eye_%02d.jpg", savedCount));
+                File outputFile = new File(String.format("src/test/resources/eye_%02d.jpg", savedCount));
                 try {
-                    ImageIO.write(image, "jpg", outputfile);
-                    System.out.println("Wrote file: " + outputfile.getAbsolutePath());
+                    ImageIO.write(image, "jpg", outputFile);
+                    System.out.println("Wrote file: " + outputFile.getAbsolutePath());
                 } catch (IOException e) {
                     System.out.println("JovpQueueTest ImageSaver thread is having trouble saving images.");
                     e.printStackTrace();
@@ -102,16 +103,16 @@ public class ImoImageTest {
                 frame.put(0, 0, im_array);
 
                 System.out.print("\nProcessFrame: " + eye);
+                FrameInfoImo f = new FrameInfoImo(frame, System.currentTimeMillis());
 
                 long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-                cameraStreamer.getImageValues(frame);
+                f.findPupil();
                 long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                 
-
-                if (cameraStreamer.pupilInfo.valid)
-                    System.out.println(String.format("%3d %10d Found pupil:" + cameraStreamer.pupilInfo, System.currentTimeMillis() - start, mem2 - mem1)) ;
+                if (f.hasPupil())
+                    System.out.println(String.format("t= %3d mem= %10d :" + f, System.currentTimeMillis() - start, mem2 - mem1)) ;
                 else
-                    System.out.println(String.format("%3d %10d No Pupil found", System.currentTimeMillis() - start, mem2 - mem1));
+                    System.out.println(String.format("t= %3d mem= %10d : No Pupil found", System.currentTimeMillis() - start, mem2 - mem1));
             } catch(IllegalArgumentException e) { ; }
         }
     }
@@ -120,7 +121,6 @@ public class ImoImageTest {
      * Call `processFrame` on a stream of images.
     Does not work
     @Test
-     */
     public void detectPupil_vidImages() {
         String fname = "/org/lei/opi/core/ImoVifa/eye_%02d.jpg";
         System.out.println("         Filename: " + fname);
@@ -145,6 +145,7 @@ public class ImoImageTest {
                 System.out.println("Error! Could not read frame");
         }
     }
+     */
 
     /** 
      * Call `processFrame` on a stream of images.
@@ -155,8 +156,8 @@ public class ImoImageTest {
         for (int i = 0 ; i < 30 ; i++) {
             System.out.println("Request " + i);
             try {
-                cameraStreamer.requestQueue.add(new CameraStreamer.Request(System.currentTimeMillis(), ViewEye.LEFT));
-                CameraStreamer.Response resp = cameraStreamer.responseQueue.poll();
+                cameraStreamer.requestQueue.add(new PupilRequest(System.currentTimeMillis(), ViewEye.LEFT));
+                PupilResponse resp = cameraStreamer.responseQueue.poll();
                 System.out.println(resp);
                 Thread.sleep(300); 
             } catch (InterruptedException e) { break; }
@@ -166,39 +167,39 @@ public class ImoImageTest {
 
     @Test
     public void circular_buffer_test() throws IOException {
-        CameraStreamerImo cameraStreamer = new CameraStreamerImo(-1, 0, -1);
-        CircularBuffer<FrameInfo> buffer = cameraStreamer.getBuffer(ViewEye.LEFT);
+        CircularBuffer<FrameInfoImo> buffer = new CircularBuffer<FrameInfoImo>(FrameInfoImo::new, 30);
 
-        FrameInfo workingFrameInfo = new FrameInfo();
+        FrameInfoImo workingFrameInfo = new FrameInfoImo();
 
         for (int eye = 0; eye < 30; eye++) {
-            String fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
-            if (eye >= 20)
-                fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye - 20);
-            String fname = fnameMut;
+            try {
+                String fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
+                if (eye >= 20)
+                    fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye - 20);
+                String fname = fnameMut;
 
-            System.out.println("\nProcessFrame: " + eye);
+                System.out.println("\nProcessFrame: " + eye);
 
-            long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-            buffer.put(f -> f.grab(fname));
-            long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                buffer.put(f -> f.grab(fname));
+                long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-            //System.out.println("\t Buffer: " + buffer);
+                //System.out.println("\t Buffer: " + buffer);
 
-            long start = System.currentTimeMillis();
-            System.out.println("Looking at: " + (start - 10));
-            if (buffer.getHeadToTail((FrameInfo f) -> Math.abs(f.timeStamp() - start + 10) < 50, (src, dst) -> src.copyTo(dst), workingFrameInfo)) {
-                System.out.println("\t Got a frame");
-                cameraStreamer.getImageValues(workingFrameInfo.mat());
-                long mem3 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+                long start = System.currentTimeMillis();
+                System.out.println("Looking at: " + (start - 10));
+                if (buffer.getHeadToTail((FrameInfoImo f) -> Math.abs(f.timeStamp() - start + 10) < 50, (src, dst) -> src.copyPupilInfo(dst), workingFrameInfo)) {
+                    System.out.println("\t Got a frame");
+                    long mem3 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-                System.out.println(String.format("\t\tt= %3d dt= %4d memGrab= %10d memProc= %10d Pupil:" + cameraStreamer.pupilInfo, 
-                    System.currentTimeMillis() - start, 
-                    start - workingFrameInfo.timeStamp(), 
-                    mem2 - mem1, 
-                    mem3 - mem2)) ;
-            } else
-                System.out.println("\t Dropped frame");
+                    System.out.println(String.format("\t\tt= %3d dt= %4d memGrab= %10d memProc= %10d Pupil:" + workingFrameInfo, 
+                        System.currentTimeMillis() - start, 
+                        start - workingFrameInfo.timeStamp(), 
+                        mem2 - mem1, 
+                        mem3 - mem2)) ;
+                } else
+                    System.out.println("\t Dropped frame");
+            } catch (IllegalArgumentException e) { ; } // missing file
         }
     }
 }

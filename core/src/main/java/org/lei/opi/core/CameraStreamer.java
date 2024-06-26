@@ -2,7 +2,8 @@ package org.lei.opi.core;
 
 import org.lei.opi.core.definitions.CircularBuffer;
 import org.lei.opi.core.definitions.FrameInfo;
-import org.opencv.core.Mat;
+import org.lei.opi.core.definitions.PupilRequest;
+import org.lei.opi.core.definitions.PupilResponse;
 import org.opencv.videoio.VideoCapture;
 
 import es.optocom.jovp.definitions.ViewEye;
@@ -20,84 +21,27 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Create a thread that serves/streams raw images from one or more "webcams" on a TCP port.
  * In addition, checks the `requestQueue` for any requests for pupil position and diameter
  * and puts responses back on the `responseQueue` as required.
+ * This should be subclassed for each specific device, as should the FrameInfo for that device.
  *
  * @author Andrew Turpin
  * @date 5 June 2024 
  */
-public abstract class CameraStreamer extends Thread {
+public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
     /** Whether this streamer is connected to a client */
     public boolean connected;
 
-    /** A working are for processRequest  */
-    private FrameInfo workingFrameInfo = new FrameInfo();
-
     /** A buffer of most recent frames grabbed for each device */
-    private final HashMap<ViewEye, CircularBuffer<FrameInfo>> frameBuffer = new HashMap<ViewEye, CircularBuffer<FrameInfo>>(); 
-
-    /** The data of an incoming request to the camera */
-    static public class Request {
-        long timeStamp;           // some timestamp of the request (used to match responses, perhaps)
-        ViewEye eye;              // eye for which to get the response
-        int numberOfTries;        // The number of times this request has been attempted to be completed
-
-        /** The maximum number of times/frames to try and find pupil to satisfy request */
-        static final int MAX_TRIES_FOR_REQUEST = 10;
-        /** The maximum number of milliseconds to allow a frame to answer a request (should be a 2^x + 1) */
-        static final int MAX_TIME_DIFFERENCE_TO_SATISFY_REQUEST = 513;
-
-        public Request(long timeStamp, ViewEye eye) {
-            this.timeStamp = timeStamp;
-            this.eye = eye;
-            this.numberOfTries = 0;
-        }
-
-        /*
-        * @return true If we can increment the number of tries, false if we have hit the limit.
-        * SIDE EFFECT - increment the number of tries
-        */
-        public boolean incTries() { 
-            this.numberOfTries++;
-            return this.numberOfTries < MAX_TRIES_FOR_REQUEST;
-        }
-
-        /*
-        * @param otherTimeStamp A time stamp to which to compare this.timeStamp
-        * @param tol The tolerance for the comparison
-        * @return true if the difference between this.timeStamp and otherTimeStamp is less than tol, false otherwise
-        */
-        public boolean closeEnough(long otherTimeStamp, int tol) {
-            return Math.abs(this.timeStamp - otherTimeStamp) < tol;
-        }
-    }
-
-    /** The data put back on the queue for each request */
-    static public record Response(
-        long requestTimeStamp,       // timestamp of request object that initiated this response
-        long acquisitionTimeStamp,   // timestamp of frame acquisition (approximate)
-        double x,                    // pupil position with (0,0) at centre of image (degrees)
-        double y,                    // pupil position with (0,0) at centre of image (degrees)
-        double diameter              // pupil diameter in mm (-1 indicates no pupil found)
-    ) {
-        public Response(long requestTimeStamp, long acquisitionTimeStamp) {
-            this(requestTimeStamp, acquisitionTimeStamp, -1, -1, -1);
-        }
-
-        public Response set(int x, int y, int diameter) {
-            return new Response(this.requestTimeStamp, this.acquisitionTimeStamp, x, y, diameter);
-        }
-
-        public boolean pupilFound() { return diameter > 0; }
-    }
+    protected HashMap<ViewEye, CircularBuffer<FT>> frameBuffer;
 
     /** Queue of requests for image processing */
-    public LinkedBlockingDeque<Request> requestQueue;
+    public LinkedBlockingDeque<PupilRequest> requestQueue;
     /** Queue of results from image processing */
-    public LinkedBlockingQueue<Response> responseQueue;
+    public LinkedBlockingQueue<PupilResponse> responseQueue;
 
     /** The device numbers of the one or two cameras to stream on the machine on which this is running. 
      * If ony one camera, then just use "Left".
     */
-    private final HashMap<ViewEye, Integer> deviceNumber = new HashMap<ViewEye, Integer>(); 
+    protected final HashMap<ViewEye, Integer> deviceNumber = new HashMap<ViewEye, Integer>(); 
 
     /** The port number on this machine that will serve images */
     private int port; 
@@ -105,55 +49,11 @@ public abstract class CameraStreamer extends Thread {
     /** The socket on which frames will be sent. */
     private Socket socket;
 
-    /** Little bit of memory for communicating with image processing subclass */
-    class PupilInfo {
-        public double diameter;     // diameter of pupil in pixels??? or mm??
-        public double centerX;      // x position of pupil in degrees
-        public double centerY;      // y position of pupil in degrees
-        public int bb_tl_x;         // bounding box of pupil (pixels)
-        public int bb_tl_y;
-        public int bb_width;
-        public int bb_height;
-        public boolean valid;       // true if these current values are from a found pixel
+    /** Accesor for buffers  - used in tests */
+    public CircularBuffer<FT> getBuffer(ViewEye eye) { return frameBuffer.get(eye);} 
 
-        /** @param srcWidth Width of source image in pixels 
-         *  @param srcHeight Height of source image in pixels 
-         */
-        PupilInfo(int srcWidth, int srcHeight) {
-            this.reset();
-        }
-            
-        public void reset() {
-            diameter = 0;
-            centerX = -1;
-            centerY = -1;
-            bb_tl_x = 0;
-            bb_tl_y = 0;
-            bb_width = 0;
-            bb_height = 0;
-            valid = false;
-        }
-
-        public String toString() {
-            if (valid)
-                return String.format("x: %6.4f, y: %6.4f, d: %5.2f", centerX, centerY, diameter);
-            else
-                return "No valid pupil.";
-        }
-    }
-    protected PupilInfo pupilInfo;
-
-
-    /** Accessor method to get results from a call to {@link getImageValues} */
-    public String getResults() { 
-        if (pupilInfo.valid) 
-            return String.format("x: %d, y: %d, d: %d", pupilInfo.centerX, pupilInfo.centerY, pupilInfo.diameter);
-        else
-            return "No results yet";
-    }
-
-    /** Accesor for buffers */
-    public CircularBuffer<FrameInfo> getBuffer(ViewEye eye) { return frameBuffer.get(eye);} 
+    /** working area for copying out of queue */
+    protected FT workingFrameInfo;
 
     /** Junk instance just to allow calling of readBytes. And testing... */
     public CameraStreamer() { ; }
@@ -173,11 +73,8 @@ public abstract class CameraStreamer extends Thread {
         if (deviceNumberRight > -1)
             this.deviceNumber.put(ViewEye.RIGHT, Integer.valueOf(deviceNumberRight));
 
-        for (ViewEye e : this.deviceNumber.keySet()) 
-            frameBuffer.put(e, new CircularBuffer<FrameInfo>(FrameInfo::new, 30));
-
-        requestQueue = new LinkedBlockingDeque<Request>(10);
-        responseQueue = new LinkedBlockingQueue<Response>(10);
+        requestQueue = new LinkedBlockingDeque<PupilRequest>(10);
+        responseQueue = new LinkedBlockingQueue<PupilResponse>(10);
 
         this.start();
     }
@@ -211,19 +108,21 @@ public abstract class CameraStreamer extends Thread {
                         this.connected = true;
                     } catch (SocketTimeoutException e) { ; }
 
-                    // Try and grab each device as close as possible in time
+                    // Try and grab each device as close as possible in time, then add pupils
                 for (ViewEye e : this.frameBuffer.keySet())
-                    frameBuffer.get(e).put((FrameInfo f) -> f.grab(grabber.get(e)));
+                    frameBuffer.get(e).put((FT f) -> f.grab(grabber.get(e)));
+                for (ViewEye e : this.frameBuffer.keySet())
+                    frameBuffer.get(e).applyHead((FT f) -> f.findPupil());
 
                     // If there is a Request pending, process it
-                Request request = requestQueue.poll();
+                PupilRequest request = requestQueue.poll();
                 if (request != null)
-                    processRequest(request, frameBuffer.get(request.eye));
+                    processRequest(request, frameBuffer.get(request.eye()));
 
                     // And now send most recent frames on the socket if there is a client
                 if (connected) {
                     for (ViewEye e : this.frameBuffer.keySet())
-                        frameBuffer.get(e).applyHead((FrameInfo f) -> writeBytes(socket, e, f));
+                        frameBuffer.get(e).applyHead((FT f) -> writeBytes(socket, e, f));
                     Thread.sleep(50);
                 }
             }
@@ -250,23 +149,24 @@ public abstract class CameraStreamer extends Thread {
      * @param frame Image frame to process
      * @param timestamp Timestamp that the image was acquired
      */
-    private void processRequest(Request request, CircularBuffer<FrameInfo> buffer) {
+    private void processRequest(PupilRequest request, CircularBuffer<FT> buffer) {
 
-        for (int tol = 1 ; tol < Request.MAX_TIME_DIFFERENCE_TO_SATISFY_REQUEST ; tol *= 2) {
+        for (int tol = 1 ; tol < PupilRequest.MAX_TIME_DIFFERENCE_TO_SATISFY_REQUEST ; tol *= 2) {
             final Integer iTol = Integer.valueOf(tol);
-            if (buffer.getHeadToTail((FrameInfo f) -> request.closeEnough(f.timeStamp(), iTol), (src, dst) -> src.copyTo(dst), workingFrameInfo))
+            if (buffer.getHeadToTail(
+                (FT f) -> request.closeEnough(f.timeStamp(), iTol), 
+                (FT src, FT dst) -> src.copyPupilInfo(dst), workingFrameInfo))
                 break;
         }
 
-        getImageValues(workingFrameInfo.mat());
-        if (pupilInfo.valid) {
+        if (workingFrameInfo.hasPupil()) {
             try {
-                responseQueue.add(new Response(
-                    request.timeStamp,
+                responseQueue.add(new PupilResponse(
+                    request.timeStamp(),
                     workingFrameInfo.timeStamp(),
-                    pupilInfo.centerX,
-                    pupilInfo.centerY,
-                    pupilInfo.diameter
+                    workingFrameInfo.pupilX(),
+                    workingFrameInfo.pupilY(),
+                    workingFrameInfo.pupilDiameter()
                 ));
             } catch (IllegalStateException e) {
                 System.out.println("Response queue is full, apparently!");
@@ -276,7 +176,7 @@ public abstract class CameraStreamer extends Thread {
                 requestQueue.addFirst(request); // put it back for a go at another frame
             else {
                 try {
-                    responseQueue.add(new Response(request.timeStamp, workingFrameInfo.timeStamp()));
+                    responseQueue.add(new PupilResponse(request.timeStamp(), workingFrameInfo.timeStamp()));
                 } catch (IllegalStateException e) {
                     System.out.println("Response queue is full, apparently!");
                 }
@@ -303,12 +203,4 @@ public abstract class CameraStreamer extends Thread {
      * @return Device number read. -1 for error
      */
     public abstract ViewEye readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException;
-
-    /**
-     * Process frame to find (x, y) and diameter of pupil and put the result in {@link pupilInfo}.
-     * 
-     * @param frame Frame to process looking for pupil
-     * @return true if values found, false otherwise
-     */
-    protected abstract void getImageValues(Mat frame);
 }
