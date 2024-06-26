@@ -171,17 +171,19 @@ public class ImoImageTest {
 
         FrameInfoImo workingFrameInfo = new FrameInfoImo();
 
-        for (int eye = 0; eye < 30; eye++) {
+        for (int eye = 0; eye < 100; eye++) {
             try {
-                String fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
-                if (eye >= 20)
-                    fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye - 20);
+                String fnameMut = String.format("/org/lei/opi/core/ImoVifa/Left/eye_%02d.jpg", eye);
+                //if (eye >= 20)
+                //    fnameMut = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye - 20);
                 String fname = fnameMut;
 
                 System.out.println("\nProcessFrame: " + eye);
 
                 long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                 buffer.put(f -> f.grab(fname));
+                buffer.applyHead(f -> f.findPupil());
+                buffer.conditionalPop(f -> !f.hasPupil());
                 long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
                 //System.out.println("\t Buffer: " + buffer);

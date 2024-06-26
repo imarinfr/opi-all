@@ -106,6 +106,30 @@ public class CircularBuffer<T> {
     }
 
     /**
+     * If predicate evaluates to true on head, cut it off!
+     * @param decider Predicate to apply to head of {@link buffer}
+     */
+    public void conditionalPop(Predicate<T> f) {
+        if (empty()) return;
+
+        lock.lock();
+        try {
+            if (f.test((T)buffer[head])) {
+                if (n == 1) {
+                    head = -1;
+                    n = 0;
+                } else {
+                    head = (head - 1) % capacity;
+                    n--;
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return;
+    }
+
+    /**
      * Apply {@link f} to the tail (oldest added) of the buffer.
      * @param f Function to take an element and do something 
      */

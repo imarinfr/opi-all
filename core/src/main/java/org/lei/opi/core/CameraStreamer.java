@@ -111,8 +111,10 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
                     // Try and grab each device as close as possible in time, then add pupils
                 for (ViewEye e : this.frameBuffer.keySet())
                     frameBuffer.get(e).put((FT f) -> f.grab(grabber.get(e)));
-                for (ViewEye e : this.frameBuffer.keySet())
+                for (ViewEye e : this.frameBuffer.keySet()) {
                     frameBuffer.get(e).applyHead((FT f) -> f.findPupil());
+                    frameBuffer.get(e).conditionalPop((FT f) -> !f.hasPupil());   // throw out frames without a pupil
+                }
 
                     // If there is a Request pending, process it
                 PupilRequest request = requestQueue.poll();
