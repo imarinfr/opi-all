@@ -115,13 +115,15 @@ public class CircularBuffer<T> {
         lock.lock();
         try {
             if (f.test((T)buffer[head])) {
-                if (n == 1) {
+                if (n == 1)
                     head = -1;
-                    n = 0;
-                } else {
-                    head = (head - 1) % capacity;
-                    n--;
+                else {
+                    if (head == 0)
+                        head = capacity - 1;
+                    else
+                        head = (head - 1) % capacity;
                 }
+                n--;
             }
         } finally {
             lock.unlock();
@@ -172,7 +174,6 @@ public class CircularBuffer<T> {
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean getTailToHead(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
-        if (empty()) return false;
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {
@@ -197,11 +198,11 @@ public class CircularBuffer<T> {
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean getHeadToTail(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
-        if (empty()) return false;
         lock.lock();
         try {
             for(int i = 0 ; i < n ; i++) {
-                int j = (head + i ) % capacity;
+                int j = (head + i) % capacity;
+//System.out.println("getHtoT " + n + " " + capacity + " " + head + " " + i + " " + j);
                 if (filter.test((T)buffer[j])) {
                     copy.accept((T)buffer[j], dst);
                     return true;
