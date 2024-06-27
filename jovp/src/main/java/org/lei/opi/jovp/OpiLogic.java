@@ -175,8 +175,8 @@ public class OpiLogic implements PsychoLogic {
 
         presenting = PresentingState.RESPONDED;  
 
-            // Request the end eye position from the camera
-        buttonPressTimeStamp = System.currentTimeMillis();
+            // Request the end eye position 30 ms before we got here from the camera
+        buttonPressTimeStamp = System.currentTimeMillis() - 30;
         requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), buttonPressTimeStamp);
 
         for (Item s : currentItems) 
