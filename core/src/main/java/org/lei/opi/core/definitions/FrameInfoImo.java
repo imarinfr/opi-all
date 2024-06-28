@@ -1,48 +1,47 @@
 package org.lei.opi.core.definitions;
 
-import org.opencv.core.KeyPoint;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
-import org.opencv.features2d.SimpleBlobDetector;
-import org.opencv.features2d.SimpleBlobDetector_Params;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.imgproc.Moments;
 
 /**
-/* Hold and manipulate info and about frame 
+/* Hold and manipulate info and about frame
  *
  * @author Andrew Turpin
- * @date 5 June 2024 
+ * @date 5 June 2024
  */
 public class FrameInfoImo extends FrameInfo {
     public static final int EYE_IMAGE_HEIGHT = 480;
     public static final int EYE_IMAGE_WIDTH = 640;
 
-    /** Square to look for pupil about centre of camera image  */
+    /** Square to look for pupil about centre of camera image. Could be a bit smaller I reckon...  */
     private static final int MASK_RADIUS = 125;
+
+    /** Current window for looking for pupil. Might change size as the stream progresses. */
+    private static final Rect pupilRect = new Rect(EYE_IMAGE_WIDTH / 2 - MASK_RADIUS, EYE_IMAGE_HEIGHT / 2 - MASK_RADIUS,
+                              MASK_RADIUS * 2, MASK_RADIUS * 2);
+
+    /** Gaussian blur sigma  - from CREWt code  March 2013 */
+    private static final double GAUSSIAN_BLUR_SIGMA = 1.8;
 
     /** Brightest a pupil can get for {@link detectPupil} */
     private static final int COLOR_UPPER_LIMIT = 80;
 
-    private static final SimpleBlobDetector_Params params = new SimpleBlobDetector_Params();
-    private static SimpleBlobDetector blobDetector;
+    /** Minimum area for a pupil in pixels */
+    private static final int MIN_PUPIL_AREA = 100;
 
-    /** Current window for looking for pupil. Might change size as the stream progresses. */
-    private static final Rect pupilRect = new Rect(EYE_IMAGE_WIDTH / 2 - MASK_RADIUS, EYE_IMAGE_HEIGHT / 2 - MASK_RADIUS, 
-                              MASK_RADIUS * 2, MASK_RADIUS * 2);
+    /** Maximum area for a pupil in pixels */
+    private static final int MAX_PUPIL_AREA = 6000;
 
 
     public FrameInfoImo() {
         super();
-        params.set_filterByArea(true);
-        params.set_filterByCircularity(true);
-        params.set_minThreshold(0);
-        params.set_maxThreshold(COLOR_UPPER_LIMIT);
-        params.set_minArea(100);
-        params.set_maxArea(6000);
-        params.set_minRepeatability(2);
-        blobDetector = SimpleBlobDetector.create(params);
     }
 
     public FrameInfoImo(Mat m, long timeStamp) {
@@ -50,108 +49,85 @@ public class FrameInfoImo extends FrameInfo {
     }
 
     /**
-     * Look for a pupil ellipse in a central square region of {@link inputFrame} defined by {@ link pupilRect}.
-     * Update {@link pupilInfo} as a side effect.
+     * Look for a pupil by in a central square region of {@link inputFrame} defined by {@ link pupilRect}.
+     * Update {@link pupilX} etc as a side effect.
      *  1) Cut out pupilRect
      *  2) Gaussian blur
      *  3) Convert to Grey.
-     *  4) Find circular blobs
-     *  5) If there's more than one, get the darkest one.
+     *  4) Threshold with COLOR_UPPER_LIMIT
+     *  5) Find all contours
+     *  6) Filter contours by area and keep the "most circular" one.
      *
      * @param inputFrame An input image straight from camera. Should be EYE_IMAGE_WIDTH x EYE_IMAGE_HEIGHT
      */
+    List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
     public void findPupil() {
         //System.out.println(" " + inputFrame.size());
-        //Imgcodecs.imwrite("input.jpg", inputFrame);
+        //Imgcodecs.imwrite("input.jpg", this.mat);
 
         Mat inputROI = new Mat(this.mat, pupilRect);
-        Imgproc.GaussianBlur(inputROI, inputROI, new Size(0, 0), 1.8);
 
         Imgproc.cvtColor(inputROI, inputROI, Imgproc.COLOR_RGB2GRAY, 0);
 
+        Imgproc.GaussianBlur(inputROI, inputROI, new Size(0, 0), GAUSSIAN_BLUR_SIGMA);
+
         //Imgcodecs.imwrite("roi_b4Blobs.jpg", inputROI);
 
-        MatOfKeyPoint blobPoints = new MatOfKeyPoint();
-        blobDetector.detect(inputROI, blobPoints);
-
-        KeyPoint []ks = blobPoints.toArray();
-
-        if (ks.length == 0) {
-            this.hasPupil = false;
-            inputROI.release();
-            blobPoints.release();
-            return;
-        }
+        Imgproc.threshold(inputROI, inputROI, COLOR_UPPER_LIMIT, 255, Imgproc.THRESH_BINARY);
+        //Imgcodecs.imwrite("roi_thresh.jpg", inputROI);
+        Imgproc.findContours(inputROI, contours, new Mat(), Imgproc.RETR_LIST, Imgproc.CHAIN_APPROX_SIMPLE, pupilRect.tl());
 
         /*
-        for (KeyPoint k : ks)
-            System.out.println("Blob at " + k.pt.x + ", " + k.pt.y + " d= " + k.size);
-
-        Mat outputImage = new Mat();
-        Features2d.drawKeypoints(inputROI, blobPoints, outputImage, new Scalar(0, 0, 255));
-        Imgproc.circle (
-            outputImage,
-            ks[0].pt,                       //Center of the circle
-            (int)(ks[0].size / 2),          //Radius
-            new Scalar(0, 255, 0),
-            2
-        );
-
-        Imgcodecs.imwrite("roi_blobs.jpg", outputImage);
-        outputImage.release();
+        Mat outputIm = new Mat();
+        this.mat.copyTo(outputIm);
+        Imgproc.drawContours(outputIm, contours, -1, new Scalar(0, 0, 255));
+        for(MatOfPoint c : contours) {
+            Rect r = Imgproc.boundingRect(c);
+            double a = Imgproc.contourArea(c);
+            double p = Imgproc.arcLength(new MatOfPoint2f(c.toArray()), true);
+            double roundness = 4.0 * Math.PI * a / p / p;
+            double myCircle = a / r.area();
+            System.out.println(String.format("\nArea: %10.0f Perimeter: %8.2f Round: %6.4f MyRound: %6.4f", a, p, roundness, myCircle));
+            if (roundness > 0.8)
+                Imgproc.rectangle(outputIm, r.tl(), r.br(), new Scalar(0, 255, 0), 2);
+        }
+        Imgcodecs.imwrite("roi_conts.jpg", outputIm);
         */
 
-        int pupilIndex = 0;
-        if (ks.length > 1) {     // Look for the darkest circle on average across centre
-            int minColorC = 255;
 
-            for (int index = 0 ; index < ks.length ; index++) {
-                int x = (int)ks[index].pt.x;
-                int y = (int)ks[index].pt.y;
-                int r = (int)ks[index].size / 2;
-
-                int centerColor = getColorValue(inputROI, y, x - r, x + r);
-
-                if (centerColor <= COLOR_UPPER_LIMIT && centerColor < minColorC) {
-                    minColorC = centerColor;
-                    pupilIndex = index;   
+            // Filter out dud contours with area outside limits and take
+            // circular factor closest to pi/4.
+        MatOfPoint bestContour = null;
+        double closestDistance = 0;  // initialized to keep compiler happy
+        for (MatOfPoint c : contours) {
+            double a = Imgproc.contourArea(c);
+            if (MIN_PUPIL_AREA < a && a < MAX_PUPIL_AREA) {
+                Rect r = Imgproc.boundingRect(c);
+                double circleDIstance = Math.abs(a / r.area() - Math.PI / 4.0);
+                if (bestContour == null || circleDIstance < closestDistance) {
+                    bestContour = c;
+                    closestDistance = circleDIstance;
                 }
+                else
+                    c.release();
             }
         }
 
-        double xAdj = pupilRect.x;
-        double yAdj = pupilRect.y;
-        this.pupilX = (ks[pupilIndex].pt.x + xAdj - EYE_IMAGE_WIDTH / 2.0) * 1.23;  // TODO need to allow for off centre start
-        this.pupilY = (ks[pupilIndex].pt.y + yAdj - EYE_IMAGE_HEIGHT / 2.0) * 1.23;  // TODO need to allow for off centre start
-        this.pupilDiameter = ks[pupilIndex].size * 14.0 / 176.0;
-        this.hasPupil = true;
+        if (bestContour == null) {
+            this.hasPupil = false;
+        } else {
+                // magic conversion factors from CREWt supplied code March 2013
+            Moments m = Imgproc.moments(bestContour);
+            this.pupilX = (m.m10 / m.m00 - EYE_IMAGE_WIDTH / 2.0) * 1.23;    // degrees
+            this.pupilY = (m.m01 / m.m00 - EYE_IMAGE_HEIGHT / 2.0) * 1.23;   // degrees
+            this.pupilDiameter = (2 * Math.sqrt(m.m00 / Math.PI)) * 14.0 / 176.0;  // mm
+            this.hasPupil = true;
 
-        inputROI.release();
-        blobPoints.release();
-        return;
-    }
-
-    /** 
-     * Get the average value of the pixel in the range of `from` to `to` along row `y` in the Mat `srcMat`.
-     * @param srcMat The Mat from which to read the pixel values
-     * @param y The row along which to read the pixel values
-     * @param from The start column from which to read the pixel values
-     * @param to The end column to which to read the pixel values
-     * @return The average pixel value in the range of `from` to `to` along row `y` in the Mat `srcMat`. If we go out of image, return -1.
-     */
-    private int getColorValue(Mat srcMat, int y, int from, int to) {
-        //if (srcMat.type() != CvType.CV_8UC1)
-        //    throw new IllegalArgumentException("getColorValue: srcMat must be of type CV_8UC1");
-
-        int pixelvalue = 0;
-        try {
-            for (int i = from; i < to; i++)
-                pixelvalue += srcMat.get(y, i)[0];
-            pixelvalue = pixelvalue / (to - from);
-        } catch (Exception e) {
-            return -1;
+            bestContour.release();
         }
 
-        return pixelvalue;
+        inputROI.release();
+        contours.clear();
+        return;
     }
 }
