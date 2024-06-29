@@ -103,17 +103,17 @@ public class FrameInfoImo extends FrameInfo {
             double a = Imgproc.contourArea(c);
             if (MIN_PUPIL_AREA < a && a < MAX_PUPIL_AREA) {
                 Rect r = Imgproc.boundingRect(c);
-                double circleDIstance = Math.abs(a / r.area() - Math.PI / 4.0);
-                if (bestContour == null || circleDIstance < closestDistance) {
+                double circleDistance = Math.abs(a / r.area() - Math.PI / 4.0);
+                if (bestContour == null || circleDistance < closestDistance) {
                     bestContour = c;
-                    closestDistance = circleDIstance;
+                    closestDistance = circleDistance;
                 }
                 else
                     c.release();
             }
         }
 
-        if (bestContour == null) {
+        if (bestContour == null || closestDistance > 0.2) {
             this.hasPupil = false;
         } else {
                 // magic conversion factors from CREWt supplied code March 2013

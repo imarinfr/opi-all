@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import org.lei.opi.core.OpiListener;
 import org.lei.opi.core.definitions.Packet;
+import org.lei.opi.core.definitions.PupilRequest;
+import org.lei.opi.core.definitions.PupilResponse;
 
 import com.google.gson.JsonSyntaxException;
 
@@ -245,10 +248,25 @@ public class OpiJovp extends OpiListener {
     if (configuration == null || psychoEngine == null)
         return Packet.error("JOVP is not ready yet. Try again or call opiInitialise()");
 
+    long now = System.currentTimeMillis(); 
+    requestEyePosition(ViewEye.LEFT, now);
+    requestEyePosition(ViewEye.RIGHT, now + 1);
+
+    buildResponse(false, now, -1);
+    Response leftEye = new Response(response);
+
+    buildResponse(false, now + 1, -1);
+    Response rightEye = new Response(response);
+
+    response = null;
+
     Query q = new Query(configuration.distance(), psychoEngine.getFieldOfView(), configuration.viewMode(),
         configuration.input(), configuration.pseudoGray(), configuration.fullScreen(), configuration.tracking(),
         configuration.calibration().getMaxLum(), configuration.calibration().getMaxPixel(), configuration.calibration().getLumPrecision(),
-        configuration.invGammaFile(), psychoEngine.getWindow().getMonitor(), configuration.webcam().toString());
+        configuration.invGammaFile(), psychoEngine.getWindow().getMonitor(), configuration.webcam().toString(),
+        leftEye.eyexStart, leftEye.eyeyStart, leftEye.eyedStart,
+        rightEye.eyexStart, rightEye.eyeyStart, rightEye.eyedStart
+        );
 
     return new Packet(q);
   }
@@ -338,16 +356,99 @@ public class OpiJovp extends OpiListener {
         }
     }
 
-  /**
-   * Stop the psychoEngine and the socket server. (ie totally kill the JOVP with CLOSE action)
-   *
-   * @since 0.1.0
-   */
-  private Packet close() {
-    setAction(Action.CLOSE);
-    this.closeListener();   // this kills the server thread, so set action first.
-    return new Packet(true, CLOSED);
-  }
+    /**
+     * Stop the psychoEngine and the socket server. (ie totally kill the JOVP with CLOSE action)
+     *
+     * @since 0.1.0
+     */
+    private Packet close() {
+        setAction(Action.CLOSE);
+        this.closeListener();   // this kills the server thread, so set action first.
+        return new Packet(true, CLOSED);
+    }
+
+    /** 
+     * Request details of eye position from the camera(s)
+     * Response should end up on driver.getConfiguration().webcam().cameraStreamer.responseQueue
+     * 
+     * @param eye One of ViewEye.LEFT, ViewEye.RIGHT, or ViewEye.BOTH
+     * @param timestamp Stamp of the request like System.getCurrentTimeMillis()
+     */
+    public void requestEyePosition(ViewEye eye, long timestamp) {
+        if (getConfiguration().webcam().cameraStreamer == null)
+            return;
+
+        PupilRequest req;
+        if (eye != ViewEye.RIGHT) // use left for BOTH eyes
+            req = new PupilRequest(timestamp, ViewEye.LEFT);
+        else 
+            req = new PupilRequest(timestamp, ViewEye.RIGHT);
+
+        try {
+            getConfiguration().webcam().cameraStreamer.requestQueue.add(req);
+        } catch (IllegalStateException e) {
+            System.out.println("CameraStreamer request queue is full. Dropping request.");
+        }
+    }
+
+    /**
+     * Set the driver.response after getting the relevant eye positions 
+     * from the camera(s) response queues.
+     * Only update end time for a seen response.
+     * @param seen true if the stimulus was seen
+     * @param startTime time the stimulus was presented
+     * @param endTime time the button was pressed (ignored if !seen)
+     */
+    public void buildResponse(boolean seen, long startTime, long endTime) {
+            // no eye tracking data at first
+        Response result = new Response(seen, seen ? endTime - startTime : 0); 
+
+        if (getConfiguration().webcam().cameraStreamer != null) {
+            int oneTryTime = 50;  // 50 ms
+            int totalTries = 5 * 1000 / oneTryTime / 2;  // 5 seconds
+
+//System.out.println("Start time: " + startTime);
+//System.out.println("End time: " + (endTime));
+//driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
+                // Keep looking for start and end responses (if !seen) 
+                // If we don't get any data after `totalTries` then we give up
+                PupilResponse resp;
+                boolean gotStart = false;
+                boolean gotEnd = !seen;   // If !seen then we will not look for End data
+                while (!gotStart || !gotEnd) {
+                    resp = null;
+                    try {
+                        int count = 0;
+                        while (resp == null && count < totalTries) {
+                            resp = getConfiguration().webcam().cameraStreamer.responseQueue.poll(oneTryTime, TimeUnit.MILLISECONDS);
+                            count++;
+                            Thread.sleep(oneTryTime);
+                        }
+                    } catch (InterruptedException e) { ; }
+
+                    if (resp == null) {
+                        System.out.println(String.format("No response from camera queue after %s seconds", totalTries * oneTryTime * 2 / 1000));
+                        break;
+                    }
+
+                        // Check response's requestTimeStamp to see which fields to update
+                    if (resp.requestTimeStamp() == startTime) {
+                        result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startTime));
+                        gotStart = true;
+                    } else if (seen && resp.requestTimeStamp() == endTime) {
+                        result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startTime));
+                        gotEnd = true;
+                    } else 
+                        try {
+                            getConfiguration().webcam().cameraStreamer.responseQueue.put(resp);  // put it back for another time
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                }
+        }
+
+        setResponse(result);  // TODO signal this with a Condition
+    }
 
     // args[0] = port number
     // note opiJovp is `running` on a separate thread as a server

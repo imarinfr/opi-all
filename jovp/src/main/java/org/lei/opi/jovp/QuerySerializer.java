@@ -28,6 +28,12 @@ public class QuerySerializer implements JsonSerializer<Query> {
         jsonObject.add("gammaFile", context.serialize(q.invGammaFile()));
         jsonObject.add("monitor", context.serialize(q.monitor()));
         jsonObject.add("webcam", context.serialize(q.webcam()));
+        jsonObject.add("leftEyex", context.serialize(q.webcam()));
+        jsonObject.add("leftEyey", context.serialize(q.webcam()));
+        jsonObject.add("leftEyed", context.serialize(q.webcam()));
+        jsonObject.add("rightEyex", context.serialize(q.webcam()));
+        jsonObject.add("rightEyey", context.serialize(q.webcam()));
+        jsonObject.add("rightEyed", context.serialize(q.webcam()));
 
         return jsonObject;
     }

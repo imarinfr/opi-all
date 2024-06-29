@@ -149,6 +149,10 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
      * @param timestamp Timestamp that the image was acquired
      */
     private void processRequest(PupilRequest request, CircularBuffer<FT> buffer) {
+        if (buffer == null) {
+            System.out.println("Cannot satisfy camera requests for eye " + request.eye());
+            return;
+        }
 
         for (int tol = 1 ; tol < PupilRequest.MAX_TIME_DIFFERENCE_TO_SATISFY_REQUEST ; tol *= 2) {
             final Integer iTol = Integer.valueOf(tol);

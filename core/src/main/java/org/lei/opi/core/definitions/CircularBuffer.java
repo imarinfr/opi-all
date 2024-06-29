@@ -240,7 +240,7 @@ public class CircularBuffer<T> {
     }
 
     /**
-     * Elements are linear searched from head (newest)to tail (oldest) .
+     * Elements are linear searched from head (newest) to tail (oldest) .
      * 
      * Apply {@link mutator} to the first element of {@link buffer} for which {@link filter} returns true.
      * If no elements make {@link filter} true, throw NoSuchElementException.
@@ -272,14 +272,12 @@ public class CircularBuffer<T> {
         try {
             StringBuilder b = new StringBuilder(String.format("CircularBuffer (n = %d/%d, tail = %s, head = %s):", n, capacity, tail, head));
             
-            if (empty())
-                return b.toString();
+            if (!empty())
+                for(int i = 0 ; i < n ; i++) {
+                    int j = (tail + i) % capacity;
 
-            for(int i = 0 ; i < n ; i++) {
-                int j = (tail + i) % capacity;
-
-                b.append("\n\t\t" + ((T)buffer[j]).toString());
-            }
+                    b.append("\n\t\t" + ((T)buffer[j]).toString());
+                }
 
             return b.toString();
         } finally {

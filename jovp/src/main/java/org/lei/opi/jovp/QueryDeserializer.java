@@ -30,7 +30,14 @@ public class QueryDeserializer implements JsonDeserializer<Query> {
         String invGammaFile = jsonObject.get("invGammaFile").getAsString();
         Monitor monitor = context.deserialize(jsonObject.get("monitor"), Monitor.class);
         String webcam = jsonObject.get("webcam").getAsString();
+        double leftEyex = context.deserialize(jsonObject.get("leftEyex"), double.class);
+        double leftEyey = context.deserialize(jsonObject.get("leftEyey"), double.class);
+        double leftEyed = context.deserialize(jsonObject.get("leftEyed"), double.class);
+        double rightEyex = context.deserialize(jsonObject.get("rightEyex"), double.class);
+        double rightEyey = context.deserialize(jsonObject.get("rightEyey"), double.class);
+        double rightEyed = context.deserialize(jsonObject.get("rightEyed"), double.class);
 
-        return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, maxPixel, lumPrecision, invGammaFile, monitor, webcam);
+        return new Query(distance, fov, viewMode, input, pseudoGray, fullScreen, tracking, maxLum, maxPixel, lumPrecision, invGammaFile, monitor, 
+        webcam, leftEyex, leftEyey, leftEyed, rightEyex, rightEyey, rightEyed);
     }
 }

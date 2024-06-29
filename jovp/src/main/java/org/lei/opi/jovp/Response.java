@@ -7,7 +7,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 /**
- * Presentation results to report back to OPI monitor
+ * Presentation results to report back to OPI monitor from OpiLogic (used for present and query to get eye position)
  * 
  * @param seen whether stimulus was seen
  * @param time response time in ms if stimulus was seen or -1 otherwise
@@ -49,6 +49,19 @@ public class Response extends TypeAdapter<Response> {
         this.eyeyEnd = eyeyEnd;
         this.eyedEnd = eyedEnd;
         this.eyetEnd = eyetEnd;
+    }
+
+    Response(Response r) {
+        this.seen = r.seen;
+        this.time = r.time;
+        this.eyexStart = r.eyexStart;
+        this.eyeyStart = r.eyeyStart;
+        this.eyedStart = r.eyedStart;
+        this.eyetStart = r.eyetStart;
+        this.eyexEnd = r.eyexEnd;
+        this.eyeyEnd = r.eyeyEnd;
+        this.eyedEnd = r.eyedEnd;
+        this.eyetEnd = r.eyetEnd;
     }
 
     public Response() { this(false, -1, 0, 0, 0, 0, 0, 0, 0, 0); }  // need this for gsonbuilder.registerTypeAdapter
