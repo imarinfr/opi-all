@@ -62,7 +62,7 @@ public class FrameInfoImo extends FrameInfo {
      */
     List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
     public void findPupil() {
-        //System.out.println(" " + inputFrame.size());
+        //System.out.println(" " + this.mat.size());
         //Imgcodecs.imwrite("input.jpg", this.mat);
 
         Mat inputROI = new Mat(this.mat, pupilRect);

@@ -27,7 +27,15 @@ public class CameraStreamerImo extends CameraStreamer<FrameInfoImo> {
 
     public CameraStreamerImo(int port, int deviceNumberLeft, int deviceNumberRight) throws IOException {
         super(port, deviceNumberLeft, deviceNumberRight);
+        setup();
+    }
 
+    public CameraStreamerImo(int port, String deviceFolderLeft, String deviceFolderRight) throws IOException {
+        super(port, deviceFolderLeft, deviceFolderRight);
+        setup();
+    }
+
+    private void setup() {
         frameBuffer = new HashMap<ViewEye, CircularBuffer<FrameInfoImo>>(); 
         for (ViewEye e : this.deviceNumber.keySet()) 
             frameBuffer.put(e, new CircularBuffer<FrameInfoImo>(FrameInfoImo::new, 30));

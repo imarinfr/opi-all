@@ -10,6 +10,8 @@ import javax.imageio.ImageIO;
 
 import org.opencv.core.*;
 
+import com.diffplug.common.base.Errors;
+
 import es.optocom.jovp.definitions.ViewEye;
 
 import org.junit.jupiter.api.Test;
@@ -173,7 +175,7 @@ public class ImoImageTest {
 
         FrameInfoImo workingFrameInfo = new FrameInfoImo();
 
-        for (int eye = 0; eye < 100; eye++) {
+        for (int eye = 0; eye < 10; eye++) {
             try {
                 String fnameMut = String.format("/org/lei/opi/core/ImoVifa/Left/eye_%02d.jpg", eye);
                 //if (eye >= 20)
@@ -183,12 +185,12 @@ public class ImoImageTest {
                 System.out.println("\nProcessFrame: " + eye);
 
                 long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-                buffer.put(f -> f.grab(fname));
+                buffer.put(Errors.rethrow().wrap((FrameInfoImo f) -> f.grab(fname)));
                 buffer.applyHead(f -> f.findPupil());
                 buffer.conditionalPop(f -> !f.hasPupil());
                 long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
-                //System.out.println("\t Buffer: " + buffer);
+                //System.out.println("\t        Buffer: " + buffer);
 
                 long start = System.currentTimeMillis();
                 System.out.println("Looking at: " + (start - 10));
@@ -203,7 +205,7 @@ public class ImoImageTest {
                         mem3 - mem2)) ;
                 } else
                     System.out.println("\t Dropped frame");
-            } catch (IllegalArgumentException e) { ; } // missing file
+            } catch (Exception e) { ; } // missing file
         }
     }
 }

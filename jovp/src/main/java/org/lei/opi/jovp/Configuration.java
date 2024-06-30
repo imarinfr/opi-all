@@ -42,7 +42,7 @@ public record Configuration(Machine machine, int screen, int[] physicalSize, boo
                            WebCamConfiguration webcam) {
 
     /** Implemented display-based machines */
-    enum Machine {IMOVIFA, PICOVR, PHONEHMD, DISPLAY}
+    public enum Machine {IMOVIFA, PICOVR, PHONEHMD, DISPLAY}
 
     /** {@value PARADIGM} */
     static final Paradigm PARADIGM = Paradigm.CLICKER;

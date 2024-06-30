@@ -1,9 +1,10 @@
-package org.lei.opi.jovp;
+package org.lei.opi.monitor;
 
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 import org.lei.opi.jovp.Configuration.Machine;
+import org.lei.opi.jovp.OpiJovp;
 import org.lei.opi.core.OpiListener;
 
 /**
@@ -12,11 +13,15 @@ import org.lei.opi.core.OpiListener;
  *
  * @since 0.0.1
  */
-public class RToMonitorToOutsideMachine {
+public class RToMonitorToJovpTests {
 
+  /** JOVP server port */
+  private static final int JOVP_PORT = 51234;
   /** JOVP monitor port */
   private static final int MONITOR_PORT = 50001;
 
+  /** The JOVP server */
+  private OpiJovp server;
   /** The OPI monitor */
   private Core monitor;
   /** The R client */
@@ -37,16 +42,17 @@ public class RToMonitorToOutsideMachine {
    * @since 0.0.1
    */
   @Test
-  public void toImovifa() {
-    setupConnections(Machine.IMOVIFA);
-    setupCommands(Machine.IMOVIFA);
-    executeCommands();
+  public void monitorDisplay() {
+    setupConnections(Machine.DISPLAY);
+    setupCommands(Machine.DISPLAY);
+    clientDriver();
     closeConnections();
   }
 
   /** setup connections */
   private void setupConnections(Machine machine) {
     try {
+      server = new OpiJovp(JOVP_PORT); // first setup JOVP server
       monitor = new Core(MONITOR_PORT); // then setup monitor
       r = new OpiListener(monitor.getPort(), null); // finally setup R client
     } catch (IOException e) {
@@ -85,7 +91,8 @@ public class RToMonitorToOutsideMachine {
           "ImoVifa/opiPresent2.json",
           "ImoVifa/opiPresent3.json",
           "ImoVifa/opiPresent4.json",
-          "ImoVifa/opiPresent5.json"
+          "ImoVifa/opiPresent5.json",
+          "Display/opiPresentDynamic2.json"
         };
       }
       case PICOVR -> {
@@ -121,28 +128,35 @@ public class RToMonitorToOutsideMachine {
     }
   }
 
-  /** server driver with lists of present/query etc*/
-  private void executeCommands() {
-    try {
-      sendAndReceive(chooseJson);
-      System.out.println("OPI QUERY before OPI INITIALIZE");
-      sendAndReceive("opiQuery.json"); // Query OPI
-      sendAndReceive(initJson); // Initialize OPI
-      Thread.sleep(2000);
-      System.out.println("OPI QUERY after OPI INITIALIZE");
-      sendAndReceive("opiQuery.json"); // Query OPI
-      for (String s : setupJson) {
-        sendAndReceive(s); // Setup OPI
-        Thread.sleep(2000);
+  /** execute commands from driver */
+  private void clientDriver() {
+    new Thread() {
+      public void run() {
+        try {
+          Thread.sleep(500); // need to wait for PsychoEngine to start
+          executeCommands();
+        } catch (IOException | InterruptedException e) {
+          throw new RuntimeException(e);
+        }
       }
-      for (String s : presentJson) { // Present OPI
-        sendAndReceive(s);
-        Thread.sleep(500);
-      } // Present OPI
-      sendAndReceive("opiClose.json"); // Close OPI  
-    } catch (IOException | InterruptedException e) {
-      e.printStackTrace();
+    }.start();
+  }
+
+  /** server driver with lists of present/query etc*/
+  private void executeCommands() throws IOException, InterruptedException {
+    sendAndReceive(chooseJson); // Choose OPI
+    sendAndReceive(initJson); // Initialize OPI
+    Thread.sleep(1000);
+    sendAndReceive("opiQuery.json"); // Query OPI
+    for (String s : setupJson) {
+      sendAndReceive(s); // Setup OPI
+      Thread.sleep(1000);
     }
+    for (String s : presentJson) { // Present OPI
+      sendAndReceive(s);
+      Thread.sleep(500);
+    } // Present OPI
+    sendAndReceive("opiClose.json"); // Close OPI  
   }
   
   /** R sends to and receives from monitor */

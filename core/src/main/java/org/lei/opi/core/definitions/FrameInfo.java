@@ -6,6 +6,8 @@ import org.opencv.videoio.VideoCapture;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
@@ -56,39 +58,45 @@ public abstract class FrameInfo {
 
     /**
      * Grab a frame from the grabber and put it in {@link mat}.
-     * Look for a pupil.
      * @param grabber
      */
-    public void grab(VideoCapture grabber) {
+    public void grab(VideoCapture grabber) throws IOException {
         this.timeStamp = System.currentTimeMillis(); 
-        if (!grabber.read(this.mat))
-            this.timeStamp = -1;
         this.hasPupil = false;
+        if (!grabber.read(this.mat)) {
+            this.timeStamp = -1;
+            throw new IOException("Failed to grab a frame from " + grabber.toString());
+        }
     }
 
-    /**
-     * Grab a frame from file filename and put it in {@link mat}.
-     * @param grabber
+    /*
+     * Grab image from file.
+     * @param f file to grab from
      */
-    public void grab(String filename) {
+    public void grab(final File f) throws IOException {
         this.hasPupil = false;
+        this.timeStamp = -1;
+
+        final BufferedImage im = ImageIO.read(f);
+
+        if (this.mat.width() != im.getWidth() || this.mat.height() != im.getHeight() || this.mat.channels() != 3)
+            this.mat = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
+
+        final byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
+        this.mat.put(0, 0, im_array);
+
+        this.timeStamp = System.currentTimeMillis(); 
+    }
+
+        // Used for test files within package
+    public void grab(String filename) throws IOException {
         try {
-            //long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-            BufferedImage im = ImageIO.read(getClass().getResource(filename));
-            //long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-            //System.out.println(mem2 - mem1);
-
-            if (mat.type() != CvType.CV_8UC3) {
-                mat.release();
-                mat = new Mat(im.getHeight(), im.getWidth(), CvType.CV_8UC3);
-            }
-
-            byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
-            this.mat.put(0, 0, im_array);
-            this.timeStamp = System.currentTimeMillis(); 
-        } catch (IOException e) {
+            File f = new File(getClass().getResource(filename).getFile());
+            grab(f);
+        } catch (NullPointerException e) {
             this.timeStamp = -1;
-            System.out.println("Error! Could not read frame from " + filename);
+            this.hasPupil = false;
+            throw new FileNotFoundException("Error! Could not read frame from " + filename);
         }
     }
 

@@ -28,6 +28,10 @@ import es.optocom.jovp.Controller;
  */
 public class JovpParamTest {
 
+  JovpParamTest() {
+    nu.pattern.OpenCV.loadLocally();  // works on mac and windows it seems
+  }
+
   /**
    *
    * Open monitor, get local ID and port, and close it
@@ -125,6 +129,7 @@ public class JovpParamTest {
    * Note 2 need vulkan and JOVP installed too
    * @since 0.2.0
    */
+  @Test
   public void aTestInitialise() {
     OpiJovp server = new OpiJovp(50002);
     System.out.println("[testInitialise] " + server);

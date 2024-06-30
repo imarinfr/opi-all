@@ -1,13 +1,21 @@
 package org.lei.opi.core;
 
+import java.io.IOException;
+import java.net.Socket;
 import java.util.HashMap;
 
 import org.lei.opi.core.definitions.Packet;
 
+import es.optocom.jovp.definitions.ViewEye;
 import javafx.application.Platform;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.scene.Node;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 
 /**
  * Opens up a window wherever the JOVP wants it
@@ -107,5 +115,59 @@ public class Display extends Jovp {
     @FXML
     void initialize() {
         setupJavaFX("Display");
+
+        // Create a thread that will get images from server and put them in imageViewLeft
+        Thread t = new Thread() {
+            public void run() { 
+                int port = settings.eyeStreamPort;
+                if (port == -1)
+                    return;
+                
+                CameraStreamerImo csImo = new CameraStreamerImo(); // just for readBytes()
+                Socket socket = null;
+
+                    // Wait for the server to be initialised
+                while (socket == null) {
+                    try {
+                        Thread.sleep(1000);
+                        socket = new Socket(settings.ip, port);
+                    } catch (IOException e) {
+                        System.out.println("Monitor is waiting for opiInitialise to open up eye camera socket on server on port: " + port);
+                    } catch (InterruptedException e) {
+                        return;
+                    }
+                }
+
+                BufferedImage im = new BufferedImage(640, 480, BufferedImage.TYPE_3BYTE_BGR);
+                byte[] im_array = ((DataBufferByte) im.getRaster().getDataBuffer()).getData();
+                boolean isRunning = true;
+                while (isRunning) {
+                    try {
+                        Thread.sleep(20);
+                        ViewEye eye = csImo.readBytes(socket, im_array);
+
+                        if (eye == ViewEye.NONE) {
+                            Thread.sleep(100);  // try again soon 
+                            //isRunning = false;
+                            //break;
+                            continue;
+                        }
+
+                        Image img = SwingFXUtils.toFXImage(im, null);
+
+                        Platform.runLater(() -> {
+                            if (eye == ViewEye.LEFT)           // TODO need to allow for mono
+                                imageViewLeft.setImage(img);
+                            else 
+                                imageViewRight.setImage(img);
+                        });
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                        isRunning = false;
+                    }
+                }
+            }
+        };
+        t.start();
     }
 }

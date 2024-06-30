@@ -19,7 +19,7 @@ to allow for use on screen-based devices such as phones,
 VR headsets, and monitors. In attempt to be device independent for screen-based perimeters, it
 makes use of the
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> written by Iv&aacute;n Mar&iacute;n-Franch which in turn
-is built upon the Vulkan platform.
+is built upon the <a href="https://vulkan.org">Vulkan</a> platform.
 
 Some of the old implementations of the OPI Server (Octopus 900, Kowa AP7000 and iCare Compass/MAIA)
 will remain the same for now, but perhaps they could eventually be incorporated into this
@@ -122,7 +122,7 @@ create the relevant R code.
 This module is not for general use, but rather to be run to update the OPI
 R package whenever a new machine is added, or an interface to an existing machine changes.
 
-## Licence and Copyright
+## License and Copyright
 
 The [OPI-project] (WEBSITE) project and all its modules are COPYRIGHTED by Andrew Turpin
 and Iv&aacute;n Mar&iacute;n-Franch, and is distributed
@@ -131,9 +131,6 @@ under the Apache 2.0 license. Please read the license information in the attache
 ## Future Work
 * Write a doclet to format @Parameters Annotation nicely in javadoc.
 * Modularise OpiMachine.process() so Enum, Double and List are all handled consistently.
-
-* Add eye tracking to GUI if available
-
 * Far future: incorporate Compass, O900, etc into this framework
 
 
@@ -175,7 +172,6 @@ There are three main changes.
   These machines have slightly different calls for `opiX()` functions than in
   the previous standard.
 
-
 # Developer notes
 
 ## Installing opencv on mac June 2024
@@ -195,4 +191,38 @@ There are three main changes.
     brew edit opencv      # change java to "ON", note name of formula file edited = X
     export HOMEBREW_NO_INSTALL_FROM_API=1
     brew reinstall --build-from-source opencv --formula <X>
+</pre>
+
+## Pupil tracking
+
+Pupil tracking is achieved through the `CameraStreamer` class which both
+streams live eye images from any specified devices and also keeps a 
+buffer of recent pupil locations. 
+`CameraStreamer` contains a queue of `PupilRequest` and `PupilResponse` objects. 
+In the frame grabbing loop, in addition to serving frames on the specified port, 
+the `requestQueue` is checked and a response generated for the first request
+in the queue. Note that the `requestQueue` is capped in length, so if requests 
+arrive faster than the rate at which frames are processed, requests will be dropped.
+Similarly the `responseQueue` is capped in length, so if responses are not
+processed at about the same rate as requests, things will go wrong...
+
+Pupil tracking is controlled by specifying the following in `opi_settings.json`.
+<pre>
+   "tracking" = true,                // not essential for ImoVifa/Tempo
+   "deviceNumberCameraLeft": "1",    // Used to construct org.opencv.videoio.VideoCapture
+   "deviceNumberCameraRight": "2",
+   "eyeStreamPort": 50201.0,         // port on which the JOVP machine will stream images
+</pre>
+
+It is also possible to replace device numbers with folders to simulate pupil tracking.
+The `CameraStreamer` will just cycle through the files in the folder in filename order
+pretending it is a video stream.
+For example, the `Display` machine makes use of the `ImoVifa` machine's `CameraStreamer`
+and can be configured as follows.
+
+<pre>
+  "tracking": true,
+  "deviceNumberCameraLeft": "/Folder/name/of/left/eye/images/640x480/",
+  "deviceNumberCameraRight": "/Folder/name/of/right/eye/images/640x480/",
+  "eyeStreamPort": 50200,
 </pre>

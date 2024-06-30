@@ -369,7 +369,7 @@ public class OpiJovp extends OpiListener {
 
     /** 
      * Request details of eye position from the camera(s)
-     * Response should end up on driver.getConfiguration().webcam().cameraStreamer.responseQueue
+     * Response should end up on getConfiguration().webcam().cameraStreamer.responseQueue
      * 
      * @param eye One of ViewEye.LEFT, ViewEye.RIGHT, or ViewEye.BOTH
      * @param timestamp Stamp of the request like System.getCurrentTimeMillis()
@@ -392,7 +392,7 @@ public class OpiJovp extends OpiListener {
     }
 
     /**
-     * Set the driver.response after getting the relevant eye positions 
+     * Set the response after getting the relevant eye positions 
      * from the camera(s) response queues.
      * Only update end time for a seen response.
      * @param seen true if the stimulus was seen
@@ -409,7 +409,7 @@ public class OpiJovp extends OpiListener {
 
 //System.out.println("Start time: " + startTime);
 //System.out.println("End time: " + (endTime));
-//driver.getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
+//getConfiguration().webcam().cameraStreamer.responseQueue.forEach(r -> System.out.println("Resp " + r.requestTimeStamp()));
                 // Keep looking for start and end responses (if !seen) 
                 // If we don't get any data after `totalTries` then we give up
                 PupilResponse resp;

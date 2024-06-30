@@ -18,7 +18,15 @@ public class CameraStreamerNone extends CameraStreamer<FrameInfoNone> {
 
     public CameraStreamerNone(int port, int deviceNumberLeft, int deviceNumberRight) throws IOException {
         super(port, deviceNumberLeft, deviceNumberRight);
+        setup();
+    }
 
+    public CameraStreamerNone(int port, String deviceFolderLeft, String deviceFolderRight) throws IOException {
+        super(port, deviceFolderLeft, deviceFolderRight);
+        setup();
+    }
+
+    private void setup() {
         frameBuffer = new HashMap<ViewEye, CircularBuffer<FrameInfoNone>>(); 
         for (ViewEye e : this.deviceNumber.keySet()) 
             frameBuffer.put(e, new CircularBuffer<FrameInfoNone>(FrameInfoNone::new, 30));

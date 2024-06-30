@@ -169,7 +169,7 @@ public class Monitor extends Application {
                     System.out.println("Could not find " + machineName + " in settings file, resetting to defauts.");
                 }
             } catch (FileNotFoundException e) {
-                System.out.println("Could not find settings file, resetting to defauts.");
+                System.out.println("Could not find settings file, resetting to defaults.");
             }
         }
         

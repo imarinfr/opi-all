@@ -6,14 +6,20 @@ import org.lei.opi.core.definitions.PupilRequest;
 import org.lei.opi.core.definitions.PupilResponse;
 import org.opencv.videoio.VideoCapture;
 
+import com.diffplug.common.base.Errors;
+
 import es.optocom.jovp.definitions.ViewEye;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -43,7 +49,13 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
     */
     protected final HashMap<ViewEye, Integer> deviceNumber = new HashMap<ViewEye, Integer>(); 
 
-    /** The port number on this machine that will serve images */
+    /*
+    * A queue of files to read instead of grabbing from camera.
+    * If there is an entry for eye it will be preferred over deviceNumbers[eye]
+    */
+    protected final HashMap<ViewEye, ArrayDeque<File>> deviceFiles = new HashMap<ViewEye, ArrayDeque<File>>(); 
+
+    /** The port number on this machine that will serve images. -1 for no streaming */
     private int port; 
 
     /** The socket on which frames will be sent. */
@@ -59,13 +71,13 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
     public CameraStreamer() { ; }
 
     /**
-     * Create a CameraStreamer that streams images from a camera on the local machine and sends them over UDP
+     * Create a CameraStreamer that streams images from camera(s) on the local machine given by deviceNumber(s)
      * @param port The port number on this machine that will serve images 
      * @param deviceNumberLeft Camera number on the local machine running the CameraStreamer for left eye (or just one camera)
      * @param deviceNumberRight Camera number on the local machine running the CameraStreamer for right eye (could be -1 for just one camera)
      * @throws IOException
      */
-    public CameraStreamer(int port, int deviceNumberLeft, int deviceNumberRight) throws IOException {
+    public CameraStreamer(final int port, final int deviceNumberLeft, final int deviceNumberRight) throws IOException {
         this.port = port;
 
         if (deviceNumberLeft > -1)
@@ -78,6 +90,40 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
 
         this.start();
     }
+
+    /**
+     * Create a CameraStreamer that streams images from a files in fodlers given
+     * @param port The port number on this machine that will serve images 
+     * @param deviceNumberLeft Camera number on the local machine running the CameraStreamer for left eye (or just one camera)
+     * @param deviceNumberRight Camera number on the local machine running the CameraStreamer for right eye (could be -1 for just one camera)
+     * @throws IOException
+     */
+    public CameraStreamer(final int port, final String leftFolder, final String rightFolder) throws IOException {
+        this.port = port;
+
+            // This is for the subclass so that framebuffers are initialised and also for a few other things...
+        if (leftFolder != null) {
+            this.deviceNumber.put(ViewEye.LEFT, null);
+            deviceFiles.put(ViewEye.LEFT, new ArrayDeque<File>(listFiles(leftFolder)));
+        }
+        if (rightFolder != null) {
+            this.deviceNumber.put(ViewEye.RIGHT, null);
+            deviceFiles.put(ViewEye.RIGHT, new ArrayDeque<File>(listFiles(rightFolder)));
+        }
+
+        requestQueue = new LinkedBlockingDeque<PupilRequest>(10);
+        responseQueue = new LinkedBlockingQueue<PupilResponse>(10);
+
+        this.start();
+    }
+    
+    /*
+     * @param folder 
+     */
+    private List<File> listFiles(final String folder) throws IOException {
+        final File f = new File(folder);
+        return Arrays.asList(f.listFiles());
+    }
         
     /**
      * Loop grabbing frames into the frameBuffer(s) and both
@@ -86,23 +132,29 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
      */
     @Override
     public void run() {
+            // Try and connect to a camera if deviceFiles is not available
         HashMap <ViewEye, VideoCapture> grabber = new HashMap<ViewEye, VideoCapture>();
         for (ViewEye e : this.deviceNumber.keySet()) {
-            grabber.put(e, new VideoCapture((int)deviceNumber.get(e)));
-            if (!grabber.get(e).isOpened()) {
-                System.out.println(String.format("Cannot open camera %s for eye %s", deviceNumber.get(e), e));
-                this.connected = false;
-                return;
-            }
+            if (!deviceFiles.containsKey(e)) {
+                grabber.put(e, new VideoCapture((int)deviceNumber.get(e)));
+                if (!grabber.get(e).isOpened()) {
+                    System.out.println(String.format("Cannot open camera %s for eye %s", deviceNumber.get(e), e));
+                    this.connected = false;
+                    return;
+                }
+            } 
         }
 
         try {
-            ServerSocket server = new ServerSocket(this.port);
-            server.setSoTimeout(10);
+            ServerSocket server = null;
+            if (port != -1) {
+                server = new ServerSocket(this.port);
+                server.setSoTimeout(10);
+            }
 
             while (!isInterrupted()) {
                     // See if someone wants to connect and stream...
-                if (!connected)
+                if (port != -1 && !connected)
                     try {
                         socket = server.accept();
                         this.connected = true;
@@ -110,7 +162,13 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
 
                     // Try and grab each device as close as possible in time, then add pupils
                 for (ViewEye e : this.frameBuffer.keySet())
-                    frameBuffer.get(e).put((FT f) -> f.grab(grabber.get(e)));
+                    if (deviceFiles.containsKey(e)) {
+                        final File file = deviceFiles.get(e).poll();
+                        deviceFiles.get(e).addLast(file);
+                        frameBuffer.get(e).put(Errors.rethrow().wrap((FT f) -> f.grab(file)));
+                    } else 
+                        frameBuffer.get(e).put(Errors.rethrow().wrap((FT f) -> f.grab(grabber.get(e))));
+
                 for (ViewEye e : this.frameBuffer.keySet()) {
                     frameBuffer.get(e).applyHead((FT f) -> f.findPupil());
                     if (connected)
@@ -203,7 +261,7 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
      *
      * @param socket An open socket from which to read
      * @param dst Byte array to fill.
-     * @return Device number read. -1 for error
+     * @return Eye read. ViewEye.NONE for error.
      */
     public abstract ViewEye readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException;
 }

@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * Create a concurrent safe circular LIFO buffer of fixed-size objects.
+ * Create a concurrent safe circular LIFO buffer of fixed-size objects of type T and of fixed capacity.
  * 
  * Andrew Turpin
  * Date Mon 17 Jun 2024 09:49:45 AWST
@@ -58,6 +58,9 @@ public class CircularBuffer<T> {
             lock.unlock();
         }
     }
+
+    /** @return Number of items currently in buffer */
+    public int size() { return n; }
 
     /**
      * Remove the last element in the buffer and return it.

@@ -29,8 +29,8 @@ public abstract class Jovp extends OpiMachine {
         public String input;
         public boolean tracking;
         public String gammaFile;
-        public int deviceNumberCameraLeft;   // for eye tracking if present
-        public int deviceNumberCameraRight;  // for eye tracking if present
+        public String deviceNumberCameraLeft;   // for eye tracking if present
+        public String deviceNumberCameraRight;  // for eye tracking if present
         public int eyeStreamPort; // Port on which eye images will be streamed (if any, -1 if none)
 
         public void setScreen(int screen) { this.screen = screen; }
