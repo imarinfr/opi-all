@@ -1,11 +1,3 @@
----
-title: "OPI-JOVP Server"
-output:
-  html_document:
-    toc: true
-    number_sections: true
----
-
 # OPI-JOVP Server
 
 Created by Iv&aacute;n Mar&iacute;n-Franch and Andrew Turpin commencing October 2022.

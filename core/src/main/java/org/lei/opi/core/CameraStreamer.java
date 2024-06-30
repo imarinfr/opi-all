@@ -92,7 +92,7 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
     }
 
     /**
-     * Create a CameraStreamer that streams images from a files in fodlers given
+     * Create a CameraStreamer that streams images from a files in folders given
      * @param port The port number on this machine that will serve images 
      * @param deviceNumberLeft Camera number on the local machine running the CameraStreamer for left eye (or just one camera)
      * @param deviceNumberRight Camera number on the local machine running the CameraStreamer for right eye (could be -1 for just one camera)
