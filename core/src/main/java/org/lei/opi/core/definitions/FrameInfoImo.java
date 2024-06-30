@@ -96,14 +96,15 @@ public class FrameInfoImo extends FrameInfo {
 
 
             // Filter out dud contours with area outside limits and take
-            // circular factor closest to pi/4.
+            // ratio of area of enclosing square and contour that is closest to pi/4.
         MatOfPoint bestContour = null;
         double closestDistance = 0;  // initialized to keep compiler happy
         for (MatOfPoint c : contours) {
             double a = Imgproc.contourArea(c);
             if (MIN_PUPIL_AREA < a && a < MAX_PUPIL_AREA) {
                 Rect r = Imgproc.boundingRect(c);
-                double circleDistance = Math.abs(a / r.area() - Math.PI / 4.0);
+                double maxDim = Math.max(r.height, r.width);
+                double circleDistance = Math.abs(a / maxDim / maxDim - Math.PI / 4.0);
                 if (bestContour == null || circleDistance < closestDistance) {
                     bestContour = c;
                     closestDistance = circleDistance;
