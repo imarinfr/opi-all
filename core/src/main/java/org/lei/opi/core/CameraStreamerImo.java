@@ -50,30 +50,31 @@ public class CameraStreamerImo extends CameraStreamer<FrameInfoImo> {
      */
     public ViewEye readBytes(Socket socket, byte []dst) throws IndexOutOfBoundsException {
         ViewEye eye = ViewEye.NONE;
-        try {
-            int eyeCode = (int)socket.getInputStream().read();
-            if (eyeCode < 0)
-                return eye;
-            eye = eyeCode == CODE_LEFT ? ViewEye.LEFT : ViewEye.RIGHT;
+        if (socket.isConnected())
+            try {
+                int eyeCode = (int)socket.getInputStream().read();
+                if (eyeCode < 0)
+                    return eye;
+                eye = eyeCode == CODE_LEFT ? ViewEye.LEFT : ViewEye.RIGHT;
 
-            int n1 = (int)socket.getInputStream().read();
-            int n2 = (int)socket.getInputStream().read();
-            int n3 = (int)socket.getInputStream().read();
-            int n4 = (int)socket.getInputStream().read();
-            int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n4;
+                int n1 = (int)socket.getInputStream().read();
+                int n2 = (int)socket.getInputStream().read();
+                int n3 = (int)socket.getInputStream().read();
+                int n4 = (int)socket.getInputStream().read();
+                int n = (n1 << 24) | (n2 << 16) | (n3 << 8) | n4;
 
-            if (dst.length != n)
-                throw new IndexOutOfBoundsException("CameraStreamerImo readBytes needs a bigger destination.");
+                if (dst.length != n)
+                    throw new IndexOutOfBoundsException("CameraStreamerImo readBytes needs a bigger destination.");
 
-            int off = 0; // current start of buffer (offset)
-            while (off < n) {
-                int readN = socket.getInputStream().read(dst, off, n - off);
-                off += readN;
+                int off = 0; // current start of buffer (offset)
+                while (off < n) {
+                    int readN = socket.getInputStream().read(dst, off, n - off);
+                    off += readN;
+                }
+            } catch(IOException e) {
+                System.out.println("CameraStreamerImo readBytes: trouble reading socket");
+                e.printStackTrace();
             }
-        } catch(IOException e) {
-            System.out.println("CameraStreamerImo readBytes: trouble reading socket");
-            e.printStackTrace();
-        }
         return eye;
     }
     

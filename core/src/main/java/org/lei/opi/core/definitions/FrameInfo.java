@@ -54,6 +54,7 @@ public abstract class FrameInfo {
         destination.pupilDiameter = pupilDiameter;
         destination.pupilX = pupilX;
         destination.pupilY = pupilY;
+        destination.timeStamp = timeStamp;
     }
 
     /**
