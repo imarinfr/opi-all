@@ -1,5 +1,5 @@
 test_that("Sims", {
-    for (m in c("SimYes", "SimNo", "SimGaussian", "SimHenson")) {
+    for (m in c("SimYes", "SimNo", "SimGaussian", "SimHenson", "SimHensonRT")) {
         a <- do.call(paste0("opiQueryDevice_for_", m), args = list())
         expect_named(a, c("isSim", "machine"), label = m)
         expect_equal(a$isSim, TRUE, label = m)

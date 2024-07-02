@@ -63,7 +63,7 @@ opiQueryDevice_for_SimHenson <- function() list(isSim = TRUE, machine = "SimHens
 #' @param ... Any other parameters you like, they are ignored.
 #'
 #' @return A list with elements:
-#'   * \code{err} NULL if initialised, meg otherwise
+#'   * \code{err} NULL if initialised, msg otherwise
 #'
 #' @examples
 #'     # Set up a simple simulation for white-on-white perimetry
@@ -132,14 +132,6 @@ opiSetup_for_SimHenson <- function(...) list(err = NULL)
 #'
 #' For internal use only, use `opiPresent()`.
 #'
-#' The FoS formula is
-#' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, \mbox{pxVar})}
-#' where `x` is the stimulus value in dB, and `pxVar` is
-#' \deqn{\min(\mbox{cap}, e^{A\times\mbox{tt}+B}).}
-#' The ceiling \code{cap} is set with the call to
-#' \code{opiInitialize}, and \code{A} and \code{B} are from Table 1 in Henson
-#' et al (2000), also set in the call to `opiInitiaise` using the \code{type} parameter.
-#'
 #' @usage NULL
 #' @param stim A list that contains at least:
 #'   * `level` which is the stim value in cd/\eqn{\mbox{m}^2}{m^2}.
@@ -147,6 +139,15 @@ opiSetup_for_SimHenson <- function(...) list(err = NULL)
 #' @param fnr false negative rate for the FoS curve (range 0..1).
 #' @param tt  mean of the assumed FoS curve in dB.
 #' @param ...  Any other parameters you like, they are ignored.
+#' 
+#' @details
+#' The FoS formula is
+#' \deqn{\mbox{fpr}+(1-\mbox{fpr}-\mbox{fnr})(1-\mbox{pnorm}(x, \mbox{tt}, \mbox{pxVar})}
+#' where `x` is the stimulus value in dB, and `pxVar` is
+#' \deqn{\min(\mbox{cap}, e^{A\times\mbox{tt}+B}).}
+#' The ceiling \code{cap} is set with the call to
+#' \code{opiInitialize}, and \code{A} and \code{B} are from Table 1 in Henson
+#' et al (2000), also set in the call to `opiInitialise` using the \code{type} parameter.
 #'
 #' @return A list with elements:
 #'   * \code{err} \code{NULL} if no error, a string message otherwise.

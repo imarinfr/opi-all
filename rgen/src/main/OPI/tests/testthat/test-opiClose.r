@@ -1,5 +1,5 @@
 test_that("Sims", {
-    for (m in c("SimYes", "SimNo", "SimGaussian", "SimHenson"))
+    for (m in c("SimYes", "SimNo", "SimGaussian", "SimHenson", "SimHensonRT"))
         expect_equal(do.call(paste0("opiClose_for_", m), args = list()), list(err = NULL), label = m)
 })
 

@@ -79,7 +79,7 @@ machineName, machineName);  // environment name
     } 
   
     public static void main(String args[]) {
-        String path = "rgen/src/main/OPI3/R/";
+        String path = "rgen/src/main/OPI/R/";
         String machinesWithoutEcho[] = Arrays.stream(OpiMachine.MACHINES).filter(s -> !s.equals("Echo")).toArray(String[]::new);
         for (String machineName : machinesWithoutEcho) {
             PrintStream printStream = null;

@@ -1,6 +1,6 @@
-# Open Perimetry Interface (OPI3)
+# Open Perimetry Interface (OPI)
 
-The OPI3 package (Open Perimetry Interface) is used to both simulate and execute visual field testing 
+The OPI package (Open Perimetry Interface) is used to both simulate and execute visual field testing 
 algorithms (perimetry algorithms) on machines that can create visual stimuli. 
 The simulation can be done solely with this package. Controlling machines, be they standard 
 displays, phones, tablets, etc or commercial perimeters 
@@ -26,16 +26,16 @@ The machine or simulation that the set of functions operate upon is selected usi
 
 ## How do I get it?
 
-The OPI3 package is free from CRAN and includes all code needed for simulation and use on 
+The OPI package is free from CRAN and includes all code needed for simulation and use on 
 machines such as standard displays (ie your computer monitor). 
 
 To use the 
  * Octopus 900 machine, you should contact Haag-Streit to seek permission.
+ * imoVifa/Tempo machine, contact CREWT (Japan)or Topcon Healthcare Inc (USA) to seek permission.
  * Compass or Maia machine, contact iCare to seek permission.
  * Kowa AP7000 machine, contact Kowa to seek permission.
- * imoVifa machine, contact CREWT to seek permission.
 
-Note the reason for requiring permission from commercial partners of the OPI3
+Note the reason for requiring permission from commercial partners of the OPI
 for use on their machines is for medico-legal reasons related to the 
 accreditation of the machines as medical devices by regulating bodies in 
 different countries.  
@@ -46,7 +46,7 @@ and he can put you in touch with the right person.
 
 ## Other resources
 
-[OPI www page](https://perimetry.org/opi)
+[OPI www page](https://opi.lei.org.au)
 
 [OPI github](https://github.com/turpinandrew/OPI)
 

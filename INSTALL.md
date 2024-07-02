@@ -1,29 +1,27 @@
 ---
-title: "OPI Server 3.0 Installation"
+title: "OPI-JOVP Installation"
 output:
   html_document:
     toc: true
     number_sections: true
 ---
 
-# OPI Server 3.0 
+`UNDER CONSTRUCTION Tue  2 Jul 2024 14:02:09 AWST`
+
+
+# OPI-JOVP 
 
 Created by Iv&aacute;n Mar&iacute;n-Franch and Andrew Turpin commencing October 2022.
 
-This is a complete re-write of the <a href="https://perimetry.org/opi">Open Perimetry Interface</a> 
-middleware (or "OPI server") and some associated changes
-to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a> 
-to allow for use on screen-based devices such as phones, 
+This is new middleware (or "OPI server") for the <a href="https://opi.lei.org.au">Open Perimetry Interface</a> 
+that allows 
+the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a> 
+to use screen-based devices such as phones, 
 VR headsets, and monitors. In attempt to be device independent for screen-based perimeters, it 
 makes use of the 
 <a href = "https://github.com/imarinfr/jovp">JOVP</a> written by Iv&aacute;n Mar&iacute;n-Franch which in turn
-is built upon the Vulkan platform.
+is built upon the <a href="https://www.vulkan.org">Vulkan</a> platform.
 
-# Basic installation
-
-1. Install Java Runtime (JRE) 19
-2. Install JavaFX API version 19 
-3. Execute run_opi_monitor.bat 
 
 # Test installation
 1. Make sure you have the OPI R package installed (v3.0 or higher)

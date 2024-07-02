@@ -30,9 +30,9 @@
   <groupId>org.lei.opi</groupId>
   <artifactId>opi</artifactId>
   <packaging>pom</packaging>
-  <version>0.3.0</version>
+  <version>1.0.0</version>
   <name>OPI project</name>
-  <url>http://perimetry.org/opi</url>
+  <url>https://opi.lei.org.au/</url>
 
   <modules>
     <module>core</module>

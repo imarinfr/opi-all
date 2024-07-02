@@ -4,7 +4,7 @@ Created by Iv&aacute;n Mar&iacute;n-Franch and Andrew Turpin commencing October 
 
 ## Description
 
-This is a new <a href="https://perimetry.org/opi">Open Perimetry Interface</a>
+This is a new <a href="https://opi.lei.org.au">Open Perimetry Interface</a>
 middleware (or "OPI server") and some associated changes
 to the <a href="https://cran.r-project.org/web/packages/OPI/index.html">OPI R package</a>
 to allow for use on screen-based devices such as phones,

@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-packageStartupMessage("OPI3 version", utils::packageVersion("OPI3"))
+packageStartupMessage("OPI version", utils::packageVersion("OPI"))
 
 # Used for holding state of the OPI
 
@@ -23,7 +23,6 @@ packageStartupMessage("OPI3 version", utils::packageVersion("OPI3"))
 .opi_env <- new.env(size = 20)
 
 assign("machine_list", list(
-    # "SimHensonRT",  No longer supported. Do your own outside opiPresent. data still in package.
     # "Jovp",  Not needed as a standalone, use subclasses: Display, ...
     #"Icare",  Not needed as a standalone, use subclasses: O900, O600
     # "O600",  Never really supported?
@@ -36,6 +35,7 @@ assign("machine_list", list(
     "SimNo",
     "SimYes",
     "SimHenson",
+    "SimHensonRT",
     "SimGaussian",
     "PhoneHMD",
     "Display",

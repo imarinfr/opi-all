@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(OPI3)
+library(OPI)
 
-test_check("OPI3")
+test_check("OPI")
