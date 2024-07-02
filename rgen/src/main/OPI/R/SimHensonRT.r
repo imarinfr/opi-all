@@ -236,7 +236,7 @@ opiSetup_for_SimHensonRT <- function(...) list(err = NULL)
 #'
 #' dist <- (10 - 30) / min(exp(-0.098 * 30 + 3.62), 6)
 #' result <- opiPresent(stim = list(level = dbTocd(20)), tt = 30, fpr = 0.15, fnr = 0.01, dist=dist)
-#' print(result, quote = FALSE))
+#' print(result, quote = FALSE)
 #'
 #' res <- opiClose()
 #' if (!is.null(res$err))
@@ -252,15 +252,15 @@ opiPresent_for_SimHensonRT <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, di
     if (is.null(stim) || ! "level" %in% names(stim))
         return(list(err = "'stim' should be a list with a name 'level'. stim$level is the cd/m^2 to present."))
 
-    if (runif(1) < 0.5) { # check fpr then fnr
-        if (runif(1) < fpr)
+    if (stats::runif(1) < 0.5) { # check fpr then fnr
+        if (stats::runif(1) < fpr)
             return(list(err = NULL, seen = TRUE, time = sample(.opi_env$sim_henson$rtFP, size = 1)))
-        if (runif(1) < fnr)
+        if (stats::runif(1) < fnr)
             return(list(err = NULL, seen = FALSE, time = NA))
     }  else { # check fnr then fpr
-        if (runif(1) < fnr)
+        if (stats::runif(1) < fnr)
             return(list(err = NULL, seen = FALSE, time = NA))
-        if (runif(1) < fpr)
+        if (stats::runif(1) < fpr)
             return(list(err = NULL, seen = TRUE, time = sample(.opi_env$sim_henson$rtFP, size = 1)))
     }
 
@@ -268,7 +268,7 @@ opiPresent_for_SimHensonRT <- function(stim, fpr = 0.03, fnr = 0.01, tt = 30, di
     px_var <- min(.opi_env$sim_henson$cap, exp(.opi_env$sim_henson$A*tt + .opi_env$sim_henson$B)) # variability of patient, henson formula
     if (stats::runif(1) < 1 - stats::pnorm(level, mean = tt, sd = px_var)) {
         ds <- abs(.opi_env$sim_henson$rtData$Dist - dist)
-        m <- head(which.min(ds), 1)
+        m <- utils::head(which.min(ds), 1)
         return(list(err = NULL, seen = TRUE, time = .opi_env$sim_henson$rtData$Rt[m]))
     } else {
         return(list(err = NULL, seen = FALSE, time = NA))

@@ -173,7 +173,7 @@ public class CircularBuffer<T> {
      * 
      * @param filter Predicate to apply to each element of {@link buffer}
      * @param copy Function to copy element i of the buffer to dst (eg copy = (src, dst) -> src.copyTo(dst); )
-     * @param dst Destination object for the copy  TODO do i need this??? or can it be in copy function?
+     * @param dst Destination object for the copy
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean getTailToHead(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {
@@ -197,7 +197,7 @@ public class CircularBuffer<T> {
      * 
      * @param filter Predicate to apply to each element of {@link buffer}
      * @param copy Function to copy element i of the buffer to dst (eg copy = (src, dst) -> src.copyTo(dst); )
-     * @param dst Destination object for the copy  TODO do i need this??? or can it be in copy function?
+     * @param dst Destination object for the copy
      * @return Copy the first element for which {@link filter} is true into dst and return true. False for no match.
      */
     public boolean getHeadToTail(Predicate<T> filter, BiConsumer<T, T> copy, T dst) {

@@ -194,7 +194,7 @@ public class ImoVifa extends Jovp {
                         Image img = SwingFXUtils.toFXImage(im, null);
 
                         Platform.runLater(() -> {
-                            if (eye == ViewEye.LEFT)                 // TODO need to allow for mono
+                            if (eye == ViewEye.LEFT)
                                 imageViewLeft.setImage(img);
                             else 
                                 imageViewRight.setImage(img);

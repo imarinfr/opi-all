@@ -25,13 +25,13 @@ packageStartupMessage("OPI version", utils::packageVersion("OPI"))
 assign("machine_list", list(
     # "Jovp",  Not needed as a standalone, use subclasses: Display, ...
     #"Icare",  Not needed as a standalone, use subclasses: O900, O600
-    # "O600",  Never really supported?
+    #"Maia",  TODO?
     "Compass",
     "ImoVifa",
     "Tempo",
-    # "Kowa",   TODO
-    #"Maia",  TODO?
+    "Kowa",
     "Octopus900",
+    "O600",  # Never really supported?
     "SimNo",
     "SimYes",
     "SimHenson",
@@ -74,7 +74,8 @@ chooseOPI <- function(machine = NULL) {
 #' @export
 chooseOpi <- chooseOPI
 
-#' opiInitialise that calls opiInitialise_for_MACHINE as appropriate.
+#' @title Calls opiInitialise_for_MACHINE as appropriate.
+#' @description
 #'
 #' Establishes connection with the device and a Monitor (aka Server) if appropriate.
 #' Sends any startup parameters that might be needed by the machine.
