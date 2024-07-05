@@ -96,8 +96,8 @@ public class ImoImageTest {
         for (int eye = 0; eye < 200; eye++) {
             long start = System.currentTimeMillis();
             //String fname = String.format("/org/lei/opi/core/ImoVifa/Left/eye_%02d.jpg", eye);
-            String fname = String.format("/org/lei/opi/core/ImoVifa/Allison/eye_%02d.jpg", eye);
-            //String fname = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
+            //String fname = String.format("/org/lei/opi/core/ImoVifa/Allison/eye_%02d.jpg", eye);
+            String fname = String.format("/org/lei/opi/core/ImoVifa/eye_%02d.jpg", eye);
             try {
                 BufferedImage im = ImageIO.read(getClass().getResource(fname));
 
