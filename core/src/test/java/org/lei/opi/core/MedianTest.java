@@ -2,6 +2,7 @@ package org.lei.opi.core;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.lei.opi.core.definitions.MedianList;
 
 public class MedianTest {
     

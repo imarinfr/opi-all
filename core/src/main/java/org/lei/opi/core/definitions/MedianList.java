@@ -1,4 +1,4 @@
-package org.lei.opi.core;
+package org.lei.opi.core.definitions;
 
 /**
  * Implement a circular array that can return the median.
