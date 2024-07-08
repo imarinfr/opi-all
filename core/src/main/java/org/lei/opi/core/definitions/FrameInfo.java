@@ -22,9 +22,9 @@ public abstract class FrameInfo {
     protected long timeStamp;
     protected Mat mat;
     protected boolean hasPupil;
-    protected double pupilDiameter;     // diameter of pupil in mm
-    protected double pupilX;      // x position of pupil in degrees from image centre
-    protected double pupilY;      // y position of pupil in degrees from image centre
+    protected int pupilDiameter;     // diameter of pupil in pixels
+    protected int pupilX;      // x position of pupil in pixels from image centre
+    protected int pupilY;      // y position of pupil in pixels from image centre
 
     public FrameInfo() {
         this.timeStamp = -1;
@@ -38,9 +38,9 @@ public abstract class FrameInfo {
         this.hasPupil = false;
     }
 
-    public double pupilDiameter() { return pupilDiameter; }
-    public double pupilY() { return pupilY; }
-    public double pupilX() { return pupilX; }
+    public int pupilDiameter() { return pupilDiameter; }
+    public int pupilY() { return pupilY; }
+    public int pupilX() { return pupilX; }
     public boolean hasPupil() { return hasPupil; }
     public long timeStamp() { return timeStamp; }
     public Mat mat() { return mat; }
@@ -103,7 +103,7 @@ public abstract class FrameInfo {
 
     public String toString() {
         if (this.hasPupil)
-            return String.format("FrameInfo: timeStamp=%10d, mat=%s x: %6.4f, y: %6.4f, d: %5.2f", timeStamp, mat, pupilX, pupilY, pupilDiameter);
+            return String.format("FrameInfo: timeStamp=%10d, mat=%s x: %+3d, y: %+3d, d: %3d", timeStamp, mat, pupilX, pupilY, pupilDiameter);
         else
             return String.format("FrameInfo: timeStamp=%10d, mat=%s No pupil", timeStamp, mat);
     }

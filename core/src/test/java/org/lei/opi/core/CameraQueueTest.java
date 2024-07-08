@@ -20,7 +20,6 @@ public class CameraQueueTest {
     */
     class Consumer extends Thread {
         CameraStreamer<? extends FrameInfo> server;
-        
         Consumer(CameraStreamer<? extends FrameInfo> server) { this.server = server; }
 
         @Override

@@ -26,19 +26,19 @@ public class Response extends TypeAdapter<Response> {
     boolean seen; 
     long time;
 
-    double eyexStart; 
-    double eyeyStart;
-    double eyedStart;
+    int eyexStart; 
+    int eyeyStart;
+    int eyedStart;
     int eyetStart;
 
-    double eyexEnd; 
-    double eyeyEnd;
-    double eyedEnd;
+    int eyexEnd; 
+    int eyeyEnd;
+    int eyedEnd;
     int eyetEnd;
     
     Response(boolean seen, long time,
-            double eyexStart, double eyeyStart, double eyedStart, int eyetStart,
-            double eyexEnd, double eyeyEnd, double eyedEnd, int eyetEnd) {
+            int eyexStart, int eyeyStart, int eyedStart, int eyetStart,
+            int eyexEnd, int eyeyEnd, int eyedEnd, int eyetEnd) {
         this.seen = seen;
         this.time = time;
         this.eyexStart = eyexStart;
@@ -75,7 +75,7 @@ public class Response extends TypeAdapter<Response> {
      * @param d Value for eyedStart or eyedEnd
      * @param t Value for eyetStart or eyetEnd
      */
-    public void updateEye(boolean isStart, double x, double y, double d, int t) {
+    public void updateEye(boolean isStart, int x, int y, int d, int t) {
         if (isStart) {
             eyexStart = x;
             eyeyStart = y;
@@ -108,13 +108,13 @@ public class Response extends TypeAdapter<Response> {
         in.beginObject();
         boolean seen = false;
         long time = -1;
-        double eyexStart = 0;
-        double eyeyStart = 0;
-        double eyedStart = 0;
+        int eyexStart = 0;
+        int eyeyStart = 0;
+        int eyedStart = 0;
         int eyetStart = 0;
-        double eyexEnd = 0;
-        double eyeyEnd = 0;
-        double eyedEnd = 0;
+        int eyexEnd = 0;
+        int eyeyEnd = 0;
+        int eyedEnd = 0;
         int eyetEnd = 0;
         while (in.hasNext()) {
             String name = in.nextName();
@@ -123,19 +123,19 @@ public class Response extends TypeAdapter<Response> {
             } else if (name.equals("time")) {
                 time = in.nextLong();
             } else if (name.equals("eyexStart")) {
-                eyexStart = in.nextDouble();
+                eyexStart = in.nextInt();
             } else if (name.equals("eyeyStart")) {
-                eyeyStart = in.nextDouble();
+                eyeyStart = in.nextInt();
             } else if (name.equals("eyedStart")) {
-                eyedStart = in.nextDouble();
+                eyedStart = in.nextInt();
             } else if (name.equals("eyetStart")) {
                 eyetStart = in.nextInt();
             } else if (name.equals("eyexEnd")) {
-                eyexEnd = in.nextDouble();
+                eyexEnd = in.nextInt();
             } else if (name.equals("eyeyEnd")) {
-                eyeyEnd = in.nextDouble();
+                eyeyEnd = in.nextInt();
             } else if (name.equals("eyedEnd")) {
-                eyedEnd = in.nextDouble();
+                eyedEnd = in.nextInt();
             } else if (name.equals("eyetEnd")) {
                 eyetEnd = in.nextInt();
             } else {

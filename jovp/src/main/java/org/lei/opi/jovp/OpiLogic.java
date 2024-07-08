@@ -3,10 +3,6 @@ package org.lei.opi.jovp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import org.lei.opi.core.definitions.PupilRequest;
-import org.lei.opi.core.definitions.PupilResponse;
 
 import es.optocom.jovp.PsychoEngine;
 import es.optocom.jovp.PsychoLogic;

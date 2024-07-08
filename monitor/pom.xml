@@ -26,28 +26,6 @@
 		          <mainClass>org.lei.opi.monitor.Monitor</mainClass>
 	      </configuration>
       </plugin>
-    <!-- 
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.4.0</version>
-            <executions>
-            <execution>
-              <phase>package</phase>
-              <goals>
-                <goal>shade</goal>
-              </goals>
-              <configuration>
-                <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>org.lei.opi.monitor.Main</mainClass>
-                </transformer>
-                </transformers>
-              </configuration>
-            </execution>
-            </executions>
-    </plugin>
-  -->
 </plugins>
 </build>
 
@@ -65,14 +43,14 @@
      <dependency>
       <groupId>org.lei.opi</groupId>
       <artifactId>core</artifactId>
-      <version>0.2.0</version>
+      <version>1.0.0</version>
     </dependency>
 
      <!-- needed for tests-->
      <dependency>
       <groupId>org.lei.opi</groupId>
       <artifactId>opiJovp</artifactId>
-      <version>0.2.0</version>
+      <version>1.0.0</version>
     </dependency>
 
   </dependencies>

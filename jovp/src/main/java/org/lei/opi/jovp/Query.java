@@ -19,17 +19,17 @@ import es.optocom.jovp.definitions.ViewMode;
  * @param invGammaFile the path of the inverse gamma file
  * @param monitor display of the OPI JOVP machine
  * @param webcam String representation of WebCamConfiguration
- * @param leftEyex x coordinate of left eye (degrees from image centre)
- * @param leftEyey y coordinate of left eye (degrees from image centre)
- * @param leftEyed diameter of left eye (mm)
- * @param rightEyex x coordinate of right eye (degrees from image centre)
- * @param rightEyey y coordinate of right eye (degrees from image centre)
- * @param rightEyed diameter of right eye (mm)
+ * @param leftEyex x coordinate of left eye (pixels from image centre)
+ * @param leftEyey y coordinate of left eye (pixels from image centre)
+ * @param leftEyed diameter of left eye (pixels)
+ * @param rightEyex x coordinate of right eye (pixels from image centre)
+ * @param rightEyey y coordinate of right eye (pixels from image centre)
+ * @param rightEyed diameter of right eye (pixels)
  * @since 0.0.1
  */
 public record Query(int distance, float[] fov, ViewMode viewMode, String input, boolean pseudoGray,
                     boolean fullScreen, boolean tracking, double maxLum, int maxPixel, double lumPrecision, String invGammaFile, Monitor monitor,
                     String webcam,
-                    double leftEyex, double leftEyey, double leftEyed, double rightEyex, double rightEyey, double rightEyed) {
+                    int leftEyex, int leftEyey, int leftEyed, int rightEyex, int rightEyey, int rightEyed) {
 
 }

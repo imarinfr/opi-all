@@ -117,11 +117,10 @@ public class FrameInfoImo extends FrameInfo {
         if (bestContour == null || closestDistance > 0.2) {
             this.hasPupil = false;
         } else {
-                // magic conversion factors from CREWt supplied code March 2013
             Moments m = Imgproc.moments(bestContour);
-            this.pupilX = (m.m10 / m.m00 - EYE_IMAGE_WIDTH / 2.0) * 1.23;    // degrees
-            this.pupilY = (EYE_IMAGE_HEIGHT / 2.0 - m.m01 / m.m00 ) * 1.23;   // degrees
-            this.pupilDiameter = (2 * Math.sqrt(m.m00 / Math.PI)) * 14.0 / 176.0;  // mm
+            this.pupilX = (int)Math.round(m.m10 / m.m00 - EYE_IMAGE_WIDTH / 2.0);    // pixels (CREWT had * 1.23 -> degrees)
+            this.pupilY = (int)Math.round(EYE_IMAGE_HEIGHT / 2.0 - m.m01 / m.m00);   // pixels
+            this.pupilDiameter = (int)Math.round(2 * Math.sqrt(m.m00 / Math.PI)); // pixels  (CREWT had * 14.0 / 176.0 -> mm)
             this.hasPupil = true;
 
             bestContour.release();

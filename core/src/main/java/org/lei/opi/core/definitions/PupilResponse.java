@@ -4,9 +4,9 @@ package org.lei.opi.core.definitions;
 public record PupilResponse(
     long requestTimeStamp,       // timestamp of request object that initiated this response
     long acquisitionTimeStamp,   // timestamp of frame acquisition (approximate)
-    double x,                    // pupil position with (0,0) at centre of image (degrees)
-    double y,                    // pupil position with (0,0) at centre of image (degrees)
-    double diameter              // pupil diameter in mm (-1 indicates no pupil found)
+    int x,                    // pupil position with (0,0) at centre of image (degrees)
+    int y,                    // pupil position with (0,0) at centre of image (degrees)
+    int diameter              // pupil diameter in mm (-1 indicates no pupil found)
 ) {
     public PupilResponse(long requestTimeStamp, long acquisitionTimeStamp) {
         this(requestTimeStamp, acquisitionTimeStamp, -1, -1, -1);

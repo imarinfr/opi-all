@@ -64,6 +64,12 @@ public class ImoVifa extends Jovp {
      * @return A packet containing a JSON object describing settings and machine state
      * @since 0.2.0
      */
+    @ReturnMsg(name = "leftEyex", className = Integer.class, desc = "x co-ordinates of left pupil (pixels from image centre)")
+    @ReturnMsg(name = "leftEyey", className = Integer.class, desc = "y co-ordinates of left pupil (pixels from image centre)")
+    @ReturnMsg(name = "leftEyed", className = Integer.class, desc = "Diameter of left pupil (pixels)")
+    @ReturnMsg(name = "rightEyex", className = Integer.class, desc = "x co-ordinates of right pupil (pixels from image centre)")
+    @ReturnMsg(name = "rightEyey", className = Integer.class, desc = "y co-ordinates of right pupil (pixels from image centre)")
+    @ReturnMsg(name = "rightEyed", className = Integer.class, desc = "Diameter of right pupil (pixels)")
     public Packet query() { 
         Packet p = super.query();
         output("OPI Query result\n" + p.getMsg().toString());
@@ -100,12 +106,12 @@ public class ImoVifa extends Jovp {
      * @return A packet containing a JSON object
      * @since 0.2.0
      */
-    @ReturnMsg(name = "eyexStart", className = Double.class, desc = "x co-ordinates of pupil at stimulus onset (degrees from image centre). For a multi-part stimulus (t=0), the eye taken is the first eye in the list of components.")
-    @ReturnMsg(name = "eyeyStart", className = Double.class, desc = "y co-ordinates (degrees from image centre). See eyexStart for more details.")
-    @ReturnMsg(name = "eyedStart", className = Double.class, desc = "Diameter of pupil at stimulus onset (mm).")
-    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinate of pupil at button press (degrees from image centre). Note that for multi-part stimuli (t=0), the eye taken is the last eye in the list of components.")
-    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinate (degrees). See eyexEnd for more details.")
-    @ReturnMsg(name = "eyedEnd", className = Double.class, desc = "Diameter of pupil at button press or response window expiry (mm).")
+    @ReturnMsg(name = "eyexStart", className = Double.class, desc = "x co-ordinates of pupil at stimulus onset (pixels from image centre. Image is 640x480). For a multi-part stimulus (t=0), the eye taken is the *first* eye in the list of components.")
+    @ReturnMsg(name = "eyeyStart", className = Double.class, desc = "y co-ordinates (pixels from image centre). See eyexStart for more details.")
+    @ReturnMsg(name = "eyedStart", className = Double.class, desc = "Diameter of pupil at stimulus onset (pixels).")
+    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinate of pupil at button press (degrees from image centre. Image is 640x480). Note that for multi-part stimuli (t=0), the eye taken is the *last* eye in the list of components.")
+    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinate (pixels). See eyexEnd for more details.")
+    @ReturnMsg(name = "eyedEnd", className = Double.class, desc = "Diameter of pupil at button press or response window expiry (pixels).")
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
 
