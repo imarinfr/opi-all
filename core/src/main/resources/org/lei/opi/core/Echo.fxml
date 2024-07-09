@@ -74,7 +74,7 @@
                   <Insets left="10.0" top="10.0" />
                </HBox.margin>
             </ImageView>
-            <Label text="OPI Monitor 3.0 - Echo Client Messages" textFill="WHITE">
+            <Label text="OPI Monitor 1.0 - Echo Client Messages" textFill="WHITE">
                <font>
                   <Font size="24.0" />
                </font>

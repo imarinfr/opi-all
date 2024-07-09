@@ -23,7 +23,7 @@
             </ImageView>
             <VBox alignment="CENTER_LEFT" prefHeight="47.0" prefWidth="200.0">
                <children>
-                  <Label prefHeight="29.0" prefWidth="179.0" text="OPI Monitor 3.0" textFill="WHITE">
+                  <Label prefHeight="29.0" prefWidth="179.0" text="OPI Monitor 1.0" textFill="WHITE">
                      <font>
                         <Font size="24.0" />
                      </font>
