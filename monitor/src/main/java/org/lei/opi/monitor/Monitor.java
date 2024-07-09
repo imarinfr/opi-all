@@ -499,7 +499,7 @@ public class Monitor extends Application {
         
             Scene scene = new Scene(root, 800, 515);
 
-            stage.setTitle("OPI Monitor (v3.0 2022)");
+            stage.setTitle("OPI Monitor (v1.0 2024)");
             stage.setScene(scene);
 
                 // whenever we return to the home scene
