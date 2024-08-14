@@ -109,9 +109,9 @@ public class ImoVifa extends Jovp {
     @ReturnMsg(name = "eyexStart", className = Double.class, desc = "x co-ordinates of pupil at stimulus onset (pixels from image centre. Image is 640x480, left < 0). For a multi-part stimulus (t=0), the eye taken is the *first* eye in the list of components.")
     @ReturnMsg(name = "eyeyStart", className = Double.class, desc = "y co-ordinates (pixels from image centre). See eyexStart for more details. (up > 0)")
     @ReturnMsg(name = "eyedStart", className = Double.class, desc = "Diameter of pupil at stimulus onset (pixels).")
-    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinate of pupil at button press (pixels from image centre. Image is 640x480, left < 0). Note that for multi-part stimuli (t=0), the eye taken is the *last* eye in the list of components.")
-    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinate (pixels). See eyexEnd for more details. (up > 0)")
-    @ReturnMsg(name = "eyedEnd", className = Double.class, desc = "Diameter of pupil at button press or response window expiry (pixels).")
+    @ReturnMsg(name = "eyexEnd", className = Double.class, desc = "x co-ordinate of pupil at button press (pixels from image centre. Image is 640x480, left < 0). Note that for multi-part stimuli (t=0), the eye taken is the *last* eye in the list of components. Not valid for not-seen response.")
+    @ReturnMsg(name = "eyeyEnd", className = Double.class, desc = "y co-ordinate (pixels). See eyexEnd for more details. (up > 0). Not valid for not-seen response.")
+    @ReturnMsg(name = "eyedEnd", className = Double.class, desc = "Diameter of pupil at button press or response window expiry (pixels). Not valid for not-seen response.")
     public Packet present(HashMap<String, Object> args) {
         updateGUIOnPresent(args);
 
