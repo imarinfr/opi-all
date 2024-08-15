@@ -397,7 +397,7 @@ public class OpiJovp extends OpiListener {
      * Only update end time for a seen response.
      * @param seen true if the stimulus was seen
      * @param startTime time the stimulus was presented
-     * @param endTime time the button was pressed (ignored if !seen)
+     * @param endTime time the button was pressed or window expired
      */
     public void buildResponse(boolean seen, long startTime, long endTime) {
             // no eye tracking data at first
@@ -414,7 +414,7 @@ public class OpiJovp extends OpiListener {
                 // If we don't get any data after `totalTries` then we give up
                 PupilResponse resp;
                 boolean gotStart = false;
-                boolean gotEnd = !seen;   // If !seen then we will not look for End data
+                boolean gotEnd = false;
                 while (!gotStart || !gotEnd) {
                     resp = null;
                     try {
@@ -435,8 +435,8 @@ public class OpiJovp extends OpiListener {
                     if (resp.requestTimeStamp() == startTime) {
                         result.updateEye(true, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startTime));
                         gotStart = true;
-                    } else if (seen && resp.requestTimeStamp() == endTime) {
-                        result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - startTime));
+                    } else if (resp.requestTimeStamp() == endTime) {
+                        result.updateEye(false, resp.x(), resp.y(), resp.diameter(), (int)(resp.acquisitionTimeStamp() - endTime));
                         gotEnd = true;
                     } else 
                         try {

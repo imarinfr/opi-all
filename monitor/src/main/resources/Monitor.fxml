@@ -138,7 +138,7 @@
                   <Insets left="10.0" top="10.0" />
                </HBox.margin>
             </ImageView>
-            <Label text="OPI Monitor 3.0" textFill="WHITE">
+            <Label text="OPI Monitor 1.0" textFill="WHITE">
                <font>
                   <Font size="24.0" />
                </font>

@@ -276,7 +276,9 @@ public class OpiLogic implements PsychoLogic {
             }
         } else if (elapsed > currentStims.get(currentStims.size() - 1).w()) { // A no response.
             presenting = PresentingState.NOT;
-            driver.buildResponse(false, startStimTimeStamp, -1);
+            long end_tstamp = System.currentTimeMillis() - Math.round(elapsed - currentStims.get(currentStims.size() - 1).w());
+            driver.requestEyePosition(currentStims.get(currentStims.size() - 1).eye(), end_tstamp);
+            driver.buildResponse(false, startStimTimeStamp, end_tstamp);
         }
     }
 
