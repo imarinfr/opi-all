@@ -46,7 +46,7 @@ public class ImoVifa extends Jovp {
      * @since 0.2.0
      */
     public Packet initialize(HashMap<String, Object> args) {
-        output("OPI Monitor: OPI Initialized");
+        output("OPI Monitor: OPI Initialized\n");
 
             // Make sure screen = 1 and viewMode = "STEREO" is present for ImoVifa
             // Also it seems the monitor does not report it's correct size...

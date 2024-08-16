@@ -12,7 +12,7 @@ public class MedianList {
 
     /** Current values */
     private double []values;
-    private double []tempValues; // for partial insertion sort
+    private double []tempValues; // for insertion sort
 
     /** Index into {@link values} of next available spot */
     private int index;
@@ -35,6 +35,7 @@ public class MedianList {
             values = new double[size];
             for (int i = 0 ; i < size ; i++)
                 values[i] = x;
+            index = 0;
             return x;
         } 
 
