@@ -41,7 +41,7 @@ public class Display extends Jovp {
     public Packet initialize(HashMap<String, Object> args) {
         if (parentScene != null)
             Platform.runLater(()-> {
-                textAreaCommands.appendText("OPI Initialized");
+                textAreaCommands.appendText("OPI Initialized\n");
             });
 
         settings.machine = "Display";
