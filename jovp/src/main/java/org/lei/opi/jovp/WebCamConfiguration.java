@@ -46,7 +46,7 @@ public class WebCamConfiguration {
         this.srcFolderRight = null;
 
         try {
-            if (machine.toLowerCase().equals("imovifa"))
+            if (machine != null && machine.toLowerCase().equals("imovifa"))
                 cameraStreamer = new CameraStreamerImo(port, srcDeviceLeft, srcDeviceRight);
             else
                 cameraStreamer = new CameraStreamerNone(port, srcDeviceLeft, srcDeviceLeft);
@@ -99,8 +99,8 @@ public class WebCamConfiguration {
         try {
             return new WebCamConfiguration(
                 ((Double) args.get("eyeStreamPort")).intValue(),
-                Integer.parseInt((String)args.get("deviceNumberCameraLeft")), 
-                Integer.parseInt((String)args.get("deviceNumberCameraRight")),
+                (int)Math.round(Double.parseDouble((String)args.get("deviceNumberCameraLeft"))), 
+                (int)Math.round(Double.parseDouble((String)args.get("deviceNumberCameraRight"))),
                 args.get("machine").toString());
         } catch (NumberFormatException e) {  // device numbers are folder names of images 
             return new WebCamConfiguration(

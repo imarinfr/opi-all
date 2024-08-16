@@ -252,10 +252,10 @@ public class OpiJovp extends OpiListener {
     requestEyePosition(ViewEye.LEFT, now);
     requestEyePosition(ViewEye.RIGHT, now + 1);
 
-    buildResponse(false, now, -1);
+    buildResponse(now);
     Response leftEye = new Response(response);
 
-    buildResponse(false, now + 1, -1);
+    buildResponse(now + 1);
     Response rightEye = new Response(response);
 
     response = null;
@@ -392,9 +392,18 @@ public class OpiJovp extends OpiListener {
     }
 
     /**
+     * Set the response for OpiLogic after getting the relevant eye positions 
+     * from the camera(s) response queues at time `time`.
+     * @param time Time for which you want eye position data
+     */
+    public void buildResponse(long time) {
+        buildResponse(false, time, -1);
+    }
+
+    /**
      * Set the response after getting the relevant eye positions 
      * from the camera(s) response queues.
-     * Only update end time for a seen response.
+     * Only update end time if endTime != -1
      * @param seen true if the stimulus was seen
      * @param startTime time the stimulus was presented
      * @param endTime time the button was pressed or window expired
@@ -414,7 +423,7 @@ public class OpiJovp extends OpiListener {
                 // If we don't get any data after `totalTries` then we give up
                 PupilResponse resp;
                 boolean gotStart = false;
-                boolean gotEnd = false;
+                boolean gotEnd = endTime == -1;   // if -1 then do not look for endTime in responseQueue
                 while (!gotStart || !gotEnd) {
                     resp = null;
                     try {

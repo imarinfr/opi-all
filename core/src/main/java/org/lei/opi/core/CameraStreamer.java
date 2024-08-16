@@ -88,7 +88,8 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
         requestQueue = new LinkedBlockingDeque<PupilRequest>(10);
         responseQueue = new LinkedBlockingQueue<PupilResponse>(10);
 
-        this.start();
+        if (port != -1)
+            this.start();
     }
 
     /**
@@ -147,14 +148,12 @@ public abstract class CameraStreamer<FT extends FrameInfo> extends Thread {
 
         try {
             ServerSocket server = null;
-            if (port != -1) {
-                server = new ServerSocket(this.port);
-                server.setSoTimeout(10);
-            }
-
+            server = new ServerSocket(this.port);
+            server.setSoTimeout(10);
+            
             while (!isInterrupted()) {
                     // See if someone wants to connect and stream...
-                if (port != -1 && !connected)
+                if (!connected)
                     try {
                         socket = server.accept();
                         this.connected = true;
