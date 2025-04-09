@@ -293,7 +293,9 @@ public class OpiFunction {
 %s
 #'
 #' @examples
+#' \\dontrun{
 %s
+#' }
 #' result <- %s(%s)
 #'
 #' @seealso [%s()]
