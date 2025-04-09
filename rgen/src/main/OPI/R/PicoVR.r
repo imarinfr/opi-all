@@ -45,8 +45,8 @@ if (exists(".opi_env") && !exists("PicoVR", where = .opi_env))
 #' @examples
 #' \dontrun{
 #' chooseOpi("PicoVR")
-#' }
 #' result <- opiInitialise(address = list(port = 50001, ip = "localhost"))
+#' }
 #'
 #' @seealso [opiInitialise()]
 #'
@@ -161,8 +161,8 @@ opiInitialise_for_PicoVR <- function(address) {
 #' \dontrun{
 #' chooseOpi("PicoVR")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
-#' }
 #' result <- opiSetup(settings = list(eye = "BOTH"))
+#' }
 #'
 #' @seealso [opiSetup()]
 #'
@@ -222,8 +222,8 @@ opiSetup_for_PicoVR <- function(settings) {
 #' chooseOpi("PicoVR")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
 #' opiSetup(list(eye = "BOTH"))
-#' }
 #' result <- opiQueryDevice()
+#' }
 #'
 #' @seealso [opiQueryDevice()]
 #'
@@ -390,10 +390,10 @@ opiQueryDevice_for_PicoVR <- function() {
 #' chooseOpi("PicoVR")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
 #' opiSetup(list(eye = "BOTH"))
-#' }
 #' result <- opiPresent(stim = list(lum = list(300.0), stim.length = 1, color1 = list(list(1.0,
 #'                   1.0, 1.0)), sx = list(1.72), sy = list(1.72),
 #'                   eye = list("LEFT"), t = list(200.0), w = 1500.0, x = list(0.0), y = list(0.0)))
+#' }
 #'
 #' @seealso [opiPresent()]
 #'
@@ -453,8 +453,8 @@ opiPresent_for_PicoVR <- function(stim, ...) {
 #' chooseOpi("PicoVR")
 #' opiInitialise(list(port = 50001, ip = "localhost"))
 #' opiSetup(list(eye = "BOTH"))
-#' }
 #' result <- opiClose()
+#' }
 #'
 #' @seealso [opiClose()]
 #'

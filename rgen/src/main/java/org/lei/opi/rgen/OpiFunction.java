@@ -295,8 +295,8 @@ public class OpiFunction {
 #' @examples
 #' \\dontrun{
 %s
-#' }
 #' result <- %s(%s)
+#' }
 #'
 #' @seealso [%s()]
 #'
