@@ -16,10 +16,10 @@
     "input": "COM10",
     "tracking": false,
     "gammaFile": "imo_invGamma.json",
-    "deviceNumberCameraLeft": 1,
-    "deviceNumberCameraRight": 2,
+    "deviceNumberCameraLeft": "1",
+    "deviceNumberCameraRight": "2",
     "ip": "192.168.4.135",
-    "eyeStreamPort": 50201,
+    "eyeStreamPort": 50201.0,
     "port": 51234.0
   },
   "this": {
@@ -59,10 +59,12 @@
     "distance": 44,
     "viewMode": "Stereo",
     "input": "mouse",
-    "tracking": false,
+    "tracking": true,
     "gammaFile": "linear8bit_invGamma.json",
-    "eyeStreamPort": -1,
-    "ip": "localhost",
+    "deviceNumberCameraLeft": "/Users/aturpin/src/opi-all/core/src/test/resources/org/lei/opi/core/ImoVifa/Left",
+    "deviceNumberCameraRight": "/Users/aturpin/src/opi-all/core/src/test/resources/org/lei/opi/core/ImoVifa/Allison",
+    "eyeStreamPort": 50200,
+    "ip": "192.168.4.204",
     "port": 51234
   }
 }
